@@ -444,25 +444,35 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    });
 
    // Convert ClipData to LinkItem format
-   const clipToLinkItem = (clip: ClipData): LinkItem => ({
-      id: parseInt(clip.id || '0') || Date.now(),
-      title: clip.title || 'Untitled',
-      url: clip.url || '',
-      image: clip.image || '',
-      summary: clip.summary || '',
-      tags: clip.keywords || [],
-      date: clip.createdAt ? new Date(clip.createdAt).toLocaleDateString() : 'Unknown',
-      timestamp: clip.createdAt ? new Date(clip.createdAt).getTime() : Date.now(),
-      readTime: '3 min',
-      aiScore: 85,
-      categoryId: clip.category || 'general',
-      collectionIds: clip.collectionIds || [],
-      isFavorite: clip.isFavorite || false,
-      isReadLater: false,
-      isArchived: clip.isArchived || false,
-      notes: '',
-      keyTakeaways: []
-   });
+   const clipToLinkItem = (clip: ClipData): LinkItem => {
+      // Extract key takeaways from summary if available (split by sentences or bullet points)
+      let takeaways: string[] = [];
+      if (clip.summary) {
+         // Try to extract bullet points or sentences as takeaways
+         const sentences = clip.summary.split(/[.!?]/).filter(s => s.trim().length > 20);
+         takeaways = sentences.slice(0, 3).map(s => s.trim());
+      }
+
+      return {
+         id: parseInt(clip.id || '0') || Date.now(),
+         title: clip.title || 'Untitled',
+         url: clip.url || '',
+         image: clip.image || clip.images?.[0] || '',
+         summary: clip.summary || '',
+         tags: clip.keywords || [],
+         date: clip.createdAt ? new Date(clip.createdAt).toLocaleDateString() : 'Unknown',
+         timestamp: clip.createdAt ? new Date(clip.createdAt).getTime() : Date.now(),
+         readTime: clip.contentMarkdown ? `${Math.ceil(clip.contentMarkdown.length / 1000)} min` : '3 min',
+         aiScore: 85,
+         categoryId: clip.category || 'general',
+         collectionIds: clip.collectionIds || [],
+         isFavorite: clip.isFavorite || false,
+         isReadLater: false,
+         isArchived: clip.isArchived || false,
+         notes: '',
+         keyTakeaways: takeaways
+      };
+   };
 
    // State - now uses Firebase data
    const [links, setLinks] = useState<LinkItem[]>([]);
