@@ -7,7 +7,7 @@ interface ManagementModalProps {
     initialData?: { id: string; name: string; color: string } | null;
     type: 'category' | 'collection';
     onClose: () => void;
-    onSave: (data: { id: string; name: string; color: string }) => void;
+    onSave: (data: { id?: string; name: string; color: string }) => void;
     onDelete?: (id: string) => void;
     links?: LinkItem[];
     theme: 'light' | 'dark';
@@ -16,7 +16,6 @@ interface ManagementModalProps {
 
 export const ManagementModal = ({ title, initialData, type, onClose, onSave, onDelete, links, theme, t }: ManagementModalProps) => {
     const [name, setName] = useState(initialData?.name || '');
-    const [id, setId] = useState(initialData?.id || '');
     const [color, setColor] = useState(initialData?.color || (type === 'category' ? 'bg-blue-100 text-blue-600' : 'bg-slate-500'));
 
     // For collections: count clips that belong to this collection
@@ -44,11 +43,7 @@ export const ManagementModal = ({ title, initialData, type, onClose, onSave, onD
                 <div className="space-y-4">
                     <div>
                         <label className="text-xs font-bold text-slate-500">{t('name')}</label>
-                        <input type="text" value={name} onChange={e => { setName(e.target.value); if (!initialData) setId(e.target.value.toLowerCase().replace(/\s+/g, '-')); }} className={`w-full border rounded-lg p-2 text-sm mt-1 focus:ring-2 focus:ring-[#21DBA4]/20 outline-none ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'}`} autoFocus />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-slate-500">ID (Unique)</label>
-                        <input type="text" value={id} onChange={e => setId(e.target.value)} disabled={!!initialData} className={`w-full border rounded-lg p-2 text-sm mt-1 ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200'}`} />
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} className={`w-full border rounded-lg p-2 text-sm mt-1 focus:ring-2 focus:ring-[#21DBA4]/20 outline-none ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'}`} autoFocus />
                     </div>
                     {/* Color picker - only show for categories */}
                     {type === 'category' && (
@@ -70,7 +65,7 @@ export const ManagementModal = ({ title, initialData, type, onClose, onSave, onD
                             </div>
                         </div>
                     )}
-                    <button onClick={() => onSave({ id, name, color })} disabled={!name || !id} className="w-full bg-[#21DBA4] text-white py-3 rounded-xl font-bold mt-4 shadow-lg shadow-[#21DBA4]/20 hover:bg-[#1bc290] disabled:opacity-50 disabled:cursor-not-allowed">{t('save')}</button>
+                    <button onClick={() => onSave({ id: initialData?.id, name, color })} disabled={!name} className="w-full bg-[#21DBA4] text-white py-3 rounded-xl font-bold mt-4 shadow-lg shadow-[#21DBA4]/20 hover:bg-[#1bc290] disabled:opacity-50 disabled:cursor-not-allowed">{t('save')}</button>
 
                     {/* Delete button - only show for existing collections */}
                     {type === 'collection' && initialData && onDelete && (

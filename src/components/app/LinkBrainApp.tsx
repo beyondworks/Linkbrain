@@ -687,12 +687,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       });
    }
 
-   const handleSaveCategory = async (cat: Category) => {
-      if (categories.some(c => c.id === cat.id && editingCategory?.id !== cat.id)) {
-         toast.error("A category with this ID already exists.");
-         return;
-      }
-
+   const handleSaveCategory = async (cat: { id?: string; name: string; color: string }) => {
       try {
          if (editingCategory && editingCategory.id) {
             // Update existing category in Firebase
@@ -700,18 +695,16 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                name: cat.name,
                color: cat.color
             });
-            setCategories(prev => prev.map(c => c.id === editingCategory.id ? cat : c));
             toast.success('Category updated successfully');
          } else {
-            // Create new category in Firebase
-            const newCategory = await createCategory({
-               id: cat.id,
+            // Create new category in Firebase - ID will be auto-generated
+            await createCategory({
                name: cat.name,
                color: cat.color
             });
-            setCategories([...categories, { ...cat, id: newCategory.id || cat.id }]);
             toast.success('Category created successfully');
          }
+         // Note: No manual state update - real-time listener will sync
          setIsCategoryModalOpen(false);
          setEditingCategory(null);
       } catch (error) {
@@ -720,12 +713,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }
    };
 
-   const handleSaveCollection = async (col: Collection) => {
-      if (collections.some(c => c.id === col.id && editingCollection?.id !== col.id)) {
-         toast.error("A collection with this ID already exists.");
-         return;
-      }
-
+   const handleSaveCollection = async (col: { id?: string; name: string; color: string }) => {
       try {
          if (editingCollection && editingCollection.id) {
             // Update existing collection in Firebase
@@ -733,18 +721,16 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                name: col.name,
                color: col.color
             });
-            setCollections(prev => prev.map(c => c.id === editingCollection.id ? col : c));
             toast.success('Collection updated successfully');
          } else {
-            // Create new collection in Firebase
-            const newCollection = await createCollection({
-               id: col.id,
+            // Create new collection in Firebase - ID will be auto-generated
+            await createCollection({
                name: col.name,
                color: col.color
             });
-            setCollections([...collections, { ...col, id: newCollection.id || col.id }]);
             toast.success('Collection created successfully');
          }
+         // Note: No manual state update - real-time listener will sync
          setIsCollectionModalOpen(false);
          setEditingCollection(null);
       } catch (error) {
