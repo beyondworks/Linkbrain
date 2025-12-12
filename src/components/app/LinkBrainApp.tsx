@@ -76,6 +76,7 @@ import {
 import { AIInsightsDashboard } from '../AIInsightsDashboard';
 import { LinkBrainArticle } from './LinkBrainArticle';
 import { Logo } from '../Logo';
+import { LinkBrainLogo } from './LinkBrainLogo';
 
 // --- Mock Data ---
 const INITIAL_CATEGORIES: Category[] = [
@@ -970,7 +971,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   transition={{ duration: 2.5, ease: "easeInOut", times: [0, 0.4, 0.5, 0.6, 1] }}
                   className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center"
                >
-                  <Send className="w-32 h-32 text-[#21DBA4] drop-shadow-2xl" strokeWidth={1.5} />
+                  <LinkBrainLogo variant="white" size={128} className="drop-shadow-2xl" />
                </motion.div>
             )}
          </AnimatePresence>
@@ -1759,7 +1760,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      {filteredLinks.length === 0 && activeTab !== 'insights' && (
                         <div className="py-20 text-center text-slate-400">
-                           <Brain size={48} className="mx-auto mb-4 opacity-20" />
+                           <LinkBrainLogo variant="green" size={48} className="mx-auto mb-4 opacity-20" />
                            <p>{t('noLinks')}</p>
                         </div>
                      )}

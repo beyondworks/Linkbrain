@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Brain, ExternalLink, Plus } from 'lucide-react';
+import { X, ExternalLink, Plus } from 'lucide-react';
+import { LinkBrainLogo } from '../LinkBrainLogo';
 
 interface AddLinkModalProps {
     onClose: () => void;
@@ -34,7 +35,7 @@ export const AddLinkModal = ({ onClose, onAdd, theme, t }: AddLinkModalProps) =>
                         <div className="flex flex-col items-center justify-center py-10 space-y-6">
                             <div className="relative">
                                 <div className="w-16 h-16 rounded-full border-4 border-[#E0FBF4] border-t-[#21DBA4] animate-spin"></div>
-                                <div className="absolute inset-0 flex items-center justify-center"><Brain size={24} className="text-[#21DBA4]" /></div>
+                                <div className="absolute inset-0 flex items-center justify-center"><LinkBrainLogo size={24} variant="green" /></div>
                             </div>
                             <div className="text-center space-y-2"><h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Analyzing Content...</h3><p className="text-slate-500 text-sm">Generating summary and extracting tags</p></div>
                         </div>

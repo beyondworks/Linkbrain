@@ -22,6 +22,7 @@ import {
     FileText,
     Plus
 } from 'lucide-react';
+import { LinkBrainLogo } from '../LinkBrainLogo';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -406,7 +407,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                         {/* AI Takeaways */}
                         <div className={`rounded-2xl p-6 border shadow-sm mb-8 relative overflow-hidden ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
                             <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Brain size={100} className="text-[#21DBA4]" />
+                                <LinkBrainLogo size={100} variant="green" />
                             </div>
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="p-2 bg-[#E0FBF4] rounded-lg text-[#21DBA4]">
@@ -469,7 +470,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 {/* AI Input Footer */}
                 <div className={`absolute bottom-0 left-0 right-0 p-4 border-t flex items-center gap-2 z-20 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
                     <div className="w-8 h-8 rounded-full bg-[#21DBA4] flex items-center justify-center text-white shrink-0">
-                        <Brain size={16} />
+                        <LinkBrainLogo size={16} variant="green" />
                     </div>
                     <input
                         type="text"

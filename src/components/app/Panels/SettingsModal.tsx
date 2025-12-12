@@ -24,6 +24,7 @@ import {
     EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { LinkBrainLogo } from '../LinkBrainLogo';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -327,7 +328,7 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                     </div>
                 </div>
                 <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
-                    <Brain size={150} className="md:w-[200px] md:h-[200px]" />
+                    <LinkBrainLogo variant="white" size={150} />
                 </div>
             </div>
         </div>
