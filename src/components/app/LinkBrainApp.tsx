@@ -1032,48 +1032,42 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   initial={{ y: 100, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 100, opacity: 0 }}
-                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-800 text-white shadow-2xl flex items-center border border-slate-600
-                          px-6 py-3 rounded-[2rem] gap-5
-                          md:px-6 md:py-3 md:rounded-full md:gap-6"
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-800 text-white shadow-2xl flex items-center border border-slate-700
+                          px-4 py-2.5 rounded-full gap-3
+                          md:px-6 md:py-3 md:gap-6"
                >
-                  {/* Count */}
-                  <div className="flex flex-col md:flex-row items-center justify-center leading-none md:gap-1.5">
-                     <span className="font-black text-lg md:text-sm mb-0.5 md:mb-0">{selectedItemIds.size}</span>
-                     <span className="text-[10px] md:text-sm font-bold md:font-medium text-slate-300 md:text-white leading-tight">
-                        <span className="md:hidden">
-                           {language === 'ko' ? '선택됨' : 'Selected'}
-                        </span>
-                        <span className="hidden md:inline">{t('selected')}</span>
+                  {/* Count - Compact for mobile */}
+                  <div className="flex items-center gap-1.5 md:gap-1.5">
+                     <span className="font-black text-base md:text-sm">{selectedItemIds.size}</span>
+                     <span className="text-xs md:text-sm font-medium text-slate-300">
+                        {language === 'ko' ? '선택' : 'sel'}
                      </span>
                   </div>
 
                   {/* Divider */}
-                  <div className="h-8 md:h-4 w-px bg-white/20"></div>
+                  <div className="h-5 md:h-4 w-px bg-white/20"></div>
 
-                  {/* Archive Action */}
-                  <button onClick={handleBulkArchive} className="group flex flex-col md:flex-row items-center gap-1 md:gap-2 hover:text-[#21DBA4] transition-colors">
-                     <Archive className="w-5 h-5 md:w-4 md:h-4" />
-                     <span className="text-[10px] md:text-sm font-bold md:font-medium leading-none">
-                        <span className="md:hidden">{language === 'ko' ? '보관' : 'Archive'}</span>
-                        <span className="hidden md:inline">{t('archiveClips')}</span>
-                     </span>
+                  {/* Archive - Icon only on mobile */}
+                  <button onClick={handleBulkArchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
+                     <Archive className="w-[18px] h-[18px] md:w-4 md:h-4" />
+                     <span className="hidden md:inline text-sm font-medium">{t('archiveClips')}</span>
                   </button>
 
                   {/* Divider */}
-                  <div className="h-8 md:h-4 w-px bg-white/20"></div>
+                  <div className="h-5 md:h-4 w-px bg-white/20"></div>
 
-                  {/* Delete Action */}
-                  <button onClick={handleBulkDeleteRequest} className="group flex flex-col md:flex-row items-center gap-1 md:gap-2 hover:text-red-400 transition-colors">
-                     <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
-                     <span className="text-[10px] md:text-sm font-bold md:font-medium leading-none">{t('delete')}</span>
+                  {/* Delete - Icon only on mobile */}
+                  <button onClick={handleBulkDeleteRequest} className="group flex items-center gap-1.5 hover:text-red-400 transition-colors">
+                     <Trash2 className="w-[18px] h-[18px] md:w-4 md:h-4" />
+                     <span className="hidden md:inline text-sm font-medium">{t('delete')}</span>
                   </button>
 
                   {/* Close */}
                   <button
                      onClick={() => { setIsSelectionMode(false); setSelectedItemIds(new Set()); }}
-                     className="ml-1 p-1.5 md:p-1 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                     className="p-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
                   >
-                     <X className="w-4 h-4 md:w-[14px] md:h-[14px]" />
+                     <X className="w-3.5 h-3.5 md:w-[14px] md:h-[14px]" />
                   </button>
                </motion.div>
             )}

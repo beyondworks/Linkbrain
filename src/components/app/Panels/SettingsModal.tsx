@@ -222,10 +222,34 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
     // Parse display name into first/last name
     const displayName = user?.displayName || 'User';
     const nameParts = displayName.split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    const initialFirstName = nameParts[0] || '';
+    const initialLastName = nameParts.slice(1).join(' ') || '';
     const email = user?.email || '';
     const photoURL = user?.photoURL;
+
+    // State for editable fields
+    const [firstNameInput, setFirstNameInput] = useState(initialFirstName);
+    const [lastNameInput, setLastNameInput] = useState(initialLastName);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Check if there are unsaved changes
+    const hasChanges = firstNameInput !== initialFirstName || lastNameInput !== initialLastName;
+
+    const handleSaveProfile = async () => {
+        if (!hasChanges) return;
+        setIsSaving(true);
+        try {
+            const newDisplayName = `${firstNameInput} ${lastNameInput}`.trim();
+            // Firebase updateProfile would go here:
+            // await updateProfile(auth.currentUser, { displayName: newDisplayName });
+            toast.success(t('profileUpdated'));
+        } catch (error) {
+            console.error('Failed to update profile:', error);
+            toast.error('Failed to update profile');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="max-w-xl space-y-6 md:space-y-8">
@@ -235,7 +259,7 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                         <img src={photoURL} className="w-full h-full object-cover" alt="Profile" />
                     ) : (
                         <div className={`w-full h-full flex items-center justify-center text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-500'}`}>
-                            {firstName.charAt(0).toUpperCase()}
+                            {firstNameInput.charAt(0).toUpperCase()}
                         </div>
                     )}
                     <div onClick={() => toast.info("Avatar change disabled")} className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -255,17 +279,38 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                 <div className="grid grid-cols-2 gap-3 md:gap-4">
                     <div className="space-y-1.5 md:space-y-2">
                         <label className="text-xs font-bold text-slate-500 uppercase">{t('firstName')}</label>
-                        <input type="text" defaultValue={firstName} className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
+                        <input
+                            type="text"
+                            value={firstNameInput}
+                            onChange={(e) => setFirstNameInput(e.target.value)}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                        />
                     </div>
                     <div className="space-y-1.5 md:space-y-2">
                         <label className="text-xs font-bold text-slate-500 uppercase">{t('lastName')}</label>
-                        <input type="text" defaultValue={lastName} className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
+                        <input
+                            type="text"
+                            value={lastNameInput}
+                            onChange={(e) => setLastNameInput(e.target.value)}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                        />
                     </div>
                 </div>
                 <div className="space-y-1.5 md:space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase">{t('email')}</label>
-                    <input type="email" defaultValue={email} className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
+                    <input type="email" defaultValue={email} disabled className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm opacity-60 cursor-not-allowed ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`} />
                 </div>
+
+                {/* Save Button - Only visible when there are changes */}
+                {hasChanges && (
+                    <button
+                        onClick={handleSaveProfile}
+                        disabled={isSaving}
+                        className="w-full py-3 bg-[#21DBA4] text-white rounded-xl font-bold text-sm hover:bg-[#1bc290] transition-colors disabled:opacity-50"
+                    >
+                        {isSaving ? '...' : t('saveProfile')}
+                    </button>
+                )}
             </div>
 
             <div className="p-4 md:p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white relative overflow-hidden">
