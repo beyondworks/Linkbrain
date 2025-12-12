@@ -14,7 +14,13 @@ interface NavItemProps {
 export const NavItem = ({ icon, label, count, active, onClick, iconClassName, className, theme }: NavItemProps) => (
     <div
         onClick={onClick}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${className} ${active ? 'bg-[#E0FBF4] text-[#21DBA4]' : theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-slate-200' : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'}`}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${className} ${active
+            ? theme === 'dark'
+                ? 'bg-[#21DBA4]/20 text-[#21DBA4]'
+                : 'bg-[#E0FBF4] text-[#21DBA4]'
+            : theme === 'dark'
+                ? 'hover:bg-slate-800 text-slate-500 hover:text-slate-200'
+                : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'}`}
     >
         <div className={`${active ? 'text-[#21DBA4]' : iconClassName || 'text-slate-400'}`}>{icon}</div>
         <span className="text-sm font-bold flex-1 truncate text-[14px]">

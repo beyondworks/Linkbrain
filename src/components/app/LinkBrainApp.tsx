@@ -1008,7 +1008,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   initial={{ y: 100, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 100, opacity: 0 }}
-                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-900 text-white shadow-2xl flex items-center 
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-800 text-white shadow-2xl flex items-center border border-slate-600
                           px-6 py-3 rounded-[2rem] gap-5
                           md:px-6 md:py-3 md:rounded-full md:gap-6"
                >
@@ -1154,8 +1154,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                           <span>{cat.name}</span>
                                           {count > 0 && (
                                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
-                                                ? 'bg-white/20'
-                                                : theme === 'dark' ? 'bg-slate-700' : 'bg-white/50'
+                                                ? 'bg-white/20 text-white'
+                                                : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
                                                 }`}>
                                                 {count}
                                              </span>
@@ -1318,7 +1318,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                      {isSelectionMode && (
                         <button
                            onClick={handleSelectAll}
-                           className={`flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full transition-colors ${isAllSelected ? 'bg-slate-900 text-white' : theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                           className={`flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full transition-colors ${isAllSelected
+                              ? theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4] border border-[#21DBA4]/30' : 'bg-[#21DBA4] text-white'
+                              : theme === 'dark' ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                            {isAllSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                            <span className="hidden sm:inline">{t('selected')}</span>

@@ -144,7 +144,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                         onClick={() => setCurrentIdx(idx)}
                                         className={`h-1.5 rounded-full transition-all ${idx === currentIdx
                                             ? 'w-6 bg-[#21DBA4]'
-                                            : `w-1.5 ${theme === 'dark' ? 'bg-slate-600' : 'bg-slate-300'}`
+                                            : `w-1.5 ${theme === 'dark' ? 'bg-slate-400' : 'bg-slate-300'}`
                                             }`}
                                     />
                                 ))}
