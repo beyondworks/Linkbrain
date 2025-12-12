@@ -1374,7 +1374,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      {/* Header Info */}
                      <div className="flex items-end justify-between mb-8">
-                        <div>
+                        <div className="flex-1">
                            <h1 className={`text-2xl font-black mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                               {(() => {
                                  // Time-based greeting
@@ -1408,28 +1408,27 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                  return title;
                               })()}
                            </h1>
-                           <div className="flex items-center justify-between">
-                              <p className={`text-sm ${textMuted}`}>
-                                 {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
-                                 {activeTab === 'home' && ` ${t('aiSummary')}`}
-                              </p>
-                              {/* Mobile View Toggle - separate box */}
-                              {activeTab !== 'insights' && (
-                                 <button
-                                    onClick={() => setMobileViewMode(mobileViewMode === 'list' ? 'grid' : 'list')}
-                                    className={`md:hidden w-9 h-9 flex items-center justify-center rounded-lg border transition-colors ${theme === 'dark'
-                                       ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
-                                       : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50 shadow-sm'
-                                       }`}
-                                 >
-                                    {mobileViewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}
-                                 </button>
-                              )}
-                           </div>
+                           <p className={`text-sm ${textMuted}`}>
+                              {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
+                              {activeTab === 'home' && ` ${t('aiSummary')}`}
+                           </p>
                         </div>
 
+                        {/* Mobile View Toggle - moved to top level for proper positioning */}
+                        {activeTab !== 'insights' && (
+                           <button
+                              onClick={() => setMobileViewMode(mobileViewMode === 'list' ? 'grid' : 'list')}
+                              className={`md:hidden w-9 h-9 flex items-center justify-center rounded-lg border transition-colors ml-3 ${theme === 'dark'
+                                 ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
+                                 : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50 shadow-sm'
+                                 }`}
+                           >
+                              {mobileViewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}
+                           </button>
+                        )}
+
                         {/* Sort & Advanced Filter Dropdown */}
-                        <div className="relative" ref={filterRef}>
+                        <div className="relative hidden md:block" ref={filterRef}>
                            <div
                               onClick={() => setIsFilterOpen(!isFilterOpen)}
                               className={`hidden md:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
