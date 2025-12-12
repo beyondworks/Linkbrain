@@ -10,13 +10,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
-      style={
-        {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-        } as React.CSSProperties
-      }
+      toastOptions={{
+        classNames: {
+          toast: theme === 'dark'
+            ? 'bg-slate-800 text-white border-slate-700 shadow-xl'
+            : 'bg-white text-slate-900 border-slate-200 shadow-lg',
+          title: theme === 'dark' ? 'text-white font-semibold' : 'text-slate-900 font-semibold',
+          description: theme === 'dark' ? 'text-slate-300' : 'text-slate-600',
+          actionButton: 'bg-[#21DBA4] text-white',
+          cancelButton: theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600',
+        },
+      }}
       {...props}
     />
   );

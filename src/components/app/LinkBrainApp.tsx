@@ -1146,7 +1146,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                           className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
                                              ? 'bg-[#21DBA4] text-white shadow-sm'
                                              : theme === 'dark'
-                                                ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                ? `text-slate-800 hover:ring-2 hover:ring-[#21DBA4]/50`
                                                 : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
                                              }`}
                                           style={!isActive ? { backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' } : {}}
@@ -1294,18 +1294,18 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                   {/* Mobile Search Toggle Overlay */}
                   {mobileSearchOpen && (
-                     <div className="absolute top-[72px] left-0 right-0 p-4 bg-white border-b border-slate-100 z-20 animate-fade-in-down md:hidden shadow-lg">
+                     <div className={`absolute top-[72px] left-0 right-0 p-4 border-b z-20 animate-fade-in-down md:hidden shadow-lg ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}>
                         <div className="relative">
-                           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                           <Search size={18} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`} />
                            <input
                               autoFocus
                               type="text"
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               placeholder={t('searchPlaceholder')}
-                              className={`w-full h-10 rounded-full pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all placeholder:text-slate-400 bg-slate-100 text-slate-900 focus:bg-white`}
+                              className={`w-full h-10 rounded-full pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white'}`}
                            />
-                           <button onClick={() => setMobileSearchOpen(false)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                           <button onClick={() => setMobileSearchOpen(false)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>
                               <X size={18} />
                            </button>
                         </div>

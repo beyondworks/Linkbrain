@@ -133,7 +133,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                         <div className={`flex items-center justify-between px-4 py-3 ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
                             <button
                                 onClick={() => setCurrentIdx(prev => prev === 0 ? images.length - 1 : prev - 1)}
-                                className={`p-2 rounded-full ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-200'}`}
+                                className={`p-2 rounded-full ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white hover:bg-slate-200 text-slate-700'}`}
                             >
                                 <ChevronLeft size={16} />
                             </button>
@@ -151,7 +151,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                             </div>
                             <button
                                 onClick={() => setCurrentIdx(prev => prev === images.length - 1 ? 0 : prev + 1)}
-                                className={`p-2 rounded-full ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-200'}`}
+                                className={`p-2 rounded-full ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white hover:bg-slate-200 text-slate-700'}`}
                             >
                                 <ChevronRight size={16} />
                             </button>
