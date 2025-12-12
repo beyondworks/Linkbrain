@@ -78,7 +78,7 @@ const TRANSLATIONS = {
       readLater: "Read Later",
       favorites: "Favorites",
       archive: "Archive",
-      smartFolders: "Smart Folders",
+      smartFolders: "Categories",
       collections: "Collections",
       settings: "Settings",
       aiInsights: "AI Insights [Beta]",
@@ -90,6 +90,8 @@ const TRANSLATIONS = {
       filterSort: "Filter & Sort",
       searchPlaceholder: "Search links, summaries, or insights...",
       goodMorning: "Good Morning",
+      goodAfternoon: "Good Afternoon",
+      goodEvening: "Good Evening",
       linksFound: "links found.",
       aiSummary: "Here's your AI summary.",
       recentlyAdded: "Recently Added",
@@ -168,7 +170,7 @@ const TRANSLATIONS = {
       readLater: "나중에 읽기",
       favorites: "즐겨찾기",
       archive: "보관함",
-      smartFolders: "스마트 폴더",
+      smartFolders: "카테고리",
       collections: "컬렉션",
       settings: "설정",
       aiInsights: "AI 인사이트 [Beta]",
@@ -180,6 +182,8 @@ const TRANSLATIONS = {
       filterSort: "필터 및 정렬",
       searchPlaceholder: "링크, 요약, 인사이트 검색...",
       goodMorning: "좋은 아침입니다",
+      goodAfternoon: "좋은 오후입니다",
+      goodEvening: "좋은 저녁입니다",
       linksFound: "개의 링크가 있습니다.",
       aiSummary: "AI 요약입니다.",
       recentlyAdded: "최신순",
@@ -1068,27 +1072,40 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                            exit={{ height: 0, opacity: 0 }}
                            className="overflow-hidden"
                         >
-                           <div className="space-y-1">
-                              {categories.map(cat => (
-                                 <div key={cat.id} className="group relative flex items-center">
-                                    <NavItem
-                                       icon={<FolderOpen size={16} />}
-                                       label={cat.name}
-                                       active={activeTab === cat.id}
-                                       onClick={() => setActiveTab(cat.id)}
-                                       iconClassName={cat.color.replace('bg-', 'text-').replace('100', '500')}
-                                       count={links.filter(l => l.categoryId === cat.id && !l.isArchived).length || undefined}
-                                       className="flex-1"
-                                       theme={theme}
-                                    />
-                                    <button
-                                       onClick={() => { setEditingCategory(cat); setIsCategoryModalOpen(true); }}
-                                       className="absolute right-2 opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-slate-600 bg-white/50 rounded-md transition-all"
-                                    >
-                                       <Edit2 size={12} />
-                                    </button>
-                                 </div>
-                              ))}
+                           <div className="flex flex-wrap gap-2 px-3 py-2">
+                              {categories.map((cat: Category) => {
+                                 const isActive = filterCategories.includes(cat.id);
+                                 const count = links.filter((l: LinkItem) => l.categoryId === cat.id && !l.isArchived).length;
+                                 return (
+                                    <div key={cat.id} className="group relative">
+                                       <button
+                                          onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
+                                                ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                : theme === 'dark'
+                                                   ? `${cat.color} text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                   : `${cat.color} text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                             }`}
+                                       >
+                                          <span>{cat.name}</span>
+                                          {count > 0 && (
+                                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                                   ? 'bg-white/20'
+                                                   : theme === 'dark' ? 'bg-slate-700' : 'bg-white/50'
+                                                }`}>
+                                                {count}
+                                             </span>
+                                          )}
+                                       </button>
+                                       <button
+                                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); setEditingCategory(cat); setIsCategoryModalOpen(true); }}
+                                          className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 p-1 bg-white rounded-full shadow-sm text-slate-400 hover:text-slate-600 transition-all"
+                                       >
+                                          <Edit2 size={10} />
+                                       </button>
+                                    </div>
+                                 );
+                              })}
                            </div>
                         </motion.div>
                      )}
@@ -1296,12 +1313,23 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                         <div>
                            <h1 className={`text-2xl font-black mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                               {(() => {
-                                 const title = activeTab === 'home' ? `${t('goodMorning')}, Alex 👋` :
+                                 // Time-based greeting
+                                 const getTimeGreeting = () => {
+                                    const hour = new Date().getHours();
+                                    if (hour >= 5 && hour < 12) return t('goodMorning');
+                                    if (hour >= 12 && hour < 18) return t('goodAfternoon');
+                                    return t('goodEvening');
+                                 };
+
+                                 // Get user display name
+                                 const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+
+                                 const title = activeTab === 'home' ? `${getTimeGreeting()}, ${userName} 👋` :
                                     activeTab === 'later' ? t('readLater') :
                                        activeTab === 'favorites' ? t('favorites') :
                                           activeTab === 'archive' ? t('archive') :
                                              activeTab === 'insights' ? t('aiInsights') :
-                                                categories.find(c => c.id === activeTab)?.name || collections.find(c => c.id === activeTab)?.name || 'Folder';
+                                                categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
 
                                  if (title && title.includes('[Beta]')) {
                                     return (
