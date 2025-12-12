@@ -695,14 +695,14 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                name: cat.name,
                color: cat.color
             });
-            toast.success('Category updated successfully');
+            toast.success(t('categoryUpdated'));
          } else {
             // Create new category in Firebase - ID will be auto-generated
             await createCategory({
                name: cat.name,
                color: cat.color
             });
-            toast.success('Category created successfully');
+            toast.success(t('categoryCreated'));
          }
          // Note: No manual state update - real-time listener will sync
          setIsCategoryModalOpen(false);
@@ -721,14 +721,14 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                name: col.name,
                color: col.color
             });
-            toast.success('Collection updated successfully');
+            toast.success(t('collectionUpdated'));
          } else {
             // Create new collection in Firebase - ID will be auto-generated
             await createCollection({
                name: col.name,
                color: col.color
             });
-            toast.success('Collection created successfully');
+            toast.success(t('collectionCreated'));
          }
          // Note: No manual state update - real-time listener will sync
          setIsCollectionModalOpen(false);
@@ -1186,7 +1186,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                     />
                                     <button
                                        onClick={() => { setEditingCollection(col); setIsCollectionModalOpen(true); }}
-                                       className="absolute right-2 opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-slate-600 bg-white/50 rounded-md transition-all"
+                                       className="absolute right-2 md:opacity-0 md:group-hover:opacity-100 p-1.5 text-slate-400 hover:text-slate-600 bg-white/50 rounded-md transition-all"
                                     >
                                        <Edit2 size={12} />
                                     </button>
@@ -1209,10 +1209,16 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
             >
                <div className="flex items-center gap-3">
                   <div className={`w-9 h-9 rounded-full bg-slate-200 border-2 shadow-sm overflow-hidden group-hover:border-[#21DBA4]/50 transition-colors ${theme === 'dark' ? 'border-slate-700' : 'border-white'}`}>
-                     <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop" alt="User" />
+                     {user?.photoURL ? (
+                        <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
+                     ) : (
+                        <div className={`w-full h-full flex items-center justify-center text-sm font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-500'}`}>
+                           {(user?.displayName || 'U').charAt(0).toUpperCase()}
+                        </div>
+                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                     <div className={`text-sm font-bold truncate group-hover:text-[#21DBA4] ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>Alex Designer</div>
+                     <div className={`text-sm font-bold truncate group-hover:text-[#21DBA4] ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>{user?.displayName || 'User'}</div>
                      <div className="text-[10px] text-slate-400">{t('proPlan')}</div>
                   </div>
                   <button className="text-slate-400 group-hover:text-slate-600 transition-colors">
