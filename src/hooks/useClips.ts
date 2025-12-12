@@ -1,6 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { User } from 'firebase/auth';
+import {
+    collection,
+    query,
+    where,
+    orderBy,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    onSnapshot,
+    Unsubscribe
+} from 'firebase/firestore';
 
 export interface ClipData {
     id?: string;
@@ -33,6 +46,7 @@ export interface ClipData {
     contentMarkdown?: string;
     contentHtml?: string;
     images?: string[];
+    userId?: string;
 }
 
 export interface CollectionData {
@@ -44,6 +58,7 @@ export interface CollectionData {
     isPublic?: boolean;
     createdAt?: string;
     updatedAt?: string;
+    userId?: string;
 }
 
 interface UseClipsReturn {
@@ -86,34 +101,73 @@ export const useClips = (): UseClipsReturn => {
 
     const handleError = (err: any, message: string) => {
         console.error(message, err);
-        setError(err?.response?.data?.error || err.message || message);
+        setError(err?.message || message);
     };
 
-    // ANALYZE URL (Phase 4)
+    // ANALYZE URL - For production, this would call an API. For dev, we create a placeholder.
     const analyzeUrl = useCallback(async (url: string): Promise<ClipData> => {
         if (!user) throw new Error('User must be authenticated');
 
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/analyze', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-                body: JSON.stringify({ url, userId: user.uid }),
-            });
+            // In development without API, create a basic clip
+            // In production, this would call /api/analyze
+            const isProduction = import.meta.env.PROD;
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Failed to analyze URL: ${response.statusText}`);
+            if (isProduction) {
+                // Use API route in production
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${await user.getIdToken()}`,
+                    },
+                    body: JSON.stringify({ url, userId: user.uid }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Failed to analyze URL: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                setClips(prev => [result, ...prev]);
+                return result;
+            } else {
+                // In development, create a basic clip directly
+                const clipData: ClipData = {
+                    url,
+                    platform: 'web',
+                    template: 'web',
+                    title: `Link: ${url}`,
+                    summary: 'Content analysis is only available in production. Deploy to Vercel to enable AI analysis.',
+                    keywords: ['web'],
+                    category: 'Other',
+                    sentiment: 'neutral',
+                    type: 'website',
+                    image: null,
+                    author: '',
+                    authorProfile: {},
+                    mediaItems: [],
+                    engagement: {},
+                    mentions: [{ label: 'Original', url }],
+                    comments: [],
+                    publishDate: null,
+                    htmlContent: '',
+                    collectionIds: [],
+                    viewCount: 0,
+                    likeCount: 0,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    userId: user.uid,
+                };
+
+                const docRef = await addDoc(collection(db, 'clips'), clipData);
+                const newClip = { ...clipData, id: docRef.id };
+                setClips(prev => [newClip, ...prev]);
+                return newClip;
             }
-
-            const result = await response.json();
-            // Add to clips list
-            setClips(prev => [result, ...prev]);
-            return result;
         } catch (err) {
             handleError(err, 'Failed to analyze URL');
             throw err;
@@ -122,28 +176,22 @@ export const useClips = (): UseClipsReturn => {
         }
     }, [user]);
 
-    // CLIP OPERATIONS
+    // CLIP OPERATIONS - Direct Firestore access
     const createClip = useCallback(async (clipData: ClipData): Promise<ClipData> => {
         if (!user) throw new Error('User must be authenticated');
 
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/clips', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-                body: JSON.stringify({
-                    ...clipData,
-                    userId: user.uid,
-                }),
-            });
+            const dataToSave = {
+                ...clipData,
+                userId: user.uid,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
 
-            if (!response.ok) throw new Error(`Failed to create clip: ${response.statusText}`);
-
-            const newClip = await response.json();
+            const docRef = await addDoc(collection(db, 'clips'), dataToSave);
+            const newClip = { ...dataToSave, id: docRef.id };
             setClips(prev => [newClip, ...prev]);
             return newClip;
         } catch (err) {
@@ -160,21 +208,39 @@ export const useClips = (): UseClipsReturn => {
         setLoading(true);
         setError(null);
         try {
-            const params = new URLSearchParams({
-                userId: user.uid,
-                ...filters,
-            });
+            const clipsRef = collection(db, 'clips');
+            let q = query(
+                clipsRef,
+                where('userId', '==', user.uid),
+                orderBy('createdAt', 'desc')
+            );
 
-            const response = await fetch(`/api/clips?${params}`, {
-                headers: {
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-            });
+            const snapshot = await getDocs(q);
+            let clipsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as ClipData[];
 
-            if (!response.ok) throw new Error(`Failed to fetch clips: ${response.statusText}`);
+            // Client-side filtering
+            if (filters?.category) {
+                clipsData = clipsData.filter(c => c.category === filters.category);
+            }
+            if (filters?.platform) {
+                clipsData = clipsData.filter(c => c.platform === filters.platform);
+            }
+            if (filters?.search) {
+                const searchLower = filters.search.toLowerCase();
+                clipsData = clipsData.filter(c =>
+                    c.title?.toLowerCase().includes(searchLower) ||
+                    c.summary?.toLowerCase().includes(searchLower) ||
+                    c.keywords?.some((k: string) => k.toLowerCase().includes(searchLower))
+                );
+            }
+            if (filters?.collectionId) {
+                clipsData = clipsData.filter(c => c.collectionIds?.includes(filters.collectionId));
+            }
 
-            const data = await response.json();
-            setClips(data.clips || []);
+            setClips(clipsData);
         } catch (err) {
             handleError(err, 'Failed to fetch clips');
         } finally {
@@ -188,20 +254,15 @@ export const useClips = (): UseClipsReturn => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/clips?id=${id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-                body: JSON.stringify(updates),
-            });
+            const docRef = doc(db, 'clips', id);
+            const updateData = {
+                ...updates,
+                updatedAt: new Date().toISOString(),
+            };
+            await updateDoc(docRef, updateData);
 
-            if (!response.ok) throw new Error(`Failed to update clip: ${response.statusText}`);
-
-            const updatedClip = await response.json();
-            setClips(prev => prev.map(c => c.id === id ? updatedClip : c));
-            return updatedClip;
+            setClips(prev => prev.map(c => c.id === id ? { ...c, ...updateData } : c));
+            return { id, ...updateData } as ClipData;
         } catch (err) {
             handleError(err, 'Failed to update clip');
             throw err;
@@ -216,15 +277,7 @@ export const useClips = (): UseClipsReturn => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/clips?id=${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-            });
-
-            if (!response.ok) throw new Error(`Failed to delete clip: ${response.statusText}`);
-
+            await deleteDoc(doc(db, 'clips', id));
             setClips(prev => prev.filter(c => c.id !== id));
         } catch (err) {
             handleError(err, 'Failed to delete clip');
@@ -234,28 +287,22 @@ export const useClips = (): UseClipsReturn => {
         }
     }, [user]);
 
-    // COLLECTION OPERATIONS
+    // COLLECTION OPERATIONS - Direct Firestore access
     const createCollection = useCallback(async (collectionData: CollectionData): Promise<CollectionData> => {
         if (!user) throw new Error('User must be authenticated');
 
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/collections', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-                body: JSON.stringify({
-                    ...collectionData,
-                    userId: user.uid,
-                }),
-            });
+            const dataToSave = {
+                ...collectionData,
+                userId: user.uid,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
 
-            if (!response.ok) throw new Error(`Failed to create collection: ${response.statusText}`);
-
-            const newCollection = await response.json();
+            const docRef = await addDoc(collection(db, 'collections'), dataToSave);
+            const newCollection = { ...dataToSave, id: docRef.id };
             setCollections(prev => [newCollection, ...prev]);
             return newCollection;
         } catch (err) {
@@ -272,16 +319,20 @@ export const useClips = (): UseClipsReturn => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/collections?userId=${user.uid}`, {
-                headers: {
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-            });
+            const collectionsRef = collection(db, 'collections');
+            const q = query(
+                collectionsRef,
+                where('userId', '==', user.uid),
+                orderBy('createdAt', 'desc')
+            );
 
-            if (!response.ok) throw new Error(`Failed to fetch collections: ${response.statusText}`);
+            const snapshot = await getDocs(q);
+            const collectionsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as CollectionData[];
 
-            const data = await response.json();
-            setCollections(data.collections || []);
+            setCollections(collectionsData);
         } catch (err) {
             handleError(err, 'Failed to fetch collections');
         } finally {
@@ -295,20 +346,15 @@ export const useClips = (): UseClipsReturn => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/collections?id=${id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-                body: JSON.stringify(updates),
-            });
+            const docRef = doc(db, 'collections', id);
+            const updateData = {
+                ...updates,
+                updatedAt: new Date().toISOString(),
+            };
+            await updateDoc(docRef, updateData);
 
-            if (!response.ok) throw new Error(`Failed to update collection: ${response.statusText}`);
-
-            const updatedCollection = await response.json();
-            setCollections(prev => prev.map(c => c.id === id ? updatedCollection : c));
-            return updatedCollection;
+            setCollections(prev => prev.map(c => c.id === id ? { ...c, ...updateData } : c));
+            return { id, ...updateData } as CollectionData;
         } catch (err) {
             handleError(err, 'Failed to update collection');
             throw err;
@@ -323,15 +369,7 @@ export const useClips = (): UseClipsReturn => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/collections?id=${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${await user.getIdToken()}`,
-                },
-            });
-
-            if (!response.ok) throw new Error(`Failed to delete collection: ${response.statusText}`);
-
+            await deleteDoc(doc(db, 'collections', id));
             setCollections(prev => prev.filter(c => c.id !== id));
         } catch (err) {
             handleError(err, 'Failed to delete collection');
@@ -346,10 +384,10 @@ export const useClips = (): UseClipsReturn => {
 
         setLoading(true);
         try {
-            const collection = collections.find(c => c.id === collectionId);
-            if (!collection) throw new Error('Collection not found');
+            const col = collections.find(c => c.id === collectionId);
+            if (!col) throw new Error('Collection not found');
 
-            const updatedClipIds = Array.from(new Set([...(collection.clipIds || []), clipId]));
+            const updatedClipIds = Array.from(new Set([...(col.clipIds || []), clipId]));
             await updateCollection(collectionId, { clipIds: updatedClipIds });
         } catch (err) {
             handleError(err, 'Failed to add clip to collection');
@@ -364,10 +402,10 @@ export const useClips = (): UseClipsReturn => {
 
         setLoading(true);
         try {
-            const collection = collections.find(c => c.id === collectionId);
-            if (!collection) throw new Error('Collection not found');
+            const col = collections.find(c => c.id === collectionId);
+            if (!col) throw new Error('Collection not found');
 
-            const updatedClipIds = (collection.clipIds || []).filter(id => id !== clipId);
+            const updatedClipIds = (col.clipIds || []).filter(id => id !== clipId);
             await updateCollection(collectionId, { clipIds: updatedClipIds });
         } catch (err) {
             handleError(err, 'Failed to remove clip from collection');
