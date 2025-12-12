@@ -1855,21 +1855,7 @@ const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavor
                      </div>
                   </div>
 
-                  <div className="mb-8">
-                     <div className="flex items-center justify-between mb-4">
-                        <h3 className={`font-bold text-lg flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                           <FileText size={18} className="text-slate-400" /> {t('myNotes')}
-                        </h3>
-                        <span className="text-xs text-slate-400">{t('autoSaved')}</span>
-                     </div>
-                     <textarea
-                        className={`w-full min-h-[150px] p-4 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 focus:border-[#21DBA4] transition-all resize-y placeholder:text-slate-300 ${theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}
-                        placeholder="Add your thoughts, ideas, or connect this with other concepts..."
-                        defaultValue={link.notes}
-                     />
-                  </div>
-
-                  {/* Full Article Content */}
+                  {/* Full Article Content - NOW BEFORE NOTES */}
                   {link.content && (
                      <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
@@ -1892,6 +1878,21 @@ const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavor
                         </div>
                      </div>
                   )}
+
+                  {/* My Notes - NOW AFTER CONTENT */}
+                  <div className="mb-8">
+                     <div className="flex items-center justify-between mb-4">
+                        <h3 className={`font-bold text-lg flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                           <FileText size={18} className="text-slate-400" /> {t('myNotes')}
+                        </h3>
+                        <span className="text-xs text-slate-400">{t('autoSaved')}</span>
+                     </div>
+                     <textarea
+                        className={`w-full min-h-[150px] p-4 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 focus:border-[#21DBA4] transition-all resize-y placeholder:text-slate-300 ${theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}
+                        placeholder="Add your thoughts, ideas, or connect this with other concepts..."
+                        defaultValue={link.notes}
+                     />
+                  </div>
 
                   <div>
                      <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-3">{t('tags')}</h3>
