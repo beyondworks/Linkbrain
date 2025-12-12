@@ -1408,7 +1408,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                  return title;
                               })()}
                            </h1>
-                           <div className="flex items-center gap-3">
+                           <div className="flex items-center justify-between">
                               <p className={`text-sm ${textMuted}`}>
                                  {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
                                  {activeTab === 'home' && ` ${t('aiSummary')}`}
