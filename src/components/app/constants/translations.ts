@@ -90,7 +90,27 @@ export const TRANSLATIONS = {
         avgReadTime: "Avg. Read Time",
         totalLinks: "Total Links",
         thisWeek: "This Week",
-        trend: "Trend"
+        trend: "Trend",
+        // Toast messages
+        addedToFavorites: "Added to favorites",
+        removedFromFavorites: "Removed from favorites",
+        addedToReadLater: "Added to read later",
+        removedFromReadLater: "Removed from read later",
+        archived: "Archived",
+        unarchived: "Unarchived",
+        itemDeleted: "Item deleted",
+        itemsDeleted: "Items deleted",
+        categoryCreated: "Category created successfully",
+        categoryUpdated: "Category updated successfully",
+        collectionCreated: "Collection created successfully",
+        collectionUpdated: "Collection updated successfully",
+        linkAnalyzed: "Link analyzed and added successfully",
+        failedToSync: "Failed to sync",
+        // Logout
+        logoutConfirmTitle: "Sign Out",
+        logoutConfirmMessage: "Are you sure you want to sign out?",
+        loggedOut: "You have been signed out",
+        confirm: "Confirm"
     },
     ko: {
         home: "홈",
@@ -182,7 +202,27 @@ export const TRANSLATIONS = {
         avgReadTime: "평균 독서 시간",
         totalLinks: "전체 링크",
         thisWeek: "이번 주",
-        trend: "트렌드"
+        trend: "트렌드",
+        // Toast messages
+        addedToFavorites: "즐겨찾기에 추가됨",
+        removedFromFavorites: "즐겨찾기에서 제거됨",
+        addedToReadLater: "나중에 읽기에 추가됨",
+        removedFromReadLater: "나중에 읽기에서 제거됨",
+        archived: "보관됨",
+        unarchived: "보관 취소됨",
+        itemDeleted: "항목이 삭제되었습니다",
+        itemsDeleted: "항목들이 삭제되었습니다",
+        categoryCreated: "카테고리가 생성되었습니다",
+        categoryUpdated: "카테고리가 수정되었습니다",
+        collectionCreated: "컬렉션이 생성되었습니다",
+        collectionUpdated: "컬렉션이 수정되었습니다",
+        linkAnalyzed: "링크가 분석되어 추가되었습니다",
+        failedToSync: "동기화 실패",
+        // Logout
+        logoutConfirmTitle: "로그아웃",
+        logoutConfirmMessage: "로그아웃 하시겠습니까?",
+        loggedOut: "로그아웃 되었습니다",
+        confirm: "확인"
     }
 } as const;
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
     Settings,
     X,
@@ -38,15 +38,25 @@ interface SettingsModalProps {
     };
     onLogout: () => void;
     t: (key: string) => string;
+    user?: { displayName: string | null; email: string | null; photoURL: string | null } | null;
 }
 
-export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t }: SettingsModalProps) => {
+export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, user }: SettingsModalProps) => {
     const [activeTab, setActiveTab] = useState('general');
     const { theme, language, showThumbnails, notifications } = settings;
     const { setTheme, setLanguage, setShowThumbnails, setNotifications } = setSettings;
 
     // Mobile View State
     const [mobileView, setMobileView] = useState<'menu' | 'content'>('menu');
+
+    // Logout Confirmation State
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+    const handleLogoutConfirm = () => {
+        setShowLogoutConfirm(false);
+        toast.success(t('loggedOut'));
+        onLogout();
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
@@ -87,7 +97,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t }: S
                         ))}
                     </nav>
                     <div className={`p-4 border-t mt-auto ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
-                        <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:bg-opacity-10 transition-colors">
+                        <button onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:bg-opacity-10 transition-colors">
                             <LogOut size={18} /> {t('signOut')}
                         </button>
                     </div>
@@ -153,72 +163,126 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t }: S
                                 </div>
                             </div>
                         )}
-                        {activeTab === 'account' && <AccountSettings theme={theme} t={t} />}
+                        {activeTab === 'account' && <AccountSettings theme={theme} t={t} user={user} />}
                         {activeTab === 'integrations' && <IntegrationsSettings theme={theme} t={t} />}
                         {activeTab === 'notifications' && <NotificationsSettings theme={theme} t={t} notifications={notifications} setNotifications={setNotifications} />}
                         {activeTab === 'data' && <DataSettings theme={theme} t={t} />}
                     </div>
                 </div>
             </motion.div>
+
+            {/* Logout Confirmation Dialog */}
+            <AnimatePresence>
+                {showLogoutConfirm && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50"
+                        onClick={() => setShowLogoutConfirm(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className={`w-full max-w-sm p-6 rounded-2xl shadow-2xl ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <h3 className="text-lg font-bold mb-2">{t('logoutConfirmTitle')}</h3>
+                            <p className={`text-sm mb-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('logoutConfirmMessage')}</p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowLogoutConfirm(false)}
+                                    className={`flex-1 py-2.5 rounded-xl font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                >
+                                    {t('cancel')}
+                                </button>
+                                <button
+                                    onClick={handleLogoutConfirm}
+                                    className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-red-500 text-white hover:bg-red-600"
+                                >
+                                    {t('confirm')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 // Account Settings
-const AccountSettings = ({ theme, t }: { theme: string; t: (key: string) => string }) => (
-    <div className="max-w-xl space-y-6 md:space-y-8">
-        <div className="flex items-center gap-4 md:gap-6">
-            <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-slate-100 relative group cursor-pointer overflow-hidden border-4 border-white shadow-lg shrink-0">
-                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop" className="w-full h-full object-cover" />
-                <div onClick={() => toast.info("Avatar change disabled")} className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Edit2 className="text-white" size={24} />
-                </div>
-            </div>
-            <div className="flex-1 min-w-0">
-                <h4 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Alex Designer</h4>
-                <p className="text-slate-400 text-sm truncate">alex.design@linkbrain.app</p>
-                <button onClick={() => toast.info("Avatar change disabled")} className="mt-2 md:mt-3 text-xs font-bold text-[#21DBA4] border border-[#21DBA4]/30 px-3 py-1.5 rounded-full hover:bg-[#21DBA4] hover:text-white transition-all">
-                    {t('changeAvatar')}
-                </button>
-            </div>
-        </div>
+const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) => string; user?: { displayName: string | null; email: string | null; photoURL: string | null } | null }) => {
+    // Parse display name into first/last name
+    const displayName = user?.displayName || 'User';
+    const nameParts = displayName.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    const email = user?.email || '';
+    const photoURL = user?.photoURL;
 
-        <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="space-y-1.5 md:space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">{t('firstName')}</label>
-                    <input type="text" defaultValue="Alex" className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
+    return (
+        <div className="max-w-xl space-y-6 md:space-y-8">
+            <div className="flex items-center gap-4 md:gap-6">
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-slate-100 relative group cursor-pointer overflow-hidden border-4 border-white shadow-lg shrink-0">
+                    {photoURL ? (
+                        <img src={photoURL} className="w-full h-full object-cover" alt="Profile" />
+                    ) : (
+                        <div className={`w-full h-full flex items-center justify-center text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-500'}`}>
+                            {firstName.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                    <div onClick={() => toast.info("Avatar change disabled")} className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Edit2 className="text-white" size={24} />
+                    </div>
                 </div>
-                <div className="space-y-1.5 md:space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">{t('lastName')}</label>
-                    <input type="text" defaultValue="Designer" className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
+                <div className="flex-1 min-w-0">
+                    <h4 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{displayName}</h4>
+                    <p className="text-slate-400 text-sm truncate">{email}</p>
+                    <button onClick={() => toast.info("Avatar change disabled")} className="mt-2 md:mt-3 text-xs font-bold text-[#21DBA4] border border-[#21DBA4]/30 px-3 py-1.5 rounded-full hover:bg-[#21DBA4] hover:text-white transition-all">
+                        {t('changeAvatar')}
+                    </button>
                 </div>
             </div>
-            <div className="space-y-1.5 md:space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase">{t('email')}</label>
-                <input type="email" defaultValue="alex.design@linkbrain.app" className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
-            </div>
-        </div>
 
-        <div className="p-4 md:p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white relative overflow-hidden">
-            <div className="relative z-10">
-                <div className="flex items-center justify-between mb-3 md:mb-4">
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">PRO PLAN</span>
-                    <CreditCard className="text-white/50" />
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="space-y-1.5 md:space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase">{t('firstName')}</label>
+                        <input type="text" defaultValue={firstName} className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
+                    </div>
+                    <div className="space-y-1.5 md:space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase">{t('lastName')}</label>
+                        <input type="text" defaultValue={lastName} className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
+                    </div>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold mb-1">LinkBrain Pro</h3>
-                <p className="text-slate-400 text-xs md:text-sm mb-4 md:mb-6">Renews on Oct 24, 2025</p>
-                <div className="flex gap-2 md:gap-3">
-                    <button onClick={() => toast.info("Redirecting to billing portal...")} className="bg-white text-slate-900 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap">{t('manageBilling')}</button>
-                    <button onClick={() => toast.info("Please contact support to cancel")} className="text-white/70 hover:text-white px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold whitespace-nowrap">{t('cancelPlan')}</button>
+                <div className="space-y-1.5 md:space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase">{t('email')}</label>
+                    <input type="email" defaultValue={email} className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`} />
                 </div>
             </div>
-            <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
-                <Brain size={150} className="md:w-[200px] md:h-[200px]" />
+
+            <div className="p-4 md:p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white relative overflow-hidden">
+                <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-3 md:mb-4">
+                        <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">PRO PLAN</span>
+                        <CreditCard className="text-white/50" />
+                    </div>
+                    <h3 className="text-lg md:text-xl font-bold mb-1">LinkBrain Pro</h3>
+                    <p className="text-slate-400 text-xs md:text-sm mb-4 md:mb-6">Renews on Oct 24, 2025</p>
+                    <div className="flex gap-2 md:gap-3">
+                        <button onClick={() => toast.info("Redirecting to billing portal...")} className="bg-white text-slate-900 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap">{t('manageBilling')}</button>
+                        <button onClick={() => toast.info("Please contact support to cancel")} className="text-white/70 hover:text-white px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold whitespace-nowrap">{t('cancelPlan')}</button>
+                    </div>
+                </div>
+                <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
+                    <Brain size={150} className="md:w-[200px] md:h-[200px]" />
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 // Integrations Settings
 const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) => string }) => (

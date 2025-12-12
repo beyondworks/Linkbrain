@@ -969,8 +969,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   onClose={() => setIsSettingsOpen(false)}
                   settings={{ theme, language, showThumbnails, notifications }}
                   setSettings={{ setTheme, setLanguage, setShowThumbnails, setNotifications }}
-                  onLogout={onLogout}
+                  onLogout={onLogout || (() => { })}
                   t={t}
+                  user={user}
                />
             )}
          </AnimatePresence>
