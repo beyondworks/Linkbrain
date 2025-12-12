@@ -54,11 +54,12 @@ interface LinkDetailPanelProps {
     onDelete: () => void;
     onUpdateCategory: (linkId: string, catId: string) => void;
     onToggleCollection: (linkId: string, colId: string) => void;
+    onClearCollections: (linkId: string) => void;
     theme: 'light' | 'dark';
     t: (key: string) => string;
 }
 
-export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onToggleCollection, theme, t }: LinkDetailPanelProps) => {
+export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onToggleCollection, onClearCollections, theme, t }: LinkDetailPanelProps) => {
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
 
@@ -384,6 +385,17 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                                     {col.name}
                                                 </DropdownMenuCheckboxItem>
                                             ))}
+                                            {(link.collectionIds || []).length > 0 && (
+                                                <>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                        onClick={() => onClearCollections(link.id)}
+                                                        className="text-slate-500 text-xs"
+                                                    >
+                                                        {t('deselectAll')}
+                                                    </DropdownMenuItem>
+                                                </>
+                                            )}
                                             {collections.length === 0 && <div className="p-2 text-xs text-slate-500 italic text-center">No collections</div>}
                                         </DropdownMenuContent>
                                     </DropdownMenu>

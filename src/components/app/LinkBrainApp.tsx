@@ -785,6 +785,27 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }
    };
 
+   const handleClearCollections = async (linkId: string) => {
+      // Find the current link
+      const currentLink = links.find(l => l.id === linkId);
+      if (!currentLink) return;
+
+      const currentCollectionIds = currentLink.collectionIds || [];
+
+      // Update local state immediately for responsiveness
+      setLinks(prev => prev.map(l => l.id === linkId ? { ...l, collectionIds: [] } : l));
+
+      // Sync to Firebase
+      try {
+         await updateClip(linkId, { collectionIds: [] });
+      } catch (error) {
+         console.error('Failed to clear clip collections:', error);
+         toast.error('Failed to update collections');
+         // Revert on error
+         setLinks(prev => prev.map(l => l.id === linkId ? { ...l, collectionIds: currentCollectionIds } : l));
+      }
+   };
+
    const isAllSelected = filteredLinks.length > 0 && filteredLinks.every(l => selectedItemIds.has(l.id));
 
    const toggleFilter = (setFn: any, current: string[], val: string) => {
@@ -877,6 +898,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   onDelete={() => handleDeleteSingleRequest(selectedLink.id)}
                   onUpdateCategory={handleUpdateLinkCategory}
                   onToggleCollection={handleToggleLinkCollection}
+                  onClearCollections={handleClearCollections}
                   theme={theme}
                   t={t}
                />
