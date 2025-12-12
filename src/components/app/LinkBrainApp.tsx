@@ -765,10 +765,11 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       const currentLink = links.find(l => l.id === linkId);
       if (!currentLink) return;
 
-      const isCurrentlyInCollection = currentLink.collectionIds.includes(colId);
+      const currentCollectionIds = currentLink.collectionIds || [];
+      const isCurrentlyInCollection = currentCollectionIds.includes(colId);
       const newCols = isCurrentlyInCollection
-         ? currentLink.collectionIds.filter(id => id !== colId)
-         : [...currentLink.collectionIds, colId];
+         ? currentCollectionIds.filter(id => id !== colId)
+         : [...currentCollectionIds, colId];
 
       // Update local state immediately for responsiveness
       setLinks(prev => prev.map(l => l.id === linkId ? { ...l, collectionIds: newCols } : l));
@@ -780,7 +781,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          console.error('Failed to update clip collections:', error);
          toast.error('Failed to update collections');
          // Revert on error
-         setLinks(prev => prev.map(l => l.id === linkId ? { ...l, collectionIds: currentLink.collectionIds } : l));
+         setLinks(prev => prev.map(l => l.id === linkId ? { ...l, collectionIds: currentCollectionIds } : l));
       }
    };
 

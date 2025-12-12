@@ -330,16 +330,16 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                     {renderMediaSection()}
 
                     <div className="p-8 max-w-xl mx-auto">
-                        <div className="mb-6">
+                        <div className="mb-6 overflow-hidden">
                             <h1 className={`text-2xl md:text-3xl font-black leading-tight mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{link.title}</h1>
                             <a
                                 href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={`flex items-start gap-2 text-sm hover:underline ${theme === 'dark' ? 'text-slate-400 hover:text-[#21DBA4]' : 'text-slate-500 hover:text-[#21DBA4]'}`}
+                                className={`flex items-start gap-2 text-sm hover:underline overflow-hidden ${theme === 'dark' ? 'text-slate-400 hover:text-[#21DBA4]' : 'text-slate-500 hover:text-[#21DBA4]'}`}
                             >
                                 <Globe size={14} className="shrink-0 mt-0.5" />
-                                <span className="break-all">{link.url}</span>
+                                <span className="min-w-0" style={{ wordBreak: 'break-all' }}>{link.url}</span>
                             </a>
                         </div>
 
@@ -366,8 +366,8 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                         <DropdownMenuTrigger asChild>
                                             <button className={`w-full max-w-[200px] text-left text-sm font-bold px-4 py-2.5 rounded-xl border outline-none focus:border-[#21DBA4] focus:ring-2 focus:ring-[#21DBA4]/20 transition-all cursor-pointer flex items-center justify-between ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
                                                 <span className="truncate block">
-                                                    {link.collectionIds.length > 0
-                                                        ? collections.filter((c: Collection) => link.collectionIds.includes(c.id)).map((c: Collection) => c.name).join(', ')
+                                                    {(link.collectionIds || []).length > 0
+                                                        ? collections.filter((c: Collection) => (link.collectionIds || []).includes(c.id)).map((c: Collection) => c.name).join(', ')
                                                         : <span className="text-slate-400 font-normal">{t('noCollections')}</span>}
                                                 </span>
                                                 <ChevronDown className="text-slate-400 ml-2 shrink-0" size={14} />
@@ -377,7 +377,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                             {collections.map((col: Collection) => (
                                                 <DropdownMenuCheckboxItem
                                                     key={col.id}
-                                                    checked={link.collectionIds.includes(col.id)}
+                                                    checked={(link.collectionIds || []).includes(col.id)}
                                                     onCheckedChange={() => onToggleCollection(link.id, col.id)}
                                                     onSelect={(e: Event) => e.preventDefault()}
                                                 >
