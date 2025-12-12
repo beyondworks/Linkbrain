@@ -183,7 +183,7 @@ export const useClips = (): UseClipsReturn => {
 
                 const docRef = await addDoc(collection(db, 'clips'), clipData);
                 const newClip = { ...clipData, id: docRef.id };
-                setClips(prev => [newClip, ...prev]);
+                // Note: No setClips here - onSnapshot listener handles it
                 return newClip;
             }
         } catch (err) {
@@ -210,7 +210,7 @@ export const useClips = (): UseClipsReturn => {
 
             const docRef = await addDoc(collection(db, 'clips'), dataToSave);
             const newClip = { ...dataToSave, id: docRef.id };
-            setClips(prev => [newClip, ...prev]);
+            // Note: No setClips here - onSnapshot listener handles it
             return newClip;
         } catch (err) {
             handleError(err, 'Failed to create clip');
@@ -312,8 +312,7 @@ export const useClips = (): UseClipsReturn => {
                 updatedAt: new Date().toISOString(),
             };
             await updateDoc(docRef, updateData);
-
-            setClips(prev => prev.map(c => c.id === id ? { ...c, ...updateData } : c));
+            // Note: No setClips here - onSnapshot listener handles it
             return { id, ...updateData } as ClipData;
         } catch (err) {
             handleError(err, 'Failed to update clip');
@@ -330,7 +329,7 @@ export const useClips = (): UseClipsReturn => {
         setError(null);
         try {
             await deleteDoc(doc(db, 'clips', id));
-            setClips(prev => prev.filter(c => c.id !== id));
+            // Note: No setClips here - onSnapshot listener handles it
         } catch (err) {
             handleError(err, 'Failed to delete clip');
             throw err;
