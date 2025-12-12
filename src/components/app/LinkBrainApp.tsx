@@ -257,7 +257,7 @@ const TRANSLATIONS = {
 
 // --- Types ---
 type LinkItem = {
-   id: number;
+   id: string;  // Changed from number to string for Firebase compatibility
    title: string;
    url: string;
    image: string;
@@ -456,7 +456,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }
 
       return {
-         id: parseInt(clip.id || '0') || Date.now(),
+         id: clip.id || `temp-${Date.now()}`,  // Use string ID directly
          title: clip.title || 'Untitled',
          url: clip.url || '',
          image: clip.image || clip.images?.[0] || '',
@@ -511,7 +511,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
 
    // Selection
-   const [selectedLinkId, setSelectedLinkId] = useState<number | null>(null);
+   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
 
    // Advanced Filter State
    const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'score'>('date-desc');
@@ -540,7 +540,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
    // Selection Mode State
    const [isSelectionMode, setIsSelectionMode] = useState(false);
-   const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
+   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
 
    // Shortcuts Effect
    useEffect(() => {
@@ -657,7 +657,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    }, [links, activeTab, searchQuery, categories, collections, sortBy, filterCategories, filterSources, filterTags]);
 
    // Actions
-   const handleToggleFavorite = (id: number, e?: React.MouseEvent) => {
+   const handleToggleFavorite = (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
       setLinks(prev => prev.map(l => {
          if (l.id === id) {
@@ -668,7 +668,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }));
    };
 
-   const handleToggleReadLater = (id: number, e?: React.MouseEvent) => {
+   const handleToggleReadLater = (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
       setLinks(prev => prev.map(l => {
          if (l.id === id) {
@@ -679,7 +679,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }));
    };
 
-   const handleArchive = (id: number, e?: React.MouseEvent) => {
+   const handleArchive = (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
       setLinks(prev => prev.map(l => {
          if (l.id === id) {
@@ -713,7 +713,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }
    };
 
-   const toggleSelection = (id: number) => {
+   const toggleSelection = (id: string) => {
       const newSet = new Set(selectedItemIds);
       if (newSet.has(id)) newSet.delete(id);
       else newSet.add(id);
@@ -749,7 +749,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       });
    };
 
-   const handleDeleteSingleRequest = (id: number) => {
+   const handleDeleteSingleRequest = (id: string) => {
       setDeleteConfirmation({
          isOpen: true,
          count: 1,
@@ -788,11 +788,11 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       setEditingCollection(null);
    };
 
-   const handleUpdateLinkCategory = (linkId: number, catId: string) => {
+   const handleUpdateLinkCategory = (linkId: string, catId: string) => {
       setLinks(prev => prev.map(l => l.id === linkId ? { ...l, categoryId: catId } : l));
    };
 
-   const handleToggleLinkCollection = (linkId: number, colId: string) => {
+   const handleToggleLinkCollection = (linkId: string, colId: string) => {
       setLinks(prev => prev.map(l => {
          if (l.id !== linkId) return l;
          const newCols = l.collectionIds.includes(colId)
