@@ -196,13 +196,13 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate }: LandingPage
             <div className="mt-8 pt-8 border-t border-slate-50 flex flex-col gap-4">
               <button
                 onClick={() => { onEnterApp(); setMobileMenuOpen(false); }}
-                className="w-full py-[12px] rounded-xl border-2 border-[#21DBA4] text-[#21DBA4] font-bold text-base transition-transform active:scale-95 bg-white px-[0px]"
+                className="w-full py-3 rounded-lg border border-[#21DBA4] text-[#21DBA4] font-bold text-base transition-transform active:scale-95 bg-white"
               >
                 Log in
               </button>
               <button
                 onClick={() => { onEnterApp(); setMobileMenuOpen(false); }}
-                className="w-full py-3.5 rounded-xl bg-[#21DBA4] text-white font-bold text-base shadow-lg shadow-[#21DBA4]/20 active:scale-95 transition-transform hover:bg-[#1BC290]"
+                className="w-full py-3 rounded-lg bg-[#21DBA4] text-white font-bold text-base shadow-md shadow-[#21DBA4]/20 active:scale-95 transition-transform hover:bg-[#1BC290]"
               >
                 App 설치하기
               </button>

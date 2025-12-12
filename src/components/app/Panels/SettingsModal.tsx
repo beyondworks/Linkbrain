@@ -358,8 +358,8 @@ const DataSettings = ({ theme, t }: { theme: string; t: (key: string) => string 
         </div>
 
         <div className={`pt-6 md:pt-8 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
-            <h4 className="text-xs md:text-sm font-bold text-red-500 uppercase tracking-wider mb-3 md:mb-4">{t('dangerZone')}</h4>
-            <button onClick={() => toast.error("Account deletion is disabled in demo")} className="w-full p-3 md:p-4 border border-red-200 bg-red-50 rounded-xl text-red-600 font-bold flex items-center justify-between hover:bg-red-100 transition-colors text-sm md:text-base">
+            <h4 className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-3 md:mb-4 ${theme === 'dark' ? 'text-red-400' : 'text-red-500'}`}>{t('dangerZone')}</h4>
+            <button onClick={() => toast.error("Account deletion is disabled in demo")} className={`w-full p-3 md:p-4 rounded-xl font-bold flex items-center justify-between transition-colors text-sm md:text-base ${theme === 'dark' ? 'bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100'}`}>
                 <span>{t('deleteAccount')}</span>
                 <ChevronRight size={16} />
             </button>
