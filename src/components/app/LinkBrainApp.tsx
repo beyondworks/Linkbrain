@@ -1408,21 +1408,21 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                  return title;
                               })()}
                            </h1>
-                           <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-3">
                               <p className={`text-sm ${textMuted}`}>
                                  {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
                                  {activeTab === 'home' && ` ${t('aiSummary')}`}
                               </p>
-                              {/* Mobile View Toggle */}
+                              {/* Mobile View Toggle - separate box */}
                               {activeTab !== 'insights' && (
                                  <button
                                     onClick={() => setMobileViewMode(mobileViewMode === 'list' ? 'grid' : 'list')}
-                                    className={`md:hidden p-2 rounded-lg border transition-colors ${theme === 'dark'
-                                       ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4]'
-                                       : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
+                                    className={`md:hidden w-9 h-9 flex items-center justify-center rounded-lg border transition-colors ${theme === 'dark'
+                                       ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
+                                       : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50 shadow-sm'
                                        }`}
                                  >
-                                    {mobileViewMode === 'list' ? <LayoutGrid size={18} /> : <List size={18} />}
+                                    {mobileViewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}
                                  </button>
                               )}
                            </div>
@@ -1596,8 +1596,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                     <div
                                        key={link.id}
                                        onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
-                                       className={`rounded-2xl overflow-hidden cursor-pointer transition-all ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'
-                                          } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : 'border border-slate-100'}`}
+                                       className={`rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'
+                                          } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : 'border border-slate-100 shadow-sm'}`}
                                     >
                                        {/* 16:9 Image */}
                                        <div className="relative aspect-video overflow-hidden">
@@ -1606,41 +1606,37 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                              alt=""
                                              className="w-full h-full object-cover"
                                           />
-                                          {/* Source Badge */}
-                                          {source.icon && (
-                                             <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white ${source.color}`}>
-                                                {source.icon}{source.name}
-                                             </div>
-                                          )}
-                                          {/* Favorite Star */}
+                                          {/* Source Badge - Always show */}
+                                          <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white ${source.color || 'bg-slate-600'}`}>
+                                             {source.icon}{source.name}
+                                          </div>
+                                          {/* Favorite Star - Always show if favorite */}
                                           {link.isFavorite && (
-                                             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center">
+                                             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
                                                 <Star size={12} fill="white" className="text-white" />
                                              </div>
                                           )}
                                        </div>
-                                       {/* Content */}
-                                       <div className="p-3">
+                                       {/* Content - flex-1 for consistent height */}
+                                       <div className="p-3 flex flex-col flex-1">
                                           {/* URL */}
                                           <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
                                              <span className="text-slate-400">⊙</span>
                                              <span className="truncate">{truncatedUrl}</span>
                                           </div>
-                                          {/* Title */}
-                                          <h3 className={`text-xs font-bold leading-tight line-clamp-2 mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                          {/* Title - fixed height for 2 lines */}
+                                          <h3 className={`text-xs font-bold leading-tight line-clamp-2 h-8 mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                                              {link.title}
                                           </h3>
-                                          {/* AI Summary */}
-                                          {link.keyTakeaways && link.keyTakeaways.length > 0 && (
-                                             <div className={`text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
-                                                <div className={`flex items-center gap-1 font-bold mb-1 ${theme === 'dark' ? 'text-[#21DBA4]' : 'text-[#21DBA4]'}`}>
-                                                   <span>✨</span> AI Summary
-                                                </div>
-                                                <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                                                   {link.keyTakeaways[0]}
-                                                </p>
+                                          {/* AI Summary - pushed to bottom with mt-auto */}
+                                          <div className={`mt-auto text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
+                                             <div className={`flex items-center gap-1 font-bold mb-1 text-[#21DBA4]`}>
+                                                <span>✨</span> AI Summary
                                              </div>
-                                          )}
+                                             <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                                {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 80) || 'No summary available'}
+                                             </p>
+                                          </div>
                                        </div>
                                     </div>
                                  );
