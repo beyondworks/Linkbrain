@@ -331,12 +331,16 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
 
                     <div className="p-8 max-w-xl mx-auto">
                         <div className="mb-6">
-                            <h1 className={`text-3xl font-black leading-tight mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{link.title}</h1>
-                            <div className="flex items-center gap-4 text-sm text-slate-500">
-                                <span className="flex items-center gap-1.5"><Globe size={14} /> {link.url}</span>
-                                <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                <span className="flex items-center gap-1.5"><Clock size={14} /> {link.readTime} read</span>
-                            </div>
+                            <h1 className={`text-2xl md:text-3xl font-black leading-tight mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{link.title}</h1>
+                            <a
+                                href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`flex items-start gap-2 text-sm hover:underline ${theme === 'dark' ? 'text-slate-400 hover:text-[#21DBA4]' : 'text-slate-500 hover:text-[#21DBA4]'}`}
+                            >
+                                <Globe size={14} className="shrink-0 mt-0.5" />
+                                <span className="break-all">{link.url}</span>
+                            </a>
                         </div>
 
                         {/* Category & Collection Editor */}
