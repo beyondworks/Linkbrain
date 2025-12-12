@@ -355,7 +355,7 @@ export const useClips = (): UseClipsReturn => {
 
             const docRef = await addDoc(collection(db, 'collections'), dataToSave);
             const newCollection = { ...dataToSave, id: docRef.id };
-            setCollections(prev => [newCollection, ...prev]);
+            // Note: No setCollections here - onSnapshot listener handles it
             return newCollection;
         } catch (err) {
             handleError(err, 'Failed to create collection');
@@ -415,8 +415,7 @@ export const useClips = (): UseClipsReturn => {
                 updatedAt: new Date().toISOString(),
             };
             await updateDoc(docRef, updateData);
-
-            setCollections(prev => prev.map(c => c.id === id ? { ...c, ...updateData } : c));
+            // Note: No setCollections here - onSnapshot listener handles it
             return { id, ...updateData } as CollectionData;
         } catch (err) {
             handleError(err, 'Failed to update collection');
@@ -433,7 +432,7 @@ export const useClips = (): UseClipsReturn => {
         setError(null);
         try {
             await deleteDoc(doc(db, 'collections', id));
-            setCollections(prev => prev.filter(c => c.id !== id));
+            // Note: No setCollections here - onSnapshot listener handles it
         } catch (err) {
             handleError(err, 'Failed to delete collection');
             throw err;
@@ -494,23 +493,16 @@ export const useClips = (): UseClipsReturn => {
 
             let docId: string;
             if (categoryData.id) {
-                // If ID is provided, use it (for "officializing" dynamic categories or manually setting ID)
                 const docRef = doc(db, 'categories', categoryData.id);
-                // Check if exists? No, just overwrite/set.
                 await setDoc(docRef, dataToSave);
                 docId = categoryData.id;
             } else {
-                // Generate new ID
                 const docRef = await addDoc(collection(db, 'categories'), dataToSave);
                 docId = docRef.id;
             }
 
             const newCategory = { ...dataToSave, id: docId };
-            setCategories(prev => {
-                // Avoid duplicates if it already exists (e.g. dynamic)
-                const filtered = prev.filter(c => c.id !== docId);
-                return [newCategory, ...filtered];
-            });
+            // Note: No setCategories here - onSnapshot listener handles it
             return newCategory;
         } catch (err) {
             handleError(err, 'Failed to create category');
@@ -568,13 +560,11 @@ export const useClips = (): UseClipsReturn => {
             const docRef = doc(db, 'categories', id);
             const updateData = {
                 ...updates,
-                userId: user.uid, // Always include userId to ensure document is queryable
+                userId: user.uid,
                 updatedAt: new Date().toISOString(),
             };
-            // Use setDoc with merge to handle cases where category exists locally (dynamic) but not in DB
             await setDoc(docRef, updateData, { merge: true });
-
-            setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updateData } : c));
+            // Note: No setCategories here - onSnapshot listener handles it
             return { id, ...updateData } as CategoryData;
         } catch (err) {
             handleError(err, 'Failed to update category');
@@ -591,7 +581,7 @@ export const useClips = (): UseClipsReturn => {
         setError(null);
         try {
             await deleteDoc(doc(db, 'categories', id));
-            setCategories(prev => prev.filter(c => c.id !== id));
+            // Note: No setCategories here - onSnapshot listener handles it
         } catch (err) {
             handleError(err, 'Failed to delete category');
             throw err;
