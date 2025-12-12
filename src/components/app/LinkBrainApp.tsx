@@ -53,7 +53,8 @@ import {
    Languages,
    Compass,
    Send,
-   Copy
+   Copy,
+   BookOpen
 } from 'lucide-react';
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { motion, AnimatePresence } from 'motion/react';
@@ -273,6 +274,7 @@ type LinkItem = {
    isArchived: boolean;
    notes?: string;
    keyTakeaways?: string[];
+   content?: string;  // Full article content (markdown or plain text)
 };
 
 type Category = {
@@ -470,7 +472,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          isReadLater: false,
          isArchived: clip.isArchived || false,
          notes: '',
-         keyTakeaways: takeaways
+         keyTakeaways: takeaways,
+         content: clip.contentMarkdown || clip.contentHtml || clip.rawMarkdown || ''
       };
    };
 
@@ -1865,6 +1868,30 @@ const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavor
                         defaultValue={link.notes}
                      />
                   </div>
+
+                  {/* Full Article Content */}
+                  {link.content && (
+                     <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4">
+                           <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                              <BookOpen size={18} className="text-slate-500" />
+                           </div>
+                           <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                              본문 내용
+                           </h3>
+                        </div>
+                        <div
+                           className={`p-6 rounded-2xl border shadow-sm prose prose-sm max-w-none ${theme === 'dark' ? 'bg-slate-900 border-slate-800 prose-invert' : 'bg-white border-slate-100'}`}
+                           style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}
+                        >
+                           {link.content.split('\n').map((line: string, idx: number) => (
+                              <p key={idx} className={`mb-3 text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                                 {line || <br />}
+                              </p>
+                           ))}
+                        </div>
+                     </div>
+                  )}
 
                   <div>
                      <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-3">{t('tags')}</h3>
