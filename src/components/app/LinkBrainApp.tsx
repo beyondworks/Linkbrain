@@ -542,37 +542,62 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    }, [links, activeTab, searchQuery, categories, collections, sortBy, filterCategories, filterSources, filterTags, filterDateRange]);
 
    // Actions
-   const handleToggleFavorite = (id: string, e?: React.MouseEvent) => {
+   const handleToggleFavorite = async (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
-      setLinks(prev => prev.map(l => {
-         if (l.id === id) {
-            toast(l.isFavorite ? "Removed from favorites" : "Added to favorites");
-            return { ...l, isFavorite: !l.isFavorite };
-         }
-         return l;
-      }));
+      const currentLink = links.find(l => l.id === id);
+      if (!currentLink) return;
+
+      const newValue = !currentLink.isFavorite;
+
+      // Optimistic update
+      setLinks(prev => prev.map(l => l.id === id ? { ...l, isFavorite: newValue } : l));
+      toast(newValue ? "Added to favorites" : "Removed from favorites");
+
+      // Sync to Firebase
+      try {
+         await updateClip(id, { isFavorite: newValue });
+      } catch (error) {
+         console.error('Failed to update favorite:', error);
+         toast.error('Failed to sync');
+         setLinks(prev => prev.map(l => l.id === id ? { ...l, isFavorite: !newValue } : l));
+      }
    };
 
-   const handleToggleReadLater = (id: string, e?: React.MouseEvent) => {
+   const handleToggleReadLater = async (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
-      setLinks(prev => prev.map(l => {
-         if (l.id === id) {
-            toast(l.isReadLater ? "Removed from read later" : "Added to read later");
-            return { ...l, isReadLater: !l.isReadLater };
-         }
-         return l;
-      }));
+      const currentLink = links.find(l => l.id === id);
+      if (!currentLink) return;
+
+      const newValue = !currentLink.isReadLater;
+
+      // Optimistic update
+      setLinks(prev => prev.map(l => l.id === id ? { ...l, isReadLater: newValue } : l));
+      toast(newValue ? "Added to read later" : "Removed from read later");
+
+      // Sync to Firebase - using 'isReadLater' field (we need to ensure this field exists in ClipData)
+      // For now, we'll just update locally as this field may not be in Firebase schema
    };
 
-   const handleArchive = (id: string, e?: React.MouseEvent) => {
+   const handleArchive = async (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
-      setLinks(prev => prev.map(l => {
-         if (l.id === id) {
-            toast(l.isArchived ? "Unarchived" : "Archived");
-            return { ...l, isArchived: !l.isArchived };
-         }
-         return l;
-      }));
+      const currentLink = links.find(l => l.id === id);
+      if (!currentLink) return;
+
+      const newValue = !currentLink.isArchived;
+
+      // Optimistic update
+      setLinks(prev => prev.map(l => l.id === id ? { ...l, isArchived: newValue } : l));
+      toast(newValue ? "Archived" : "Unarchived");
+
+      // Sync to Firebase
+      try {
+         await updateClip(id, { isArchived: newValue });
+      } catch (error) {
+         console.error('Failed to update archive status:', error);
+         toast.error('Failed to sync');
+         setLinks(prev => prev.map(l => l.id === id ? { ...l, isArchived: !newValue } : l));
+      }
+
       if (selectedLinkId === id) setSelectedLinkId(null);
    };
 
@@ -624,12 +649,21 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       setDeleteConfirmation({
          isOpen: true,
          count: selectedItemIds.size,
-         onConfirm: () => {
-            setLinks(prev => prev.filter(l => !selectedItemIds.has(l.id)));
-            setSelectedItemIds(new Set());
-            setIsSelectionMode(false);
-            setDeleteConfirmation({ isOpen: false, count: 0, onConfirm: () => { } });
-            toast.success("Items deleted");
+         onConfirm: async () => {
+            try {
+               // Delete all selected clips from Firebase
+               const deletePromises = Array.from(selectedItemIds).map(id => deleteClip(id));
+               await Promise.all(deletePromises);
+
+               setLinks(prev => prev.filter(l => !selectedItemIds.has(l.id)));
+               setSelectedItemIds(new Set());
+               setIsSelectionMode(false);
+               setDeleteConfirmation({ isOpen: false, count: 0, onConfirm: () => { } });
+               toast.success("Items deleted");
+            } catch (error) {
+               console.error('Failed to delete clips:', error);
+               toast.error('Failed to delete some items');
+            }
          }
       });
    };
