@@ -1157,7 +1157,14 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                      onClick={() => setActiveTab('favorites')}
                      theme={theme}
                   />
-                  <NavItem icon={<Archive size={18} />} label={t('archive')} active={activeTab === 'archive'} onClick={() => setActiveTab('archive')} theme={theme} />
+                  <NavItem
+                     icon={<Archive size={18} />}
+                     label={t('archive')}
+                     count={links.filter(l => l.isArchived).length}
+                     active={activeTab === 'archive'}
+                     onClick={() => setActiveTab('archive')}
+                     theme={theme}
+                  />
                   <NavItem icon={<Sparkles size={18} />} label={t('aiInsights')} active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} theme={theme} iconClassName="text-[#21DBA4]" />
                </div>
 
