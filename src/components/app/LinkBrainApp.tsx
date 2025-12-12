@@ -464,15 +464,29 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          takeaways = sentences.slice(0, 3).map(s => s.trim());
       }
 
+      // Enhanced date parsing
+      const getTimestamp = (clip: ClipData): number => {
+         if (clip.createdAt) {
+            // Handle Firestore Timestamp (has seconds/nanoseconds) or Date object or ISO string
+            if (typeof clip.createdAt === 'object' && 'seconds' in clip.createdAt) {
+               return (clip.createdAt as any).seconds * 1000;
+            }
+            return new Date(clip.createdAt).getTime();
+         }
+         return Date.now();
+      };
+
+      const timestamp = getTimestamp(clip);
+
       return {
-         id: clip.id || `temp-${Date.now()}`,  // Use string ID directly
+         id: clip.id || `temp-${Date.now()}`,
          title: clip.title || 'Untitled',
          url: clip.url || '',
          image: clip.image || clip.images?.[0] || '',
          summary: clip.summary || '',
          tags: clip.keywords || [],
-         date: clip.createdAt ? new Date(clip.createdAt).toLocaleDateString() : 'Unknown',
-         timestamp: clip.createdAt ? new Date(clip.createdAt).getTime() : Date.now(),
+         date: new Date(timestamp).toLocaleDateString(),
+         timestamp: timestamp,
          readTime: clip.contentMarkdown ? `${Math.ceil(clip.contentMarkdown.length / 1000)} min` : '3 min',
          aiScore: 85,
          categoryId: clip.category || 'general',
@@ -502,6 +516,44 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          setLinks(firebaseClips.map(clipToLinkItem));
       }
    }, [firebaseClips]);
+
+   // Sync Categories from Links (Dynamic Category Creation)
+   useEffect(() => {
+      if (links.length > 0) {
+         setCategories(prev => {
+            const existingIds = new Set(prev.map(c => c.id));
+            const newCategories: Category[] = [];
+
+            // Palette for new categories
+            const colors = [
+               'bg-pink-100 text-pink-600',
+               'bg-blue-100 text-blue-600',
+               'bg-emerald-100 text-emerald-600',
+               'bg-orange-100 text-orange-600',
+               'bg-purple-100 text-purple-600',
+               'bg-indigo-100 text-indigo-600',
+               'bg-cyan-100 text-cyan-600',
+               'bg-red-100 text-red-600',
+            ];
+
+            links.forEach(link => {
+               if (link.categoryId && !existingIds.has(link.categoryId)) {
+                  existingIds.add(link.categoryId); // Prevent duplicates
+                  newCategories.push({
+                     id: link.categoryId,
+                     name: link.categoryId.charAt(0).toUpperCase() + link.categoryId.slice(1), // Capitalize
+                     color: colors[Math.floor(Math.random() * colors.length)] // Random color
+                  });
+               }
+            });
+
+            if (newCategories.length > 0) {
+               return [...prev, ...newCategories];
+            }
+            return prev;
+         });
+      }
+   }, [links]);
 
    // Sync Firebase collections to local state
    useEffect(() => {
@@ -1388,8 +1440,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                     <div className="mt-2 space-y-1">
                                        {[
                                           { id: 'date-desc', label: t('recentlyAdded') },
-                                          { id: 'date-asc', label: t('oldestFirst') },
-                                          { id: 'score', label: t('highestScore') }
+                                          { id: 'date-asc', label: t('oldestFirst') }
                                        ].map((opt) => (
                                           <button
                                              key={opt.id}
@@ -1651,9 +1702,7 @@ const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, selected
                   </div>
                </div>
 
-               <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                  <Clock size={10} /> {data.readTime}
-               </div>
+
 
                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                   <div className="flex gap-2 w-full">
