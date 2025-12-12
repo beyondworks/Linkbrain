@@ -130,7 +130,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                     </div>
                     {/* Carousel Controls */}
                     {images.length > 1 && (
-                        <div className={`flex items-center justify-between px-4 py-3 ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                        <div className={`flex items-center justify-between px-4 py-3 ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'}`}>
                             <button
                                 onClick={() => setCurrentIdx(prev => prev === 0 ? images.length - 1 : prev - 1)}
                                 className={`p-2 rounded-full ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white hover:bg-slate-200 text-slate-700'}`}
@@ -144,7 +144,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                         onClick={() => setCurrentIdx(idx)}
                                         className={`h-1.5 rounded-full transition-all ${idx === currentIdx
                                             ? 'w-6 bg-[#21DBA4]'
-                                            : `w-1.5 ${theme === 'dark' ? 'bg-slate-400' : 'bg-slate-300'}`
+                                            : `w-1.5 ${theme === 'dark' ? 'bg-slate-500' : 'bg-slate-300'}`
                                             }`}
                                     />
                                 ))}

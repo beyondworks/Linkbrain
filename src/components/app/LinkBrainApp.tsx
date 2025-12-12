@@ -1211,7 +1211,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                     />
                                     <button
                                        onClick={() => { setEditingCollection(col); setIsCollectionModalOpen(true); }}
-                                       className="absolute right-2 md:opacity-0 md:group-hover:opacity-100 p-1.5 text-slate-400 hover:text-slate-600 bg-white/50 rounded-md transition-all"
+                                       className={`absolute right-2 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded-md transition-all ${theme === 'dark' ? 'text-slate-500 hover:text-slate-300 bg-slate-800/80' : 'text-slate-400 hover:text-slate-600 bg-white/50'}`}
                                     >
                                        <Edit2 size={12} />
                                     </button>
@@ -1350,7 +1350,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      <button
                         onClick={() => setIsSelectionMode(!isSelectionMode)}
-                        className={`p-2 rounded-full transition-all ${isSelectionMode ? 'bg-[#E0FBF4] text-[#21DBA4]' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`p-2 rounded-full transition-all ${isSelectionMode
+                           ? theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : 'bg-[#E0FBF4] text-[#21DBA4]'
+                           : 'text-slate-400 hover:text-slate-600'}`}
                         title="Select Items"
                      >
                         <CheckSquare size={18} />
