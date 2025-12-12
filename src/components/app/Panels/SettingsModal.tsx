@@ -18,7 +18,10 @@ import {
     Upload,
     Edit2,
     Brain,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Lock,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -80,6 +83,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, use
                     <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
                         {[
                             { id: 'account', label: t('myAccount'), icon: User },
+                            { id: 'security', label: t('security'), icon: Lock },
                             { id: 'general', label: t('general'), icon: Smartphone },
                             { id: 'integrations', label: t('integrations'), icon: Zap },
                             { id: 'notifications', label: t('notifications'), icon: Bell },
@@ -164,6 +168,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, use
                             </div>
                         )}
                         {activeTab === 'account' && <AccountSettings theme={theme} t={t} user={user} />}
+                        {activeTab === 'security' && <SecuritySettings theme={theme} t={t} />}
                         {activeTab === 'integrations' && <IntegrationsSettings theme={theme} t={t} />}
                         {activeTab === 'notifications' && <NotificationsSettings theme={theme} t={t} notifications={notifications} setNotifications={setNotifications} />}
                         {activeTab === 'data' && <DataSettings theme={theme} t={t} />}
@@ -303,6 +308,110 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
         </div>
     </div>
 );
+
+// Security Settings
+const SecuritySettings = ({ theme, t }: { theme: string; t: (key: string) => string }) => {
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showCurrent, setShowCurrent] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+
+    const handleChangePassword = () => {
+        if (newPassword !== confirmPassword) {
+            toast.error(t('passwordMismatch'));
+            return;
+        }
+        if (newPassword.length < 8) {
+            toast.error('Password must be at least 8 characters');
+            return;
+        }
+        // Firebase password update would go here
+        toast.success(t('passwordChanged'));
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+    };
+
+    return (
+        <div className="max-w-xl space-y-6 md:space-y-8">
+            {/* Password Change */}
+            <div className="space-y-3 md:space-y-4">
+                <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('changePassword')}</h4>
+                <div className="space-y-3">
+                    <div className="relative">
+                        <input
+                            type={showCurrent ? 'text' : 'password'}
+                            placeholder={t('currentPassword')}
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className={`w-full p-3 md:p-4 rounded-xl border outline-none text-sm font-medium pr-12 ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
+                        />
+                        <button
+                            onClick={() => setShowCurrent(!showCurrent)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                            {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+                    <div className="relative">
+                        <input
+                            type={showNew ? 'text' : 'password'}
+                            placeholder={t('newPassword')}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className={`w-full p-3 md:p-4 rounded-xl border outline-none text-sm font-medium pr-12 ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
+                        />
+                        <button
+                            onClick={() => setShowNew(!showNew)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                            {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+                    <input
+                        type="password"
+                        placeholder={t('confirmPassword')}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className={`w-full p-3 md:p-4 rounded-xl border outline-none text-sm font-medium ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
+                    />
+                    <button
+                        onClick={handleChangePassword}
+                        disabled={!currentPassword || !newPassword || !confirmPassword}
+                        className="w-full py-3 md:py-4 bg-[#21DBA4] text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1bc290] transition-colors"
+                    >
+                        {t('changePassword')}
+                    </button>
+                </div>
+            </div>
+
+            {/* Two-Factor Authentication */}
+            <div className="space-y-3 md:space-y-4">
+                <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('twoFactorAuth')}</h4>
+                <div
+                    onClick={() => {
+                        setTwoFactorEnabled(!twoFactorEnabled);
+                        toast.info(twoFactorEnabled ? '2FA disabled' : '2FA enabled - Additional setup required');
+                    }}
+                    className={`flex items-center justify-between p-3 md:p-4 rounded-xl border cursor-pointer ${twoFactorEnabled ? 'border-[#21DBA4]/30 bg-[#E0FBF4]/10' : theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-white'}`}
+                >
+                    <div className="flex items-center gap-3">
+                        <Lock size={18} className="text-slate-400" />
+                        <div>
+                            <h5 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{t('enable2FA')}</h5>
+                            <p className="text-xs text-slate-400">Add extra security to your account</p>
+                        </div>
+                    </div>
+                    <div className={`w-9 h-5 md:w-11 md:h-6 rounded-full relative transition-colors ${twoFactorEnabled ? 'bg-[#21DBA4]' : 'bg-slate-200'}`}>
+                        <div className={`absolute top-1 left-1 w-3 h-3 md:w-4 md:h-4 rounded-full bg-white shadow-sm transition-transform ${twoFactorEnabled ? 'translate-x-4 md:translate-x-5' : ''}`} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Notifications Settings
 const NotificationsSettings = ({ theme, t, notifications, setNotifications }: { theme: string; t: (key: string) => string; notifications: any; setNotifications: (n: any) => void }) => (

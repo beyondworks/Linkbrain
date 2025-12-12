@@ -129,7 +129,25 @@ export const TRANSLATIONS = {
         logoutConfirmTitle: "Sign Out",
         logoutConfirmMessage: "Are you sure you want to sign out?",
         loggedOut: "You have been signed out",
-        confirm: "Confirm"
+        confirm: "Confirm",
+        // Security
+        security: "Security",
+        changePassword: "Change Password",
+        currentPassword: "Current Password",
+        newPassword: "New Password",
+        confirmPassword: "Confirm Password",
+        twoFactorAuth: "Two-Factor Authentication",
+        enable2FA: "Enable 2FA",
+        passwordChanged: "Password changed successfully",
+        passwordMismatch: "Passwords do not match",
+        // Profile
+        profileUpdated: "Profile updated successfully",
+        saveProfile: "Save Changes",
+        // Archive
+        archiveClips: "Archive",
+        archiveConfirmTitle: "Archive {count} Item{s}?",
+        archiveConfirmDesc: "Archived items will be hidden from Home, Read Later, and Favorites.",
+        itemsArchived: "{count} items archived"
     },
     ko: {
         home: "홈",
@@ -260,7 +278,25 @@ export const TRANSLATIONS = {
         logoutConfirmTitle: "로그아웃",
         logoutConfirmMessage: "로그아웃 하시겠습니까?",
         loggedOut: "로그아웃 되었습니다",
-        confirm: "확인"
+        confirm: "확인",
+        // Security
+        security: "보안",
+        changePassword: "비밀번호 변경",
+        currentPassword: "현재 비밀번호",
+        newPassword: "새 비밀번호",
+        confirmPassword: "비밀번호 확인",
+        twoFactorAuth: "2차 인증",
+        enable2FA: "2FA 활성화",
+        passwordChanged: "비밀번호가 변경되었습니다",
+        passwordMismatch: "비밀번호가 일치하지 않습니다",
+        // Profile
+        profileUpdated: "프로필이 업데이트되었습니다",
+        saveProfile: "저장",
+        // Archive
+        archiveClips: "보관",
+        archiveConfirmTitle: "{count}개의 항목을 보관하시겠습니까?",
+        archiveConfirmDesc: "보관된 항목은 홈, 나중에 읽기, 즐겨찾기에서 숨겨집니다.",
+        itemsArchived: "{count}개 항목이 보관되었습니다"
     }
 } as const;
 

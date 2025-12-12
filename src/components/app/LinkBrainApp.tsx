@@ -670,6 +670,30 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       });
    };
 
+   // Handle bulk archive - moves selected clips to archive
+   const handleBulkArchive = async () => {
+      try {
+         const archivePromises = Array.from(selectedItemIds).map(id =>
+            updateClip(id, { isArchived: true })
+         );
+         await Promise.all(archivePromises);
+
+         // Update local state
+         setLinks(prev => prev.map(l =>
+            selectedItemIds.has(l.id) ? { ...l, isArchived: true } : l
+         ));
+         setSelectedItemIds(new Set());
+         setIsSelectionMode(false);
+         toast.success(language === 'ko'
+            ? `${selectedItemIds.size}개 항목이 보관되었습니다`
+            : `${selectedItemIds.size} items archived`
+         );
+      } catch (error) {
+         console.error('Failed to archive clips:', error);
+         toast.error(language === 'ko' ? '보관 실패' : 'Failed to archive');
+      }
+   };
+
    const handleDeleteSingleRequest = (id: string) => {
       setDeleteConfirmation({
          isOpen: true,
@@ -1026,6 +1050,18 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   {/* Divider */}
                   <div className="h-8 md:h-4 w-px bg-white/20"></div>
 
+                  {/* Archive Action */}
+                  <button onClick={handleBulkArchive} className="group flex flex-col md:flex-row items-center gap-1 md:gap-2 hover:text-[#21DBA4] transition-colors">
+                     <Archive className="w-5 h-5 md:w-4 md:h-4" />
+                     <span className="text-[10px] md:text-sm font-bold md:font-medium leading-none">
+                        <span className="md:hidden">{language === 'ko' ? '보관' : 'Archive'}</span>
+                        <span className="hidden md:inline">{t('archiveClips')}</span>
+                     </span>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="h-8 md:h-4 w-px bg-white/20"></div>
+
                   {/* Delete Action */}
                   <button onClick={handleBulkDeleteRequest} className="group flex flex-col md:flex-row items-center gap-1 md:gap-2 hover:text-red-400 transition-colors">
                      <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
@@ -1360,7 +1396,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="bg-[#21DBA4] hover:bg-[#1bc290] text-slate-900 h-9 px-4 rounded-full text-sm font-bold shadow-lg shadow-[#21DBA4]/20 flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px]"
+                        className={`bg-[#21DBA4] hover:bg-[#1bc290] h-9 px-4 rounded-full text-sm font-bold shadow-lg shadow-[#21DBA4]/20 flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px] ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}
                      >
                         <Plus size={18} />
                         <span className="hidden md:inline text-[14px]">{t('addLink')}</span>

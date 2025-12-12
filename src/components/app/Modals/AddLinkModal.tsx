@@ -47,7 +47,7 @@ export const AddLinkModal = ({ onClose, onAdd, theme, t }: AddLinkModalProps) =>
                                     <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste any link here..." className={`w-full h-14 rounded-2xl pl-12 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 border transition-all ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 focus:bg-white'}`} autoFocus />
                                 </div>
                             </div>
-                            <button type="submit" disabled={!url} className="w-full h-14 bg-[#21DBA4] text-slate-900 rounded-2xl font-bold text-lg shadow-lg shadow-[#21DBA4]/30 hover:bg-[#1bc290] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"><Plus size={20} /> {t('addLink')}</button>
+                            <button type="submit" disabled={!url} className={`w-full h-14 bg-[#21DBA4] rounded-2xl font-bold text-lg shadow-lg shadow-[#21DBA4]/30 hover:bg-[#1bc290] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}><Plus size={20} /> {t('addLink')}</button>
                         </form>
                     )}
                 </div>
