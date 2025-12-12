@@ -694,6 +694,30 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }
    };
 
+   // Handle bulk unarchive - moves selected clips back to home
+   const handleBulkUnarchive = async () => {
+      try {
+         const unarchivePromises = Array.from(selectedItemIds).map(id =>
+            updateClip(id, { isArchived: false })
+         );
+         await Promise.all(unarchivePromises);
+
+         // Update local state
+         setLinks(prev => prev.map(l =>
+            selectedItemIds.has(l.id) ? { ...l, isArchived: false } : l
+         ));
+         setSelectedItemIds(new Set());
+         setIsSelectionMode(false);
+         toast.success(language === 'ko'
+            ? `${selectedItemIds.size}개 항목이 홈으로 이동되었습니다`
+            : `${selectedItemIds.size} items moved to home`
+         );
+      } catch (error) {
+         console.error('Failed to unarchive clips:', error);
+         toast.error(language === 'ko' ? '이동 실패' : 'Failed to move');
+      }
+   };
+
    const handleDeleteSingleRequest = (id: string) => {
       setDeleteConfirmation({
          isOpen: true,
@@ -1047,11 +1071,18 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   {/* Divider */}
                   <div className="h-5 md:h-4 w-px bg-white/20"></div>
 
-                  {/* Archive - Icon only on mobile */}
-                  <button onClick={handleBulkArchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
-                     <Archive className="w-[18px] h-[18px] md:w-4 md:h-4" />
-                     <span className="hidden md:inline text-sm font-medium">{t('archiveClips')}</span>
-                  </button>
+                  {/* Archive/Home - Conditional based on current tab */}
+                  {activeTab === 'archive' ? (
+                     <button onClick={handleBulkUnarchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
+                        <Home className="w-[18px] h-[18px] md:w-4 md:h-4" />
+                        <span className="hidden md:inline text-sm font-medium">{t('home')}</span>
+                     </button>
+                  ) : (
+                     <button onClick={handleBulkArchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
+                        <Archive className="w-[18px] h-[18px] md:w-4 md:h-4" />
+                        <span className="hidden md:inline text-sm font-medium">{t('archiveClips')}</span>
+                     </button>
+                  )}
 
                   {/* Divider */}
                   <div className="h-5 md:h-4 w-px bg-white/20"></div>
