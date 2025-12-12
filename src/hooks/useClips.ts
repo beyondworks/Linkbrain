@@ -12,7 +12,8 @@ import {
     deleteDoc,
     doc,
     onSnapshot,
-    Unsubscribe
+    Unsubscribe,
+    setDoc
 } from 'firebase/firestore';
 
 export interface ClipData {
@@ -265,6 +266,40 @@ export const useClips = (): UseClipsReturn => {
         }
     }, [user]);
 
+    // Real-time listener for Clips
+    useEffect(() => {
+        if (!user) {
+            setClips([]);
+            return;
+        }
+
+        const clipsRef = collection(db, 'clips');
+        // Using only where clause to avoid needing a composite index
+        const q = query(
+            clipsRef,
+            where('userId', '==', user.uid)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const clipsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as ClipData[];
+            // Sort client-side by createdAt (descending)
+            clipsData.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0).getTime();
+                const dateB = new Date(b.createdAt || 0).getTime();
+                return dateB - dateA;
+            });
+            setClips(clipsData);
+        }, (err) => {
+            console.error("Failed to subscribe to clips:", err);
+            handleError(err, 'Failed to sync clips');
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
     const updateClip = useCallback(async (id: string, updates: Partial<ClipData>): Promise<ClipData> => {
         if (!user) throw new Error('User must be authenticated');
 
@@ -446,9 +481,25 @@ export const useClips = (): UseClipsReturn => {
                 updatedAt: new Date().toISOString(),
             };
 
-            const docRef = await addDoc(collection(db, 'categories'), dataToSave);
-            const newCategory = { ...dataToSave, id: docRef.id };
-            setCategories(prev => [newCategory, ...prev]);
+            let docId: string;
+            if (categoryData.id) {
+                // If ID is provided, use it (for "officializing" dynamic categories or manually setting ID)
+                const docRef = doc(db, 'categories', categoryData.id);
+                // Check if exists? No, just overwrite/set.
+                await setDoc(docRef, dataToSave);
+                docId = categoryData.id;
+            } else {
+                // Generate new ID
+                const docRef = await addDoc(collection(db, 'categories'), dataToSave);
+                docId = docRef.id;
+            }
+
+            const newCategory = { ...dataToSave, id: docId };
+            setCategories(prev => {
+                // Avoid duplicates if it already exists (e.g. dynamic)
+                const filtered = prev.filter(c => c.id !== docId);
+                return [newCategory, ...filtered];
+            });
             return newCategory;
         } catch (err) {
             handleError(err, 'Failed to create category');
@@ -459,30 +510,42 @@ export const useClips = (): UseClipsReturn => {
     }, [user]);
 
     const getCategories = useCallback(async () => {
-        if (!user) return;
+        // This is now handled by the onSnapshot effect below
+        return;
+    }, [user]);
 
-        setLoading(true);
-        setError(null);
-        try {
-            const categoriesRef = collection(db, 'categories');
-            const q = query(
-                categoriesRef,
-                where('userId', '==', user.uid),
-                orderBy('createdAt', 'desc')
-            );
+    // Real-time listener for Categories
+    useEffect(() => {
+        if (!user) {
+            setCategories([]);
+            return;
+        }
 
-            const snapshot = await getDocs(q);
+        const categoriesRef = collection(db, 'categories');
+        // Using only where clause to avoid needing a composite index
+        const q = query(
+            categoriesRef,
+            where('userId', '==', user.uid)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const categoriesData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as CategoryData[];
-
+            // Sort client-side by createdAt (descending)
+            categoriesData.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0).getTime();
+                const dateB = new Date(b.createdAt || 0).getTime();
+                return dateB - dateA;
+            });
             setCategories(categoriesData);
-        } catch (err) {
-            handleError(err, 'Failed to fetch categories');
-        } finally {
-            setLoading(false);
-        }
+        }, (err) => {
+            console.error("Failed to subscribe to categories:", err);
+            handleError(err, 'Failed to sync categories');
+        });
+
+        return () => unsubscribe();
     }, [user]);
 
     const updateCategory = useCallback(async (id: string, updates: Partial<CategoryData>): Promise<CategoryData> => {
@@ -494,9 +557,11 @@ export const useClips = (): UseClipsReturn => {
             const docRef = doc(db, 'categories', id);
             const updateData = {
                 ...updates,
+                userId: user.uid, // Always include userId to ensure document is queryable
                 updatedAt: new Date().toISOString(),
             };
-            await updateDoc(docRef, updateData);
+            // Use setDoc with merge to handle cases where category exists locally (dynamic) but not in DB
+            await setDoc(docRef, updateData, { merge: true });
 
             setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updateData } : c));
             return { id, ...updateData } as CategoryData;

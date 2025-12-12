@@ -310,6 +310,20 @@ const INITIAL_COLLECTIONS: Collection[] = [
    { id: 'reading-list-2025', name: 'Must Read 2025', color: 'bg-teal-500' }
 ];
 
+// --- Color Palette Map (Tailwind -> Hex) ---
+// Guaranteed fallback for when Tailwind classes fail to load dynamically
+const CATEGORY_COLORS: Record<string, string> = {
+   'bg-pink-100 text-pink-600': '#fce7f3',
+   'bg-blue-100 text-blue-600': '#dbeafe',
+   'bg-emerald-100 text-emerald-600': '#d1fae5',
+   'bg-orange-100 text-orange-600': '#ffedd5',
+   'bg-purple-100 text-purple-600': '#f3e8ff',
+   'bg-green-200 text-green-700': '#bbf7d0',
+   'bg-indigo-200 text-indigo-700': '#c7d2fe',
+   'bg-red-200 text-red-700': '#fecaca',
+   'bg-slate-100 text-slate-600': '#f1f5f9', // Legacy
+};
+
 const INITIAL_LINKS: LinkItem[] = [
    {
       id: 1,
@@ -511,57 +525,79 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
    // State - now uses Firebase data
    const [links, setLinks] = useState<LinkItem[]>([]);
-   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
-   const [collections, setCollections] = useState<Collection[]>(INITIAL_COLLECTIONS);
+   const [categories, setCategories] = useState<Category[]>([]);
+   const [collections, setCollections] = useState<Collection[]>([]);
 
    // Sync Firebase clips to local state
    useEffect(() => {
-      if (firebaseClips && firebaseClips.length > 0) {
+      // Always sync, even when array is empty (for deletion persistence)
+      if (firebaseClips) {
          setLinks(firebaseClips.map(clipToLinkItem));
       }
    }, [firebaseClips]);
 
-   // Sync Categories from Links (Dynamic Category Creation)
+   // Sync Firebase categories to local state
    useEffect(() => {
-      if (links.length > 0) {
-         setCategories(prev => {
-            const existingIds = new Set(prev.map(c => c.id));
-            const newCategories: Category[] = [];
+      // Always sync, even when array is empty (for deletion persistence)
+      if (firebaseCategories) {
+         setCategories(firebaseCategories.map(c => ({
+            id: c.id || '',
+            name: c.name || '',
+            color: c.color || 'bg-slate-500' // Default fallback
+         })));
+      }
+   }, [firebaseCategories]);
 
-            // Palette for new categories
-            const colors = [
-               'bg-pink-100 text-pink-600',
-               'bg-blue-100 text-blue-600',
-               'bg-emerald-100 text-emerald-600',
-               'bg-orange-100 text-orange-600',
-               'bg-purple-100 text-purple-600',
-               'bg-indigo-100 text-indigo-600',
-               'bg-cyan-100 text-cyan-600',
-               'bg-red-100 text-red-600',
-            ];
-
-            links.forEach(link => {
-               if (link.categoryId && !existingIds.has(link.categoryId)) {
-                  existingIds.add(link.categoryId); // Prevent duplicates
-                  newCategories.push({
-                     id: link.categoryId,
-                     name: link.categoryId.charAt(0).toUpperCase() + link.categoryId.slice(1), // Capitalize
-                     color: colors[Math.floor(Math.random() * colors.length)] // Random color
-                  });
+   // --- Auto-Migration for Legacy/Dynamic Categories ---
+   // If we have links but NO categories (e.g. after moving to real DB),
+   // scan links and create real category documents for them.
+   // This runs once to restore the user's categories as "real" data.
+   useEffect(() => {
+      const migrateCategories = async () => {
+         // Only run if we have loaded links, but have 0 categories loaded (and finished loading)
+         if (links.length > 0 && categories.length === 0 && !dataLoading) {
+            console.log("Auto-migrating categories from links...");
+            const uniqueCategories = new Set<string>();
+            links.forEach(l => {
+               if (l.categoryId && l.categoryId !== 'uncategorized') {
+                  uniqueCategories.add(l.categoryId);
                }
             });
 
-            if (newCategories.length > 0) {
-               return [...prev, ...newCategories];
+            // Palette to assign consistent colors
+            const palette = Object.keys(CATEGORY_COLORS).filter(c => !c.includes('slate'));
+
+            let colorIdx = 0;
+            const promises = Array.from(uniqueCategories).map(async (catId) => {
+               const color = palette[colorIdx % palette.length];
+               colorIdx++;
+
+               // Use the createCategory from useClips which we updated to support UPSERT (setDoc)
+               // This ensures we don't accidentally duplicate if it's lagging
+               await createCategory({
+                  id: catId,
+                  name: catId.charAt(0).toUpperCase() + catId.slice(1),
+                  color: color
+               });
+            });
+
+            if (promises.length > 0) {
+               await Promise.all(promises);
+               toast.success("Categories restored from links!");
             }
-            return prev;
-         });
-      }
-   }, [links]);
+         }
+      };
+
+      // Removed generic setTimeout to speed up appearance.
+      // We rely on dataLoading flag to ensure we don't run too early.
+      migrateCategories();
+
+   }, [links.length, categories.length, dataLoading]);
 
    // Sync Firebase collections to local state
    useEffect(() => {
-      if (firebaseCollections && firebaseCollections.length > 0) {
+      // Always sync, even when array is empty (for deletion persistence)
+      if (firebaseCollections) {
          setCollections(firebaseCollections.map(c => ({
             id: c.id || '',
             name: c.name || 'Untitled',
@@ -602,6 +638,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
    const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
 
    // Delete Confirmation State
    const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -922,14 +959,28 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       setLinks(prev => prev.map(l => l.id === linkId ? { ...l, categoryId: catId } : l));
    };
 
-   const handleToggleLinkCollection = (linkId: string, colId: string) => {
-      setLinks(prev => prev.map(l => {
-         if (l.id !== linkId) return l;
-         const newCols = l.collectionIds.includes(colId)
-            ? l.collectionIds.filter(id => id !== colId)
-            : [...l.collectionIds, colId];
-         return { ...l, collectionIds: newCols };
-      }));
+   const handleToggleLinkCollection = async (linkId: string, colId: string) => {
+      // Find the current link
+      const currentLink = links.find(l => l.id === linkId);
+      if (!currentLink) return;
+
+      const isCurrentlyInCollection = currentLink.collectionIds.includes(colId);
+      const newCols = isCurrentlyInCollection
+         ? currentLink.collectionIds.filter(id => id !== colId)
+         : [...currentLink.collectionIds, colId];
+
+      // Update local state immediately for responsiveness
+      setLinks(prev => prev.map(l => l.id === linkId ? { ...l, collectionIds: newCols } : l));
+
+      // Sync to Firebase
+      try {
+         await updateClip(linkId, { collectionIds: newCols });
+      } catch (error) {
+         console.error('Failed to update clip collections:', error);
+         toast.error('Failed to update collections');
+         // Revert on error
+         setLinks(prev => prev.map(l => l.id === linkId ? { ...l, collectionIds: currentLink.collectionIds } : l));
+      }
    };
 
    const isAllSelected = filteredLinks.length > 0 && filteredLinks.every(l => selectedItemIds.has(l.id));
@@ -937,6 +988,38 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const toggleFilter = (setFn: any, current: string[], val: string) => {
       if (current.includes(val)) setFn(current.filter(c => c !== val));
       else setFn([...current, val]);
+   };
+
+   const handleDeleteCategory = async (catId: string) => {
+      setDeleteConfirmation({
+         isOpen: true,
+         count: 1,
+         onConfirm: async () => {
+            try {
+               // Cascade: Update all clips with this category to 'uncategorized'
+               const clipsToUpdate = links.filter(l => l.categoryId === catId);
+               const updatePromises = clipsToUpdate.map(clip =>
+                  updateClip(clip.id, { category: 'uncategorized' })
+               );
+               await Promise.all(updatePromises);
+
+               // Update local state
+               setLinks(prev => prev.map(l => l.categoryId === catId ? { ...l, categoryId: 'uncategorized' } : l));
+
+               // Now delete the category
+               await deleteCategoryApi(catId);
+               setCategories(prev => prev.filter(c => c.id !== catId));
+               // Also clear from filters if active
+               if (activeTab === catId) setActiveTab('home');
+               setFilterCategories(prev => prev.filter(id => id !== catId));
+               setDeleteConfirmation({ isOpen: false, count: 0, onConfirm: () => { } });
+               toast.success(language === 'ko' ? '카테고리가 삭제되었습니다.' : 'Category deleted');
+            } catch (error) {
+               console.error('Failed to delete category:', error);
+               toast.error('Failed to delete category');
+            }
+         }
+      });
    };
 
    // Theme Classes
@@ -1039,6 +1122,34 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   type="collection"
                   onClose={() => { setIsCollectionModalOpen(false); setEditingCollection(null); }}
                   onSave={handleSaveCollection}
+                  onDelete={editingCollection ? async (id: string) => {
+                     try {
+                        await deleteCollectionApi(id);
+                        setCollections(prev => prev.filter(c => c.id !== id));
+                        setIsCollectionModalOpen(false);
+                        setEditingCollection(null);
+                        toast.success(language === 'ko' ? '컬렉션이 삭제되었습니다.' : 'Collection deleted');
+                     } catch (error) {
+                        console.error('Failed to delete collection:', error);
+                        toast.error('Failed to delete collection');
+                     }
+                  } : undefined}
+                  links={links}
+                  theme={theme}
+                  t={t}
+               />
+            )}
+            {isCategoryManagerOpen && (
+               <CategoryManagerModal
+                  categories={categories}
+                  links={links}
+                  onClose={() => setIsCategoryManagerOpen(false)}
+                  onEdit={(cat: Category) => {
+                     setIsCategoryManagerOpen(false);
+                     setEditingCategory(cat);
+                     setIsCategoryModalOpen(true);
+                  }}
+                  onDelete={handleDeleteCategory}
                   theme={theme}
                   t={t}
                />
@@ -1172,12 +1283,21 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                         <ChevronDown size={14} className={`transition-transform duration-200 ${isSmartFoldersOpen ? '' : '-rotate-90'}`} />
                         {t('smartFolders')}
                      </button>
-                     <button
-                        onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }}
-                        className={`p-1 rounded transition-colors ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]'}`}
-                     >
-                        <Plus size={14} />
-                     </button>
+                     <div className="flex items-center gap-1">
+                        <button
+                           onClick={() => setIsCategoryManagerOpen(true)}
+                           className={`p-1 rounded transition-colors ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]'}`}
+                           title="Manage Categories"
+                        >
+                           <Settings size={14} />
+                        </button>
+                        <button
+                           onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }}
+                           className={`p-1 rounded transition-colors ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]'}`}
+                        >
+                           <Plus size={14} />
+                        </button>
+                     </div>
                   </div>
 
                   <AnimatePresence initial={false}>
@@ -1199,9 +1319,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                           className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
                                              ? 'bg-[#21DBA4] text-white shadow-sm'
                                              : theme === 'dark'
-                                                ? `${cat.color} text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
-                                                : `${cat.color} text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
                                              }`}
+                                          style={!isActive ? { backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' } : {}}
                                        >
                                           <span>{cat.name}</span>
                                           {count > 0 && (
@@ -1212,12 +1333,6 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                                 {count}
                                              </span>
                                           )}
-                                       </button>
-                                       <button
-                                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); setEditingCategory(cat); setIsCategoryModalOpen(true); }}
-                                          className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 p-1 bg-white rounded-full shadow-sm text-slate-400 hover:text-slate-600 transition-all"
-                                       >
-                                          <Edit2 size={10} />
                                        </button>
                                     </div>
                                  );
@@ -2603,13 +2718,27 @@ const IntegrationCard = ({ name, icon, description, connected, t, theme }: any) 
    </div>
 );
 
-const ManagementModal = ({ title, initialData, type, onClose, onSave, theme, t }: any) => {
+const ManagementModal = ({ title, initialData, type, onClose, onSave, onDelete, links, theme, t }: any) => {
    const [name, setName] = useState(initialData?.name || '');
    const [id, setId] = useState(initialData?.id || '');
-   const [color, setColor] = useState(initialData?.color || (type === 'category' ? 'bg-slate-100 text-slate-600' : 'bg-slate-500'));
+   const [color, setColor] = useState(initialData?.color || (type === 'category' ? 'bg-blue-100 text-blue-600' : 'bg-slate-500'));
+
+   // For collections: count clips that belong to this collection
+   const clipCount = type === 'collection' && initialData && links
+      ? links.filter((l: any) => l.collectionIds?.includes(initialData.id)).length
+      : 0;
 
    const colors = type === 'category'
-      ? ['bg-pink-100 text-pink-600', 'bg-blue-100 text-blue-600', 'bg-emerald-100 text-emerald-600', 'bg-orange-100 text-orange-600', 'bg-purple-100 text-purple-600']
+      ? [
+         'bg-pink-100 text-pink-600',
+         'bg-blue-100 text-blue-600',
+         'bg-emerald-100 text-emerald-600',
+         'bg-orange-100 text-orange-600',
+         'bg-purple-100 text-purple-600',
+         'bg-green-200 text-green-700',
+         'bg-indigo-200 text-indigo-700',
+         'bg-red-200 text-red-700'
+      ]
       : ['bg-indigo-500', 'bg-teal-500', 'bg-rose-500', 'bg-amber-500', 'bg-slate-800'];
 
    return (
@@ -2625,15 +2754,41 @@ const ManagementModal = ({ title, initialData, type, onClose, onSave, theme, t }
                   <label className="text-xs font-bold text-slate-500">ID (Unique)</label>
                   <input type="text" value={id} onChange={e => setId(e.target.value)} disabled={!!initialData} className={`w-full border rounded-lg p-2 text-sm mt-1 ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200'}`} />
                </div>
-               <div>
-                  <label className="text-xs font-bold text-slate-500">{t('colorStyle')}</label>
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                     {colors.map(c => (
-                        <button key={c} onClick={() => setColor(c)} className={`w-8 h-8 rounded-full border ${c} ${color === c ? 'ring-2 ring-black ring-offset-2' : ''}`} />
-                     ))}
+               {/* Color picker - only show for categories */}
+               {type === 'category' && (
+                  <div>
+                     <label className="text-xs font-bold text-slate-500">{t('colorStyle')}</label>
+                     <div className="flex gap-2 mt-2 flex-wrap">
+                        {colors.map(c => {
+                           const bgStyle = CATEGORY_COLORS[c] || '#f1f5f9';
+
+                           return (
+                              <button
+                                 key={c}
+                                 onClick={() => setColor(c)}
+                                 className={`w-8 h-8 rounded-full border transition-all ${color === c ? 'ring-2 ring-black ring-offset-2 scale-110' : 'hover:scale-105'}`}
+                                 style={{ backgroundColor: bgStyle }}
+                              />
+                           );
+                        })}
+                     </div>
                   </div>
-               </div>
+               )}
                <button onClick={() => onSave({ id, name, color })} disabled={!name || !id} className="w-full bg-[#21DBA4] text-white py-3 rounded-xl font-bold mt-4 shadow-lg shadow-[#21DBA4]/20 hover:bg-[#1bc290] disabled:opacity-50 disabled:cursor-not-allowed">{t('save')}</button>
+
+               {/* Delete button - only show for existing collections */}
+               {type === 'collection' && initialData && onDelete && (
+                  <button
+                     onClick={() => onDelete(initialData.id)}
+                     disabled={clipCount > 0}
+                     title={clipCount > 0 ? "Cannot delete non-empty collection" : "Delete collection"}
+                     className={`w-full py-2.5 rounded-xl font-bold transition-colors ${clipCount > 0
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        : 'bg-red-50 text-red-500 hover:bg-red-100'}`}
+                  >
+                     {t('delete') || 'Delete'} {clipCount > 0 && `(${clipCount} clips)`}
+                  </button>
+               )}
             </div>
          </div>
       </div>
@@ -2711,6 +2866,74 @@ const DeleteConfirmationModal = ({ count, onCancel, onConfirm, theme, t }: any) 
       </div>
    )
 }
+
+const CategoryManagerModal = ({ categories, links, onClose, onEdit, onDelete, theme, t }: any) => {
+   return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+         <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className={`rounded-2xl w-full max-w-sm max-h-[70vh] flex flex-col shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-100'}`}
+            onClick={e => e.stopPropagation()}
+         >
+            <div className={`p-4 border-b flex items-center justify-between shrink-0 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+               <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('smartFolders')}</h3>
+               <button onClick={onClose} className={`p-1.5 rounded-full ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>
+                  <X size={18} />
+               </button>
+            </div>
+
+            <div className="overflow-y-auto p-2 space-y-1">
+               {categories.map((cat: Category) => {
+                  const count = links.filter((l: LinkItem) => l.categoryId === cat.id && !l.isArchived).length;
+                  return (
+                     <div key={cat.id} className={`flex items-center justify-between p-3 rounded-xl transition-colors ${theme === 'dark' ? 'bg-slate-800/50 hover:bg-slate-800' : 'bg-slate-50/50 hover:bg-slate-100'}`}>
+                        <div className="flex items-center gap-3 min-w-0">
+                           <div
+                              className={`w-3 h-3 rounded-full shrink-0`}
+                              style={{ backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' }}
+                           />
+                           <div className="min-w-0">
+                              <div className={`font-bold text-sm truncate ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>{cat.name}</div>
+                              <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                                 {count} links
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                           <button
+                              onClick={() => onEdit(cat)}
+                              className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200'}`}
+                           >
+                              <Edit2 size={16} />
+                           </button>
+                           <button
+                              onClick={() => count === 0 && onDelete(cat.id)}
+                              disabled={count > 0}
+                              title={count > 0 ? "Cannot delete non-empty category" : "Delete category"}
+                              className={`p-2 rounded-lg transition-colors ${count > 0
+                                 ? 'opacity-30 cursor-not-allowed text-slate-400'
+                                 : theme === 'dark' ? 'text-slate-400 hover:text-red-400 hover:bg-slate-700' : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
+                                 }`}
+                           >
+                              <Trash2 size={16} />
+                           </button>
+                        </div>
+                     </div>
+                  );
+               })}
+               {categories.length === 0 && (
+                  <div className="py-8 text-center text-slate-400 text-sm italic">
+                     No categories found.
+                  </div>
+               )}
+            </div>
+         </motion.div>
+      </div>
+   );
+};
 
 const ArrowUpCircle = ({ size, className }: any) => (
    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
