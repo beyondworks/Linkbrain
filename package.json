@@ -1,5 +1,5 @@
 {
-      "name": "Lickbrain UI v2",
+      "name": "linkbrain-ui",
       "version": "0.1.0",
       "private": true,
       "dependencies": {
@@ -58,6 +58,8 @@
       },
       "scripts": {
             "dev": "vite",
-            "build": "vite build"
+            "start": "vercel dev",
+            "build": "vite build",
+            "preview": "vite preview"
       }
 }
