@@ -373,7 +373,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                                 <ChevronDown className="text-slate-400 ml-2 shrink-0" size={14} />
                                             </button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-[200px]" align="start">
+                                        <DropdownMenuContent className="w-[200px] z-[100]" align="start">
                                             {collections.map((col: Collection) => (
                                                 <DropdownMenuCheckboxItem
                                                     key={col.id}
