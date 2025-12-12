@@ -1360,7 +1360,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="bg-[#21DBA4] hover:bg-[#1bc290] text-white h-9 px-4 rounded-full text-sm font-bold shadow-lg shadow-[#21DBA4]/20 flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px]"
+                        className="bg-[#21DBA4] hover:bg-[#1bc290] text-slate-900 h-9 px-4 rounded-full text-sm font-bold shadow-lg shadow-[#21DBA4]/20 flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px]"
                      >
                         <Plus size={18} />
                         <span className="hidden md:inline text-[14px]">{t('addLink')}</span>
