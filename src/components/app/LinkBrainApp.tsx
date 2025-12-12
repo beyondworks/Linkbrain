@@ -1060,11 +1060,11 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                           px-4 py-2.5 rounded-full gap-3
                           md:px-6 md:py-3 md:gap-6"
                >
-                  {/* Count - Compact for mobile */}
-                  <div className="flex items-center gap-1.5 md:gap-1.5">
+                  {/* Count - Number only for mobile */}
+                  <div className="flex items-center gap-1.5">
                      <span className="font-black text-base md:text-sm">{selectedItemIds.size}</span>
-                     <span className="text-xs md:text-sm font-medium text-slate-300">
-                        {language === 'ko' ? '선택' : 'sel'}
+                     <span className="hidden md:inline text-sm font-medium text-slate-300">
+                        {t('selected')}
                      </span>
                   </div>
 
