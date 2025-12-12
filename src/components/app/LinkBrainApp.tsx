@@ -59,7 +59,8 @@ import {
    Compass,
    Send,
    Copy,
-   BookOpen
+   BookOpen,
+   LayoutGrid
 } from 'lucide-react';
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { motion, AnimatePresence } from 'motion/react';
@@ -375,6 +376,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [activeTab, setActiveTab] = useState(initialTab);
    const [searchQuery, setSearchQuery] = useState('');
    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>('list');
 
    // Sidebar Toggles
    const [isSmartFoldersOpen, setIsSmartFoldersOpen] = useState(true);
@@ -1406,10 +1408,24 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                  return title;
                               })()}
                            </h1>
-                           <p className={`text-sm ${textMuted}`}>
-                              {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
-                              {activeTab === 'home' && ` ${t('aiSummary')}`}
-                           </p>
+                           <div className="flex items-center justify-between">
+                              <p className={`text-sm ${textMuted}`}>
+                                 {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
+                                 {activeTab === 'home' && ` ${t('aiSummary')}`}
+                              </p>
+                              {/* Mobile View Toggle */}
+                              {activeTab !== 'insights' && (
+                                 <button
+                                    onClick={() => setMobileViewMode(mobileViewMode === 'list' ? 'grid' : 'list')}
+                                    className={`md:hidden p-2 rounded-lg border transition-colors ${theme === 'dark'
+                                       ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4]'
+                                       : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
+                                       }`}
+                                 >
+                                    {mobileViewMode === 'list' ? <LayoutGrid size={18} /> : <List size={18} />}
+                                 </button>
+                              )}
+                           </div>
                         </div>
 
                         {/* Sort & Advanced Filter Dropdown */}
@@ -1570,26 +1586,91 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                            t={t}
                         />
                      ) : viewMode === 'grid' ? (
-                        <ResponsiveMasonry columnsCountBreakPoints={{ 350: 1, 750: 2, 1100: 3, 1400: 4 }}>
-                           <Masonry gutter="24px">
-                              {filteredLinks.map(link => (
-                                 <LinkCard
-                                    key={link.id}
-                                    data={link}
-                                    selected={selectedItemIds.has(link.id)}
-                                    selectionMode={isSelectionMode}
-                                    onToggleSelect={() => toggleSelection(link.id)}
-                                    onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
-                                    onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
-                                    onToggleReadLater={(e) => handleToggleReadLater(link.id, e)}
-                                    categories={categories}
-                                    theme={theme}
-                                    showThumbnails={showThumbnails}
-                                    t={t}
-                                 />
-                              ))}
-                           </Masonry>
-                        </ResponsiveMasonry>
+                        <>
+                           {/* Mobile 2-Column Grid View */}
+                           <div className={`md:hidden ${mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden'}`}>
+                              {filteredLinks.map(link => {
+                                 const source = getSourceInfo(link.url);
+                                 const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
+                                 return (
+                                    <div
+                                       key={link.id}
+                                       onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                       className={`rounded-2xl overflow-hidden cursor-pointer transition-all ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'
+                                          } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : 'border border-slate-100'}`}
+                                    >
+                                       {/* 16:9 Image */}
+                                       <div className="relative aspect-video overflow-hidden">
+                                          <img
+                                             src={link.image || '/placeholder.jpg'}
+                                             alt=""
+                                             className="w-full h-full object-cover"
+                                          />
+                                          {/* Source Badge */}
+                                          {source.icon && (
+                                             <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white ${source.color}`}>
+                                                {source.icon}{source.name}
+                                             </div>
+                                          )}
+                                          {/* Favorite Star */}
+                                          {link.isFavorite && (
+                                             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center">
+                                                <Star size={12} fill="white" className="text-white" />
+                                             </div>
+                                          )}
+                                       </div>
+                                       {/* Content */}
+                                       <div className="p-3">
+                                          {/* URL */}
+                                          <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                             <span className="text-slate-400">⊙</span>
+                                             <span className="truncate">{truncatedUrl}</span>
+                                          </div>
+                                          {/* Title */}
+                                          <h3 className={`text-xs font-bold leading-tight line-clamp-2 mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                             {link.title}
+                                          </h3>
+                                          {/* AI Summary */}
+                                          {link.keyTakeaways && link.keyTakeaways.length > 0 && (
+                                             <div className={`text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
+                                                <div className={`flex items-center gap-1 font-bold mb-1 ${theme === 'dark' ? 'text-[#21DBA4]' : 'text-[#21DBA4]'}`}>
+                                                   <span>✨</span> AI Summary
+                                                </div>
+                                                <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                                   {link.keyTakeaways[0]}
+                                                </p>
+                                             </div>
+                                          )}
+                                       </div>
+                                    </div>
+                                 );
+                              })}
+                           </div>
+
+                           {/* Desktop Masonry / Mobile List View */}
+                           <div className={`${mobileViewMode === 'grid' ? 'hidden md:block' : ''}`}>
+                              <ResponsiveMasonry columnsCountBreakPoints={{ 350: 1, 750: 2, 1100: 3, 1400: 4 }}>
+                                 <Masonry gutter="24px">
+                                    {filteredLinks.map(link => (
+                                       <LinkCard
+                                          key={link.id}
+                                          data={link}
+                                          selected={selectedItemIds.has(link.id)}
+                                          selectionMode={isSelectionMode}
+                                          onToggleSelect={() => toggleSelection(link.id)}
+                                          onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                          onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
+                                          onToggleReadLater={(e) => handleToggleReadLater(link.id, e)}
+                                          categories={categories}
+                                          theme={theme}
+                                          showThumbnails={showThumbnails}
+                                          t={t}
+                                       />
+                                    ))}
+                                 </Masonry>
+                              </ResponsiveMasonry>
+                           </div>
+                        </>
                      ) : (
                         <div className="space-y-4">
                            {filteredLinks.map(link => (
