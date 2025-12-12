@@ -430,6 +430,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const {
       clips: firebaseClips,
       collections: firebaseCollections,
+      categories: firebaseCategories,
       loading: dataLoading,
       error: dataError,
       user,
@@ -439,6 +440,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       createCollection,
       updateCollection,
       deleteCollection: deleteCollectionApi,
+      createCategory,
+      updateCategory,
+      deleteCategory: deleteCategoryApi,
       getClips
    } = useClips();
 
@@ -833,39 +837,85 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       setDeleteConfirmation({
          isOpen: true,
          count: 1,
-         onConfirm: () => {
-            setLinks(prev => prev.filter(l => l.id !== id));
-            if (selectedLinkId === id) setSelectedLinkId(null);
-            setDeleteConfirmation({ isOpen: false, count: 0, onConfirm: () => { } });
-            toast.success("Item deleted");
+         onConfirm: async () => {
+            try {
+               await deleteClip(id);
+               setLinks(prev => prev.filter(l => l.id !== id));
+               if (selectedLinkId === id) setSelectedLinkId(null);
+               setDeleteConfirmation({ isOpen: false, count: 0, onConfirm: () => { } });
+               toast.success("Item deleted");
+            } catch (error) {
+               console.error('Failed to delete clip:', error);
+               toast.error('Failed to delete item');
+            }
          }
       });
    }
 
-   const handleSaveCategory = (cat: Category) => {
+   const handleSaveCategory = async (cat: Category) => {
       if (categories.some(c => c.id === cat.id && editingCategory?.id !== cat.id)) {
-         alert("A category with this ID already exists."); return;
+         toast.error("A category with this ID already exists.");
+         return;
       }
-      if (editingCategory) {
-         setCategories(prev => prev.map(c => c.id === editingCategory.id ? cat : c));
-      } else {
-         setCategories([...categories, cat]);
+
+      try {
+         if (editingCategory && editingCategory.id) {
+            // Update existing category in Firebase
+            await updateCategory(editingCategory.id, {
+               name: cat.name,
+               color: cat.color
+            });
+            setCategories(prev => prev.map(c => c.id === editingCategory.id ? cat : c));
+            toast.success('Category updated successfully');
+         } else {
+            // Create new category in Firebase
+            const newCategory = await createCategory({
+               id: cat.id,
+               name: cat.name,
+               color: cat.color
+            });
+            setCategories([...categories, { ...cat, id: newCategory.id || cat.id }]);
+            toast.success('Category created successfully');
+         }
+         setIsCategoryModalOpen(false);
+         setEditingCategory(null);
+      } catch (error) {
+         console.error('Failed to save category:', error);
+         toast.error('Failed to save category');
       }
-      setIsCategoryModalOpen(false);
-      setEditingCategory(null);
    };
 
-   const handleSaveCollection = (col: Collection) => {
+   const handleSaveCollection = async (col: Collection) => {
       if (collections.some(c => c.id === col.id && editingCollection?.id !== col.id)) {
-         alert("A collection with this ID already exists."); return;
+         toast.error("A collection with this ID already exists.");
+         return;
       }
-      if (editingCollection) {
-         setCollections(prev => prev.map(c => c.id === editingCollection.id ? col : c));
-      } else {
-         setCollections([...collections, col]);
+
+      try {
+         if (editingCollection && editingCollection.id) {
+            // Update existing collection in Firebase
+            await updateCollection(editingCollection.id, {
+               name: col.name,
+               color: col.color
+            });
+            setCollections(prev => prev.map(c => c.id === editingCollection.id ? col : c));
+            toast.success('Collection updated successfully');
+         } else {
+            // Create new collection in Firebase
+            const newCollection = await createCollection({
+               id: col.id,
+               name: col.name,
+               color: col.color
+            });
+            setCollections([...collections, { ...col, id: newCollection.id || col.id }]);
+            toast.success('Collection created successfully');
+         }
+         setIsCollectionModalOpen(false);
+         setEditingCollection(null);
+      } catch (error) {
+         console.error('Failed to save collection:', error);
+         toast.error('Failed to save collection');
       }
-      setIsCollectionModalOpen(false);
-      setEditingCollection(null);
    };
 
    const handleUpdateLinkCategory = (linkId: string, catId: string) => {

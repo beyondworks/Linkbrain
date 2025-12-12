@@ -61,9 +61,19 @@ export interface CollectionData {
     userId?: string;
 }
 
+export interface CategoryData {
+    id?: string;
+    name: string;
+    color: string;
+    createdAt?: string;
+    updatedAt?: string;
+    userId?: string;
+}
+
 interface UseClipsReturn {
     clips: ClipData[];
     collections: CollectionData[];
+    categories: CategoryData[];
     loading: boolean;
     error: string | null;
     user: User | null;
@@ -82,12 +92,19 @@ interface UseClipsReturn {
     deleteCollection: (id: string) => Promise<void>;
     addClipToCollection: (clipId: string, collectionId: string) => Promise<void>;
     removeClipFromCollection: (clipId: string, collectionId: string) => Promise<void>;
+
+    // Category operations
+    createCategory: (categoryData: CategoryData) => Promise<CategoryData>;
+    getCategories: () => Promise<void>;
+    updateCategory: (id: string, updates: Partial<CategoryData>) => Promise<CategoryData>;
+    deleteCategory: (id: string) => Promise<void>;
 }
 
 export const useClips = (): UseClipsReturn => {
     const [user, setUser] = useState<User | null>(auth.currentUser);
     const [clips, setClips] = useState<ClipData[]>([]);
     const [collections, setCollections] = useState<CollectionData[]>([]);
+    const [categories, setCategories] = useState<CategoryData[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -415,20 +432,115 @@ export const useClips = (): UseClipsReturn => {
         }
     }, [user, collections, updateCollection]);
 
+    // CATEGORY OPERATIONS - Direct Firestore access
+    const createCategory = useCallback(async (categoryData: CategoryData): Promise<CategoryData> => {
+        if (!user) throw new Error('User must be authenticated');
+
+        setLoading(true);
+        setError(null);
+        try {
+            const dataToSave = {
+                ...categoryData,
+                userId: user.uid,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            const docRef = await addDoc(collection(db, 'categories'), dataToSave);
+            const newCategory = { ...dataToSave, id: docRef.id };
+            setCategories(prev => [newCategory, ...prev]);
+            return newCategory;
+        } catch (err) {
+            handleError(err, 'Failed to create category');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    const getCategories = useCallback(async () => {
+        if (!user) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            const categoriesRef = collection(db, 'categories');
+            const q = query(
+                categoriesRef,
+                where('userId', '==', user.uid),
+                orderBy('createdAt', 'desc')
+            );
+
+            const snapshot = await getDocs(q);
+            const categoriesData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as CategoryData[];
+
+            setCategories(categoriesData);
+        } catch (err) {
+            handleError(err, 'Failed to fetch categories');
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    const updateCategory = useCallback(async (id: string, updates: Partial<CategoryData>): Promise<CategoryData> => {
+        if (!user) throw new Error('User must be authenticated');
+
+        setLoading(true);
+        setError(null);
+        try {
+            const docRef = doc(db, 'categories', id);
+            const updateData = {
+                ...updates,
+                updatedAt: new Date().toISOString(),
+            };
+            await updateDoc(docRef, updateData);
+
+            setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updateData } : c));
+            return { id, ...updateData } as CategoryData;
+        } catch (err) {
+            handleError(err, 'Failed to update category');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    const deleteCategory = useCallback(async (id: string) => {
+        if (!user) throw new Error('User must be authenticated');
+
+        setLoading(true);
+        setError(null);
+        try {
+            await deleteDoc(doc(db, 'categories', id));
+            setCategories(prev => prev.filter(c => c.id !== id));
+        } catch (err) {
+            handleError(err, 'Failed to delete category');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
     // Load data on user change
     useEffect(() => {
         if (user) {
             getClips();
             getCollections();
+            getCategories();
         } else {
             setClips([]);
             setCollections([]);
+            setCategories([]);
         }
-    }, [user]);
+    }, [user, getClips, getCollections, getCategories]);
 
     return {
         clips,
         collections,
+        categories,
         loading,
         error,
         user,
@@ -443,5 +555,9 @@ export const useClips = (): UseClipsReturn => {
         deleteCollection,
         addClipToCollection,
         removeClipFromCollection,
+        createCategory,
+        getCategories,
+        updateCategory,
+        deleteCategory,
     };
 };
