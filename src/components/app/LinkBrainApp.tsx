@@ -261,6 +261,7 @@ type LinkItem = {
    title: string;
    url: string;
    image: string;
+   images?: string[];  // Multiple images for carousel
    summary: string;
    tags: string[];
    date: string;
@@ -275,6 +276,10 @@ type LinkItem = {
    notes?: string;
    keyTakeaways?: string[];
    content?: string;  // Full article content (markdown or plain text)
+   platform?: 'youtube' | 'instagram' | 'threads' | 'web';  // Platform type
+   author?: string;  // Author name
+   authorHandle?: string;  // Author handle (@username)
+   authorAvatar?: string;  // Author profile image
 };
 
 type Category = {
@@ -473,7 +478,12 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          isArchived: clip.isArchived || false,
          notes: '',
          keyTakeaways: takeaways,
-         content: clip.contentMarkdown || clip.contentHtml || clip.rawMarkdown || ''
+         content: clip.contentMarkdown || clip.contentHtml || clip.rawMarkdown || '',
+         platform: clip.platform || 'web',
+         images: clip.images || (clip.image ? [clip.image] : []),
+         author: clip.author || '',
+         authorHandle: (clip.authorProfile as any)?.handle || '',
+         authorAvatar: (clip.authorProfile as any)?.avatar || ''
       };
    };
 
@@ -1762,14 +1772,121 @@ const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavor
 
             {/* Scrollable Content */}
             <div className={`flex-1 overflow-y-auto ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
-               {/* Cover */}
-               <div className="h-64 relative group">
-                  <img src={link.image} alt={link.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
-                  <button className="absolute bottom-4 right-4 bg-white/90 backdrop-blur text-slate-700 px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 hover:bg-white hover:scale-105 transition-all">
-                     <ExternalLink size={14} /> {t('visitOriginal')}
-                  </button>
-               </div>
+               {/* Platform-Specific Cover/Media */}
+               {(() => {
+                  const platform = source.name.toLowerCase();
+                  const getYoutubeId = (url: string) => {
+                     const match = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^#\&\?]*)/);
+                     return match && match[1].length === 11 ? match[1] : null;
+                  };
+
+                  // YouTube: Embed player
+                  if (platform === 'youtube') {
+                     const videoId = getYoutubeId(link.url);
+                     return (
+                        <div className="aspect-video bg-black relative">
+                           {videoId ? (
+                              <iframe
+                                 width="100%"
+                                 height="100%"
+                                 src={`https://www.youtube.com/embed/${videoId}`}
+                                 title={link.title}
+                                 frameBorder="0"
+                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                 allowFullScreen
+                              />
+                           ) : (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                 <Youtube size={48} className="text-white opacity-50" />
+                              </div>
+                           )}
+                        </div>
+                     );
+                  }
+
+                  // Threads/Instagram: Image Carousel
+                  if (platform === 'threads' || platform === 'instagram') {
+                     const images = link.images && link.images.length > 0 ? link.images : (link.image ? [link.image] : []);
+                     const [currentIdx, setCurrentIdx] = React.useState(0);
+
+                     if (images.length === 0) {
+                        return (
+                           <div className={`h-32 flex items-center justify-center ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                              <Instagram size={48} className="text-slate-400" />
+                           </div>
+                        );
+                     }
+
+                     return (
+                        <div className="relative">
+                           <div className="h-80 relative overflow-hidden">
+                              <img
+                                 src={images[currentIdx]}
+                                 alt={`${link.title} - Image ${currentIdx + 1}`}
+                                 className="w-full h-full object-cover"
+                                 onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                    e.currentTarget.src = '/placeholder.png';
+                                 }}
+                              />
+                              {/* Visit Original Button */}
+                              <a
+                                 href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 className="absolute bottom-4 right-4 bg-white/90 backdrop-blur text-slate-700 px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 hover:bg-white hover:scale-105 transition-all"
+                              >
+                                 <ExternalLink size={14} /> {t('visitOriginal')}
+                              </a>
+                           </div>
+                           {/* Carousel Controls */}
+                           {images.length > 1 && (
+                              <div className={`flex items-center justify-between px-4 py-3 ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                                 <button
+                                    onClick={() => setCurrentIdx(prev => prev === 0 ? images.length - 1 : prev - 1)}
+                                    className={`p-2 rounded-full ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-200'}`}
+                                 >
+                                    <ChevronLeft size={16} />
+                                 </button>
+                                 <div className="flex gap-1.5">
+                                    {images.map((_: string, idx: number) => (
+                                       <button
+                                          key={idx}
+                                          onClick={() => setCurrentIdx(idx)}
+                                          className={`h-1.5 rounded-full transition-all ${idx === currentIdx
+                                             ? 'w-6 bg-[#21DBA4]'
+                                             : `w-1.5 ${theme === 'dark' ? 'bg-slate-600' : 'bg-slate-300'}`
+                                             }`}
+                                       />
+                                    ))}
+                                 </div>
+                                 <button
+                                    onClick={() => setCurrentIdx(prev => prev === images.length - 1 ? 0 : prev + 1)}
+                                    className={`p-2 rounded-full ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-200'}`}
+                                 >
+                                    <ChevronRight size={16} />
+                                 </button>
+                              </div>
+                           )}
+                        </div>
+                     );
+                  }
+
+                  // Default: Single image
+                  return (
+                     <div className="h-64 relative group">
+                        <img src={link.image} alt={link.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                        <a
+                           href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="absolute bottom-4 right-4 bg-white/90 backdrop-blur text-slate-700 px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 hover:bg-white hover:scale-105 transition-all"
+                        >
+                           <ExternalLink size={14} /> {t('visitOriginal')}
+                        </a>
+                     </div>
+                  );
+               })()}
 
                <div className="p-8 max-w-xl mx-auto">
                   <div className="mb-6">
@@ -1855,29 +1972,120 @@ const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavor
                      </div>
                   </div>
 
-                  {/* Full Article Content - NOW BEFORE NOTES */}
-                  {link.content && (
-                     <div className="mb-8">
-                        <div className="flex items-center gap-2 mb-4">
-                           <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                              <BookOpen size={18} className="text-slate-500" />
+                  {/* Full Article Content - Platform-Specific Rendering */}
+                  {(() => {
+                     const platform = source.name.toLowerCase();
+
+                     // YouTube: No content section (only summary in AI section above)
+                     if (platform === 'youtube') {
+                        return null;
+                     }
+
+                     // Threads: Split content into body and comments
+                     if (platform === 'threads' && link.content) {
+                        const COMMENTS_MARKER = '[[[COMMENTS_SECTION]]]';
+                        const COMMENT_SEPARATOR = '[[[COMMENT_SPLIT]]]';
+
+                        let mainText = link.content;
+                        let comments: string[] = [];
+
+                        // Try marker-based parsing
+                        if (link.content.includes(COMMENTS_MARKER)) {
+                           const [main, commentsPart] = link.content.split(COMMENTS_MARKER);
+                           mainText = main?.trim() || '';
+                           comments = commentsPart
+                              ? commentsPart.split(COMMENT_SEPARATOR).map(c => c.trim()).filter(c => c.length > 0)
+                              : [];
+                        } else {
+                           // Fallback: try Comments(N) pattern
+                           const legacyMatch = link.content.match(/Comments?\s*\(\d+\)/i);
+                           if (legacyMatch) {
+                              const splitIndex = link.content.indexOf(legacyMatch[0]);
+                              mainText = link.content.slice(0, splitIndex).trim();
+                              const commentsRaw = link.content.slice(splitIndex + legacyMatch[0].length).trim();
+                              comments = commentsRaw.split(/\n\n+/).map(c => c.trim()).filter(c => c.length > 3);
+                           }
+                        }
+
+                        return (
+                           <div className="mb-8">
+                              {/* Main Content Header */}
+                              <div className="flex items-center gap-2 mb-4">
+                                 <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                                    <BookOpen size={18} className="text-slate-500" />
+                                 </div>
+                                 <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                    Content
+                                 </h3>
+                              </div>
+                              <div className={`h-px mb-4 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`} />
+
+                              {/* Main Content */}
+                              <div
+                                 className={`p-6 rounded-2xl border shadow-sm ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}
+                                 style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}
+                              >
+                                 <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    {mainText}
+                                 </p>
+                              </div>
+
+                              {/* Comments Section */}
+                              {comments.length > 0 && (
+                                 <div className="mt-8">
+                                    <div className="flex items-center gap-2 mb-4">
+                                       <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                                          <AtSign size={18} className="text-slate-500" />
+                                       </div>
+                                       <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                          Comments ({comments.length})
+                                       </h3>
+                                    </div>
+                                    <div className={`h-px mb-4 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`} />
+
+                                    <div className={`rounded-2xl border divide-y ${theme === 'dark' ? 'bg-slate-900 border-slate-800 divide-slate-800' : 'bg-white border-slate-100 divide-slate-100'}`}>
+                                       {comments.map((comment, idx) => (
+                                          <div key={idx} className="p-4">
+                                             <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                                                {comment}
+                                             </p>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 </div>
+                              )}
                            </div>
-                           <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                              본문 내용
-                           </h3>
-                        </div>
-                        <div
-                           className={`p-6 rounded-2xl border shadow-sm prose prose-sm max-w-none ${theme === 'dark' ? 'bg-slate-900 border-slate-800 prose-invert' : 'bg-white border-slate-100'}`}
-                           style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}
-                        >
-                           {link.content.split('\n').map((line: string, idx: number) => (
-                              <p key={idx} className={`mb-3 text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                                 {line || <br />}
-                              </p>
-                           ))}
-                        </div>
-                     </div>
-                  )}
+                        );
+                     }
+
+                     // Default: Show content as-is (Instagram, Web, Blog)
+                     if (link.content) {
+                        return (
+                           <div className="mb-8">
+                              <div className="flex items-center gap-2 mb-4">
+                                 <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                                    <BookOpen size={18} className="text-slate-500" />
+                                 </div>
+                                 <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                    본문 내용
+                                 </h3>
+                              </div>
+                              <div
+                                 className={`p-6 rounded-2xl border shadow-sm prose prose-sm max-w-none ${theme === 'dark' ? 'bg-slate-900 border-slate-800 prose-invert' : 'bg-white border-slate-100'}`}
+                                 style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}
+                              >
+                                 {link.content.split('\n').map((line: string, idx: number) => (
+                                    <p key={idx} className={`mb-3 text-sm leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                                       {line || <br />}
+                                    </p>
+                                 ))}
+                              </div>
+                           </div>
+                        );
+                     }
+
+                     return null;
+                  })()}
 
                   {/* My Notes - NOW AFTER CONTENT */}
                   <div className="mb-8">
