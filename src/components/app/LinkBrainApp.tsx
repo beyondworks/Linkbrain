@@ -534,6 +534,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [filterCategories, setFilterCategories] = useState<string[]>([]);
    const [filterSources, setFilterSources] = useState<string[]>([]);
    const [filterTags, setFilterTags] = useState<string[]>([]);
+   const [showAllTags, setShowAllTags] = useState(false);
+   const [filterDateRange, setFilterDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
 
    // Modals
    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -657,7 +659,19 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          });
       }
       if (filterTags.length > 0) {
-         result = result.filter(l => l.tags.some(t => filterTags.includes(t)));
+         result = result.filter(l => l.tags.some((t: string) => filterTags.includes(t)));
+      }
+
+      // Date range filter
+      if (filterDateRange !== 'all') {
+         const now = Date.now();
+         const ranges = {
+            today: 24 * 60 * 60 * 1000,    // 24 hours
+            week: 7 * 24 * 60 * 60 * 1000, // 7 days
+            month: 30 * 24 * 60 * 60 * 1000 // 30 days
+         };
+         const cutoff = now - ranges[filterDateRange];
+         result = result.filter(l => l.timestamp >= cutoff);
       }
 
       result = [...result].sort((a, b) => {
@@ -668,7 +682,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       });
 
       return result;
-   }, [links, activeTab, searchQuery, categories, collections, sortBy, filterCategories, filterSources, filterTags]);
+   }, [links, activeTab, searchQuery, categories, collections, sortBy, filterCategories, filterSources, filterTags, filterDateRange]);
 
    // Actions
    const handleToggleFavorite = (id: string, e?: React.MouseEvent) => {
@@ -1081,17 +1095,17 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                        <button
                                           onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
                                           className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
-                                                ? 'bg-[#21DBA4] text-white shadow-sm'
-                                                : theme === 'dark'
-                                                   ? `${cat.color} text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
-                                                   : `${cat.color} text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                             ? 'bg-[#21DBA4] text-white shadow-sm'
+                                             : theme === 'dark'
+                                                ? `${cat.color} text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                : `${cat.color} text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
                                              }`}
                                        >
                                           <span>{cat.name}</span>
                                           {count > 0 && (
                                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
-                                                   ? 'bg-white/20'
-                                                   : theme === 'dark' ? 'bg-slate-700' : 'bg-white/50'
+                                                ? 'bg-white/20'
+                                                : theme === 'dark' ? 'bg-slate-700' : 'bg-white/50'
                                                 }`}>
                                                 {count}
                                              </span>
@@ -1391,6 +1405,29 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                                  <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
 
+                                 {/* Date Range Filter */}
+                                 <div className="px-4 py-2">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
+                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                       {[
+                                          { id: 'all', label: '전체' },
+                                          { id: 'today', label: '오늘' },
+                                          { id: 'week', label: '이번 주' },
+                                          { id: 'month', label: '이번 달' }
+                                       ].map((opt) => (
+                                          <button
+                                             key={opt.id}
+                                             onClick={() => setFilterDateRange(opt.id as any)}
+                                             className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                          >
+                                             {opt.label}
+                                          </button>
+                                       ))}
+                                    </div>
+                                 </div>
+
+                                 <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+
                                  {availableCategories.length > 0 && (
                                     <div className="px-4 py-2">
                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
@@ -1436,9 +1473,19 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                     <>
                                        <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
                                        <div className="px-4 py-2">
-                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('tags')}</span>
-                                          <div className="mt-2 flex flex-wrap gap-1.5">
-                                             {availableTags.map(tag => (
+                                          <div className="flex items-center justify-between mb-2">
+                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('tags')}</span>
+                                             {availableTags.length > 8 && (
+                                                <button
+                                                   onClick={() => setShowAllTags(!showAllTags)}
+                                                   className="text-[10px] font-bold text-[#21DBA4] hover:text-[#1BC491]"
+                                                >
+                                                   {showAllTags ? '접기' : `더보기 (+${availableTags.length - 8})`}
+                                                </button>
+                                             )}
+                                          </div>
+                                          <div className="flex flex-wrap gap-1.5">
+                                             {(showAllTags ? availableTags : availableTags.slice(0, 8)).map((tag: string) => (
                                                 <button
                                                    key={tag}
                                                    onClick={() => toggleFilter(setFilterTags, filterTags, tag)}
@@ -1452,10 +1499,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                     </>
                                  )}
 
-                                 {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0) && (
+                                 {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0 || filterDateRange !== 'all') && (
                                     <div className={`p-2 border-t mt-1 ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
                                        <button
-                                          onClick={() => { setFilterCategories([]); setFilterSources([]); setFilterTags([]); }}
+                                          onClick={() => { setFilterCategories([]); setFilterSources([]); setFilterTags([]); setFilterDateRange('all'); }}
                                           className="w-full text-center text-xs font-bold text-red-500 hover:text-red-600 py-1"
                                        >
                                           {t('resetFilters')}
@@ -1656,12 +1703,17 @@ const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, selected
             )}
 
             <div className={`mt-auto pt-2 flex items-center justify-between border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-50'}`}>
-               <div className="flex gap-1.5 flex-wrap">
-                  {data.tags.map(tag => (
-                     <span key={tag} className={`text-[10px] font-medium px-2 py-0.5 rounded transition-colors cursor-pointer ${theme === 'dark' ? 'text-slate-400 bg-slate-800 hover:bg-slate-700' : 'text-slate-400 bg-slate-50 hover:bg-slate-100'}`}>
+               <div className="flex gap-1.5 items-center overflow-hidden">
+                  {data.tags.slice(0, 3).map((tag: string) => (
+                     <span key={tag} className={`text-[10px] font-medium px-2 py-0.5 rounded transition-colors cursor-pointer whitespace-nowrap ${theme === 'dark' ? 'text-slate-400 bg-slate-800 hover:bg-slate-700' : 'text-slate-400 bg-slate-50 hover:bg-slate-100'}`}>
                         #{tag}
                      </span>
                   ))}
+                  {data.tags.length > 3 && (
+                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded whitespace-nowrap ${theme === 'dark' ? 'text-slate-500 bg-slate-800' : 'text-slate-400 bg-slate-100'}`}>
+                        +{data.tags.length - 3}
+                     </span>
+                  )}
                </div>
                <button onClick={onToggleFavorite} className={`transition-colors ${data.isFavorite ? 'text-yellow-400' : 'text-slate-300 hover:text-yellow-400'}`}>
                   <Star size={16} fill={data.isFavorite ? "currentColor" : "none"} />
