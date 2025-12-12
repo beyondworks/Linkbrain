@@ -366,30 +366,41 @@ export const useClips = (): UseClipsReturn => {
     }, [user]);
 
     const getCollections = useCallback(async () => {
-        if (!user) return;
+        // This is now handled by the onSnapshot effect below
+        return;
+    }, [user]);
 
-        setLoading(true);
-        setError(null);
-        try {
-            const collectionsRef = collection(db, 'collections');
-            const q = query(
-                collectionsRef,
-                where('userId', '==', user.uid),
-                orderBy('createdAt', 'desc')
-            );
+    // Real-time listener for Collections
+    useEffect(() => {
+        if (!user) {
+            setCollections([]);
+            return;
+        }
 
-            const snapshot = await getDocs(q);
+        const collectionsRef = collection(db, 'collections');
+        const q = query(
+            collectionsRef,
+            where('userId', '==', user.uid)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const collectionsData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as CollectionData[];
-
+            // Sort client-side by createdAt (descending)
+            collectionsData.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0).getTime();
+                const dateB = new Date(b.createdAt || 0).getTime();
+                return dateB - dateA;
+            });
             setCollections(collectionsData);
-        } catch (err) {
-            handleError(err, 'Failed to fetch collections');
-        } finally {
-            setLoading(false);
-        }
+        }, (err) => {
+            console.error("Failed to subscribe to collections:", err);
+            handleError(err, 'Failed to sync collections');
+        });
+
+        return () => unsubscribe();
     }, [user]);
 
     const updateCollection = useCallback(async (id: string, updates: Partial<CollectionData>): Promise<CollectionData> => {

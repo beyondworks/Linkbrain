@@ -62,15 +62,17 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
                         </div>
                     </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                        <div className="flex gap-2 w-full">
-                            <button className="flex-1 bg-white/20 backdrop-blur hover:bg-white/30 text-white text-xs font-bold py-2 rounded-lg transition-colors">
-                                {t('summarize')}
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); window.open(`https://${data.url}`, '_blank') }} className="w-8 h-8 bg-white text-slate-900 rounded-lg flex items-center justify-center hover:bg-[#21DBA4] hover:text-white transition-colors">
-                                <ExternalLink size={14} />
-                            </button>
-                        </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-end p-4">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const url = data.url.startsWith('http') ? data.url : `https://${data.url}`;
+                                window.open(url, '_blank');
+                            }}
+                            className="w-10 h-10 bg-white text-slate-900 rounded-lg flex items-center justify-center hover:bg-[#21DBA4] hover:text-white transition-colors shadow-lg"
+                        >
+                            <ExternalLink size={16} />
+                        </button>
                     </div>
                 </div>
             )}

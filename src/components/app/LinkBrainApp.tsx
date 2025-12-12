@@ -719,8 +719,25 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       }
    };
 
-   const handleUpdateLinkCategory = (linkId: string, catId: string) => {
+   const handleUpdateLinkCategory = async (linkId: string, catId: string) => {
+      // Find the current link
+      const currentLink = links.find(l => l.id === linkId);
+      if (!currentLink) return;
+
+      const oldCatId = currentLink.categoryId;
+
+      // Update local state immediately for responsiveness
       setLinks(prev => prev.map(l => l.id === linkId ? { ...l, categoryId: catId } : l));
+
+      // Sync to Firebase
+      try {
+         await updateClip(linkId, { category: catId });
+      } catch (error) {
+         console.error('Failed to update clip category:', error);
+         toast.error('Failed to update category');
+         // Revert on error
+         setLinks(prev => prev.map(l => l.id === linkId ? { ...l, categoryId: oldCatId } : l));
+      }
    };
 
    const handleToggleLinkCollection = async (linkId: string, colId: string) => {
