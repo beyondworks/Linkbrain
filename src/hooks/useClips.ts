@@ -129,63 +129,24 @@ export const useClips = (): UseClipsReturn => {
         setLoading(true);
         setError(null);
         try {
-            // In development without API, create a basic clip
-            // In production, this would call /api/analyze
-            const isProduction = import.meta.env.PROD;
+            // Call /api/analyze for content analysis
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await user.getIdToken()}`,
+                },
+                body: JSON.stringify({ url, userId: user.uid }),
+            });
 
-            if (isProduction) {
-                // Use API route in production
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${await user.getIdToken()}`,
-                    },
-                    body: JSON.stringify({ url, userId: user.uid }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `Failed to analyze URL: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                setClips(prev => [result, ...prev]);
-                return result;
-            } else {
-                // In development, create a basic clip directly
-                const clipData: ClipData = {
-                    url,
-                    platform: 'web',
-                    template: 'web',
-                    title: `Link: ${url}`,
-                    summary: 'Content analysis is only available in production. Deploy to Vercel to enable AI analysis.',
-                    keywords: ['web'],
-                    category: 'Other',
-                    sentiment: 'neutral',
-                    type: 'website',
-                    image: null,
-                    author: '',
-                    authorProfile: {},
-                    mediaItems: [],
-                    engagement: {},
-                    mentions: [{ label: 'Original', url }],
-                    comments: [],
-                    publishDate: null,
-                    htmlContent: '',
-                    collectionIds: [],
-                    viewCount: 0,
-                    likeCount: 0,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    userId: user.uid,
-                };
-
-                const docRef = await addDoc(collection(db, 'clips'), clipData);
-                const newClip = { ...clipData, id: docRef.id };
-                // Note: No setClips here - onSnapshot listener handles it
-                return newClip;
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Failed to analyze URL: ${response.statusText}`);
             }
+
+            const result = await response.json();
+            // Note: No setClips here - onSnapshot listener handles it
+            return result;
         } catch (err) {
             handleError(err, 'Failed to analyze URL');
             throw err;
