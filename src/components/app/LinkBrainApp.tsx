@@ -77,6 +77,7 @@ import { AIInsightsDashboard } from '../AIInsightsDashboard';
 import { LinkBrainArticle } from './LinkBrainArticle';
 import { Logo } from '../Logo';
 import { LinkBrainLogo } from './LinkBrainLogo';
+import { AnalysisIndicator, AnalysisItem, AnalysisStatus } from './AnalysisIndicator';
 
 // --- Mock Data ---
 const INITIAL_CATEGORIES: Category[] = [
@@ -606,21 +607,52 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+   // Analysis Queue State
+   const [analysisQueue, setAnalysisQueue] = useState<AnalysisItem[]>([]);
+
+   const updateAnalysisItem = (id: string, status: AnalysisStatus) => {
+      setAnalysisQueue(prev => prev.map(item =>
+         item.id === id ? { ...item, status } : item
+      ));
+   };
+
+   const removeAnalysisItem = (id: string) => {
+      setAnalysisQueue(prev => prev.filter(item => item.id !== id));
+   };
+
    const handleAddLink = async (url: string) => {
       setIsAnalyzing(true);
       setIsAddModalOpen(false);
+
+      // Generate unique ID for this analysis
+      const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Add to queue as pending
+      setAnalysisQueue(prev => [...prev, { id: analysisId, url, status: 'pending' as AnalysisStatus }]);
 
       // Trigger Animation immediately
       setShowFlyAnimation(true);
       setTimeout(() => setShowFlyAnimation(false), 2500);
 
+      // Update to analyzing
+      setTimeout(() => updateAnalysisItem(analysisId, 'analyzing'), 100);
+
       try {
          const result = await analyzeUrl(url);
-         // The useClips hook automatically updates the clips state
+         // Mark as complete
+         updateAnalysisItem(analysisId, 'complete');
          toast.success(language === 'ko' ? '링크가 분석되어 추가되었습니다!' : 'Link analyzed and added successfully!');
+
+         // Auto-remove from queue after 3 seconds
+         setTimeout(() => removeAnalysisItem(analysisId), 3000);
       } catch (error: any) {
          console.error('Failed to analyze URL:', error);
+         // Mark as error
+         updateAnalysisItem(analysisId, 'error');
          toast.error(language === 'ko' ? `분석 실패: ${error.message}` : `Analysis failed: ${error.message}`);
+
+         // Auto-remove error after 5 seconds
+         setTimeout(() => removeAnalysisItem(analysisId), 5000);
       } finally {
          setIsAnalyzing(false);
       }
@@ -1426,6 +1458,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                      >
                         <CheckSquare size={18} />
                      </button>
+
+                     {/* Analysis Status Indicator */}
+                     <AnalysisIndicator items={analysisQueue} theme={theme} language={language} />
 
                      <button
                         onClick={() => setIsAddModalOpen(true)}
