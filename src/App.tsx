@@ -38,10 +38,48 @@ const PRIMARY_COLOR = "#21DBA4";
 type ViewType = 'landing' | 'features' | 'how-it-works' | 'pricing' | 'app';
 
 const App = () => {
-  const [currentView, setCurrentView] = useState<ViewType>('landing');
+  // Initialize from localStorage or URL hash
+  const [currentView, setCurrentView] = useState<ViewType>(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(hash)) {
+      return hash as ViewType;
+    }
+    const saved = localStorage.getItem('linkbrain_view');
+    if (saved && ['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(saved)) {
+      return saved as ViewType;
+    }
+    return 'landing';
+  });
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [language, setLanguage] = useState<'en' | 'ko'>('ko');
+
+  // Save view to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('linkbrain_view', currentView);
+    // Update URL hash without triggering navigation
+    if (window.location.hash !== `#${currentView}`) {
+      window.history.replaceState({ view: currentView }, '', `#${currentView}`);
+    }
+  }, [currentView]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const view = e.state?.view || window.location.hash.replace('#', '') || 'landing';
+      if (['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(view)) {
+        setCurrentView(view as ViewType);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+
+    // Set initial state
+    if (!window.history.state?.view) {
+      window.history.replaceState({ view: currentView }, '', `#${currentView}`);
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Firebase Auth State Listener
   useEffect(() => {
@@ -49,14 +87,22 @@ const App = () => {
       setUser(currentUser);
       setAuthLoading(false);
       console.log('[Firebase Auth] User state changed:', currentUser?.email || 'Not logged in');
+
+      // Auto-redirect to app if logged in and on landing page
+      if (currentUser && currentView === 'landing') {
+        setCurrentView('app');
+        window.history.pushState({ view: 'app' }, '', '#app');
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [currentView]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       setCurrentView('landing');
+      window.history.pushState({ view: 'landing' }, '', '#landing');
+      localStorage.removeItem('linkbrain_view');
       console.log('[Firebase Auth] User logged out');
     } catch (error) {
       console.error('[Firebase Auth] Logout error:', error);
@@ -65,8 +111,8 @@ const App = () => {
 
   const handleNavigate = (view: string) => {
     // If view matches one of our defined views, switch to it.
-    // If it's a legacy anchor tag or special value, handle appropriately.
     if (['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(view)) {
+      window.history.pushState({ view }, '', `#${view}`);
       setCurrentView(view as ViewType);
       window.scrollTo(0, 0);
     }
