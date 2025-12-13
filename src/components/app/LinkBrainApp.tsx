@@ -77,7 +77,7 @@ import { AIInsightsDashboard } from '../AIInsightsDashboard';
 import { LinkBrainArticle } from './LinkBrainArticle';
 import { Logo } from '../Logo';
 import { LinkBrainLogo } from './LinkBrainLogo';
-import { AnalysisIndicator, AnalysisItem, AnalysisStatus } from './AnalysisIndicator';
+import { AnalysisIndicator, AnalysisItem, AnalysisStatus, AnalysisLogItem } from './AnalysisIndicator';
 
 // --- Mock Data ---
 const INITIAL_CATEGORIES: Category[] = [
@@ -620,6 +620,19 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       setAnalysisQueue(prev => prev.filter(item => item.id !== id));
    };
 
+   // Analysis Log History (most recent first)
+   const [analysisLogs, setAnalysisLogs] = useState<AnalysisLogItem[]>([]);
+
+   const addLogEntry = (url: string, status: 'complete' | 'error') => {
+      const newLog: AnalysisLogItem = {
+         id: `log-${Date.now()}`,
+         url,
+         status,
+         timestamp: Date.now()
+      };
+      setAnalysisLogs(prev => [newLog, ...prev].slice(0, 10)); // Keep max 10 logs
+   };
+
    const handleAddLink = async (url: string) => {
       setIsAnalyzing(true);
       setIsAddModalOpen(false);
@@ -627,32 +640,29 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       // Generate unique ID for this analysis
       const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Add to queue as pending
-      setAnalysisQueue(prev => [...prev, { id: analysisId, url, status: 'pending' as AnalysisStatus }]);
+      // Clear previous items and add new one as analyzing directly
+      setAnalysisQueue([{ id: analysisId, url, status: 'analyzing' as AnalysisStatus }]);
 
       // Trigger Animation immediately
       setShowFlyAnimation(true);
       setTimeout(() => setShowFlyAnimation(false), 2500);
 
-      // Update to analyzing
-      setTimeout(() => updateAnalysisItem(analysisId, 'analyzing'), 100);
-
       try {
          const result = await analyzeUrl(url);
          // Mark as complete
-         updateAnalysisItem(analysisId, 'complete');
+         setAnalysisQueue([{ id: analysisId, url, status: 'complete' as AnalysisStatus }]);
+         addLogEntry(url, 'complete');
          toast.success(language === 'ko' ? '링크가 분석되어 추가되었습니다!' : 'Link analyzed and added successfully!');
-
-         // Auto-remove from queue after 3 seconds
-         setTimeout(() => removeAnalysisItem(analysisId), 3000);
+         // Reset to idle after 3 seconds
+         setTimeout(() => setAnalysisQueue([]), 3000);
       } catch (error: any) {
          console.error('Failed to analyze URL:', error);
          // Mark as error
-         updateAnalysisItem(analysisId, 'error');
+         setAnalysisQueue([{ id: analysisId, url, status: 'error' as AnalysisStatus }]);
+         addLogEntry(url, 'error');
          toast.error(language === 'ko' ? `분석 실패: ${error.message}` : `Analysis failed: ${error.message}`);
-
-         // Auto-remove error after 5 seconds
-         setTimeout(() => removeAnalysisItem(analysisId), 5000);
+         // Reset to idle after 3 seconds
+         setTimeout(() => setAnalysisQueue([]), 3000);
       } finally {
          setIsAnalyzing(false);
       }
@@ -1432,6 +1442,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                         <Search size={20} />
                      </button>
 
+                     {/* Analysis Status Indicator - positioned before divider */}
+                     <AnalysisIndicator items={analysisQueue} logs={analysisLogs} theme={theme} language={language} />
+
                      <div className={`h-6 w-px hidden md:block ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
 
                      <div className={`flex items-center gap-1 rounded-lg p-0.5 hidden md:flex ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
@@ -1458,9 +1471,6 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                      >
                         <CheckSquare size={18} />
                      </button>
-
-                     {/* Analysis Status Indicator */}
-                     <AnalysisIndicator items={analysisQueue} theme={theme} language={language} />
 
                      <button
                         onClick={() => setIsAddModalOpen(true)}
