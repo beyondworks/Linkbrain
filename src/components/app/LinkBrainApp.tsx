@@ -1612,7 +1612,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      {/* Mobile Sticky Header Section */}
                      {activeTab !== 'insights' && (
-                        <div className={`md:hidden sticky top-0 z-20 -mx-4 px-4 -mt-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                        <div className={`md:hidden sticky -top-px z-20 -mx-4 px-4 -mt-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                            {/* Title + Count */}
                            <div className="mb-3">
                               <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -1664,7 +1664,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                               {/* Mobile Filter Dropdown */}
                               {isFilterOpen && (
-                                 <div className={`absolute left-0 top-full mt-1 w-full rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[60vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
+                                 <div onClick={(e) => e.stopPropagation()} className={`absolute left-0 top-full mt-1 w-full rounded-xl shadow-xl border py-2 z-30 overflow-hidden max-h-[60vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
                                     <div className="px-4 py-2">
                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
                                        <div className="mt-2 space-y-1">
@@ -1754,7 +1754,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                               )}
                            </div>
                            {/* Divider */}
-                           <div className={`border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}></div>
+                           <div className={`border-b mb-4 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}></div>
                         </div>
                      )}
 
