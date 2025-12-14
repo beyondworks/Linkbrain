@@ -38,7 +38,7 @@ export const ManagementModal = ({ title, initialData, type, onClose, onSave, onD
 
     return (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
-            <div className={`rounded-2xl w-full max-w-sm p-6 shadow-2xl ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`} onClick={e => e.stopPropagation()}>
+            <div className={`rounded-2xl w-full max-w-xs sm:max-w-sm p-4 sm:p-6 shadow-2xl ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`} onClick={e => e.stopPropagation()}>
                 <h3 className="font-bold text-lg mb-4">{title}</h3>
                 <div className="space-y-4">
                     <div>

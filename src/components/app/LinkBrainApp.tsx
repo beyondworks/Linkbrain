@@ -1478,7 +1478,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               placeholder={t('searchPlaceholder')}
-                              className={`w-full h-10 rounded-full pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white'}`}
+                              className={`w-full h-10 rounded-full pl-10 pr-10 text-xs focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all box-border ${theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white'}`}
                            />
                            <button onClick={() => setMobileSearchOpen(false)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>
                               <X size={18} />
