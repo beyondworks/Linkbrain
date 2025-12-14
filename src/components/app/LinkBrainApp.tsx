@@ -1661,20 +1661,26 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
             >
                {/* Pull-to-Refresh Indicator (mobile only) */}
-               {pullDistance > 0 && (
-                  <div
-                     className="md:hidden flex items-center justify-center transition-all duration-150"
-                     style={{ height: `${pullDistance}px` }}
-                  >
-                     <div className={`w-6 h-6 rounded-full border-2 border-t-transparent animate-spin ${theme === 'dark' ? 'border-slate-400' : 'border-slate-500'}`}
+               <div
+                  className={`md:hidden flex items-center justify-center ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
+                  style={{
+                     height: `${pullDistance}px`,
+                     transition: isPulling ? 'none' : 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                     willChange: 'height'
+                  }}
+               >
+                  {pullDistance > 10 && (
+                     <div
+                        className={`w-7 h-7 rounded-full border-2 border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
                         style={{
-                           opacity: pullDistance / 60,
-                           transform: `rotate(${pullDistance * 4}deg)`,
-                           animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+                           opacity: Math.min(pullDistance / 50, 1),
+                           transform: `rotate(${pullDistance * 6}deg) scale(${Math.min(pullDistance / 60, 1)})`,
+                           transition: isPulling ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                           animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none'
                         }}
                      />
-                  </div>
-               )}
+                  )}
+               </div>
                {activeTab === 'discovery' ? (
                   <LinkBrainArticle theme={theme} />
                ) : (
