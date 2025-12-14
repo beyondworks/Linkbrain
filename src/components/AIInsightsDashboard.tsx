@@ -60,6 +60,15 @@ const qualityLabels: Record<string, { en: string; ko: string }> = {
   'low': { en: 'Low (<60)', ko: '매우 낮음 (<60)' },
 };
 
+// 마크다운 문법 제거 헬퍼
+const stripMarkdown = (text: string): string => {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold** -> bold
+    .replace(/\*([^*]+)\*/g, '$1')       // *italic* -> italic
+    .replace(/__([^_]+)__/g, '$1')       // __bold__ -> bold
+    .replace(/_([^_]+)_/g, '$1');        // _italic_ -> italic
+};
+
 // 콘텐츠 갭 탐지용 주제 (영어/한국어)
 const contentGapTopics = [
   { id: 'mobile', labelEn: 'Mobile Development', labelKo: '모바일 개발', keywords: ['mobile', 'ios', 'android', 'swift', 'kotlin', 'flutter'] },
@@ -182,61 +191,69 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     setGeneratingArticle(true);
 
     try {
-      // 프로덕션: API 호출
+      // 프로덕션: API 호출 시도
       const isProduction = window.location.hostname !== 'localhost';
+      let apiSuccess = false;
 
       if (isProduction) {
-        const response = await fetch('/api/insights/article', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.uid,
-            period,
-            language,
-            type: 'article' // 오리지널 콘텐츠 요청
-          })
-        });
+        try {
+          const response = await fetch('/api/insights/article', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.uid,
+              period,
+              language,
+              type: 'article'
+            })
+          });
 
-        if (response.ok) {
-          const data = await response.json();
-          setGeneratedArticle(data.article);
-          setShowArticle(true);
-          setGeneratingArticle(false);
-          return;
+          if (response.ok) {
+            const data = await response.json();
+            if (data.article && data.article.content) {
+              setGeneratedArticle(data.article);
+              setShowArticle(true);
+              apiSuccess = true;
+            }
+          }
+        } catch (apiError) {
+          console.warn('[AIInsights] API call failed, using local generation:', apiError);
         }
       }
 
-      // 로컬: 클립 기반 오리지널 콘텐츠 생성
-      const topClips = filteredData
-        .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
-        .slice(0, 8);
+      // API 실패 또는 로컬: 클립 기반 오리지널 콘텐츠 생성
+      if (!apiSuccess) {
+        const topClips = filteredData
+          .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
+          .slice(0, 8);
 
-      const topicsSet = new Set<string>();
-      topClips.forEach(clip => {
-        (clip.tags || clip.keywords || []).forEach((t: string) => {
-          topicsSet.add(t);
+        const topicsSet = new Set<string>();
+        topClips.forEach(clip => {
+          (clip.tags || clip.keywords || []).forEach((t: string) => {
+            topicsSet.add(t);
+          });
         });
-      });
-      const topTopics = Array.from(topicsSet).slice(0, 4);
+        const topTopics = Array.from(topicsSet).slice(0, 4);
 
-      const periodText = period === 'weekly'
-        ? (language === 'ko' ? '이번 주' : 'this week')
-        : (language === 'ko' ? '이번 달' : 'this month');
+        const periodText = period === 'weekly'
+          ? (language === 'ko' ? '이번 주' : 'this week')
+          : (language === 'ko' ? '이번 달' : 'this month');
 
-      const articleContent = language === 'ko'
-        ? generateKoreanOriginalArticle(topClips, topTopics, periodText)
-        : generateEnglishOriginalArticle(topClips, topTopics, periodText);
+        const articleContent = language === 'ko'
+          ? generateKoreanOriginalArticle(topClips, topTopics, periodText)
+          : generateEnglishOriginalArticle(topClips, topTopics, periodText);
 
-      setGeneratedArticle({
-        title: language === 'ko'
-          ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
-          : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`,
-        content: articleContent,
-        topics: topTopics,
-        wordCount: articleContent.length,
-        generatedAt: new Date().toISOString()
-      });
-      setShowArticle(true);
+        setGeneratedArticle({
+          title: language === 'ko'
+            ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
+            : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`,
+          content: articleContent,
+          topics: topTopics,
+          wordCount: articleContent.length,
+          generatedAt: new Date().toISOString()
+        });
+        setShowArticle(true);
+      }
 
     } catch (error) {
       console.error('[AIInsights] Article generation error:', error);
@@ -1084,16 +1101,17 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                     }
                     // Regular content
                     return part.split('\n').map((line, lineIdx) => {
+                      const cleanLine = stripMarkdown(line);
                       if (line.startsWith('## ')) {
-                        return <h2 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{line.replace('## ', '')}</h2>;
+                        return <h2 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{stripMarkdown(line.replace('## ', ''))}</h2>;
                       } else if (line.startsWith('### ')) {
-                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{line.replace('### ', '')}</h3>;
+                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{stripMarkdown(line.replace('### ', ''))}</h3>;
                       } else if (line.startsWith('- ')) {
-                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{line.replace('- ', '')}</li>;
+                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{stripMarkdown(line.replace('- ', ''))}</li>;
                       } else if (line.match(/^\d\./)) {
-                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 list-decimal ${textMuted}`}>{line.replace(/^\d\./, '')}</li>;
-                      } else if (line.trim()) {
-                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{line}</p>;
+                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 list-decimal ${textMuted}`}>{stripMarkdown(line.replace(/^\d\./, ''))}</li>;
+                      } else if (cleanLine.trim()) {
+                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{cleanLine}</p>;
                       }
                       return null;
                     });
@@ -1207,18 +1225,19 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                     }
                     // Regular content
                     return part.split('\n').map((line, lineIdx) => {
+                      const cleanLine = stripMarkdown(line);
                       if (line.startsWith('## ')) {
-                        return <h2 key={`${idx}-${lineIdx}`} className="mt-5 mb-2 text-base font-black text-[#21DBA4]">{line.replace('## ', '')}</h2>;
+                        return <h2 key={`${idx}-${lineIdx}`} className="mt-5 mb-2 text-base font-black text-[#21DBA4]">{stripMarkdown(line.replace('## ', ''))}</h2>;
                       } else if (line.startsWith('### ')) {
-                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{line.replace('### ', '')}</h3>;
+                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{stripMarkdown(line.replace('### ', ''))}</h3>;
                       } else if (line.startsWith('- ')) {
-                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{line.replace('- ', '')}</li>;
+                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{stripMarkdown(line.replace('- ', ''))}</li>;
                       } else if (line.startsWith('*') && line.endsWith('*')) {
                         return <p key={`${idx}-${lineIdx}`} className={`mt-4 text-xs italic ${textMuted}`}>{line.replace(/\*/g, '')}</p>;
                       } else if (line.startsWith('---')) {
                         return <hr key={`${idx}-${lineIdx}`} className={`my-4 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
-                      } else if (line.trim()) {
-                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{line}</p>;
+                      } else if (cleanLine.trim()) {
+                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{cleanLine}</p>;
                       }
                       return null;
                     });
