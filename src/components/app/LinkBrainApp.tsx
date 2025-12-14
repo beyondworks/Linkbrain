@@ -413,6 +413,47 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [isSourcesOpen, setIsSourcesOpen] = useState(true);
    const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
 
+   // PWA Install Prompt
+   const deferredPromptRef = useRef<any>(null);
+   const [canInstall, setCanInstall] = useState(false);
+
+   // PWA Install Prompt Handler
+   useEffect(() => {
+      const handleBeforeInstallPrompt = (e: Event) => {
+         e.preventDefault();
+         deferredPromptRef.current = e;
+         setCanInstall(true);
+      };
+
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+      // Check if already installed (standalone mode)
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+         setCanInstall(false);
+      }
+
+      return () => {
+         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
+   }, []);
+
+   const handleInstallApp = async () => {
+      if (deferredPromptRef.current) {
+         deferredPromptRef.current.prompt();
+         const { outcome } = await deferredPromptRef.current.userChoice;
+         if (outcome === 'accepted') {
+            toast.success(language === 'ko' ? '앱이 설치되었습니다!' : 'App installed!');
+            setCanInstall(false);
+         }
+         deferredPromptRef.current = null;
+      } else {
+         // iOS Safari - show manual instructions
+         toast(language === 'ko' ? '공유 버튼 → 홈 화면에 추가를 눌러주세요' : 'Tap Share → Add to Home Screen', {
+            duration: 5000
+         });
+      }
+   };
+
    // Selection
    const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
 
@@ -1690,6 +1731,19 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                         title="Select Items"
                      >
                         <CheckSquare size={18} />
+                     </button>
+
+                     {/* PWA Install Button - shows on desktop when installable or always on mobile for iOS instructions */}
+                     <button
+                        onClick={handleInstallApp}
+                        className={`hidden md:flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-bold transition-all transform active:scale-95 ${theme === 'dark'
+                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                              : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'
+                           }`}
+                        title={language === 'ko' ? '앱 설치' : 'Install App'}
+                     >
+                        <Download size={16} />
+                        <span className="text-[14px]">{language === 'ko' ? '앱 설치' : 'Install'}</span>
                      </button>
 
                      <button
