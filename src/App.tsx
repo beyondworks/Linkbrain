@@ -71,26 +71,15 @@ const App = () => {
     };
   }, []);
 
-  const handleInstallApp = async () => {
-    if (deferredPromptRef.current) {
-      deferredPromptRef.current.prompt();
-      const { outcome } = await deferredPromptRef.current.userChoice;
-      if (outcome === 'accepted') {
-        toast.success(language === 'ko' ? '앱이 설치되었습니다!' : 'App installed!');
-      }
-      deferredPromptRef.current = null;
-    } else {
-      // iOS Safari - show manual instructions
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) {
-        toast(language === 'ko' ? '공유 버튼(▢↑) → 홈 화면에 추가를 눌러주세요' : 'Tap Share (▢↑) → Add to Home Screen', {
-          duration: 6000
-        });
-      } else {
-        // Already installed or not supported - redirect to app
-        setCurrentView('app');
-      }
-    }
+  const handleInstallApp = () => {
+    // Download the app zip file
+    const link = document.createElement('a');
+    link.href = '/LinkBrain.app.zip';
+    link.download = 'LinkBrain.app.zip';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(language === 'ko' ? '다운로드가 시작됩니다!' : 'Download started!');
   };
 
   // Save view to localStorage on change
