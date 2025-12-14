@@ -1612,7 +1612,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      {/* Mobile Sticky Header Section */}
                      {activeTab !== 'insights' && (
-                        <div className={`md:hidden sticky top-0 z-20 -mx-4 px-4 pt-0 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                        <div className={`md:hidden sticky top-0 z-20 -mx-4 px-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                            {/* Title + Count */}
                            <div className="mb-3">
                               <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
