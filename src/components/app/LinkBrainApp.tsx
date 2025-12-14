@@ -1733,19 +1733,6 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                         <CheckSquare size={18} />
                      </button>
 
-                     {/* PWA Install Button - shows on desktop when installable or always on mobile for iOS instructions */}
-                     <button
-                        onClick={handleInstallApp}
-                        className={`hidden md:flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-bold transition-all transform active:scale-95 ${theme === 'dark'
-                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
-                              : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'
-                           }`}
-                        title={language === 'ko' ? '앱 설치' : 'Install App'}
-                     >
-                        <Download size={16} />
-                        <span className="text-[14px]">{language === 'ko' ? '앱 설치' : 'Install'}</span>
-                     </button>
-
                      <button
                         onClick={() => setIsAddModalOpen(true)}
                         className={`bg-[#21DBA4] hover:bg-[#1bc290] h-9 px-4 rounded-full text-sm font-bold shadow-lg shadow-[#21DBA4]/20 flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px] ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}

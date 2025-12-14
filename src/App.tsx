@@ -31,6 +31,7 @@ import { LoginPage } from './components/app/LoginPage';
 import { Toaster } from './components/ui/sonner';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { toast } from 'sonner';
 
 // Brand Color Constants
 const PRIMARY_COLOR = "#21DBA4";
@@ -53,6 +54,44 @@ const App = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [language, setLanguage] = useState<'en' | 'ko'>('ko');
+
+  // PWA Install Prompt
+  const deferredPromptRef = React.useRef<any>(null);
+
+  // Handle beforeinstallprompt event for PWA install
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      deferredPromptRef.current = e;
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPromptRef.current) {
+      deferredPromptRef.current.prompt();
+      const { outcome } = await deferredPromptRef.current.userChoice;
+      if (outcome === 'accepted') {
+        toast.success(language === 'ko' ? '앱이 설치되었습니다!' : 'App installed!');
+      }
+      deferredPromptRef.current = null;
+    } else {
+      // iOS Safari - show manual instructions
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        toast(language === 'ko' ? '공유 버튼(▢↑) → 홈 화면에 추가를 눌러주세요' : 'Tap Share (▢↑) → Add to Home Screen', {
+          duration: 6000
+        });
+      } else {
+        // Already installed or not supported - redirect to app
+        setCurrentView('app');
+      }
+    }
+  };
 
   // Save view to localStorage on change
   useEffect(() => {
@@ -160,6 +199,7 @@ const App = () => {
         currentView={currentView}
         onEnterApp={() => setCurrentView('app')}
         onNavigate={handleNavigate}
+        onInstallApp={handleInstallApp}
       />
       <Toaster />
     </>
@@ -170,9 +210,10 @@ interface LandingPageProps {
   currentView: ViewType;
   onEnterApp: () => void;
   onNavigate: (view: string) => void;
+  onInstallApp: () => void;
 }
 
-const LandingPageContent = ({ currentView, onEnterApp, onNavigate }: LandingPageProps) => {
+const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp }: LandingPageProps) => {
   const [scrolled, setScrolled] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -247,7 +288,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate }: LandingPage
                 Log in
               </button>
               <button
-                onClick={() => { onEnterApp(); setMobileMenuOpen(false); }}
+                onClick={() => { onInstallApp(); setMobileMenuOpen(false); }}
                 className="w-full py-3 rounded-lg bg-[#21DBA4] text-white font-bold text-base shadow-md shadow-[#21DBA4]/20 active:scale-95 transition-transform hover:bg-[#1BC290]"
               >
                 App 설치하기
@@ -293,7 +334,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate }: LandingPage
               Log in
             </button>
             <button
-              onClick={onEnterApp}
+              onClick={onInstallApp}
               className="px-6 py-2.5 rounded-full bg-[#21DBA4] text-white text-[13px] font-bold hover:bg-[#1BC290] hover:shadow-lg hover:shadow-[#21DBA4]/30 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 active:scale-95 duration-200 shadow-md shadow-[#21DBA4]/20"
             >
               <Download size={14} /> <span className="hidden sm:inline">App 설치</span><span className="sm:hidden">App</span>
@@ -339,11 +380,11 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate }: LandingPage
                 {/* CTA Group */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 mb-28 animate-fade-in-up delay-300">
                   <button
-                    onClick={onEnterApp}
+                    onClick={onInstallApp}
                     className="group relative px-10 py-4 bg-[#21DBA4] text-white rounded-full font-bold text-base flex items-center gap-2 hover:bg-[#1BC290] hover:shadow-2xl hover:shadow-[#21DBA4]/25 transition-all overflow-hidden shadow-xl shadow-[#21DBA4]/15 active:scale-95 duration-200"
                   >
                     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
-                    무료로 시작하기 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    앱 무료 설치하기 <Download size={18} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
 
@@ -662,7 +703,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate }: LandingPage
         .perspective-1000 { perspective: 1000px; }
       `}</style>
 
-    </div>
+    </div >
   );
 };
 
