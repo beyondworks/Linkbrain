@@ -37,9 +37,9 @@ export const ManagementModal = ({ title, initialData, type, onClose, onSave, onD
         : ['bg-indigo-500', 'bg-teal-500', 'bg-rose-500', 'bg-amber-500', 'bg-slate-800'];
 
     return (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" style={{ padding: 'calc(12px + env(safe-area-inset-left)) calc(12px + env(safe-area-inset-right)) 12px' }} onClick={onClose}>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
             <div
-                className={`rounded-xl w-[calc(100%-24px)] max-w-[320px] max-h-[85vh] overflow-y-auto p-4 shadow-2xl mx-auto ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}
+                className={`rounded-xl w-[90vw] max-w-[320px] max-h-[85vh] overflow-y-auto p-5 shadow-2xl relative ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}
                 onClick={e => e.stopPropagation()}
             >
                 <h3 className="font-bold text-base mb-3">{title}</h3>
