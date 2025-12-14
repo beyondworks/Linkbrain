@@ -197,7 +197,7 @@ const App = () => {
     <>
       <LandingPageContent
         currentView={currentView}
-        onEnterApp={() => setCurrentView('app')}
+        onEnterApp={() => handleNavigate('app')}
         onNavigate={handleNavigate}
         onInstallApp={handleInstallApp}
       />
