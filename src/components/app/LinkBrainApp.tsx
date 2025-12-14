@@ -1612,7 +1612,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                      {/* Mobile Sticky Header Section */}
                      {activeTab !== 'insights' && (
-                        <div className={`md:hidden sticky top-0 z-10 -mx-4 px-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                        <div className={`md:hidden sticky top-0 z-10 -mx-4 px-4 -mt-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                            {/* Title + Count */}
                            <div className="mb-3">
                               <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -1638,7 +1638,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                               </p>
                            </div>
                            {/* Filter + Toggle Row */}
-                           <div className="flex items-center justify-between pb-3">
+                           <div className="flex items-center justify-between pb-3 relative" ref={filterRef}>
                               <button
                                  onClick={() => setIsFilterOpen(!isFilterOpen)}
                                  className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
@@ -1998,7 +1998,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   onClick={() => mainContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className={`md:hidden fixed bottom-24 right-6 w-10 h-10 rounded-full shadow-lg flex items-center justify-center z-30 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200'}`}
+                  className={`md:hidden fixed bottom-6 left-4 w-9 h-9 rounded-full shadow-lg flex items-center justify-center z-30 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200'}`}
                >
                   <ChevronUp size={20} />
                </motion.button>
