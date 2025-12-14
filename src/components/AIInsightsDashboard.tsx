@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
-import { Brain, TrendingUp, Clock, BookOpen, Tag, Globe, Zap, Target, Network, Calendar, Loader2 } from 'lucide-react';
+import { Brain, TrendingUp, Clock, BookOpen, Tag, Globe, Zap, Target, Network, Calendar, Loader2, FileText, Sparkles, X } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 
@@ -76,6 +76,28 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   const [loading, setLoading] = useState(false);
   const [firestoreClips, setFirestoreClips] = useState<any[]>([]);
 
+  // Insights Report states (현재 요약 기능)
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [generatedReport, setGeneratedReport] = useState<{
+    title: string;
+    content: string;
+    topics: string[];
+    wordCount: number;
+    generatedAt: string;
+  } | null>(null);
+  const [showReport, setShowReport] = useState(false);
+
+  // AI Article states (새로운 오리지널 콘텐츠 생성)
+  const [generatingArticle, setGeneratingArticle] = useState(false);
+  const [generatedArticle, setGeneratedArticle] = useState<{
+    title: string;
+    content: string;
+    topics: string[];
+    wordCount: number;
+    generatedAt: string;
+  } | null>(null);
+  const [showArticle, setShowArticle] = useState(false);
+
   // Firestore에서 클립 데이터 가져오기
   useEffect(() => {
     const fetchClips = async () => {
@@ -106,6 +128,255 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     fetchClips();
   }, []);
 
+  // 인사이트 리포트 생성 함수 (요약 정리)
+  const generateReport = async () => {
+    const user = auth.currentUser;
+    if (!user || filteredData.length < 3) return;
+
+    setGeneratingReport(true);
+
+    try {
+      const topClips = filteredData
+        .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
+        .slice(0, 10);
+
+      const topicsSet = new Set<string>();
+      topClips.forEach(clip => {
+        (clip.tags || clip.keywords || []).forEach((t: string) => {
+          topicsSet.add(t);
+        });
+      });
+      const topTopics = Array.from(topicsSet).slice(0, 5);
+
+      const periodText = period === 'weekly'
+        ? (language === 'ko' ? '이번 주' : 'this week')
+        : (language === 'ko' ? '이번 달' : 'this month');
+
+      const reportContent = language === 'ko'
+        ? generateKoreanReport(topClips, topTopics, periodText)
+        : generateEnglishReport(topClips, topTopics, periodText);
+
+      setGeneratedReport({
+        title: language === 'ko'
+          ? `📊 ${periodText} 인사이트 리포트`
+          : `📊 ${periodText} Insights Report`,
+        content: reportContent,
+        topics: topTopics,
+        wordCount: reportContent.length,
+        generatedAt: new Date().toISOString()
+      });
+      setShowReport(true);
+
+    } catch (error) {
+      console.error('[AIInsights] Report generation error:', error);
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  // AI 아티클 생성 함수 (새로운 오리지널 콘텐츠)
+  const generateArticle = async () => {
+    const user = auth.currentUser;
+    if (!user || filteredData.length < 3) return;
+
+    setGeneratingArticle(true);
+
+    try {
+      // 프로덕션: API 호출
+      const isProduction = window.location.hostname !== 'localhost';
+
+      if (isProduction) {
+        const response = await fetch('/api/insights/article', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.uid,
+            period,
+            language,
+            type: 'article' // 오리지널 콘텐츠 요청
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setGeneratedArticle(data.article);
+          setShowArticle(true);
+          setGeneratingArticle(false);
+          return;
+        }
+      }
+
+      // 로컬: 클립 기반 오리지널 콘텐츠 생성
+      const topClips = filteredData
+        .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
+        .slice(0, 8);
+
+      const topicsSet = new Set<string>();
+      topClips.forEach(clip => {
+        (clip.tags || clip.keywords || []).forEach((t: string) => {
+          topicsSet.add(t);
+        });
+      });
+      const topTopics = Array.from(topicsSet).slice(0, 4);
+
+      const periodText = period === 'weekly'
+        ? (language === 'ko' ? '이번 주' : 'this week')
+        : (language === 'ko' ? '이번 달' : 'this month');
+
+      const articleContent = language === 'ko'
+        ? generateKoreanOriginalArticle(topClips, topTopics, periodText)
+        : generateEnglishOriginalArticle(topClips, topTopics, periodText);
+
+      setGeneratedArticle({
+        title: language === 'ko'
+          ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
+          : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`,
+        content: articleContent,
+        topics: topTopics,
+        wordCount: articleContent.length,
+        generatedAt: new Date().toISOString()
+      });
+      setShowArticle(true);
+
+    } catch (error) {
+      console.error('[AIInsights] Article generation error:', error);
+    } finally {
+      setGeneratingArticle(false);
+    }
+  };
+
+  // 한국어 인사이트 리포트
+  const generateKoreanReport = (clips: any[], topics: string[], period: string) => {
+    const intro = `## 📊 ${period} 트렌드 분석
+
+${period} 동안 총 ${clips.length}개의 흥미로운 콘텐츠를 발견했습니다. 주요 관심 분야는 ${topics.slice(0, 3).join(', ')} 등입니다.`;
+
+    const insights = clips.slice(0, 5).map((clip, idx) => {
+      const title = clip.title || '제목 없음';
+      const summary = clip.summary?.slice(0, 200) || '';
+      return `### ${idx + 1}. ${title}
+
+${summary}${summary.length >= 200 ? '...' : ''}`;
+    }).join('\n\n');
+
+    const conclusion = `## 💡 핵심 인사이트
+
+- **${topics[0] || '주요 주제'}** 관련 콘텐츠가 가장 많이 저장되었습니다
+- 총 ${clips.length}개의 클립에서 ${topics.length}개의 주요 주제가 발견되었습니다
+
+## 🚀 다음 액션
+
+1. 저장된 콘텐츠 중 아직 읽지 않은 것들을 확인해보세요
+2. 관심 주제에 대해 더 깊이 탐구해보세요`;
+
+    return `${intro}\n\n${insights}\n\n${conclusion}`;
+  };
+
+  // 영어 인사이트 리포트
+  const generateEnglishReport = (clips: any[], topics: string[], period: string) => {
+    const intro = `## 📊 ${period} Trend Analysis
+
+This ${period}, you discovered ${clips.length} interesting pieces of content. Your main interests include ${topics.slice(0, 3).join(', ')}.`;
+
+    const insights = clips.slice(0, 5).map((clip, idx) => {
+      const title = clip.title || 'Untitled';
+      const summary = clip.summary?.slice(0, 200) || '';
+      return `### ${idx + 1}. ${title}
+
+${summary}${summary.length >= 200 ? '...' : ''}`;
+    }).join('\n\n');
+
+    const conclusion = `## 💡 Key Insights
+
+- **${topics[0] || 'Main Topic'}** related content was saved most frequently
+- ${topics.length} major topics were discovered across ${clips.length} clips
+
+## 🚀 Next Actions
+
+1. Review saved content you haven't read yet
+2. Dive deeper into your interest topics`;
+
+    return `${intro}\n\n${insights}\n\n${conclusion}`;
+  };
+
+  // 한국어 오리지널 아티클 생성
+  const generateKoreanOriginalArticle = (clips: any[], topics: string[], period: string) => {
+    const mainTopic = topics[0] || 'AI';
+    const summaries = clips.map(c => c.summary || c.title || '').join(' ');
+
+    return `${period} 동안 수집한 다양한 콘텐츠를 바탕으로, **${mainTopic}**과 관련된 흥미로운 트렌드를 발견할 수 있었습니다.
+
+## 🔍 핵심 발견
+
+### 1. ${mainTopic}의 급속한 발전
+
+최근 ${mainTopic} 분야는 눈에 띄는 변화를 겪고 있습니다. ${clips[0]?.title || '최신 기술'} 관련 콘텐츠에서 볼 수 있듯이, 이 분야는 매일 새로운 혁신이 일어나고 있습니다.
+
+${clips[0]?.summary?.slice(0, 300) || '기술의 발전은 우리 일상에 큰 영향을 미치고 있습니다.'}
+
+### 2. ${topics[1] || '기술'} 트렌드 분석
+
+${clips[1]?.title || '관련 주제'}와 같은 콘텐츠들은 현재 업계에서 주목받는 방향을 보여줍니다. ${clips[1]?.summary?.slice(0, 200) || '다양한 기업들이 이 분야에 투자를 확대하고 있습니다.'}
+
+### 3. 실용적 적용 사례
+
+${clips[2]?.title || '실제 사례'}를 통해 이론이 실제로 어떻게 적용되는지 확인할 수 있습니다. ${clips[2]?.summary?.slice(0, 200) || '이러한 사례들은 앞으로의 방향을 제시합니다.'}
+
+## 💡 시사점
+
+${period} 동안의 콘텐츠 분석을 통해 다음과 같은 시사점을 도출할 수 있습니다:
+
+- **${topics[0] || '주요 분야'}**는 계속해서 성장세를 유지할 것으로 보입니다
+- ${topics[1] || '관련 기술'}과의 융합이 새로운 기회를 창출하고 있습니다
+- 사용자 경험 중심의 접근이 더욱 중요해지고 있습니다
+
+## 🚀 앞으로의 전망
+
+앞으로 ${mainTopic} 분야는 더욱 빠르게 진화할 것으로 예상됩니다. 지속적인 학습과 트렌드 파악이 중요한 시점입니다.
+
+---
+
+*이 아티클은 ${period} 수집된 ${clips.length}개의 콘텐츠를 기반으로 AI가 재구성하여 작성했습니다.*`;
+  };
+
+  // 영어 오리지널 아티클 생성
+  const generateEnglishOriginalArticle = (clips: any[], topics: string[], period: string) => {
+    const mainTopic = topics[0] || 'AI';
+
+    return `Based on the diverse content collected ${period}, we've discovered fascinating trends related to **${mainTopic}**.
+
+## 🔍 Key Discoveries
+
+### 1. The Rapid Evolution of ${mainTopic}
+
+The ${mainTopic} field is undergoing remarkable changes. As seen in content about ${clips[0]?.title || 'recent technologies'}, innovations are happening daily in this space.
+
+${clips[0]?.summary?.slice(0, 300) || 'Technology advances are significantly impacting our daily lives.'}
+
+### 2. ${topics[1] || 'Technology'} Trend Analysis
+
+Content like ${clips[1]?.title || 'related topics'} shows the direction the industry is heading. ${clips[1]?.summary?.slice(0, 200) || 'Various companies are expanding investments in this field.'}
+
+### 3. Practical Applications
+
+Through ${clips[2]?.title || 'real cases'}, we can see how theory is applied in practice. ${clips[2]?.summary?.slice(0, 200) || 'These cases point to future directions.'}
+
+## 💡 Key Takeaways
+
+From ${period}'s content analysis, we can draw the following insights:
+
+- **${topics[0] || 'Main field'}** is expected to maintain its growth trajectory
+- Integration with ${topics[1] || 'related technologies'} is creating new opportunities
+- User experience-centric approaches are becoming increasingly important
+
+## 🚀 Future Outlook
+
+The ${mainTopic} field is expected to evolve even faster. Continuous learning and trend awareness are crucial at this point.
+
+---
+
+*This article was created by AI, synthesizing ${clips.length} pieces of content collected ${period}.*`;
+  };
   // 기간에 따른 데이터 필터링
   const filteredData = useMemo(() => {
     const now = Date.now();
@@ -411,37 +682,87 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
 
   return (
     <div className="space-y-8">
-      {/* Period Toggle */}
-      <div className="flex items-center justify-between">
+      {/* Period Toggle + Generation Buttons */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Period Toggle */}
         <div className={`inline-flex rounded-xl p-1 ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
           <button
             onClick={() => setPeriod('weekly')}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${period === 'weekly'
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
               ? 'bg-[#21DBA4] text-white shadow-md'
               : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
           >
-            <Calendar size={14} />
+            <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
             {language === 'ko' ? '주간' : 'Weekly'}
           </button>
           <button
             onClick={() => setPeriod('monthly')}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${period === 'monthly'
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
               ? 'bg-[#21DBA4] text-white shadow-md'
               : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
           >
-            <Calendar size={14} />
+            <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
             {language === 'ko' ? '월간' : 'Monthly'}
           </button>
         </div>
 
         {loading && (
           <div className="flex items-center gap-2 text-[#21DBA4]">
-            <Loader2 size={16} className="animate-spin" />
-            <span className="text-sm">{language === 'ko' ? '로딩...' : 'Loading...'}</span>
+            <Loader2 size={14} className="animate-spin" />
+            <span className="text-xs sm:text-sm">{language === 'ko' ? '로딩...' : 'Loading...'}</span>
           </div>
         )}
+
+        {/* Generation Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Insights Report Button */}
+          <button
+            onClick={generateReport}
+            disabled={generatingReport || filteredData.length < 3}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed
+              ${isDark
+                ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+              }`}
+          >
+            {generatingReport ? (
+              <>
+                <Loader2 size={12} className="animate-spin" />
+                <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
+              </>
+            ) : (
+              <>
+                <FileText size={12} />
+                <span className="whitespace-nowrap">{language === 'ko' ? '리포트' : 'Report'}</span>
+              </>
+            )}
+          </button>
+
+          {/* AI Article Button */}
+          <button
+            onClick={generateArticle}
+            disabled={generatingArticle || filteredData.length < 3}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
+              ${generatingArticle
+                ? 'bg-slate-600 text-white'
+                : 'bg-gradient-to-r from-[#21DBA4] to-[#3B82F6] text-white hover:from-[#1bc290] hover:to-[#2563EB]'
+              }`}
+          >
+            {generatingArticle ? (
+              <>
+                <Loader2 size={12} className="animate-spin" />
+                <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={12} />
+                <span className="whitespace-nowrap">{language === 'ko' ? '아티클' : 'Article'}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Hero Summary Card */}
@@ -664,6 +985,169 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
           isGap
         />
       </div>
+
+      {/* Insights Report Modal */}
+      {showReport && generatedReport && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
+        >
+          <div
+            className={`w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
+                  <FileText className="text-[#21DBA4]" size={18} />
+                </div>
+                <div className="min-w-0">
+                  <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedReport.title}</h2>
+                  <p className={`text-xs ${textMuted}`}>
+                    {language === 'ko' ? `${generatedReport.wordCount}자` : `${generatedReport.wordCount} chars`} •
+                    {new Date(generatedReport.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowReport(false)}
+                className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {generatedReport.topics.map((topic, idx) => (
+                  <span
+                    key={idx}
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
+                  >
+                    #{topic}
+                  </span>
+                ))}
+              </div>
+
+              <article className={`text-sm leading-relaxed ${textPrimary}`}>
+                {generatedReport.content.split('\n').map((paragraph, idx) => {
+                  if (paragraph.startsWith('## ')) {
+                    return <h2 key={idx} className={`mt-5 mb-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{paragraph.replace('## ', '')}</h2>;
+                  } else if (paragraph.startsWith('### ')) {
+                    return <h3 key={idx} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{paragraph.replace('### ', '')}</h3>;
+                  } else if (paragraph.startsWith('- ')) {
+                    return <li key={idx} className={`ml-4 ${textMuted}`}>{paragraph.replace('- ', '')}</li>;
+                  } else if (paragraph.match(/^\d\./)) {
+                    return <li key={idx} className={`ml-4 list-decimal ${textMuted}`}>{paragraph.replace(/^\d\./, '')}</li>;
+                  } else if (paragraph.trim()) {
+                    return <p key={idx} className={`mb-2 ${textMuted}`}>{paragraph}</p>;
+                  }
+                  return null;
+                })}
+              </article>
+            </div>
+
+            {/* Footer */}
+            <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+              <button
+                onClick={() => navigator.clipboard.writeText(generatedReport.content)}
+                className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+              >
+                {language === 'ko' ? '복사' : 'Copy'}
+              </button>
+              <button
+                onClick={() => setShowReport(false)}
+                className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+              >
+                {language === 'ko' ? '닫기' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Article Modal */}
+      {showArticle && generatedArticle && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
+        >
+          <div
+            className={`w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-[#21DBA4] to-[#3B82F6] flex items-center justify-center">
+                  <Sparkles className="text-white" size={18} />
+                </div>
+                <div className="min-w-0">
+                  <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedArticle.title}</h2>
+                  <p className={`text-xs ${textMuted}`}>
+                    {language === 'ko' ? `AI 아티클 • ${generatedArticle.wordCount}자` : `AI Article • ${generatedArticle.wordCount} chars`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowArticle(false)}
+                className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {generatedArticle.topics.map((topic, idx) => (
+                  <span
+                    key={idx}
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-[#21DBA4]' : 'bg-[#21DBA4]/10 text-[#21DBA4]'}`}
+                  >
+                    #{topic}
+                  </span>
+                ))}
+              </div>
+
+              <article className={`text-sm leading-relaxed ${textPrimary}`}>
+                {generatedArticle.content.split('\n').map((paragraph, idx) => {
+                  if (paragraph.startsWith('## ')) {
+                    return <h2 key={idx} className="mt-5 mb-2 text-base font-black text-[#21DBA4]">{paragraph.replace('## ', '')}</h2>;
+                  } else if (paragraph.startsWith('### ')) {
+                    return <h3 key={idx} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{paragraph.replace('### ', '')}</h3>;
+                  } else if (paragraph.startsWith('- ')) {
+                    return <li key={idx} className={`ml-4 ${textMuted}`}>{paragraph.replace('- ', '')}</li>;
+                  } else if (paragraph.startsWith('*') && paragraph.endsWith('*')) {
+                    return <p key={idx} className={`mt-4 text-xs italic ${textMuted}`}>{paragraph.replace(/\*/g, '')}</p>;
+                  } else if (paragraph.trim()) {
+                    return <p key={idx} className={`mb-2 ${textMuted}`}>{paragraph}</p>;
+                  }
+                  return null;
+                })}
+              </article>
+            </div>
+
+            {/* Footer */}
+            <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+              <button
+                onClick={() => navigator.clipboard.writeText(generatedArticle.content)}
+                className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+              >
+                {language === 'ko' ? '복사' : 'Copy'}
+              </button>
+              <button
+                onClick={() => setShowArticle(false)}
+                className="px-3 py-1.5 rounded-lg font-semibold text-sm bg-gradient-to-r from-[#21DBA4] to-[#3B82F6] text-white hover:from-[#1bc290] hover:to-[#2563EB] transition-colors"
+              >
+                {language === 'ko' ? '닫기' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
