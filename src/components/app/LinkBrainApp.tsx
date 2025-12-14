@@ -392,7 +392,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [activeTab, setActiveTab] = useState(initialTab);
    const [searchQuery, setSearchQuery] = useState('');
    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>('list');
+   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>('grid');
 
    // Scroll position for scroll-to-top button
    const [showScrollTop, setShowScrollTop] = useState(false);
@@ -1662,23 +1662,31 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
             >
                {/* Pull-to-Refresh Indicator (mobile only) */}
                <div
-                  className={`md:hidden flex items-center justify-center ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
+                  className={`md:hidden flex flex-col items-center justify-center gap-2 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
                   style={{
                      height: `${pullDistance}px`,
                      transition: isPulling ? 'none' : 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                     willChange: 'height'
+                     willChange: 'height',
+                     minHeight: pullDistance > 0 ? '0px' : '0'
                   }}
                >
                   {pullDistance > 10 && (
-                     <div
-                        className={`w-7 h-7 rounded-full border-2 border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
-                        style={{
-                           opacity: Math.min(pullDistance / 50, 1),
-                           transform: `rotate(${pullDistance * 6}deg) scale(${Math.min(pullDistance / 60, 1)})`,
-                           transition: isPulling ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                           animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none'
-                        }}
-                     />
+                     <>
+                        <div
+                           className={`w-8 h-8 rounded-full border-[3px] border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
+                           style={{
+                              opacity: Math.min(pullDistance / 40, 1),
+                              transform: `rotate(${pullDistance * 8}deg) scale(${Math.min(pullDistance / 50, 1)})`,
+                              transition: isPulling ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none'
+                           }}
+                        />
+                        {pullDistance > 50 && (
+                           <span className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`} style={{ opacity: Math.min((pullDistance - 50) / 20, 1) }}>
+                              {isRefreshing ? (language === 'ko' ? '새로고침 중...' : 'Refreshing...') : (language === 'ko' ? '놓으면 새로고침' : 'Release to refresh')}
+                           </span>
+                        )}
+                     </>
                   )}
                </div>
                {activeTab === 'discovery' ? (
