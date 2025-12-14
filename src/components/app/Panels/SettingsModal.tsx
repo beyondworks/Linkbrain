@@ -86,6 +86,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, use
                             { id: 'account', label: t('myAccount'), icon: User },
                             { id: 'security', label: t('security'), icon: Lock },
                             { id: 'general', label: t('general'), icon: Smartphone },
+                            { id: 'ai', label: t('aiSettings') || 'AI Settings', icon: Brain },
                             { id: 'integrations', label: t('integrations'), icon: Zap },
                             { id: 'notifications', label: t('notifications'), icon: Bell },
                             { id: 'data', label: t('dataStorage'), icon: Shield },
@@ -170,6 +171,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, use
                         )}
                         {activeTab === 'account' && <AccountSettings theme={theme} t={t} user={user} />}
                         {activeTab === 'security' && <SecuritySettings theme={theme} t={t} />}
+                        {activeTab === 'ai' && <AISettings theme={theme} t={t} />}
                         {activeTab === 'integrations' && <IntegrationsSettings theme={theme} t={t} />}
                         {activeTab === 'notifications' && <NotificationsSettings theme={theme} t={t} notifications={notifications} setNotifications={setNotifications} />}
                         {activeTab === 'data' && <DataSettings theme={theme} t={t} />}
@@ -550,3 +552,158 @@ const IntegrationCard = ({ name, icon, description, connected, t, theme }: any) 
         </button>
     </div>
 );
+
+// AI Settings Component
+const AI_MODELS = {
+    openai: [
+        { id: 'gpt-4o', name: 'GPT-4o (Recommended)' },
+        { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+    ],
+    gemini: [
+        { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Experimental)' },
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
+        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+    ]
+};
+
+const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) => string }) => {
+    const [provider, setProvider] = useState<'openai' | 'gemini'>(() => {
+        return (localStorage.getItem('ai_provider') as 'openai' | 'gemini') || 'gemini';
+    });
+    const [apiKey, setApiKey] = useState(() => localStorage.getItem('ai_api_key') || '');
+    const [model, setModel] = useState(() => localStorage.getItem('ai_model') || '');
+    const [showKey, setShowKey] = useState(false);
+
+    const saveSettings = () => {
+        localStorage.setItem('ai_provider', provider);
+        localStorage.setItem('ai_api_key', apiKey);
+        localStorage.setItem('ai_model', model);
+        toast.success(t('aiSettingsSaved') || 'AI settings saved!');
+    };
+
+    const clearSettings = () => {
+        localStorage.removeItem('ai_provider');
+        localStorage.removeItem('ai_api_key');
+        localStorage.removeItem('ai_model');
+        setApiKey('');
+        setModel('');
+        toast.success(t('aiSettingsCleared') || 'AI settings cleared');
+    };
+
+    const isConfigured = apiKey.length > 10;
+
+    return (
+        <div className="max-w-xl space-y-6 md:space-y-8">
+            {/* Status Banner */}
+            <div className={`p-4 rounded-xl flex items-center gap-3 ${isConfigured ? 'bg-[#21DBA4]/10 border border-[#21DBA4]/30' : theme === 'dark' ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-amber-50 border border-amber-200'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isConfigured ? 'bg-[#21DBA4] text-white' : 'bg-amber-500 text-white'}`}>
+                    <Brain size={20} />
+                </div>
+                <div className="flex-1">
+                    <h5 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                        {isConfigured ? (t('aiEnabled') || 'AI Features Enabled') : (t('aiDisabled') || 'AI Features Disabled')}
+                    </h5>
+                    <p className="text-xs text-slate-400">
+                        {isConfigured
+                            ? (t('aiEnabledDesc') || 'Insights, Articles, and AI Chat are available')
+                            : (t('aiDisabledDesc') || 'Enter your API key to enable AI features')}
+                    </p>
+                </div>
+            </div>
+
+            {/* Provider Selection */}
+            <div className="space-y-3 md:space-y-4">
+                <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('aiProvider') || 'AI Provider'}</h4>
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <button
+                        onClick={() => { setProvider('openai'); setModel(''); }}
+                        className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${provider === 'openai' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : 'border-slate-200 opacity-60'}`}
+                    >
+                        <span className="text-xl md:text-2xl">🤖</span>
+                        <span className={`text-xs md:text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-600'}`}>OpenAI</span>
+                    </button>
+                    <button
+                        onClick={() => { setProvider('gemini'); setModel(''); }}
+                        className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${provider === 'gemini' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : 'border-slate-200 opacity-60'}`}
+                    >
+                        <span className="text-xl md:text-2xl">✨</span>
+                        <span className={`text-xs md:text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-600'}`}>Google Gemini</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* API Key Input */}
+            <div className="space-y-3 md:space-y-4">
+                <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('apiKey') || 'API Key'}</h4>
+                <div className="relative">
+                    <input
+                        type={showKey ? 'text' : 'password'}
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder={provider === 'openai' ? 'sk-...' : 'AIza...'}
+                        className={`w-full h-12 rounded-xl px-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'} border`}
+                    />
+                    <button
+                        onClick={() => setShowKey(!showKey)}
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg ${theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                    >
+                        {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
+                <p className="text-xs text-slate-400">
+                    {provider === 'openai'
+                        ? (t('getOpenAIKey') || 'Get your API key from platform.openai.com')
+                        : (t('getGeminiKey') || 'Get your API key from ai.google.dev')}
+                </p>
+            </div>
+
+            {/* Model Selection */}
+            <div className="space-y-3 md:space-y-4">
+                <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('model') || 'Model'}</h4>
+                <select
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    className={`w-full h-12 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all cursor-pointer ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'} border`}
+                >
+                    <option value="">{t('selectModel') || 'Select a model'}</option>
+                    {AI_MODELS[provider].map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
+                <button
+                    onClick={saveSettings}
+                    disabled={!apiKey || !model}
+                    className="flex-1 h-12 rounded-xl font-bold text-sm bg-[#21DBA4] text-white hover:bg-[#1bc290] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#21DBA4]/20"
+                >
+                    {t('save') || 'Save Settings'}
+                </button>
+                {isConfigured && (
+                    <button
+                        onClick={clearSettings}
+                        className={`px-6 h-12 rounded-xl font-bold text-sm transition-all ${theme === 'dark' ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                    >
+                        {t('clear') || 'Clear'}
+                    </button>
+                )}
+            </div>
+
+            {/* Info */}
+            <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-50'}`}>
+                <h5 className={`font-bold text-sm mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                    {t('aiFeatures') || 'AI Features'}
+                </h5>
+                <ul className="text-xs text-slate-400 space-y-1">
+                    <li>• {t('aiInsightsReport') || 'AI Insights Report - Summarize your saved content'}</li>
+                    <li>• {t('aiArticle') || 'AI Article - Generate original articles from your clips'}</li>
+                    <li>• {t('aiChat') || 'AI Chat - Ask questions about your content'}</li>
+                </ul>
+            </div>
+        </div>
+    );
+};

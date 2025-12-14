@@ -148,7 +148,27 @@ export const TRANSLATIONS = {
         archiveClips: "Archive",
         archiveConfirmTitle: "Archive {count} Item{s}?",
         archiveConfirmDesc: "Archived items will be hidden from Home, Read Later, and Favorites.",
-        itemsArchived: "{count} items archived"
+        itemsArchived: "{count} items archived",
+        // AI Settings
+        aiSettings: "AI Settings",
+        aiProvider: "AI Provider",
+        apiKey: "API Key",
+        model: "Model",
+        selectModel: "Select a model",
+        aiEnabled: "AI Features Enabled",
+        aiDisabled: "AI Features Disabled",
+        aiEnabledDesc: "Insights, Articles, and AI Chat are available",
+        aiDisabledDesc: "Enter your API key to enable AI features",
+        aiSettingsSaved: "AI settings saved!",
+        aiSettingsCleared: "AI settings cleared",
+        getOpenAIKey: "Get your API key from platform.openai.com",
+        getGeminiKey: "Get your API key from ai.google.dev",
+        aiFeatures: "AI Features",
+        aiInsightsReport: "AI Insights Report - Summarize your saved content",
+        aiArticle: "AI Article - Generate original articles from your clips",
+        aiChat: "AI Chat - Ask questions about your content",
+        clear: "Clear",
+        aiSetupRequired: "Set up your API key in Settings to use AI features"
     },
     ko: {
         home: "홈",
@@ -298,7 +318,27 @@ export const TRANSLATIONS = {
         archiveClips: "보관",
         archiveConfirmTitle: "{count}개의 항목을 보관하시겠습니까?",
         archiveConfirmDesc: "보관된 항목은 홈, 나중에 읽기, 즐겨찾기에서 숨겨집니다.",
-        itemsArchived: "{count}개 항목이 보관되었습니다"
+        itemsArchived: "{count}개 항목이 보관되었습니다",
+        // AI Settings
+        aiSettings: "AI 설정",
+        aiProvider: "AI 제공자",
+        apiKey: "API 키",
+        model: "모델",
+        selectModel: "모델 선택",
+        aiEnabled: "AI 기능 활성화됨",
+        aiDisabled: "AI 기능 비활성화됨",
+        aiEnabledDesc: "인사이트, 아티클, AI 대화 기능 사용 가능",
+        aiDisabledDesc: "AI 기능을 사용하려면 API 키를 입력하세요",
+        aiSettingsSaved: "AI 설정이 저장되었습니다!",
+        aiSettingsCleared: "AI 설정이 초기화되었습니다",
+        getOpenAIKey: "platform.openai.com에서 API 키를 받으세요",
+        getGeminiKey: "ai.google.dev에서 API 키를 받으세요",
+        aiFeatures: "AI 기능",
+        aiInsightsReport: "AI 인사이트 리포트 - 저장된 콘텐츠 요약",
+        aiArticle: "AI 아티클 - 클립에서 새로운 글 생성",
+        aiChat: "AI 대화 - 콘텐츠에 대해 질문하기",
+        clear: "초기화",
+        aiSetupRequired: "AI 기능을 사용하려면 설정에서 API 키를 입력하세요"
     }
 } as const;
 

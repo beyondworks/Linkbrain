@@ -468,19 +468,28 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 </div>
 
                 {/* AI Input Footer */}
-                <div className={`absolute bottom-0 left-0 right-0 p-4 border-t flex items-center gap-2 z-20 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-                    <div className="w-8 h-8 rounded-full bg-[#21DBA4] flex items-center justify-center text-white shrink-0">
-                        <LinkBrainLogo size={16} variant="green" />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Ask AI about this content..."
-                        className={`flex-1 rounded-full h-10 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700' : 'bg-slate-100 focus:bg-white'}`}
-                    />
-                    <button className="p-2 text-slate-400 hover:text-[#21DBA4]">
-                        <ArrowUpCircle size={24} />
-                    </button>
-                </div>
+                {(() => {
+                    const isAIConfigured = (localStorage.getItem('ai_api_key') || '').length > 10;
+                    return (
+                        <div className={`absolute bottom-0 left-0 right-0 p-4 border-t flex items-center gap-2 z-20 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 ${isAIConfigured ? 'bg-[#21DBA4]' : 'bg-slate-400'}`}>
+                                <LinkBrainLogo size={16} variant="green" />
+                            </div>
+                            <input
+                                type="text"
+                                disabled={!isAIConfigured}
+                                placeholder={isAIConfigured ? (t('askAI') || 'Ask AI about this content...') : (t('aiSetupRequired') || 'Set up your API key in Settings')}
+                                className={`flex-1 rounded-full h-10 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${!isAIConfigured ? 'cursor-not-allowed opacity-60' : ''} ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700 placeholder:text-slate-500' : 'bg-slate-100 focus:bg-white placeholder:text-slate-400'}`}
+                            />
+                            <button
+                                disabled={!isAIConfigured}
+                                className={`p-2 transition-colors ${isAIConfigured ? 'text-slate-400 hover:text-[#21DBA4]' : 'text-slate-300 cursor-not-allowed'}`}
+                            >
+                                <ArrowUpCircle size={24} />
+                            </button>
+                        </div>
+                    );
+                })()}
             </motion.div>
         </div>
     );

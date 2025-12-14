@@ -107,6 +107,9 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   } | null>(null);
   const [showArticle, setShowArticle] = useState(false);
 
+  // Check if user has configured AI API key
+  const isAIConfigured = typeof window !== 'undefined' && (localStorage.getItem('ai_api_key') || '').length > 10;
+
   // Firestore에서 클립 데이터 가져오기
   useEffect(() => {
     const fetchClips = async () => {
@@ -748,7 +751,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
           {/* Insights Report Button */}
           <button
             onClick={generateReport}
-            disabled={generatingReport || filteredData.length < 3}
+            disabled={!isAIConfigured || generatingReport || filteredData.length < 3}
+            title={!isAIConfigured ? (language === 'ko' ? 'AI 설정에서 API 키를 입력하세요' : 'Set up API key in AI Settings') : ''}
             className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed
               ${isDark
                 ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600'
@@ -771,7 +775,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
           {/* AI Article Button */}
           <button
             onClick={generateArticle}
-            disabled={generatingArticle || filteredData.length < 3}
+            disabled={!isAIConfigured || generatingArticle || filteredData.length < 3}
+            title={!isAIConfigured ? (language === 'ko' ? 'AI 설정에서 API 키를 입력하세요' : 'Set up API key in AI Settings') : ''}
             className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
               ${generatingArticle
                 ? 'bg-slate-600 text-white'
