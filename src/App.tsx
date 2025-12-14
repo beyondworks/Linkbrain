@@ -593,7 +593,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
 
         {currentView === 'features' && (
           <div className="py-20 animate-fade-in-up">
-            <LinkBrainFeatures theme="light" language="ko" />
+            <LinkBrainFeatures theme="light" language="ko" onEnterApp={onEnterApp} />
           </div>
         )}
 
