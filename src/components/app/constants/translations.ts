@@ -168,6 +168,7 @@ export const TRANSLATIONS = {
         aiArticle: "AI Article - Generate original articles from your clips",
         aiChat: "AI Chat - Ask questions about your content",
         clear: "Clear",
+        comingSoon: "Coming Soon",
         aiSetupRequired: "Set up your API key in Settings to use AI features"
     },
     ko: {
@@ -338,6 +339,7 @@ export const TRANSLATIONS = {
         aiArticle: "AI 아티클 - 클립에서 새로운 글 생성",
         aiChat: "AI 대화 - 콘텐츠에 대해 질문하기",
         clear: "초기화",
+        comingSoon: "준비중",
         aiSetupRequired: "AI 기능을 사용하려면 설정에서 API 키를 입력하세요"
     }
 } as const;

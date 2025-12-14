@@ -349,10 +349,10 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
         </div>
 
         <div className="space-y-3 md:space-y-4">
-            <IntegrationCard name="Notion" icon="N" description="Sync your saved links to a Notion database" connected t={t} theme={theme} />
-            <IntegrationCard name="YouTube" icon="Y" description="Import liked videos and playlists automatically" t={t} theme={theme} />
-            <IntegrationCard name="Readwise" icon="R" description="Sync highlights from articles and books" t={t} theme={theme} />
-            <IntegrationCard name="Slack" icon="S" description="Save links directly from Slack conversations" t={t} theme={theme} />
+            <IntegrationCard name="Notion" icon="N" description="Sync your saved links to a Notion database" comingSoon t={t} theme={theme} />
+            <IntegrationCard name="YouTube" icon="Y" description="Import liked videos and playlists automatically" comingSoon t={t} theme={theme} />
+            <IntegrationCard name="Readwise" icon="R" description="Sync highlights from articles and books" comingSoon t={t} theme={theme} />
+            <IntegrationCard name="Slack" icon="S" description="Save links directly from Slack conversations" comingSoon t={t} theme={theme} />
         </div>
     </div>
 );
@@ -538,7 +538,7 @@ const ToggleOption = ({ label, description, checked, disabled, onToggle, theme }
 );
 
 // Integration Card Component
-const IntegrationCard = ({ name, icon, description, connected, t, theme }: any) => (
+const IntegrationCard = ({ name, icon, description, connected, comingSoon, t, theme }: any) => (
     <div className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl border transition-all ${theme === 'dark' ? 'bg-slate-800 border-slate-700 hover:bg-slate-750' : 'bg-white border-slate-100 hover:shadow-md'}`}>
         <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm md:text-lg flex-shrink-0">
             {icon}
@@ -547,8 +547,17 @@ const IntegrationCard = ({ name, icon, description, connected, t, theme }: any) 
             <h5 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{name}</h5>
             <p className="text-xs text-slate-400 truncate md:whitespace-normal">{description}</p>
         </div>
-        <button onClick={() => toast.success(connected ? "Disconnected" : "Connected!")} className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap ${connected ? 'bg-slate-100 text-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
-            {connected ? t('connected') : t('connect')}
+        <button
+            onClick={() => !comingSoon && toast.success(connected ? "Disconnected" : "Connected!")}
+            disabled={comingSoon}
+            className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap ${comingSoon
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : connected
+                    ? 'bg-slate-100 text-slate-600'
+                    : 'bg-slate-900 text-white hover:bg-slate-800'
+                }`}
+        >
+            {comingSoon ? t('comingSoon') : (connected ? t('connected') : t('connect'))}
         </button>
     </div>
 );
