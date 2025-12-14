@@ -36,6 +36,19 @@ export const ManagementModal = ({ title, initialData, type, onClose, onSave, onD
         ]
         : ['bg-indigo-500', 'bg-teal-500', 'bg-rose-500', 'bg-amber-500', 'bg-slate-800'];
 
+    // Manage body scroll lock
+    React.useEffect(() => {
+        // Store original overflow style
+        const originalStyle = window.getComputedStyle(document.body).overflow;
+        // Lock scroll
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            // Restore original style on unmount
+            document.body.style.overflow = originalStyle;
+        };
+    }, []);
+
     return (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
             <div

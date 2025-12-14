@@ -946,7 +946,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const textMuted = theme === 'dark' ? 'text-slate-400' : 'text-slate-500';
 
    return (
-      <div className={`flex h-screen font-sans overflow-hidden transition-colors duration-300 ${bgClass}`}>
+      <div className={`flex h-screen h-[100dvh] font-sans overflow-hidden transition-colors duration-300 ${bgClass}`}>
 
          {/* Loading Overlay for Data Fetch */}
          {dataLoading && links.length === 0 && (
