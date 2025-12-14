@@ -398,6 +398,12 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [showScrollTop, setShowScrollTop] = useState(false);
    const mainContentRef = useRef<HTMLDivElement>(null);
 
+   // Pull-to-refresh state
+   const [isPulling, setIsPulling] = useState(false);
+   const [pullDistance, setPullDistance] = useState(0);
+   const [isRefreshing, setIsRefreshing] = useState(false);
+   const pullStartY = useRef(0);
+
    // Sidebar Toggles
    const [isSmartFoldersOpen, setIsSmartFoldersOpen] = useState(true);
    const [isSourcesOpen, setIsSourcesOpen] = useState(true);
@@ -494,6 +500,51 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
    }, []);
+
+   // Pull-to-refresh handler (mobile only)
+   useEffect(() => {
+      const container = mainContentRef.current;
+      if (!container) return;
+
+      const handleTouchStart = (e: TouchEvent) => {
+         if (container.scrollTop === 0) {
+            pullStartY.current = e.touches[0].clientY;
+            setIsPulling(true);
+         }
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+         if (!isPulling || isRefreshing) return;
+         const currentY = e.touches[0].clientY;
+         const diff = currentY - pullStartY.current;
+         if (diff > 0 && container.scrollTop === 0) {
+            e.preventDefault();
+            setPullDistance(Math.min(diff * 0.5, 80));
+         }
+      };
+
+      const handleTouchEnd = async () => {
+         if (pullDistance > 60 && !isRefreshing) {
+            setIsRefreshing(true);
+            setPullDistance(50);
+            // Trigger refresh
+            window.location.reload();
+         } else {
+            setPullDistance(0);
+         }
+         setIsPulling(false);
+      };
+
+      container.addEventListener('touchstart', handleTouchStart, { passive: true });
+      container.addEventListener('touchmove', handleTouchMove, { passive: false });
+      container.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+         container.removeEventListener('touchstart', handleTouchStart);
+         container.removeEventListener('touchmove', handleTouchMove);
+         container.removeEventListener('touchend', handleTouchEnd);
+      };
+   }, [isPulling, pullDistance, isRefreshing]);
 
    // Filter Outside Click
    useEffect(() => {
@@ -1604,7 +1655,26 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
             </header>
 
             {/* Scrollable Area */}
-            <div ref={mainContentRef} className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}>
+            <div
+               ref={mainContentRef}
+               className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}
+               style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
+            >
+               {/* Pull-to-Refresh Indicator (mobile only) */}
+               {pullDistance > 0 && (
+                  <div
+                     className="md:hidden flex items-center justify-center transition-all duration-150"
+                     style={{ height: `${pullDistance}px` }}
+                  >
+                     <div className={`w-6 h-6 rounded-full border-2 border-t-transparent animate-spin ${theme === 'dark' ? 'border-slate-400' : 'border-slate-500'}`}
+                        style={{
+                           opacity: pullDistance / 60,
+                           transform: `rotate(${pullDistance * 4}deg)`,
+                           animation: isRefreshing ? 'spin 1s linear infinite' : 'none'
+                        }}
+                     />
+                  </div>
+               )}
                {activeTab === 'discovery' ? (
                   <LinkBrainArticle theme={theme} />
                ) : (
