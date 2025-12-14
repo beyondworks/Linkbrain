@@ -1610,8 +1610,65 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                ) : (
                   <div className="max-w-7xl mx-auto">
 
-                     {/* Header Info */}
-                     <div className="flex items-end justify-between mb-8">
+                     {/* Mobile Sticky Header Section */}
+                     {activeTab !== 'insights' && (
+                        <div className={`md:hidden sticky top-0 z-10 -mx-4 px-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                           {/* Title + Count */}
+                           <div className="mb-3">
+                              <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                 {(() => {
+                                    const getTimeGreeting = () => {
+                                       const hour = new Date().getHours();
+                                       if (hour >= 5 && hour < 12) return t('goodMorning');
+                                       if (hour >= 12 && hour < 18) return t('goodAfternoon');
+                                       return t('goodEvening');
+                                    };
+                                    const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+                                    const title = activeTab === 'home' ? `${getTimeGreeting()}, ${userName} 👋` :
+                                       activeTab === 'later' ? t('readLater') :
+                                          activeTab === 'favorites' ? t('favorites') :
+                                             activeTab === 'archive' ? t('archive') :
+                                                categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
+                                    return title;
+                                 })()}
+                              </h1>
+                              <p className={`text-sm ${textMuted}`}>
+                                 {`${filteredLinks.length}${t('linksFound')}`}
+                                 {activeTab === 'home' && ` ${t('aiSummary')}`}
+                              </p>
+                           </div>
+                           {/* Filter + Toggle Row */}
+                           <div className="flex items-center justify-between pb-3">
+                              <button
+                                 onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                 className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
+                                    ? 'bg-[#E0FBF4] border-[#21DBA4] text-[#21DBA4]'
+                                    : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-500 shadow-sm'
+                                    }`}
+                              >
+                                 <Filter size={14} />
+                                 {t('filter')}
+                                 {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0) && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></span>
+                                 )}
+                              </button>
+                              <button
+                                 onClick={() => setMobileViewMode(mobileViewMode === 'list' ? 'grid' : 'list')}
+                                 className={`w-9 h-9 flex items-center justify-center rounded-lg border transition-colors ${theme === 'dark'
+                                    ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
+                                    : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50 shadow-sm'
+                                    }`}
+                              >
+                                 {mobileViewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}
+                              </button>
+                           </div>
+                           {/* Divider */}
+                           <div className={`border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}></div>
+                        </div>
+                     )}
+
+                     {/* Desktop Header Info (hidden on mobile now) */}
+                     <div className="hidden md:flex items-end justify-between mb-8">
                         <div className="flex-1">
                            <h1 className={`text-2xl font-black mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                               {(() => {
@@ -1651,19 +1708,6 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                               {activeTab === 'home' && ` ${t('aiSummary')}`}
                            </p>
                         </div>
-
-                        {/* Mobile View Toggle - moved to top level for proper positioning */}
-                        {activeTab !== 'insights' && (
-                           <button
-                              onClick={() => setMobileViewMode(mobileViewMode === 'list' ? 'grid' : 'list')}
-                              className={`md:hidden w-9 h-9 flex items-center justify-center rounded-lg border transition-colors ml-3 ${theme === 'dark'
-                                 ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
-                                 : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50 shadow-sm'
-                                 }`}
-                           >
-                              {mobileViewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}
-                           </button>
-                        )}
 
                         {/* Sort & Advanced Filter Dropdown */}
                         <div className="relative hidden md:block" ref={filterRef}>
@@ -1936,30 +1980,30 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                )}
             </div>
 
-            {/* Mobile FAB */}
-            <button
-               onClick={() => setIsAddModalOpen(true)}
-               className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#21DBA4] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:scale-110 transition-transform active:scale-90"
-            >
-               <Plus size={24} />
-            </button>
-
-            {/* Mobile Scroll-to-Top Button */}
-            <AnimatePresence>
-               {showScrollTop && (
-                  <motion.button
-                     initial={{ opacity: 0, scale: 0.8 }}
-                     animate={{ opacity: 1, scale: 1 }}
-                     exit={{ opacity: 0, scale: 0.8 }}
-                     onClick={() => mainContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                     className={`md:hidden fixed bottom-24 right-6 w-10 h-10 rounded-full shadow-lg flex items-center justify-center z-30 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200'}`}
-                  >
-                     <ChevronUp size={20} />
-                  </motion.button>
-               )}
-            </AnimatePresence>
-
          </main>
+
+         {/* Mobile FAB - outside main for proper fixed positioning */}
+         <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#21DBA4] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:scale-110 transition-transform active:scale-90"
+         >
+            <Plus size={24} />
+         </button>
+
+         {/* Mobile Scroll-to-Top Button */}
+         <AnimatePresence>
+            {showScrollTop && (
+               <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => mainContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className={`md:hidden fixed bottom-24 right-6 w-10 h-10 rounded-full shadow-lg flex items-center justify-center z-30 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200'}`}
+               >
+                  <ChevronUp size={20} />
+               </motion.button>
+            )}
+         </AnimatePresence>
       </div>
    );
 };
