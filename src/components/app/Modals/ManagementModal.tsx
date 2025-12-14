@@ -50,7 +50,7 @@ export const ManagementModal = ({ title, initialData, type, onClose, onSave, onD
                             type="text"
                             value={name}
                             onChange={e => setName(e.target.value)}
-                            className={`w-full border rounded-lg px-3 py-2 text-sm mt-1 focus:ring-2 focus:ring-[#21DBA4]/20 outline-none ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'}`}
+                            className={`w-full border rounded-lg px-3 py-2 text-base md:text-sm mt-1 focus:ring-2 focus:ring-[#21DBA4]/20 outline-none ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'}`}
                             autoFocus
                         />
                     </div>
