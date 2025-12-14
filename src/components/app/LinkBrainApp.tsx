@@ -403,6 +403,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [pullDistance, setPullDistance] = useState(0);
    const [isRefreshing, setIsRefreshing] = useState(false);
    const pullStartY = useRef(0);
+   const pullDistanceRef = useRef(0);
+   const pullIndicatorRef = useRef<HTMLDivElement>(null);
+   const pullSpinnerRef = useRef<HTMLDivElement>(null);
+   const pullTextRef = useRef<HTMLSpanElement>(null);
 
    // Sidebar Toggles
    const [isSmartFoldersOpen, setIsSmartFoldersOpen] = useState(true);
@@ -501,38 +505,83 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       return () => container.removeEventListener('scroll', handleScroll);
    }, []);
 
-   // Pull-to-refresh handler (mobile only)
+   // Pull-to-refresh handler (mobile only) - using refs for smooth animation
    useEffect(() => {
       const container = mainContentRef.current;
       if (!container) return;
 
+      let isPullingLocal = false;
+
       const handleTouchStart = (e: TouchEvent) => {
          if (container.scrollTop === 0) {
             pullStartY.current = e.touches[0].clientY;
+            isPullingLocal = true;
             setIsPulling(true);
          }
       };
 
       const handleTouchMove = (e: TouchEvent) => {
-         if (!isPulling || isRefreshing) return;
+         if (!isPullingLocal || isRefreshing) return;
          const currentY = e.touches[0].clientY;
          const diff = currentY - pullStartY.current;
          if (diff > 0 && container.scrollTop === 0) {
             e.preventDefault();
-            setPullDistance(Math.min(diff * 0.5, 80));
+            const distance = Math.min(diff * 0.5, 100);
+            pullDistanceRef.current = distance;
+
+            // Direct DOM manipulation for smooth animation
+            requestAnimationFrame(() => {
+               if (pullIndicatorRef.current) {
+                  pullIndicatorRef.current.style.height = `${distance}px`;
+               }
+               if (pullSpinnerRef.current) {
+                  pullSpinnerRef.current.style.opacity = `${Math.min(distance / 40, 1)}`;
+                  pullSpinnerRef.current.style.transform = `rotate(${distance * 8}deg) scale(${Math.min(distance / 50, 1)})`;
+               }
+               if (pullTextRef.current) {
+                  pullTextRef.current.style.opacity = distance > 50 ? `${Math.min((distance - 50) / 20, 1)}` : '0';
+                  pullTextRef.current.style.display = distance > 50 ? 'block' : 'none';
+               }
+            });
          }
       };
 
-      const handleTouchEnd = async () => {
-         if (pullDistance > 60 && !isRefreshing) {
+      const handleTouchEnd = () => {
+         if (pullDistanceRef.current > 60 && !isRefreshing) {
             setIsRefreshing(true);
             setPullDistance(50);
-            // Trigger refresh
-            window.location.reload();
+            // Animate back and refresh
+            if (pullIndicatorRef.current) {
+               pullIndicatorRef.current.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+               pullIndicatorRef.current.style.height = '50px';
+            }
+            setTimeout(() => window.location.reload(), 300);
          } else {
+            // Animate back to 0
+            if (pullIndicatorRef.current) {
+               pullIndicatorRef.current.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+               pullIndicatorRef.current.style.height = '0px';
+            }
+            if (pullSpinnerRef.current) {
+               pullSpinnerRef.current.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+               pullSpinnerRef.current.style.opacity = '0';
+               pullSpinnerRef.current.style.transform = 'rotate(0deg) scale(0)';
+            }
             setPullDistance(0);
          }
+         pullDistanceRef.current = 0;
+         isPullingLocal = false;
          setIsPulling(false);
+
+         // Reset transition after animation
+         setTimeout(() => {
+            if (pullIndicatorRef.current) {
+               pullIndicatorRef.current.style.transition = 'none';
+            }
+            if (pullSpinnerRef.current) {
+               pullSpinnerRef.current.style.transition = 'none';
+            }
+         }, 300);
       };
 
       container.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -544,7 +593,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          container.removeEventListener('touchmove', handleTouchMove);
          container.removeEventListener('touchend', handleTouchEnd);
       };
-   }, [isPulling, pullDistance, isRefreshing]);
+   }, [isRefreshing]);
 
    // Filter Outside Click
    useEffect(() => {
@@ -1660,34 +1709,24 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}
                style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
             >
-               {/* Pull-to-Refresh Indicator (mobile only) */}
+               {/* Pull-to-Refresh Indicator (mobile only) - using refs for 60fps animation */}
                <div
-                  className={`md:hidden flex flex-col items-center justify-center gap-2 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
-                  style={{
-                     height: `${pullDistance}px`,
-                     transition: isPulling ? 'none' : 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                     willChange: 'height',
-                     minHeight: pullDistance > 0 ? '0px' : '0'
-                  }}
+                  ref={pullIndicatorRef}
+                  className={`md:hidden flex flex-col items-center justify-center gap-2 overflow-hidden ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
+                  style={{ height: '0px', willChange: 'height' }}
                >
-                  {pullDistance > 10 && (
-                     <>
-                        <div
-                           className={`w-8 h-8 rounded-full border-[3px] border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
-                           style={{
-                              opacity: Math.min(pullDistance / 40, 1),
-                              transform: `rotate(${pullDistance * 8}deg) scale(${Math.min(pullDistance / 50, 1)})`,
-                              transition: isPulling ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                              animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none'
-                           }}
-                        />
-                        {pullDistance > 50 && (
-                           <span className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`} style={{ opacity: Math.min((pullDistance - 50) / 20, 1) }}>
-                              {isRefreshing ? (language === 'ko' ? '새로고침 중...' : 'Refreshing...') : (language === 'ko' ? '놓으면 새로고침' : 'Release to refresh')}
-                           </span>
-                        )}
-                     </>
-                  )}
+                  <div
+                     ref={pullSpinnerRef}
+                     className={`w-8 h-8 rounded-full border-[3px] border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
+                     style={{ opacity: 0, transform: 'rotate(0deg) scale(0)', animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none' }}
+                  />
+                  <span
+                     ref={pullTextRef}
+                     className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}
+                     style={{ opacity: 0, display: 'none' }}
+                  >
+                     {isRefreshing ? (language === 'ko' ? '새로고침 중...' : 'Refreshing...') : (language === 'ko' ? '놓으면 새로고침' : 'Release to refresh')}
+                  </span>
                </div>
                {activeTab === 'discovery' ? (
                   <LinkBrainArticle theme={theme} />
