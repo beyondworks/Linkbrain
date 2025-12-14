@@ -158,8 +158,8 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
 
       setGeneratedReport({
         title: language === 'ko'
-          ? `📊 ${periodText} 인사이트 리포트`
-          : `📊 ${periodText} Insights Report`,
+          ? `${periodText} 인사이트 리포트`
+          : `${periodText} Insights Report`,
         content: reportContent,
         topics: topTopics,
         wordCount: reportContent.length,
@@ -247,9 +247,9 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
 
   // 한국어 인사이트 리포트
   const generateKoreanReport = (clips: any[], topics: string[], period: string) => {
-    const intro = `## 📊 ${period} 트렌드 분석
+    const intro = `## 트렌드 분석
 
-${period} 동안 총 ${clips.length}개의 흥미로운 콘텐츠를 발견했습니다. 주요 관심 분야는 ${topics.slice(0, 3).join(', ')} 등입니다.`;
+${period} 동안 총 ${clips.length}개의 콘텐츠를 저장했습니다. 주요 관심 분야는 ${topics.slice(0, 3).join(', ')} 등입니다.`;
 
     const insights = clips.slice(0, 5).map((clip, idx) => {
       const title = clip.title || '제목 없음';
@@ -259,24 +259,28 @@ ${period} 동안 총 ${clips.length}개의 흥미로운 콘텐츠를 발견했�
 ${summary}${summary.length >= 200 ? '...' : ''}`;
     }).join('\n\n');
 
-    const conclusion = `## 💡 핵심 인사이트
+    const conclusion = `:::callout-insight
+핵심 인사이트
 
-- **${topics[0] || '주요 주제'}** 관련 콘텐츠가 가장 많이 저장되었습니다
+- ${topics[0] || '주요 주제'} 관련 콘텐츠가 가장 많이 저장되었습니다
 - 총 ${clips.length}개의 클립에서 ${topics.length}개의 주요 주제가 발견되었습니다
+:::
 
-## 🚀 다음 액션
+:::callout-action
+다음 액션
 
 1. 저장된 콘텐츠 중 아직 읽지 않은 것들을 확인해보세요
-2. 관심 주제에 대해 더 깊이 탐구해보세요`;
+2. 관심 주제에 대해 더 깊이 탐구해보세요
+:::`;
 
     return `${intro}\n\n${insights}\n\n${conclusion}`;
   };
 
   // 영어 인사이트 리포트
   const generateEnglishReport = (clips: any[], topics: string[], period: string) => {
-    const intro = `## 📊 ${period} Trend Analysis
+    const intro = `## Trend Analysis
 
-This ${period}, you discovered ${clips.length} interesting pieces of content. Your main interests include ${topics.slice(0, 3).join(', ')}.`;
+This ${period}, you saved ${clips.length} pieces of content. Your main interests include ${topics.slice(0, 3).join(', ')}.`;
 
     const insights = clips.slice(0, 5).map((clip, idx) => {
       const title = clip.title || 'Untitled';
@@ -286,15 +290,19 @@ This ${period}, you discovered ${clips.length} interesting pieces of content. Yo
 ${summary}${summary.length >= 200 ? '...' : ''}`;
     }).join('\n\n');
 
-    const conclusion = `## 💡 Key Insights
+    const conclusion = `:::callout-insight
+Key Insights
 
-- **${topics[0] || 'Main Topic'}** related content was saved most frequently
+- ${topics[0] || 'Main Topic'} related content was saved most frequently
 - ${topics.length} major topics were discovered across ${clips.length} clips
+:::
 
-## 🚀 Next Actions
+:::callout-action
+Next Actions
 
 1. Review saved content you haven't read yet
-2. Dive deeper into your interest topics`;
+2. Dive deeper into your interest topics
+:::`;
 
     return `${intro}\n\n${insights}\n\n${conclusion}`;
   };
@@ -302,11 +310,10 @@ ${summary}${summary.length >= 200 ? '...' : ''}`;
   // 한국어 오리지널 아티클 생성
   const generateKoreanOriginalArticle = (clips: any[], topics: string[], period: string) => {
     const mainTopic = topics[0] || 'AI';
-    const summaries = clips.map(c => c.summary || c.title || '').join(' ');
 
-    return `${period} 동안 수집한 다양한 콘텐츠를 바탕으로, **${mainTopic}**과 관련된 흥미로운 트렌드를 발견할 수 있었습니다.
+    return `${period} 동안 수집한 다양한 콘텐츠를 바탕으로, ${mainTopic}과 관련된 흥미로운 트렌드를 발견할 수 있었습니다.
 
-## 🔍 핵심 발견
+## 핵심 발견
 
 ### 1. ${mainTopic}의 급속한 발전
 
@@ -322,17 +329,19 @@ ${clips[1]?.title || '관련 주제'}와 같은 콘텐츠들은 현재 업계에
 
 ${clips[2]?.title || '실제 사례'}를 통해 이론이 실제로 어떻게 적용되는지 확인할 수 있습니다. ${clips[2]?.summary?.slice(0, 200) || '이러한 사례들은 앞으로의 방향을 제시합니다.'}
 
-## 💡 시사점
+:::callout-insight
+시사점
 
-${period} 동안의 콘텐츠 분석을 통해 다음과 같은 시사점을 도출할 수 있습니다:
-
-- **${topics[0] || '주요 분야'}**는 계속해서 성장세를 유지할 것으로 보입니다
+- ${topics[0] || '주요 분야'}는 계속해서 성장세를 유지할 것으로 보입니다
 - ${topics[1] || '관련 기술'}과의 융합이 새로운 기회를 창출하고 있습니다
 - 사용자 경험 중심의 접근이 더욱 중요해지고 있습니다
+:::
 
-## 🚀 앞으로의 전망
+:::callout-action
+앞으로의 전망
 
 앞으로 ${mainTopic} 분야는 더욱 빠르게 진화할 것으로 예상됩니다. 지속적인 학습과 트렌드 파악이 중요한 시점입니다.
+:::
 
 ---
 
@@ -343,9 +352,9 @@ ${period} 동안의 콘텐츠 분석을 통해 다음과 같은 시사점을 도
   const generateEnglishOriginalArticle = (clips: any[], topics: string[], period: string) => {
     const mainTopic = topics[0] || 'AI';
 
-    return `Based on the diverse content collected ${period}, we've discovered fascinating trends related to **${mainTopic}**.
+    return `Based on the diverse content collected ${period}, we've discovered fascinating trends related to ${mainTopic}.
 
-## 🔍 Key Discoveries
+## Key Discoveries
 
 ### 1. The Rapid Evolution of ${mainTopic}
 
@@ -361,17 +370,19 @@ Content like ${clips[1]?.title || 'related topics'} shows the direction the indu
 
 Through ${clips[2]?.title || 'real cases'}, we can see how theory is applied in practice. ${clips[2]?.summary?.slice(0, 200) || 'These cases point to future directions.'}
 
-## 💡 Key Takeaways
+:::callout-insight
+Key Takeaways
 
-From ${period}'s content analysis, we can draw the following insights:
-
-- **${topics[0] || 'Main field'}** is expected to maintain its growth trajectory
+- ${topics[0] || 'Main field'} is expected to maintain its growth trajectory
 - Integration with ${topics[1] || 'related technologies'} is creating new opportunities
 - User experience-centric approaches are becoming increasingly important
+:::
 
-## 🚀 Future Outlook
+:::callout-action
+Future Outlook
 
 The ${mainTopic} field is expected to evolve even faster. Continuous learning and trend awareness are crucial at this point.
+:::
 
 ---
 
@@ -747,7 +758,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
               ${generatingArticle
                 ? 'bg-slate-600 text-white'
-                : 'bg-gradient-to-r from-[#21DBA4] to-[#3B82F6] text-white hover:from-[#1bc290] hover:to-[#2563EB]'
+                : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'
               }`}
           >
             {generatingArticle ? (
@@ -1032,20 +1043,62 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               </div>
 
               <article className={`text-sm leading-relaxed ${textPrimary}`}>
-                {generatedReport.content.split('\n').map((paragraph, idx) => {
-                  if (paragraph.startsWith('## ')) {
-                    return <h2 key={idx} className={`mt-5 mb-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{paragraph.replace('## ', '')}</h2>;
-                  } else if (paragraph.startsWith('### ')) {
-                    return <h3 key={idx} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{paragraph.replace('### ', '')}</h3>;
-                  } else if (paragraph.startsWith('- ')) {
-                    return <li key={idx} className={`ml-4 ${textMuted}`}>{paragraph.replace('- ', '')}</li>;
-                  } else if (paragraph.match(/^\d\./)) {
-                    return <li key={idx} className={`ml-4 list-decimal ${textMuted}`}>{paragraph.replace(/^\d\./, '')}</li>;
-                  } else if (paragraph.trim()) {
-                    return <p key={idx} className={`mb-2 ${textMuted}`}>{paragraph}</p>;
-                  }
-                  return null;
-                })}
+                {(() => {
+                  const content = generatedReport.content;
+                  const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
+
+                  return parts.map((part, idx) => {
+                    // Callout insight box
+                    if (part.startsWith(':::callout-insight')) {
+                      const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
+                      const lines = inner.split('\n').filter(l => l.trim());
+                      const title = lines[0];
+                      const items = lines.slice(1);
+                      return (
+                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#21DBA4] ${isDark ? 'bg-[#21DBA4]/10' : 'bg-[#21DBA4]/5'}`}>
+                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#21DBA4]' : 'text-[#1a9f7c]'}`}>{title}</h4>
+                          <ul className="space-y-1">
+                            {items.map((item, i) => (
+                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    }
+                    // Callout action box
+                    if (part.startsWith(':::callout-action')) {
+                      const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
+                      const lines = inner.split('\n').filter(l => l.trim());
+                      const title = lines[0];
+                      const items = lines.slice(1);
+                      return (
+                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#3B82F6] ${isDark ? 'bg-[#3B82F6]/10' : 'bg-[#3B82F6]/5'}`}>
+                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#3B82F6]' : 'text-[#2563eb]'}`}>{title}</h4>
+                          <ul className="space-y-1">
+                            {items.map((item, i) => (
+                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    }
+                    // Regular content
+                    return part.split('\n').map((line, lineIdx) => {
+                      if (line.startsWith('## ')) {
+                        return <h2 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{line.replace('## ', '')}</h2>;
+                      } else if (line.startsWith('### ')) {
+                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{line.replace('### ', '')}</h3>;
+                      } else if (line.startsWith('- ')) {
+                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{line.replace('- ', '')}</li>;
+                      } else if (line.match(/^\d\./)) {
+                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 list-decimal ${textMuted}`}>{line.replace(/^\d\./, '')}</li>;
+                      } else if (line.trim()) {
+                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{line}</p>;
+                      }
+                      return null;
+                    });
+                  });
+                })()}
               </article>
             </div>
 
@@ -1081,7 +1134,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             {/* Header */}
             <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-[#21DBA4] to-[#3B82F6] flex items-center justify-center">
+                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-[#21DBA4] flex items-center justify-center">
                   <Sparkles className="text-white" size={18} />
                 </div>
                 <div className="min-w-0">
@@ -1113,20 +1166,64 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               </div>
 
               <article className={`text-sm leading-relaxed ${textPrimary}`}>
-                {generatedArticle.content.split('\n').map((paragraph, idx) => {
-                  if (paragraph.startsWith('## ')) {
-                    return <h2 key={idx} className="mt-5 mb-2 text-base font-black text-[#21DBA4]">{paragraph.replace('## ', '')}</h2>;
-                  } else if (paragraph.startsWith('### ')) {
-                    return <h3 key={idx} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{paragraph.replace('### ', '')}</h3>;
-                  } else if (paragraph.startsWith('- ')) {
-                    return <li key={idx} className={`ml-4 ${textMuted}`}>{paragraph.replace('- ', '')}</li>;
-                  } else if (paragraph.startsWith('*') && paragraph.endsWith('*')) {
-                    return <p key={idx} className={`mt-4 text-xs italic ${textMuted}`}>{paragraph.replace(/\*/g, '')}</p>;
-                  } else if (paragraph.trim()) {
-                    return <p key={idx} className={`mb-2 ${textMuted}`}>{paragraph}</p>;
-                  }
-                  return null;
-                })}
+                {(() => {
+                  const content = generatedArticle.content;
+                  const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
+
+                  return parts.map((part, idx) => {
+                    // Callout insight box
+                    if (part.startsWith(':::callout-insight')) {
+                      const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
+                      const lines = inner.split('\n').filter(l => l.trim());
+                      const title = lines[0];
+                      const items = lines.slice(1);
+                      return (
+                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#21DBA4] ${isDark ? 'bg-[#21DBA4]/10' : 'bg-[#21DBA4]/5'}`}>
+                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#21DBA4]' : 'text-[#1a9f7c]'}`}>{title}</h4>
+                          <ul className="space-y-1">
+                            {items.map((item, i) => (
+                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    }
+                    // Callout action box
+                    if (part.startsWith(':::callout-action')) {
+                      const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
+                      const lines = inner.split('\n').filter(l => l.trim());
+                      const title = lines[0];
+                      const items = lines.slice(1);
+                      return (
+                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#3B82F6] ${isDark ? 'bg-[#3B82F6]/10' : 'bg-[#3B82F6]/5'}`}>
+                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#3B82F6]' : 'text-[#2563eb]'}`}>{title}</h4>
+                          <ul className="space-y-1">
+                            {items.map((item, i) => (
+                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    }
+                    // Regular content
+                    return part.split('\n').map((line, lineIdx) => {
+                      if (line.startsWith('## ')) {
+                        return <h2 key={`${idx}-${lineIdx}`} className="mt-5 mb-2 text-base font-black text-[#21DBA4]">{line.replace('## ', '')}</h2>;
+                      } else if (line.startsWith('### ')) {
+                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{line.replace('### ', '')}</h3>;
+                      } else if (line.startsWith('- ')) {
+                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{line.replace('- ', '')}</li>;
+                      } else if (line.startsWith('*') && line.endsWith('*')) {
+                        return <p key={`${idx}-${lineIdx}`} className={`mt-4 text-xs italic ${textMuted}`}>{line.replace(/\*/g, '')}</p>;
+                      } else if (line.startsWith('---')) {
+                        return <hr key={`${idx}-${lineIdx}`} className={`my-4 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
+                      } else if (line.trim()) {
+                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{line}</p>;
+                      }
+                      return null;
+                    });
+                  });
+                })()}
               </article>
             </div>
 
@@ -1140,7 +1237,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               </button>
               <button
                 onClick={() => setShowArticle(false)}
-                className="px-3 py-1.5 rounded-lg font-semibold text-sm bg-gradient-to-r from-[#21DBA4] to-[#3B82F6] text-white hover:from-[#1bc290] hover:to-[#2563EB] transition-colors"
+                className="px-3 py-1.5 rounded-lg font-semibold text-sm bg-[#21DBA4] text-white hover:bg-[#1bc290] transition-colors"
               >
                 {language === 'ko' ? '닫기' : 'Close'}
               </button>

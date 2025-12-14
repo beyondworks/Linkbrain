@@ -382,6 +382,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
    // Sidebar Toggles
    const [isSmartFoldersOpen, setIsSmartFoldersOpen] = useState(true);
+   const [isSourcesOpen, setIsSourcesOpen] = useState(true);
    const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
 
    // Selection
@@ -1281,6 +1282,60 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   </AnimatePresence>
                </div>
 
+               {/* Sources */}
+               <div>
+                  <div className="px-3 mb-2 flex justify-between items-center group">
+                     <button
+                        onClick={() => setIsSourcesOpen(!isSourcesOpen)}
+                        className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors ${theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}
+                     >
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${isSourcesOpen ? '' : '-rotate-90'}`} />
+                        {t('sources')}
+                     </button>
+                  </div>
+
+                  <AnimatePresence initial={false}>
+                     {isSourcesOpen && (
+                        <motion.div
+                           initial={{ height: 0, opacity: 0 }}
+                           animate={{ height: "auto", opacity: 1 }}
+                           exit={{ height: 0, opacity: 0 }}
+                           className="overflow-hidden"
+                        >
+                           <div className="flex flex-wrap gap-2 px-3 py-2">
+                              {availableSources.map((src: string) => {
+                                 const isActive = filterSources.includes(src);
+                                 const count = links.filter((l: LinkItem) => getSourceInfo(l.url).name === src && !l.isArchived).length;
+                                 const sourceInfo = getSourceInfo(`https://${src.toLowerCase().replace(' ', '')}.com`);
+                                 return (
+                                    <button
+                                       key={src}
+                                       onClick={() => toggleFilter(setFilterSources, filterSources, src)}
+                                       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
+                                          ? 'bg-[#21DBA4] text-white shadow-sm'
+                                          : theme === 'dark'
+                                             ? 'bg-slate-800 text-slate-400 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                             : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                          }`}
+                                    >
+                                       <span>{src}</span>
+                                       {count > 0 && (
+                                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                             ? 'bg-white/20 text-white'
+                                             : theme === 'dark' ? 'bg-slate-700 text-slate-500' : 'bg-white/50 text-slate-500'
+                                             }`}>
+                                             {count}
+                                          </span>
+                                       )}
+                                    </button>
+                                 );
+                              })}
+                           </div>
+                        </motion.div>
+                     )}
+                  </AnimatePresence>
+               </div>
+
                {/* Collections */}
                <div>
                   <div className="px-3 mb-2 flex justify-between items-center group">
@@ -1373,8 +1428,17 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                      <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
                         <Menu size={20} />
                      </button>
-                     <span className={`font-bold capitalize ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                        {activeTab === 'insights' ? t('aiInsights') : activeTab === 'discovery' ? t('discovery') : categories.find(c => c.id === activeTab)?.name || collections.find(c => c.id === activeTab)?.name || activeTab}
+                     <span className={`font-bold capitalize flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                        {(() => {
+                           const label = activeTab === 'insights' ? t('aiInsights') : activeTab === 'discovery' ? t('discovery') : categories.find(c => c.id === activeTab)?.name || collections.find(c => c.id === activeTab)?.name || activeTab;
+                           const hasBeta = label.includes('[Beta]');
+                           return (
+                              <>
+                                 {label.replace('[Beta]', '').trim()}
+                                 {hasBeta && <span className="px-1.5 py-0.5 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-[9px] font-extrabold tracking-wide">BETA</span>}
+                              </>
+                           );
+                        })()}
                      </span>
                   </div>
 
