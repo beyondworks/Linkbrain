@@ -1469,19 +1469,19 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                   {/* Mobile Search Toggle Overlay */}
                   {mobileSearchOpen && (
-                     <div className={`absolute top-[72px] left-0 right-0 p-4 border-b z-20 animate-fade-in-down md:hidden shadow-lg ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}>
-                        <div className="relative">
-                           <Search size={18} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`} />
+                     <div className={`absolute top-[72px] left-0 right-0 px-3 py-3 border-b z-20 animate-fade-in-down md:hidden shadow-lg ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}>
+                        <div className="relative w-full">
+                           <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`} />
                            <input
                               autoFocus
                               type="text"
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               placeholder={t('searchPlaceholder')}
-                              className={`w-full h-10 rounded-full pl-10 pr-10 text-xs focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all box-border ${theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white'}`}
+                              className={`w-full h-9 rounded-full pl-9 pr-9 text-xs focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white'}`}
                            />
                            <button onClick={() => setMobileSearchOpen(false)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>
-                              <X size={18} />
+                              <X size={16} />
                            </button>
                         </div>
                      </div>
