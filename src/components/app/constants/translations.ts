@@ -169,6 +169,13 @@ export const TRANSLATIONS = {
         aiChat: "AI Chat - Ask questions about your content",
         clear: "Clear",
         comingSoon: "Coming Soon",
+        systemTheme: "System",
+        keyboardShortcuts: "Keyboard Shortcuts",
+        themeToggleShortcut: "Toggle Theme",
+        thumbnailToggleShortcut: "Toggle Thumbnails",
+        languageToggleShortcut: "Toggle Language",
+        saveShortcuts: "Save Shortcuts",
+        scrollToTop: "Scroll to top",
         aiSetupRequired: "Set up your API key in Settings to use AI features"
     },
     ko: {
@@ -340,6 +347,13 @@ export const TRANSLATIONS = {
         aiChat: "AI 대화 - 콘텐츠에 대해 질문하기",
         clear: "초기화",
         comingSoon: "준비중",
+        systemTheme: "시스템 설정",
+        keyboardShortcuts: "키보드 단축키",
+        themeToggleShortcut: "테마 전환",
+        thumbnailToggleShortcut: "썸네일 토글",
+        languageToggleShortcut: "언어 전환",
+        saveShortcuts: "단축키 저장",
+        scrollToTop: "맨 위로 이동",
         aiSetupRequired: "AI 기능을 사용하려면 설정에서 API 키를 입력하세요"
     }
 } as const;

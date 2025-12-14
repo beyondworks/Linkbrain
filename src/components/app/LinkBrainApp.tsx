@@ -60,7 +60,8 @@ import {
    Send,
    Copy,
    BookOpen,
-   LayoutGrid
+   LayoutGrid,
+   ChevronUp
 } from 'lucide-react';
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { motion, AnimatePresence } from 'motion/react';
@@ -228,7 +229,20 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    } = useClips();
 
    // --- Global State ---
-   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+   const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>(() => {
+      return (localStorage.getItem('themePreference') as 'light' | 'dark' | 'system') || 'system';
+   });
+   const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() => {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+   });
+
+   // Compute effective theme based on preference and system setting
+   const theme = themePreference === 'system' ? systemTheme : themePreference;
+   const setTheme = (newTheme: 'light' | 'dark' | 'system') => {
+      setThemePreference(newTheme);
+      localStorage.setItem('themePreference', newTheme);
+   };
+
    const [showThumbnails, setShowThumbnails] = useState(true);
    // language state is now passed from props
 
@@ -380,6 +394,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
    const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>('list');
 
+   // Scroll position for scroll-to-top button
+   const [showScrollTop, setShowScrollTop] = useState(false);
+   const mainContentRef = useRef<HTMLDivElement>(null);
+
    // Sidebar Toggles
    const [isSmartFoldersOpen, setIsSmartFoldersOpen] = useState(true);
    const [isSourcesOpen, setIsSourcesOpen] = useState(true);
@@ -425,7 +443,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       const handleKeyDown = (e: KeyboardEvent) => {
          if ((e.metaKey || e.ctrlKey) && e.key === "'") {
             e.preventDefault();
-            setTheme(prev => prev === 'light' ? 'dark' : 'light');
+            // Toggle between light and dark only (not system) for quick shortcut
+            setThemePreference(prev => prev === 'light' || prev === 'system' ? 'dark' : 'light');
          }
          if ((e.metaKey || e.ctrlKey) && e.key === "/") {
             e.preventDefault();
@@ -439,6 +458,41 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
+   }, []);
+
+   // System Theme Detection
+   useEffect(() => {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = (e: MediaQueryListEvent) => {
+         setSystemTheme(e.matches ? 'dark' : 'light');
+      };
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+   }, []);
+
+   // PWA Notch Color (theme-color meta tag)
+   useEffect(() => {
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      const color = theme === 'dark' ? '#0f172a' : '#ffffff';
+      if (metaThemeColor) {
+         metaThemeColor.setAttribute('content', color);
+      } else {
+         const meta = document.createElement('meta');
+         meta.name = 'theme-color';
+         meta.content = color;
+         document.head.appendChild(meta);
+      }
+   }, [theme]);
+
+   // Scroll-to-Top Button Visibility (mobile only)
+   useEffect(() => {
+      const container = mainContentRef.current;
+      if (!container) return;
+      const handleScroll = () => {
+         setShowScrollTop(container.scrollTop > 300);
+      };
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
    }, []);
 
    // Filter Outside Click
@@ -1084,7 +1138,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
             {isSettingsOpen && (
                <SettingsModal
                   onClose={() => setIsSettingsOpen(false)}
-                  settings={{ theme, language, showThumbnails, notifications }}
+                  settings={{ theme, themePreference, language, showThumbnails, notifications }}
                   setSettings={{ setTheme, setLanguage, setShowThumbnails, setNotifications }}
                   onLogout={onLogout || (() => { })}
                   t={t}
@@ -1550,7 +1604,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
             </header>
 
             {/* Scrollable Area */}
-            <div className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'p-4 md:p-8'}`}>
+            <div ref={mainContentRef} className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'p-4 md:p-8'}`}>
                {activeTab === 'discovery' ? (
                   <LinkBrainArticle theme={theme} />
                ) : (
@@ -1885,10 +1939,25 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
             {/* Mobile FAB */}
             <button
                onClick={() => setIsAddModalOpen(true)}
-               className="md:hidden absolute bottom-6 right-6 w-14 h-14 bg-[#21DBA4] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:scale-110 transition-transform active:scale-90"
+               className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#21DBA4] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:scale-110 transition-transform active:scale-90"
             >
                <Plus size={24} />
             </button>
+
+            {/* Mobile Scroll-to-Top Button */}
+            <AnimatePresence>
+               {showScrollTop && (
+                  <motion.button
+                     initial={{ opacity: 0, scale: 0.8 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.8 }}
+                     onClick={() => mainContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                     className={`md:hidden fixed bottom-24 right-6 w-10 h-10 rounded-full shadow-lg flex items-center justify-center z-30 transition-all ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200'}`}
+                  >
+                     <ChevronUp size={20} />
+                  </motion.button>
+               )}
+            </AnimatePresence>
 
          </main>
       </div>
