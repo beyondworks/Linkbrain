@@ -1469,8 +1469,11 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                   {/* Mobile Search Toggle Overlay */}
                   {mobileSearchOpen && (
-                     <div className={`absolute top-[72px] left-0 right-0 px-3 py-3 border-b z-20 animate-fade-in-down md:hidden shadow-lg ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}>
-                        <div className="relative w-full">
+                     <div
+                        className={`absolute top-[72px] left-0 right-0 py-3 border-b z-20 animate-fade-in-down md:hidden shadow-lg ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}
+                        style={{ paddingLeft: 'calc(12px + env(safe-area-inset-left))', paddingRight: 'calc(12px + env(safe-area-inset-right))' }}
+                     >
+                        <div className="relative w-full max-w-full">
                            <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`} />
                            <input
                               autoFocus
