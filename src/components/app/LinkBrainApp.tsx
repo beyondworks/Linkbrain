@@ -1604,7 +1604,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
             </header>
 
             {/* Scrollable Area */}
-            <div ref={mainContentRef} className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'p-4 md:p-8'}`}>
+            <div ref={mainContentRef} className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}>
                {activeTab === 'discovery' ? (
                   <LinkBrainArticle theme={theme} />
                ) : (
@@ -1661,6 +1661,97 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                               >
                                  {mobileViewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}
                               </button>
+
+                              {/* Mobile Filter Dropdown */}
+                              {isFilterOpen && (
+                                 <div className={`absolute left-0 top-full mt-1 w-full rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[60vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
+                                    <div className="px-4 py-2">
+                                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
+                                       <div className="mt-2 space-y-1">
+                                          {[
+                                             { id: 'date-desc', label: t('recentlyAdded') },
+                                             { id: 'date-asc', label: t('oldestFirst') }
+                                          ].map((opt) => (
+                                             <button
+                                                key={opt.id}
+                                                onClick={() => setSortBy(opt.id as any)}
+                                                className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
+                                             >
+                                                {opt.label}
+                                                {sortBy === opt.id && <Check size={14} />}
+                                             </button>
+                                          ))}
+                                       </div>
+                                    </div>
+
+                                    <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+
+                                    {/* Date Range Filter */}
+                                    <div className="px-4 py-2">
+                                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
+                                       <div className="mt-2 flex flex-wrap gap-1.5">
+                                          {[
+                                             { id: 'all', label: '전체' },
+                                             { id: 'today', label: '오늘' },
+                                             { id: 'week', label: '이번 주' },
+                                             { id: 'month', label: '이번 달' }
+                                          ].map((opt) => (
+                                             <button
+                                                key={opt.id}
+                                                onClick={() => setFilterDateRange(opt.id as any)}
+                                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                             >
+                                                {opt.label}
+                                             </button>
+                                          ))}
+                                       </div>
+                                    </div>
+
+                                    {availableCategories.length > 0 && (
+                                       <>
+                                          <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                          <div className="px-4 py-2">
+                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
+                                             <div className="mt-2 space-y-1">
+                                                {availableCategories.map(cat => (
+                                                   <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
+                                                      <div
+                                                         onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                                         className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                      >
+                                                         {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
+                                                      </div>
+                                                      <span className={`text-sm ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
+                                                   </label>
+                                                ))}
+                                             </div>
+                                          </div>
+                                       </>
+                                    )}
+
+                                    {availableSources.length > 0 && (
+                                       <>
+                                          <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                          <div className="px-4 py-2">
+                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
+                                             <div className="mt-2 space-y-1">
+                                                {availableSources.map(src => (
+                                                   <label key={src} className="flex items-center gap-2 cursor-pointer group">
+                                                      <div
+                                                         onClick={() => toggleFilter(setFilterSources, filterSources, src)}
+                                                         className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                      >
+                                                         {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
+                                                      </div>
+                                                      <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
+                                                   </label>
+                                                ))}
+                                             </div>
+                                          </div>
+                                       </>
+                                    )}
+                                 </div>
+                              )}
                            </div>
                            {/* Divider */}
                            <div className={`border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}></div>
