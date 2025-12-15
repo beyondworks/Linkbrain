@@ -71,6 +71,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; timestamp?: number }>>([]);
     const [chatExpanded, setChatExpanded] = useState(false);
     const chatMessagesRef = useRef<HTMLDivElement>(null);
+    const chatInputRef = useRef<HTMLInputElement>(null);
 
     // Auto-scroll to bottom when messages change or chat expands
     useEffect(() => {
@@ -151,6 +152,8 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
             setChatMessages(prev => [...prev, { role: 'ai', content: 'Error occurred. Please check your API settings.', timestamp: Date.now() }]);
         } finally {
             setChatLoading(false);
+            // Re-focus input after sending
+            setTimeout(() => chatInputRef.current?.focus(), 100);
         }
     };
 
@@ -643,6 +646,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                 </div>
                                 <input
                                     type="text"
+                                    ref={chatInputRef}
                                     value={chatInput}
                                     onChange={(e) => setChatInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && sendChatMessage()}
