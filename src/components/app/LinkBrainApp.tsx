@@ -418,6 +418,23 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const deferredPromptRef = useRef<any>(null);
    const [canInstall, setCanInstall] = useState(false);
 
+   // Mobile Visual Viewport Fix - handles keyboard appearance/disappearance
+   useEffect(() => {
+      if (typeof window === 'undefined' || !window.visualViewport) return;
+
+      const handleViewportResize = () => {
+         // Force layout recalculation by triggering a minimal style change
+         document.documentElement.style.setProperty('--vh', `${window.visualViewport!.height * 0.01}px`);
+      };
+
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+      handleViewportResize(); // Initial call
+
+      return () => {
+         window.visualViewport?.removeEventListener('resize', handleViewportResize);
+      };
+   }, []);
+
    // PWA Install Prompt Handler
    useEffect(() => {
       const handleBeforeInstallPrompt = (e: Event) => {
@@ -1208,7 +1225,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const textMuted = theme === 'dark' ? 'text-slate-400' : 'text-slate-500';
 
    return (
-      <div className={`flex h-screen h-[100dvh] font-sans overflow-hidden transition-colors duration-300 ${bgClass}`}>
+      <div
+         className={`flex h-screen font-sans overflow-hidden transition-colors duration-300 ${bgClass}`}
+         style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+      >
 
 
 
@@ -2199,7 +2219,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className={`fixed inset-0 z-[150] backdrop-blur-sm flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950/95' : 'bg-slate-50/95'}`}
+                  className={`fixed inset-0 z-[150] backdrop-blur-sm hidden md:flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950/95' : 'bg-slate-50/95'}`}
                >
                   <div className="w-16 h-16 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
                      <div className="w-8 h-8 rounded-full bg-[#21DBA4]" />

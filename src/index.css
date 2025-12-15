@@ -5529,3 +5529,22 @@ html {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+
+/* Mobile viewport stability fixes */
+html, body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+@supports (-webkit-touch-callout: none) {
+    /* iOS-specific fixes */
+    .h-screen {
+        height: -webkit-fill-available;
+    }
+}
+
+/* Force layout recalculation helper */
+.force-repaint {
+    transform: translateZ(0);
+}

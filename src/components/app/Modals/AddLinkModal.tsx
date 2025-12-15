@@ -23,9 +23,9 @@ export const AddLinkModal = ({ onClose, onAdd, theme, t }: AddLinkModalProps) =>
     };
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] flex items-start md:items-center justify-center p-4 pt-20 md:pt-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className={`rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden z-10 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}>
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: -20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: -20 }} className={`rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden z-10 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}>
                 <div className="p-8">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className={`text-2xl font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('addLink')}</h2>
