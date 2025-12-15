@@ -110,11 +110,31 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
 
             return (
                 <div className="relative">
-                    <div className="h-80 relative overflow-hidden">
+                    <div
+                        className="h-80 relative overflow-hidden touch-pan-y"
+                        onTouchStart={(e) => {
+                            const touch = e.touches[0];
+                            (e.currentTarget as any)._touchStartX = touch.clientX;
+                        }}
+                        onTouchEnd={(e) => {
+                            const touch = e.changedTouches[0];
+                            const startX = (e.currentTarget as any)._touchStartX;
+                            if (startX === undefined) return;
+                            const diffX = touch.clientX - startX;
+                            // Swipe left = next image
+                            if (diffX < -50) {
+                                setCurrentIdx(prev => prev === images.length - 1 ? 0 : prev + 1);
+                            }
+                            // Swipe right = prev image
+                            if (diffX > 50) {
+                                setCurrentIdx(prev => prev === 0 ? images.length - 1 : prev - 1);
+                            }
+                        }}
+                    >
                         <img
                             src={images[currentIdx]}
                             alt={`${link.title} - Image ${currentIdx + 1}`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover select-none pointer-events-none"
                             onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                                 e.currentTarget.src = '/placeholder.png';
                             }}
