@@ -207,7 +207,7 @@ const INITIAL_LINKS: LinkItem[] = [
    }
 ];
 
-export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialTab = 'home' }: { onBack?: () => void, onLogout?: () => void, language: 'en' | 'ko', setLanguage: (lang: 'en' | 'ko') => void, initialTab?: string }) => {
+export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, themePreference, setTheme, initialTab = 'home' }: { onBack?: () => void, onLogout?: () => void, language: 'en' | 'ko', setLanguage: (lang: 'en' | 'ko') => void, theme: 'light' | 'dark', themePreference: 'light' | 'dark' | 'system', setTheme: (t: 'light' | 'dark' | 'system') => void, initialTab?: string }) => {
    // --- Firebase Data Hook ---
    const {
       clips: firebaseClips,
@@ -229,19 +229,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    } = useClips();
 
    // --- Global State ---
-   const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>(() => {
-      return (localStorage.getItem('themePreference') as 'light' | 'dark' | 'system') || 'system';
-   });
-   const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() => {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-   });
 
-   // Compute effective theme based on preference and system setting
-   const theme = themePreference === 'system' ? systemTheme : themePreference;
-   const setTheme = (newTheme: 'light' | 'dark' | 'system') => {
-      setThemePreference(newTheme);
-      localStorage.setItem('themePreference', newTheme);
-   };
 
    const [showThumbnails, setShowThumbnails] = useState(true);
    // language state is now passed from props
@@ -502,7 +490,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
          if ((e.metaKey || e.ctrlKey) && e.key === "'") {
             e.preventDefault();
             // Toggle between light and dark only (not system) for quick shortcut
-            setThemePreference(prev => prev === 'light' || prev === 'system' ? 'dark' : 'light');
+            setTheme(themePreference === 'light' || themePreference === 'system' ? 'dark' : 'light');
          }
          if ((e.metaKey || e.ctrlKey) && e.key === "/") {
             e.preventDefault();
@@ -518,15 +506,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
       return () => window.removeEventListener('keydown', handleKeyDown);
    }, []);
 
-   // System Theme Detection
-   useEffect(() => {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e: MediaQueryListEvent) => {
-         setSystemTheme(e.matches ? 'dark' : 'light');
-      };
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-   }, []);
+
 
    // PWA Notch Color (theme-color meta tag)
    useEffect(() => {

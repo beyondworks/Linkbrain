@@ -57,10 +57,28 @@ const App = () => {
     return (localStorage.getItem('language') as 'en' | 'ko') || 'ko';
   });
 
-  // Save language to localStorage
+  // Theme State
+  const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>(() => {
+    return (localStorage.getItem('themePreference') as 'light' | 'dark' | 'system') || 'system';
+  });
+
+  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
+
   useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => setSystemTheme(e.matches ? 'dark' : 'light');
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  const theme = themePreference === 'system' ? systemTheme : themePreference;
+
+  const handleSetTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    setThemePreference(newTheme);
+    localStorage.setItem('themePreference', newTheme);
+  };
 
   // PWA Install Prompt
   const deferredPromptRef = React.useRef<any>(null);
@@ -200,9 +218,9 @@ const App = () => {
     // Show loading state while checking authentication
     if (authLoading) {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
-          <Loader2 className="w-10 h-10 text-[#21DBA4] animate-spin" />
-          <p className="text-slate-500 text-sm font-medium">Loading...</p>
+        <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
+          <Loader2 className={`w-10 h-10 animate-spin ${theme === 'dark' ? 'text-[#21DBA4]' : 'text-[#21DBA4]'}`} />
+          <p className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Loading...</p>
         </div>
       );
     }
@@ -226,6 +244,9 @@ const App = () => {
           onLogout={handleLogout}
           language={language}
           setLanguage={setLanguage}
+          theme={theme}
+          themePreference={themePreference}
+          setTheme={handleSetTheme}
         />
         <Toaster />
       </>
