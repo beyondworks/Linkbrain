@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
-import { Brain, TrendingUp, Clock, BookOpen, Tag, Globe, Zap, Target, Network, Calendar, Loader2, FileText, Sparkles, X } from 'lucide-react';
+import { Brain, TrendingUp, Clock, BookOpen, Tag, Globe, Zap, Target, Network, Calendar, Loader2, FileText, Sparkles, X, Lightbulb } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 
@@ -1227,7 +1227,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                 ))}
               </div>
 
-              <article className={`text-sm leading-relaxed space-y-3 ${textPrimary}`}>
+              <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
                 {(() => {
                   const content = generatedReport.content;
                   const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
@@ -1240,11 +1240,19 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                       const title = lines[0];
                       const items = lines.slice(1);
                       return (
-                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#21DBA4] ${isDark ? 'bg-[#21DBA4]/10' : 'bg-[#21DBA4]/5'}`}>
-                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#21DBA4]' : 'text-[#1a9f7c]'}`}>{title}</h4>
-                          <ul className="space-y-1">
+                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
+                              <Lightbulb size={16} className="text-white" />
+                            </div>
+                            <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
+                          </div>
+                          <ul className="space-y-2 ml-1">
                             {items.map((item, i) => (
-                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
+                                {item.replace(/^[-\d.]\s*/, '')}
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -1257,29 +1265,93 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                       const title = lines[0];
                       const items = lines.slice(1);
                       return (
-                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#3B82F6] ${isDark ? 'bg-[#3B82F6]/10' : 'bg-[#3B82F6]/5'}`}>
-                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#3B82F6]' : 'text-[#2563eb]'}`}>{title}</h4>
-                          <ul className="space-y-1">
+                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                              <Zap size={16} className="text-white" />
+                            </div>
+                            <h4 className="font-bold text-sm text-blue-500">{title}</h4>
+                          </div>
+                          <ul className="space-y-2 ml-1">
                             {items.map((item, i) => (
-                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                                {item.replace(/^[-\d.]\s*/, '')}
+                              </li>
                             ))}
                           </ul>
                         </div>
                       );
                     }
-                    // Regular content
-                    return part.split('\n').map((line, lineIdx) => {
+                    // Regular content - enhanced
+                    const lines = part.split('\n');
+                    let currentSection: React.ReactNode[] = [];
+                    let inList = false;
+
+                    return lines.map((line, lineIdx) => {
                       const cleanLine = stripMarkdown(line);
+
+                      // H2 - Major section header
                       if (line.startsWith('## ')) {
-                        return <h2 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{stripMarkdown(line.replace('## ', ''))}</h2>;
-                      } else if (line.startsWith('### ')) {
-                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{stripMarkdown(line.replace('### ', ''))}</h3>;
-                      } else if (line.startsWith('- ')) {
-                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{stripMarkdown(line.replace('- ', ''))}</li>;
-                      } else if (line.match(/^\d\./)) {
-                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 list-decimal ${textMuted}`}>{stripMarkdown(line.replace(/^\d\./, ''))}</li>;
-                      } else if (cleanLine.trim()) {
-                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{cleanLine}</p>;
+                        return (
+                          <div key={`${idx}-${lineIdx}`} className="mt-8 mb-4 first:mt-0">
+                            <h2 className={`text-lg font-black pb-2 border-b-2 ${isDark ? 'text-white border-slate-700' : 'text-slate-900 border-slate-200'}`}>
+                              {stripMarkdown(line.replace('## ', ''))}
+                            </h2>
+                          </div>
+                        );
+                      }
+                      // H3 - Sub section header
+                      if (line.startsWith('### ')) {
+                        return (
+                          <h3 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-bold flex items-center gap-2 ${textPrimary}`}>
+                            <span className="w-1 h-5 rounded-full bg-[#21DBA4]" />
+                            {stripMarkdown(line.replace('### ', ''))}
+                          </h3>
+                        );
+                      }
+                      // Bullet list
+                      if (line.startsWith('- ')) {
+                        return (
+                          <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
+                            <span className="w-2 h-2 rounded-full bg-[#21DBA4]/60 mt-1.5 shrink-0" />
+                            <span className="text-sm leading-relaxed">{stripMarkdown(line.replace('- ', ''))}</span>
+                          </div>
+                        );
+                      }
+                      // Numbered list
+                      if (line.match(/^\d\./)) {
+                        const num = line.match(/^(\d)/)?.[1];
+                        return (
+                          <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
+                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                              {num}
+                            </span>
+                            <span className="text-sm leading-relaxed">{stripMarkdown(line.replace(/^\d\./, ''))}</span>
+                          </div>
+                        );
+                      }
+                      // Bold emphasis (** or __)
+                      if (line.match(/^\*\*.*\*\*$/) || line.match(/^__.*__$/)) {
+                        return (
+                          <div key={`${idx}-${lineIdx}`} className={`my-4 p-4 rounded-xl ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
+                            <p className={`text-sm font-semibold ${textPrimary}`}>
+                              {stripMarkdown(line)}
+                            </p>
+                          </div>
+                        );
+                      }
+                      // Horizontal rule
+                      if (line.startsWith('---')) {
+                        return <hr key={`${idx}-${lineIdx}`} className={`my-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
+                      }
+                      // Regular paragraph
+                      if (cleanLine.trim()) {
+                        return (
+                          <p key={`${idx}-${lineIdx}`} className={`mb-3 text-sm leading-relaxed ${textMuted}`}>
+                            {cleanLine}
+                          </p>
+                        );
                       }
                       return null;
                     });
@@ -1351,7 +1423,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                 ))}
               </div>
 
-              <article className={`text-sm leading-relaxed ${textPrimary}`}>
+              <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
                 {(() => {
                   const content = generatedArticle.content;
                   const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
@@ -1364,11 +1436,19 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                       const title = lines[0];
                       const items = lines.slice(1);
                       return (
-                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#21DBA4] ${isDark ? 'bg-[#21DBA4]/10' : 'bg-[#21DBA4]/5'}`}>
-                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#21DBA4]' : 'text-[#1a9f7c]'}`}>{title}</h4>
-                          <ul className="space-y-1">
+                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
+                              <Lightbulb size={16} className="text-white" />
+                            </div>
+                            <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
+                          </div>
+                          <ul className="space-y-2 ml-1">
                             {items.map((item, i) => (
-                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
+                                {item.replace(/^[-\d.]\s*/, '')}
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -1381,31 +1461,75 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                       const title = lines[0];
                       const items = lines.slice(1);
                       return (
-                        <div key={idx} className={`my-4 p-4 rounded-xl border-l-4 border-[#3B82F6] ${isDark ? 'bg-[#3B82F6]/10' : 'bg-[#3B82F6]/5'}`}>
-                          <h4 className={`font-bold text-sm mb-2 ${isDark ? 'text-[#3B82F6]' : 'text-[#2563eb]'}`}>{title}</h4>
-                          <ul className="space-y-1">
+                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                              <Zap size={16} className="text-white" />
+                            </div>
+                            <h4 className="font-bold text-sm text-blue-500">{title}</h4>
+                          </div>
+                          <ul className="space-y-2 ml-1">
                             {items.map((item, i) => (
-                              <li key={i} className={`text-sm ${textMuted}`}>{item.replace(/^[-\d.]\s*/, '')}</li>
+                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                                {item.replace(/^[-\d.]\s*/, '')}
+                              </li>
                             ))}
                           </ul>
                         </div>
                       );
                     }
-                    // Regular content
+                    // Regular content - enhanced
                     return part.split('\n').map((line, lineIdx) => {
                       const cleanLine = stripMarkdown(line);
+
+                      // H2 - Major section header
                       if (line.startsWith('## ')) {
-                        return <h2 key={`${idx}-${lineIdx}`} className="mt-5 mb-2 text-base font-black text-[#21DBA4]">{stripMarkdown(line.replace('## ', ''))}</h2>;
-                      } else if (line.startsWith('### ')) {
-                        return <h3 key={`${idx}-${lineIdx}`} className={`mt-3 mb-1.5 font-bold ${textPrimary}`}>{stripMarkdown(line.replace('### ', ''))}</h3>;
-                      } else if (line.startsWith('- ')) {
-                        return <li key={`${idx}-${lineIdx}`} className={`ml-4 ${textMuted}`}>{stripMarkdown(line.replace('- ', ''))}</li>;
-                      } else if (line.startsWith('*') && line.endsWith('*')) {
-                        return <p key={`${idx}-${lineIdx}`} className={`mt-4 text-xs italic ${textMuted}`}>{line.replace(/\*/g, '')}</p>;
-                      } else if (line.startsWith('---')) {
-                        return <hr key={`${idx}-${lineIdx}`} className={`my-4 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
-                      } else if (cleanLine.trim()) {
-                        return <p key={`${idx}-${lineIdx}`} className={`mb-2 ${textMuted}`}>{cleanLine}</p>;
+                        return (
+                          <div key={`${idx}-${lineIdx}`} className="mt-8 mb-4 first:mt-0">
+                            <h2 className={`text-lg font-black pb-2 border-b-2 text-[#21DBA4] ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                              {stripMarkdown(line.replace('## ', ''))}
+                            </h2>
+                          </div>
+                        );
+                      }
+                      // H3 - Sub section header
+                      if (line.startsWith('### ')) {
+                        return (
+                          <h3 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-bold flex items-center gap-2 ${textPrimary}`}>
+                            <span className="w-1 h-5 rounded-full bg-[#21DBA4]" />
+                            {stripMarkdown(line.replace('### ', ''))}
+                          </h3>
+                        );
+                      }
+                      // Bullet list
+                      if (line.startsWith('- ')) {
+                        return (
+                          <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
+                            <span className="w-2 h-2 rounded-full bg-[#21DBA4]/60 mt-1.5 shrink-0" />
+                            <span className="text-sm leading-relaxed">{stripMarkdown(line.replace('- ', ''))}</span>
+                          </div>
+                        );
+                      }
+                      // Emphasis line (italic)
+                      if (line.startsWith('*') && line.endsWith('*')) {
+                        return (
+                          <p key={`${idx}-${lineIdx}`} className={`mt-4 text-sm italic py-3 px-4 rounded-xl ${isDark ? 'bg-slate-800/50 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
+                            {line.replace(/\*/g, '')}
+                          </p>
+                        );
+                      }
+                      // Horizontal rule
+                      if (line.startsWith('---')) {
+                        return <hr key={`${idx}-${lineIdx}`} className={`my-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
+                      }
+                      // Regular paragraph
+                      if (cleanLine.trim()) {
+                        return (
+                          <p key={`${idx}-${lineIdx}`} className={`mb-3 text-sm leading-relaxed ${textMuted}`}>
+                            {cleanLine}
+                          </p>
+                        );
                       }
                       return null;
                     });
