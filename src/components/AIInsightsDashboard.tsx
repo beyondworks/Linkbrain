@@ -126,6 +126,7 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     generatedAt: string;
   }>>([]);
   const [showHistoryList, setShowHistoryList] = useState<'report' | 'article' | null>(null);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   // Load history from localStorage
   useEffect(() => {
@@ -882,44 +883,84 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       </div>
 
       {/* History Section */}
-      {(reportHistory.length > 0 || articleHistory.length > 0) && (
-        <div className={`rounded-xl border p-4 ${cardClass}`}>
-          <h3 className={`text-sm font-bold mb-3 ${textPrimary}`}>
-            {language === 'ko' ? '생성 기록' : 'Generation History'}
-          </h3>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
-            {[...reportHistory.map(r => ({ ...r, type: 'report' as const })),
-            ...articleHistory.map(a => ({ ...a, type: 'article' as const }))]
-              .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
-              .slice(0, 5)
-              .map((item) => (
-                <button
+      {(reportHistory.length > 0 || articleHistory.length > 0) && (() => {
+        const allItems = [...reportHistory.map(r => ({ ...r, type: 'report' as const })),
+        ...articleHistory.map(a => ({ ...a, type: 'article' as const }))]
+          .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime());
+        const displayItems = showAllHistory ? allItems : allItems.slice(0, 5);
+        const hasMore = allItems.length > 5;
+
+        const deleteHistoryItem = (id: string, type: 'report' | 'article') => {
+          if (type === 'report') {
+            const updated = reportHistory.filter(r => r.id !== id);
+            setReportHistory(updated);
+            localStorage.setItem('ai_reports_history', JSON.stringify(updated));
+          } else {
+            const updated = articleHistory.filter(a => a.id !== id);
+            setArticleHistory(updated);
+            localStorage.setItem('ai_articles_history', JSON.stringify(updated));
+          }
+        };
+
+        return (
+          <div className={`rounded-xl border p-4 ${cardClass}`}>
+            <h3 className={`text-sm font-bold mb-3 ${textPrimary}`}>
+              {language === 'ko' ? '생성 기록' : 'Generation History'}
+            </h3>
+            <div className="space-y-2">
+              {displayItems.map((item) => (
+                <div
                   key={item.id}
-                  onClick={() => {
-                    if (item.type === 'report') {
-                      setGeneratedReport(item);
-                      setShowReport(true);
-                    } else {
-                      setGeneratedArticle(item);
-                      setShowArticle(true);
-                    }
-                  }}
-                  className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
+                  className={`flex items-center gap-2 p-2 rounded-lg transition-colors group ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
                 >
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${item.type === 'report' ? (isDark ? 'bg-slate-700' : 'bg-slate-100') : 'bg-[#21DBA4]/10'}`}>
-                    {item.type === 'report' ? <FileText size={14} className="text-slate-400" /> : <Sparkles size={14} className="text-[#21DBA4]" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-medium truncate ${textPrimary}`}>{item.title}</p>
-                    <p className={`text-xs ${textMuted}`}>
-                      {new Date(item.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </button>
+                  <button
+                    onClick={() => {
+                      if (item.type === 'report') {
+                        setGeneratedReport(item);
+                        setShowReport(true);
+                      } else {
+                        setGeneratedArticle(item);
+                        setShowArticle(true);
+                      }
+                    }}
+                    className="flex-1 flex items-center gap-3 text-left"
+                  >
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${item.type === 'report' ? (isDark ? 'bg-slate-700' : 'bg-slate-100') : 'bg-[#21DBA4]/10'}`}>
+                      {item.type === 'report' ? <FileText size={14} className="text-slate-400" /> : <Sparkles size={14} className="text-[#21DBA4]" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-medium truncate ${textPrimary}`}>{item.title}</p>
+                      <p className={`text-xs ${textMuted}`}>
+                        {new Date(item.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteHistoryItem(item.id, item.type);
+                    }}
+                    className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity ${isDark ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                    title={language === 'ko' ? '삭제' : 'Delete'}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               ))}
+            </div>
+            {hasMore && (
+              <button
+                onClick={() => setShowAllHistory(!showAllHistory)}
+                className={`w-full mt-3 py-2 text-xs font-medium rounded-lg transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+              >
+                {showAllHistory
+                  ? (language === 'ko' ? '접기' : 'Show less')
+                  : (language === 'ko' ? `더 보기 (${allItems.length - 5}개)` : `Show more (${allItems.length - 5})`)}
+              </button>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
       <div className={`rounded-2xl border p-8 shadow-lg ${cardClass}`}>
         <div className="flex items-start gap-4 mb-6">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center shadow-lg">

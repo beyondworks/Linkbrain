@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
     X,
@@ -65,20 +65,58 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
 
-    // Chat state
+    // Chat state - persisted per clip
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
-    const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string }>>([]);
+    const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; timestamp?: number }>>([]);
     const [chatExpanded, setChatExpanded] = useState(false);
+
+    // Unique key for this clip's chat history
+    const chatStorageKey = `clip_chat_${link.id || link.url.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 50)}`;
+
+    // Load chat history from localStorage on mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(chatStorageKey);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setChatMessages(parsed);
+                    setChatExpanded(true); // Auto-expand if there's history
+                }
+            }
+        } catch (e) {
+            console.error('[Chat] Failed to load chat history:', e);
+        }
+    }, [chatStorageKey]);
+
+    // Save chat history to localStorage when messages change
+    useEffect(() => {
+        if (chatMessages.length > 0) {
+            try {
+                localStorage.setItem(chatStorageKey, JSON.stringify(chatMessages.slice(-50))); // Keep last 50 messages
+            } catch (e) {
+                console.error('[Chat] Failed to save chat history:', e);
+            }
+        }
+    }, [chatMessages, chatStorageKey]);
+
+    // Clear chat history for this clip
+    const clearChatHistory = () => {
+        setChatMessages([]);
+        localStorage.removeItem(chatStorageKey);
+    };
 
     // Send chat message to AI with clip context
     const sendChatMessage = async () => {
         if (!chatInput.trim() || chatLoading) return;
 
         const userMessage = chatInput.trim();
+        const timestamp = Date.now();
         setChatInput('');
-        setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+        setChatMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp }]);
         setChatLoading(true);
+        setChatExpanded(true); // Auto-expand when sending message
 
         try {
             // Build context from clip data
@@ -96,13 +134,13 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
             const result = await sendAIChat(userMessage, clipContext, language);
 
             if (result.success && result.content) {
-                setChatMessages(prev => [...prev, { role: 'ai', content: result.content! }]);
+                setChatMessages(prev => [...prev, { role: 'ai', content: result.content!, timestamp: Date.now() }]);
             } else {
-                setChatMessages(prev => [...prev, { role: 'ai', content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.' }]);
+                setChatMessages(prev => [...prev, { role: 'ai', content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.', timestamp: Date.now() }]);
             }
         } catch (error) {
             console.error('[Chat] Error:', error);
-            setChatMessages(prev => [...prev, { role: 'ai', content: 'Error occurred. Please check your API settings.' }]);
+            setChatMessages(prev => [...prev, { role: 'ai', content: 'Error occurred. Please check your API settings.', timestamp: Date.now() }]);
         } finally {
             setChatLoading(false);
         }
@@ -538,16 +576,23 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                         <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl max-h-[50vh] flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
                             {/* Toggle Header - show when messages exist */}
                             {chatMessages.length > 0 && (
-                                <button
-                                    onClick={() => setChatExpanded(!chatExpanded)}
-                                    className={`w-full shrink-0 flex items-center justify-between px-4 py-2 border-t text-xs font-medium transition-colors ${theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-400' : 'border-slate-100 hover:bg-slate-50 text-slate-500'}`}
-                                >
-                                    <span className="flex items-center gap-2">
+                                <div className={`shrink-0 flex items-center justify-between px-4 py-2 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+                                    <button
+                                        onClick={() => setChatExpanded(!chatExpanded)}
+                                        className={`flex-1 flex items-center gap-2 text-xs font-medium transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-300' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
                                         <Lightbulb size={12} className="text-[#21DBA4]" />
                                         {localStorage.getItem('language') === 'en' ? `${chatMessages.length} messages` : `대화 ${chatMessages.length}개`}
-                                    </span>
-                                    <ChevronDown size={14} className={`transition-transform ${chatExpanded ? 'rotate-180' : ''}`} />
-                                </button>
+                                        <ChevronDown size={14} className={`transition-transform ${chatExpanded ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <button
+                                        onClick={clearChatHistory}
+                                        className={`p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-500 hover:text-red-400' : 'hover:bg-slate-100 text-slate-400 hover:text-red-500'}`}
+                                        title={localStorage.getItem('language') === 'en' ? 'Clear chat' : '대화 삭제'}
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
                             )}
                             {/* Chat Messages - collapsible */}
                             {chatMessages.length > 0 && chatExpanded && (
