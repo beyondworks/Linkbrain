@@ -68,6 +68,15 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
 
+    // Mobile detection for responsive positioning
+    const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     // Chat state - persisted per clip
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
@@ -382,7 +391,10 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex justify-end">
+        <div
+            className="fixed bottom-0 left-0 right-0 z-[9999] flex justify-end"
+            style={{ top: isMobile ? 0 : 72 }}
+        >
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

@@ -1204,7 +1204,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    // Theme Classes
    const bgClass = theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-[#F8FAFC] text-slate-900';
    const sidebarClass = theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100';
-   const headerClass = theme === 'dark' ? 'bg-slate-900/80 border-slate-800' : 'bg-white/80 border-slate-100';
+   const headerClass = theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100';
    const textMuted = theme === 'dark' ? 'text-slate-400' : 'text-slate-500';
 
    return (
@@ -1489,7 +1489,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
 
             {/* Top Header */}
-            <header className={`sticky top-0 h-[72px] border-b backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-[10] shrink-0 ${headerClass}`}>
+            <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
                <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
                   <div className="flex items-center gap-3 md:hidden">
                      <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
@@ -1700,8 +1700,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                   <div className="max-w-7xl mx-auto">
 
                      {/* Mobile Sticky Header Section */}
-                     {activeTab !== 'insights' && (
-                        <div className={`md:hidden sticky top-0 z-[5] -mx-4 px-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                     {activeTab !== 'insights' && !selectedLink && (
+                        <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-4 pb-3 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                            {/* Title + Count */}
                            <div className="mb-3">
                               <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -1727,7 +1727,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                               </p>
                            </div>
                            {/* Filter + Toggle Row */}
-                           <div className="flex items-center justify-between pb-3 relative" ref={filterRef}>
+                           <div className="flex items-center justify-between relative mb-3" ref={filterRef}>
                               <button
                                  onClick={() => setIsFilterOpen(!isFilterOpen)}
                                  className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
@@ -2389,16 +2389,18 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
          </AnimatePresence>
 
          {/* Mobile FAB - outside main for proper fixed positioning */}
-         <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#21DBA4] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:scale-110 transition-transform active:scale-90"
-         >
-            <Plus size={24} />
-         </button>
+         {!selectedLink && (
+            <button
+               onClick={() => setIsAddModalOpen(true)}
+               className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#21DBA4] text-white rounded-full shadow-xl flex items-center justify-center z-30 hover:scale-110 transition-transform active:scale-90"
+            >
+               <Plus size={24} />
+            </button>
+         )}
 
          {/* Mobile Scroll-to-Top Button */}
          <AnimatePresence>
-            {showScrollTop && (
+            {showScrollTop && !selectedLink && (
                <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
