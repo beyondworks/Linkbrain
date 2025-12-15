@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
 import { Brain, TrendingUp, Clock, BookOpen, Tag, Globe, Zap, Target, Network, Calendar, Loader2, FileText, Sparkles, X, Lightbulb } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
@@ -1184,7 +1185,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       </div>
 
       {/* Insights Report Modal */}
-      {showReport && generatedReport && (
+      {showReport && generatedReport && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
@@ -1377,11 +1378,12 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* AI Article Modal */}
-      {showArticle && generatedArticle && (
+      {showArticle && generatedArticle && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
@@ -1555,11 +1557,12 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      {pendingDeleteItem && (
+      {pendingDeleteItem && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           onClick={() => setPendingDeleteItem(null)}
@@ -1602,7 +1605,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
