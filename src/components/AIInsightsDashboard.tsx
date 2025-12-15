@@ -1187,7 +1187,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       {/* Insights Report Modal */}
       {showReport && generatedReport && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
           onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
         >
           <div
@@ -1379,13 +1379,13 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('modal-root') || document.body
       )}
 
       {/* AI Article Modal */}
       {showArticle && generatedArticle && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
           onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
         >
           <div
@@ -1558,13 +1558,13 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('modal-root') || document.body
       )}
 
       {/* Delete Confirmation Modal */}
       {pendingDeleteItem && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
           onClick={() => setPendingDeleteItem(null)}
         >
           <div
@@ -1606,7 +1606,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </div>
           </div>
         </div>,
-        document.body
+        document.getElementById('modal-root') || document.body
       )}
     </div>
   );
