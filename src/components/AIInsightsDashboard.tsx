@@ -81,8 +81,12 @@ const contentGapTopics = [
   { id: 'performance', labelEn: 'Performance', labelKo: '성능 최적화', keywords: ['performance', 'optimization', 'speed', 'cache'] },
 ];
 
+import { useSubscription } from '../hooks/useSubscription';
+import { toast } from 'sonner';
+
 export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'ko', onOpenSettings }: AIInsightsDashboardProps) => {
   const isDark = theme === 'dark';
+  const { canUseAI } = useSubscription(); // Use hook
   const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
   const [loading, setLoading] = useState(false);
   const [firestoreClips, setFirestoreClips] = useState<any[]>([]);
@@ -210,11 +214,21 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     const user = auth.currentUser;
     if (!user || filteredData.length < 3) return;
 
+    if (!canUseAI) {
+      toast.error(language === 'ko'
+        ? 'AI 기능은 무료 체험 기간 또는 프로 플랜에서만 사용할 수 있습니다.'
+        : 'AI features are only available during Free Trial or Pro Plan.');
+      return;
+    }
+
     // API 미설정 시 설정 열기
     if (!isAIConfigured) {
       onOpenSettings?.();
       return;
     }
+
+    // ...
+
 
     setGeneratingReport(true);
 
@@ -284,6 +298,13 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   const generateArticle = async () => {
     const user = auth.currentUser;
     if (!user || filteredData.length < 3) return;
+
+    if (!canUseAI) {
+      toast.error(language === 'ko'
+        ? 'AI 기능은 무료 체험 기간 또는 프로 플랜에서만 사용할 수 있습니다.'
+        : 'AI features are only available during Free Trial or Pro Plan.');
+      return;
+    }
 
     // API 미설정 시 설정 열기
     if (!isAIConfigured) {

@@ -33,6 +33,7 @@ import { Toaster } from './components/ui/sonner';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { toast } from 'sonner';
+import { SubscriptionProvider } from './context/SubscriptionContext';
 
 // Brand Color Constants
 const PRIMARY_COLOR = "#21DBA4";
@@ -242,17 +243,19 @@ const App = () => {
     }
     return (
       <>
-        <LinkBrainApp
-          onBack={() => setCurrentView('landing')}
-          onLogout={handleLogout}
-          language={language}
-          setLanguage={handleSetLanguage}
-          theme={theme}
-          themePreference={themePreference}
-          setTheme={handleSetTheme}
-          preferences={preferences}
-          updatePreference={updatePreference}
-        />
+        <SubscriptionProvider>
+          <LinkBrainApp
+            onBack={() => setCurrentView('landing')}
+            onLogout={handleLogout}
+            language={language}
+            setLanguage={handleSetLanguage}
+            theme={theme}
+            themePreference={themePreference}
+            setTheme={handleSetTheme}
+            preferences={preferences}
+            updatePreference={updatePreference}
+          />
+        </SubscriptionProvider>
         <Toaster />
       </>
     );

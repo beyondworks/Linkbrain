@@ -35,6 +35,7 @@ import {
 import { toast } from 'sonner';
 import { getSourceInfo, GlobeIcon } from '../Cards';
 import { Category, Collection } from '../types';
+import { useSubscription } from '../../../hooks/useSubscription';
 
 // Custom ArrowUpCircle Icon
 const ArrowUpCircle = ({ size, className }: any) => (
@@ -98,7 +99,16 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     };
 
     // Send chat message to AI with clip context
+    const { canUseAI } = useSubscription();
+
     const sendChatMessage = async () => {
+        if (!canUseAI) {
+            toast.error(localStorage.getItem('language') === 'en'
+                ? 'AI Chat is available in Free Trial or Pro Plan.'
+                : 'AI 채팅은 무료 체험 또는 프로 플랜에서만 가능합니다.');
+            return;
+        }
+
         if (!chatInput.trim() || chatLoading) return;
 
         const userMessage = chatInput.trim();

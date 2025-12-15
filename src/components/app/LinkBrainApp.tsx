@@ -64,9 +64,10 @@ import {
    LayoutGrid,
    ChevronUp
 } from 'lucide-react';
+// @ts-ignore
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { motion, AnimatePresence } from 'motion/react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 import {
    DropdownMenu,
    DropdownMenuContent,
@@ -80,6 +81,7 @@ import { LinkBrainArticle } from './LinkBrainArticle';
 import { Logo } from '../Logo';
 import { LinkBrainLogo } from './LinkBrainLogo';
 import { AnalysisIndicator, AnalysisItem, AnalysisStatus, AnalysisLogItem } from './AnalysisIndicator';
+import { useSubscription } from '../../hooks/useSubscription';
 
 // --- Mock Data ---
 const INITIAL_CATEGORIES: Category[] = [
@@ -95,7 +97,7 @@ const INITIAL_COLLECTIONS: Collection[] = [
 
 const INITIAL_LINKS: LinkItem[] = [
    {
-      id: 1,
+      id: '1',
       title: "The Future of Design Systems in 2025",
       url: "medium.com/design-ux",
       image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800&auto=format&fit=crop",
@@ -117,7 +119,7 @@ const INITIAL_LINKS: LinkItem[] = [
       ]
    },
    {
-      id: 2,
+      id: '2',
       title: "Building AI Agents with MCP (Model Context Protocol)",
       url: "youtube.com/watch?v=ai_agents",
       image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop",
@@ -139,7 +141,7 @@ const INITIAL_LINKS: LinkItem[] = [
       ]
    },
    {
-      id: 3,
+      id: '3',
       title: "Minimalist UI Inspiration for 2025",
       url: "instagram.com/p/design_daily",
       image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=800&auto=format&fit=crop",
@@ -156,7 +158,7 @@ const INITIAL_LINKS: LinkItem[] = [
       isArchived: false
    },
    {
-      id: 4,
+      id: '4',
       title: "Why 'Vibe Coding' is the Future of Software",
       url: "threads.net/@tech_guru",
       image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop",
@@ -173,7 +175,7 @@ const INITIAL_LINKS: LinkItem[] = [
       isArchived: false
    },
    {
-      id: 5,
+      id: '5',
       title: "Sustainable Architecture Trends",
       url: "archdaily.com",
       image: "https://images.unsplash.com/photo-1518005020951-ecc8e1213afc?q=80&w=800&auto=format&fit=crop",
@@ -190,7 +192,7 @@ const INITIAL_LINKS: LinkItem[] = [
       isArchived: false
    },
    {
-      id: 6,
+      id: '6',
       title: "Generative AI for Marketing Strategy",
       url: "hbr.org",
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop",
@@ -297,6 +299,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const [links, setLinks] = useState<LinkItem[]>([]);
    const [categories, setCategories] = useState<Category[]>([]);
    const [collections, setCollections] = useState<Collection[]>([]);
+
+   const { isReadOnly, daysRemaining, status, canCreate, canEdit } = useSubscription();
+   const [showSubscriptionBanner, setShowSubscriptionBanner] = useState(true);
 
    // Sync Firebase clips to local state
    useEffect(() => {
@@ -469,6 +474,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const [showFlyAnimation, setShowFlyAnimation] = useState(false);
    const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+   const [settingsInitialTab, setSettingsInitialTab] = useState('general');
 
    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
    const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
@@ -732,6 +738,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    // Actions
    const handleToggleFavorite = async (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다. 수정하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to edit.');
+         return;
+      }
       const currentLink = links.find(l => l.id === id);
       if (!currentLink) return;
 
@@ -739,7 +749,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
       // Optimistic update
       setLinks(prev => prev.map(l => l.id === id ? { ...l, isFavorite: newValue } : l));
-      toast(newValue ? "Added to favorites" : "Removed from favorites");
+      toast(language === 'ko'
+         ? (newValue ? "즐겨찾기에 추가되었습니다" : "즐겨찾기에서 제거되었습니다")
+         : (newValue ? "Added to favorites" : "Removed from favorites"));
 
       // Sync to Firebase
       try {
@@ -753,6 +765,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
    const handleToggleReadLater = async (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다. 수정하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to edit.');
+         return;
+      }
       const currentLink = links.find(l => l.id === id);
       if (!currentLink) return;
 
@@ -760,7 +776,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
       // Optimistic update
       setLinks(prev => prev.map(l => l.id === id ? { ...l, isReadLater: newValue } : l));
-      toast(newValue ? "Added to read later" : "Removed from read later");
+      toast(language === 'ko'
+         ? (newValue ? "나중에 읽기에 추가되었습니다" : "나중에 읽기에서 제거되었습니다")
+         : (newValue ? "Added to read later" : "Removed from read later"));
 
       // Sync to Firebase - using 'isReadLater' field (we need to ensure this field exists in ClipData)
       // For now, we'll just update locally as this field may not be in Firebase schema
@@ -768,6 +786,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
    const handleArchive = async (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다. 수정하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to edit.');
+         return;
+      }
       const currentLink = links.find(l => l.id === id);
       if (!currentLink) return;
 
@@ -775,7 +797,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
       // Optimistic update
       setLinks(prev => prev.map(l => l.id === id ? { ...l, isArchived: newValue } : l));
-      toast(newValue ? "Archived" : "Unarchived");
+      toast(language === 'ko'
+         ? (newValue ? "보관함으로 이동되었습니다" : "보관함에서 복구되었습니다")
+         : (newValue ? "Archived" : "Unarchived"));
 
       // Sync to Firebase
       try {
@@ -818,6 +842,13 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    };
 
    const handleAddLink = async (url: string) => {
+      if (!canCreate) {
+         toast.error(language === 'ko' ? '체험 기간이 종료되었습니다. 계속하려면 플랜을 업그레이드하세요.' : 'Trial expired. Upgrade to add more links.');
+         setIsAddModalOpen(false);
+         // Optionally redirect to pricing or show modal
+         return;
+      }
+
       setIsAnalyzing(true);
       setIsAddModalOpen(false);
 
@@ -875,6 +906,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    };
 
    const handleBulkDeleteRequest = () => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다. 삭제하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to delete.');
+         return;
+      }
       setDeleteConfirmation({
          isOpen: true,
          count: selectedItemIds.size,
@@ -888,10 +923,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                setSelectedItemIds(new Set());
                setIsSelectionMode(false);
                setDeleteConfirmation({ isOpen: false, count: 0, onConfirm: () => { } });
-               toast.success("Items deleted");
+               toast.success(language === 'ko' ? "항목이 삭제되었습니다" : "Items deleted");
             } catch (error) {
                console.error('Failed to delete clips:', error);
-               toast.error('Failed to delete some items');
+               toast.error(language === 'ko' ? "일부 항목 삭제 실패" : "Failed to delete some items");
             }
          }
       });
@@ -899,6 +934,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
    // Handle bulk archive - moves selected clips to archive
    const handleBulkArchive = async () => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다. 수정하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to edit.');
+         return;
+      }
       try {
          const archivePromises = Array.from(selectedItemIds).map(id =>
             updateClip(id, { isArchived: true })
@@ -923,6 +962,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
    // Handle bulk unarchive - moves selected clips back to home
    const handleBulkUnarchive = async () => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다. 수정하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to edit.');
+         return;
+      }
       try {
          const unarchivePromises = Array.from(selectedItemIds).map(id =>
             updateClip(id, { isArchived: false })
@@ -946,6 +989,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    };
 
    const handleDeleteSingleRequest = (id: string) => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다. 삭제하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to delete.');
+         return;
+      }
       setDeleteConfirmation({
          isOpen: true,
          count: 1,
@@ -955,10 +1002,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                setLinks(prev => prev.filter(l => l.id !== id));
                if (selectedLinkId === id) setSelectedLinkId(null);
                setDeleteConfirmation({ isOpen: false, count: 0, onConfirm: () => { } });
-               toast.success("Item deleted");
+               toast.success(language === 'ko' ? "항목이 삭제되었습니다" : "Item deleted");
             } catch (error) {
                console.error('Failed to delete clip:', error);
-               toast.error('Failed to delete item');
+               toast.error(language === 'ko' ? "삭제 실패" : "Failed to delete item");
             }
          }
       });
@@ -967,6 +1014,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const handleSaveCategory = async (cat: { id?: string; name: string; color: string }) => {
       try {
          if (editingCategory && editingCategory.id) {
+            if (!canEdit) {
+               toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+               return;
+            }
             // Update existing category in Firebase
             await updateCategory(editingCategory.id, {
                name: cat.name,
@@ -974,6 +1025,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             });
             toast.success(t('categoryUpdated'));
          } else {
+            if (!canCreate) {
+               toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+               return;
+            }
             // Create new category in Firebase - ID will be auto-generated
             await createCategory({
                name: cat.name,
@@ -993,6 +1048,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const handleSaveCollection = async (col: { id?: string; name: string; color: string }) => {
       try {
          if (editingCollection && editingCollection.id) {
+            if (!canEdit) {
+               toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+               return;
+            }
             // Update existing collection in Firebase
             await updateCollection(editingCollection.id, {
                name: col.name,
@@ -1000,6 +1059,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             });
             toast.success(t('collectionUpdated'));
          } else {
+            if (!canCreate) {
+               toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+               return;
+            }
             // Create new collection in Firebase - ID will be auto-generated
             await createCollection({
                name: col.name,
@@ -1017,6 +1080,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    };
 
    const handleUpdateLinkCategory = async (linkId: string, catId: string) => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+         return;
+      }
       // Find the current link
       const currentLink = links.find(l => l.id === linkId);
       if (!currentLink) return;
@@ -1038,6 +1105,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    };
 
    const handleToggleLinkCollection = async (linkId: string, colId: string) => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+         return;
+      }
       // Find the current link
       const currentLink = links.find(l => l.id === linkId);
       if (!currentLink) return;
@@ -1063,6 +1134,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    };
 
    const handleClearCollections = async (linkId: string) => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+         return;
+      }
       // Find the current link
       const currentLink = links.find(l => l.id === linkId);
       if (!currentLink) return;
@@ -1091,6 +1166,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    };
 
    const handleDeleteCategory = async (catId: string) => {
+      if (!canEdit) {
+         toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+         return;
+      }
       setDeleteConfirmation({
          isOpen: true,
          count: 1,
@@ -1229,6 +1308,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                   onClose={() => { setIsCollectionModalOpen(false); setEditingCollection(null); }}
                   onSave={handleSaveCollection}
                   onDelete={editingCollection ? async (id: string) => {
+                     if (!canEdit) {
+                        toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+                        return;
+                     }
                      try {
                         await deleteCollectionApi(id);
                         setCollections(prev => prev.filter(c => c.id !== id));
@@ -1271,6 +1354,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             )}
             {isSettingsOpen && (
                <SettingsModal
+                  initialTab={settingsInitialTab}
                   onClose={() => setIsSettingsOpen(false)}
                   settings={{ theme, themePreference, language, showThumbnails, notifications }}
                   setSettings={{ setTheme, setLanguage, setShowThumbnails: handleSetShowThumbnails, setNotifications: handleSetNotifications }}
@@ -1583,7 +1667,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
             {/* User Footer */}
             <div
-               onClick={() => setIsSettingsOpen(true)}
+               onClick={() => { setSettingsInitialTab('account'); setIsSettingsOpen(true); }}
                className={`p-4 border-t ${theme === 'dark' ? 'border-slate-800 bg-slate-900 hover:bg-slate-800' : 'border-slate-50 bg-slate-50/50 hover:bg-slate-100'} cursor-pointer transition-colors group`}
             >
                <div className="flex items-center gap-3">
@@ -1609,6 +1693,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
          {/* Main Content */}
          <main className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+            {/* Subscription Banner */}
+
+
             {/* Top Header */}
             <header className={`h-[72px] border-b backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-30 shrink-0 ${headerClass}`}>
                <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
@@ -1736,6 +1823,60 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                   </div>
                </div>
             </header>
+
+            {/* Subscription Banner */}
+            {showSubscriptionBanner && status !== 'active' && (
+               <div className="w-full px-4 md:px-8 pt-4 z-20">
+                  <div className="w-full max-w-7xl mx-auto">
+                     <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`rounded-xl shadow-sm flex items-center justify-between px-4 py-2.5 transition-colors border ${status === 'expired'
+                           ? 'bg-red-500 border-red-400 text-white'
+                           : theme === 'dark'
+                              ? 'bg-slate-800 border-slate-700 text-white shadow-black/20'
+                              : 'bg-[#21DBA4]/10 border-[#21DBA4]/20 text-slate-800 shadow-[#21DBA4]/5'
+                           }`}
+                     >
+                        <div className="flex items-center gap-3">
+                           <div className={`p-1.5 rounded-full ${status === 'expired'
+                              ? 'bg-white/20'
+                              : theme === 'dark' ? 'bg-white/10' : 'bg-[#21DBA4]/20'
+                              }`}>
+                              <Clock size={16} className={status !== 'expired' && theme !== 'dark' ? 'text-[#059669]' : ''} />
+                           </div>
+                           <div className="flex flex-col md:flex-row md:items-center md:gap-2">
+                              <span className="font-bold text-sm">
+                                 {status === 'expired'
+                                    ? (language === 'ko' ? '체험 기간 종료' : 'Trial Expired')
+                                    : (language === 'ko' ? '무료 체험 중' : 'Free Trial Active')}
+                              </span>
+                              <span className={`hidden md:inline w-1 h-1 rounded-full ${status === 'expired' || theme === 'dark' ? 'bg-white/40' : 'bg-slate-400/50'}`}></span>
+                              <span className={`text-xs md:text-sm font-medium ${status === 'expired' || theme === 'dark' ? 'opacity-90' : 'text-slate-600'}`}>
+                                 {status === 'expired'
+                                    ? (language === 'ko' ? '기능이 제한됩니다.' : 'Read-only mode.')
+                                    : (language === 'ko' ? `${daysRemaining}일 남음` : `${daysRemaining} days left`)}
+                              </span>
+                           </div>
+                        </div>
+                        <div className={`flex items-center gap-3 pl-4 border-l ml-auto ${status === 'expired' || theme === 'dark' ? 'border-white/10' : 'border-slate-900/10'}`}>
+                           <button
+                              onClick={() => window.history.pushState({}, '', '/pricing')}
+                              className={`whitespace-nowrap font-bold transition-colors text-xs md:text-sm ${status === 'expired' || theme === 'dark' ? 'hover:text-[#21DBA4]' : 'text-[#059669] hover:text-[#047857]'}`}
+                           >
+                              {language === 'ko' ? '업그레이드' : 'Upgrade'}
+                           </button>
+                           <button
+                              onClick={() => setShowSubscriptionBanner(false)}
+                              className={`p-0.5 rounded-full transition-colors ${status === 'expired' || theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-slate-900/5 text-slate-500'}`}
+                           >
+                              <X size={14} />
+                           </button>
+                        </div>
+                     </motion.div>
+                  </div>
+               </div>
+            )}
 
             {/* Scrollable Area */}
             <div
