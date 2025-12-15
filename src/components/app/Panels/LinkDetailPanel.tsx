@@ -573,7 +573,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 {(() => {
                     const isAIConfigured = (localStorage.getItem('ai_api_key') || '').length > 10;
                     return (
-                        <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl max-h-[40vh] flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+                        <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl max-h-[40vh] overflow-hidden flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
                             {/* Toggle Header - show when messages exist */}
                             {chatMessages.length > 0 && (
                                 <div className={`shrink-0 flex items-center justify-between px-4 py-2 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
@@ -594,9 +594,12 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                     </button>
                                 </div>
                             )}
-                            {/* Chat Messages - collapsible */}
+                            {/* Chat Messages - collapsible with fixed max height */}
                             {chatMessages.length > 0 && chatExpanded && (
-                                <div className={`flex-1 overflow-y-auto p-4 border-t space-y-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+                                <div
+                                    className={`overflow-y-auto p-4 border-t space-y-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}
+                                    style={{ maxHeight: 'calc(40vh - 120px)' }}
+                                >
                                     {chatMessages.map((msg, idx) => (
                                         <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                             {msg.role === 'ai' && (
