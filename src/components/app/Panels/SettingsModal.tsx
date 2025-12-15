@@ -23,7 +23,10 @@ import {
     Lock,
     Eye,
     EyeOff,
-    Keyboard
+    Eye,
+    EyeOff,
+    Keyboard,
+    Key
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LinkBrainLogo } from '../LinkBrainLogo';
@@ -777,7 +780,11 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
             {/* OpenAI Section */}
             <div className={`p-4 rounded-2xl border-2 transition-all ${openaiStatus === 'active' && activeProvider === 'openai' ? 'border-[#21DBA4] bg-[#E0FBF4]/10' : openaiStatus === 'inactive' ? 'border-red-500/50 bg-red-50/10' : theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
                 <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">🤖</span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                        <svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a6.374 6.374 0 0 1-3.956 5.8576 4.498 4.498 0 0 1-.5005.1772zm-7.6687-1.55a4.4718 4.4718 0 0 1-.6171-5.1613l.1424.0851 4.774 2.7562a.7951.7951 0 0 0 .7873.011l5.8122-3.3764v2.333a6.374 6.374 0 0 1-5.8362 3.8682 4.4916 4.4916 0 0 1-5.0626-.5163zm-.4685-9.3323a4.4717 4.4717 0 0 1 3.4909-4.1432l-.1423.0844-4.7745 2.7566a.7925.7925 0 0 0-.3952.6806v6.7456l-2.0151-1.1713a6.374 6.374 0 0 1 3.8344-4.9453c.0004-.0001.0008-.0002.0013-.0004.0001-.0025.0003-.005.0005-.007zm9.0221-1.3932a4.4716 4.4716 0 0 1 2.8753 1.042l-.143.08l-4.7784 2.7583a.7948.7948 0 0 0-.3927.6813v6.7369l-2.02-1.1687a6.374 6.374 0 0 1 3.9561-5.8576 4.4975 4.4975 0 0 1 .5027-.1722zm7.6688 1.55a4.4714 4.4714 0 0 1 .617 5.1613l-.1424-.085-4.774-2.7562a.795.795 0 0 0-.7873-.011L11.6997 12v-2.333a6.374 6.374 0 0 1 5.8361-3.8681 4.488 4.488 0 0 1 5.0627.5162zm.4684 9.3322a4.4714 4.4714 0 0 1-3.4896 4.1416l.1424-.0844 4.7744-2.7565a.7924.7924 0 0 0 .3952-.6806v-6.7457l2.0152 1.1713a6.3739 6.3739 0 0 1-3.8376 4.9543z" />
+                        </svg>
+                    </div>
                     <div>
                         <h4 className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>OpenAI</h4>
                         <p className="text-xs text-slate-400">GPT-5.2, GPT-4o 모델 지원</p>
@@ -800,8 +807,9 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                             {showOpenaiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     </div>
-                    <a href={API_LINKS.openai.url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-[#21DBA4] hover:underline">
-                        🔗 OpenAI Platform에서 API 키 발급받기
+                    <a href={API_LINKS.openai.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-[#21DBA4] hover:underline font-bold">
+                        <Key size={12} />
+                        OpenAI Platform에서 API 키 발급받기
                     </a>
                 </div>
 
@@ -837,7 +845,11 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
             {/* Gemini Section */}
             <div className={`p-4 rounded-2xl border-2 transition-all ${geminiStatus === 'active' && activeProvider === 'gemini' ? 'border-[#21DBA4] bg-[#E0FBF4]/10' : geminiStatus === 'inactive' ? 'border-red-500/50 bg-red-50/10' : theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
                 <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">✨</span>
+                    <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                        <svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path d="M12 24c0-6.627-5.373-12-12-12 6.627 0 12-5.373 12-12 0 6.627 5.373 12 12 12-6.627 0-12 5.373-12 12z" />
+                        </svg>
+                    </div>
                     <div>
                         <h4 className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Google Gemini</h4>
                         <p className="text-xs text-slate-400">Gemini 3 Pro, 2.5 Pro 모델 지원</p>
@@ -860,8 +872,9 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                             {showGeminiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     </div>
-                    <a href={API_LINKS.gemini.url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-[#21DBA4] hover:underline">
-                        🔗 Google AI Studio에서 API 키 발급받기
+                    <a href={API_LINKS.gemini.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-[#21DBA4] hover:underline font-bold">
+                        <Key size={12} />
+                        Google AI Studio에서 API 키 발급받기
                     </a>
                 </div>
 
