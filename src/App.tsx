@@ -35,6 +35,8 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { toast } from 'sonner';
 import { SubscriptionProvider } from './context/SubscriptionContext';
 
+import { InstallInstructionModal } from './components/common/InstallInstructionModal';
+
 // Brand Color Constants
 const PRIMARY_COLOR = "#21DBA4";
 
@@ -100,16 +102,7 @@ const App = () => {
     };
   }, []);
 
-  const handleInstallApp = () => {
-    // Download the app zip file
-    const link = document.createElement('a');
-    link.href = '/LinkBrain.app.zip';
-    link.download = 'LinkBrain.app.zip';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success(language === 'ko' ? '다운로드가 시작됩니다!' : 'Download started!');
-  };
+
 
   // Save view to localStorage on change
   useEffect(() => {
@@ -119,6 +112,9 @@ const App = () => {
       window.history.replaceState({ view: currentView }, '', `#${currentView}`);
     }
   }, [currentView]);
+
+  // For install instruction modal (iOS / Fallback)
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -218,6 +214,20 @@ const App = () => {
     }
   };
 
+  const handleInstallApp = async () => {
+    if (deferredPromptRef.current) {
+      deferredPromptRef.current.prompt();
+      const { outcome } = await deferredPromptRef.current.userChoice;
+      if (outcome === 'accepted') {
+        toast.success(language === 'ko' ? '앱이 설치되었습니다!' : 'App installed!');
+      }
+      deferredPromptRef.current = null;
+    } else {
+      // If no system prompt is available (e.g. iOS or already installed/dismissed), show instruction modal
+      setShowInstallModal(true);
+    }
+  };
+
   if (currentView === 'app') {
     // Show loading state while checking authentication
     if (authLoading) {
@@ -268,6 +278,11 @@ const App = () => {
         onEnterApp={() => handleNavigate('app')}
         onNavigate={handleNavigate}
         onInstallApp={handleInstallApp}
+      />
+      <InstallInstructionModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+        theme={theme}
       />
       <Toaster />
     </>
