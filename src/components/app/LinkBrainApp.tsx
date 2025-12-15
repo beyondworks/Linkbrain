@@ -1810,7 +1810,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                               <button
                                  onClick={() => setIsFilterOpen(!isFilterOpen)}
                                  className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
-                                    ? 'bg-[#E0FBF4] border-[#21DBA4] text-[#21DBA4]'
+                                    ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4]'
                                     : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-500 shadow-sm'
                                     }`}
                               >
@@ -1832,52 +1832,214 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
                               {/* Mobile Filter Dropdown */}
                               {isFilterOpen && (
-                                 <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute left-0 top-full mt-1 w-full rounded-xl shadow-xl border py-2 z-30 overflow-hidden max-h-[60vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
-                                    <div className="px-4 py-2">
-                                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
-                                       <div className="mt-2 space-y-1">
-                                          {[
-                                             { id: 'date-desc', label: t('recentlyAdded') },
-                                             { id: 'date-asc', label: t('oldestFirst') }
-                                          ].map((opt) => (
-                                             <button
-                                                key={opt.id}
-                                                onClick={() => setSortBy(opt.id as any)}
-                                                className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
-                                             >
-                                                {opt.label}
-                                                {sortBy === opt.id && <Check size={14} />}
-                                             </button>
-                                          ))}
+                                 <>
+                                    <div
+                                       className="fixed inset-0 z-20 bg-black/5 backdrop-blur-[1px]"
+                                       onClick={(e) => {
+                                          e.stopPropagation();
+                                          setIsFilterOpen(false);
+                                       }}
+                                    />
+                                    <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute left-0 top-full mt-1 w-full rounded-xl shadow-xl border py-2 z-30 overflow-hidden max-h-[60vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
+                                       <div className="px-4 py-2">
+                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
+                                          <div className="mt-2 space-y-1">
+                                             {[
+                                                { id: 'date-desc', label: t('recentlyAdded') },
+                                                { id: 'date-asc', label: t('oldestFirst') }
+                                             ].map((opt) => (
+                                                <button
+                                                   key={opt.id}
+                                                   onClick={() => setSortBy(opt.id as any)}
+                                                   className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
+                                                >
+                                                   {opt.label}
+                                                   {sortBy === opt.id && <Check size={14} />}
+                                                </button>
+                                             ))}
+                                          </div>
                                        </div>
-                                    </div>
 
-                                    <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                       <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
 
-                                    {/* Date Range Filter */}
-                                    <div className="px-4 py-2">
-                                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
-                                       <div className="mt-2 flex flex-wrap gap-1.5">
-                                          {[
-                                             { id: 'all', label: '전체' },
-                                             { id: 'today', label: '오늘' },
-                                             { id: 'week', label: '이번 주' },
-                                             { id: 'month', label: '이번 달' }
-                                          ].map((opt) => (
-                                             <button
-                                                key={opt.id}
-                                                onClick={() => setFilterDateRange(opt.id as any)}
-                                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
-                                             >
-                                                {opt.label}
-                                             </button>
-                                          ))}
+                                       {/* Date Range Filter */}
+                                       <div className="px-4 py-2">
+                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
+                                          <div className="mt-2 flex flex-wrap gap-1.5">
+                                             {[
+                                                { id: 'all', label: '전체' },
+                                                { id: 'today', label: '오늘' },
+                                                { id: 'week', label: '이번 주' },
+                                                { id: 'month', label: '이번 달' }
+                                             ].map((opt) => (
+                                                <button
+                                                   key={opt.id}
+                                                   onClick={() => setFilterDateRange(opt.id as any)}
+                                                   className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                                >
+                                                   {opt.label}
+                                                </button>
+                                             ))}
+                                          </div>
                                        </div>
-                                    </div>
 
-                                    {availableCategories.length > 0 && (
-                                       <>
-                                          <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                       {availableCategories.length > 0 && (
+                                          <>
+                                             <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                             <div className="px-4 py-2">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
+                                                <div className="mt-2 space-y-1">
+                                                   {availableCategories.map(cat => (
+                                                      <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
+                                                         <div
+                                                            onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                                            className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                         >
+                                                            {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
+                                                         </div>
+                                                         <span className={`text-sm ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
+                                                      </label>
+                                                   ))}
+                                                </div>
+                                             </div>
+                                          </>
+                                       )}
+
+                                       {availableSources.length > 0 && (
+                                          <>
+                                             <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                             <div className="px-4 py-2">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
+                                                <div className="mt-2 space-y-1">
+                                                   {availableSources.map(src => (
+                                                      <label key={src} className="flex items-center gap-2 cursor-pointer group">
+                                                         <div
+                                                            onClick={() => toggleFilter(setFilterSources, filterSources, src)}
+                                                            className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                         >
+                                                            {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
+                                                         </div>
+                                                         <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
+                                                      </label>
+                                                   ))}
+                                                </div>
+                                             </div>
+                                          </>
+                                       )}
+                                    </div>
+                              )}
+                                 </div>
+                              {/* Divider */}
+                              <div className={`border-b mb-4 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}></div>
+                           </div>
+                     )}
+
+                           {/* Desktop Header Info (hidden on mobile now) */}
+                           <div className="hidden md:flex items-end justify-between mb-8">
+                              <div className="flex-1">
+                                 <h1 className={`text-2xl font-black mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                    {(() => {
+                                       // Time-based greeting
+                                       const getTimeGreeting = () => {
+                                          const hour = new Date().getHours();
+                                          if (hour >= 5 && hour < 12) return t('goodMorning');
+                                          if (hour >= 12 && hour < 18) return t('goodAfternoon');
+                                          return t('goodEvening');
+                                       };
+
+                                       // Get user display name
+                                       const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+
+                                       const title = activeTab === 'home' ? `${getTimeGreeting()}, ${userName} 👋` :
+                                          activeTab === 'later' ? t('readLater') :
+                                             activeTab === 'favorites' ? t('favorites') :
+                                                activeTab === 'archive' ? t('archive') :
+                                                   activeTab === 'insights' ? t('aiInsights') :
+                                                      categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
+
+                                       if (title && title.includes('[Beta]')) {
+                                          return (
+                                             <>
+                                                {title.replace('[Beta]', '')}
+                                                <span className="px-1.5 py-0.5 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-[10px] font-extrabold tracking-wide border border-[#21DBA4]/20 align-middle">
+                                                   BETA
+                                                </span>
+                                             </>
+                                          );
+                                       }
+                                       return title;
+                                    })()}
+                                 </h1>
+                                 <p className={`text-sm ${textMuted}`}>
+                                    {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
+                                    {activeTab === 'home' && ` ${t('aiSummary')}`}
+                                 </p>
+                              </div>
+
+                              {/* Sort & Advanced Filter Dropdown */}
+                              <div className="relative hidden md:block" ref={filterRef}>
+                                 <div
+                                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                    className={`hidden md:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
+                                       ? 'bg-slate-50 border-[#21DBA4] text-[#21DBA4]'
+                                       : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-[#21DBA4]/50' : 'bg-white border-slate-200 text-slate-500 hover:border-[#21DBA4]/50'
+                                       }`}
+                                 >
+                                    <Filter size={14} />
+                                    {t('filterSort')}
+                                    {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0) && (
+                                       <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></span>
+                                    )}
+                                    <ChevronDown size={14} />
+                                 </div>
+
+                                 {isFilterOpen && (
+                                    <div className={`absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[80vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
+                                       <div className="px-4 py-2">
+                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
+                                          <div className="mt-2 space-y-1">
+                                             {[
+                                                { id: 'date-desc', label: t('recentlyAdded') },
+                                                { id: 'date-asc', label: t('oldestFirst') }
+                                             ].map((opt) => (
+                                                <button
+                                                   key={opt.id}
+                                                   onClick={() => setSortBy(opt.id as any)}
+                                                   className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
+                                                >
+                                                   {opt.label}
+                                                   {sortBy === opt.id && <Check size={14} />}
+                                                </button>
+                                             ))}
+                                          </div>
+                                       </div>
+
+                                       <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+
+                                       {/* Date Range Filter */}
+                                       <div className="px-4 py-2">
+                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
+                                          <div className="mt-2 flex flex-wrap gap-1.5">
+                                             {[
+                                                { id: 'all', label: '전체' },
+                                                { id: 'today', label: '오늘' },
+                                                { id: 'week', label: '이번 주' },
+                                                { id: 'month', label: '이번 달' }
+                                             ].map((opt) => (
+                                                <button
+                                                   key={opt.id}
+                                                   onClick={() => setFilterDateRange(opt.id as any)}
+                                                   className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                                >
+                                                   {opt.label}
+                                                </button>
+                                             ))}
+                                          </div>
+                                       </div>
+
+                                       <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+
+                                       {availableCategories.length > 0 && (
                                           <div className="px-4 py-2">
                                              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
                                              <div className="mt-2 space-y-1">
@@ -1894,351 +2056,197 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                                                 ))}
                                              </div>
                                           </div>
-                                       </>
-                                    )}
+                                       )}
 
-                                    {availableSources.length > 0 && (
-                                       <>
-                                          <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                          <div className="px-4 py-2">
-                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
-                                             <div className="mt-2 space-y-1">
-                                                {availableSources.map(src => (
-                                                   <label key={src} className="flex items-center gap-2 cursor-pointer group">
-                                                      <div
-                                                         onClick={() => toggleFilter(setFilterSources, filterSources, src)}
-                                                         className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                      >
-                                                         {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
-                                                      </div>
-                                                      <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
-                                                   </label>
-                                                ))}
-                                             </div>
-                                          </div>
-                                       </>
-                                    )}
-                                 </div>
-                              )}
-                           </div>
-                           {/* Divider */}
-                           <div className={`border-b mb-4 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}></div>
-                        </div>
-                     )}
-
-                     {/* Desktop Header Info (hidden on mobile now) */}
-                     <div className="hidden md:flex items-end justify-between mb-8">
-                        <div className="flex-1">
-                           <h1 className={`text-2xl font-black mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                              {(() => {
-                                 // Time-based greeting
-                                 const getTimeGreeting = () => {
-                                    const hour = new Date().getHours();
-                                    if (hour >= 5 && hour < 12) return t('goodMorning');
-                                    if (hour >= 12 && hour < 18) return t('goodAfternoon');
-                                    return t('goodEvening');
-                                 };
-
-                                 // Get user display name
-                                 const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
-
-                                 const title = activeTab === 'home' ? `${getTimeGreeting()}, ${userName} 👋` :
-                                    activeTab === 'later' ? t('readLater') :
-                                       activeTab === 'favorites' ? t('favorites') :
-                                          activeTab === 'archive' ? t('archive') :
-                                             activeTab === 'insights' ? t('aiInsights') :
-                                                categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
-
-                                 if (title && title.includes('[Beta]')) {
-                                    return (
-                                       <>
-                                          {title.replace('[Beta]', '')}
-                                          <span className="px-1.5 py-0.5 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-[10px] font-extrabold tracking-wide border border-[#21DBA4]/20 align-middle">
-                                             BETA
-                                          </span>
-                                       </>
-                                    );
-                                 }
-                                 return title;
-                              })()}
-                           </h1>
-                           <p className={`text-sm ${textMuted}`}>
-                              {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
-                              {activeTab === 'home' && ` ${t('aiSummary')}`}
-                           </p>
-                        </div>
-
-                        {/* Sort & Advanced Filter Dropdown */}
-                        <div className="relative hidden md:block" ref={filterRef}>
-                           <div
-                              onClick={() => setIsFilterOpen(!isFilterOpen)}
-                              className={`hidden md:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
-                                 ? 'bg-slate-50 border-[#21DBA4] text-[#21DBA4]'
-                                 : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-[#21DBA4]/50' : 'bg-white border-slate-200 text-slate-500 hover:border-[#21DBA4]/50'
-                                 }`}
-                           >
-                              <Filter size={14} />
-                              {t('filterSort')}
-                              {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0) && (
-                                 <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></span>
-                              )}
-                              <ChevronDown size={14} />
-                           </div>
-
-                           {isFilterOpen && (
-                              <div className={`absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[80vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
-                                 <div className="px-4 py-2">
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
-                                    <div className="mt-2 space-y-1">
-                                       {[
-                                          { id: 'date-desc', label: t('recentlyAdded') },
-                                          { id: 'date-asc', label: t('oldestFirst') }
-                                       ].map((opt) => (
-                                          <button
-                                             key={opt.id}
-                                             onClick={() => setSortBy(opt.id as any)}
-                                             className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
-                                          >
-                                             {opt.label}
-                                             {sortBy === opt.id && <Check size={14} />}
-                                          </button>
-                                       ))}
-                                    </div>
-                                 </div>
-
-                                 <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-
-                                 {/* Date Range Filter */}
-                                 <div className="px-4 py-2">
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
-                                       {[
-                                          { id: 'all', label: '전체' },
-                                          { id: 'today', label: '오늘' },
-                                          { id: 'week', label: '이번 주' },
-                                          { id: 'month', label: '이번 달' }
-                                       ].map((opt) => (
-                                          <button
-                                             key={opt.id}
-                                             onClick={() => setFilterDateRange(opt.id as any)}
-                                             className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
-                                          >
-                                             {opt.label}
-                                          </button>
-                                       ))}
-                                    </div>
-                                 </div>
-
-                                 <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-
-                                 {availableCategories.length > 0 && (
-                                    <div className="px-4 py-2">
-                                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
-                                       <div className="mt-2 space-y-1">
-                                          {availableCategories.map(cat => (
-                                             <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
-                                                <div
-                                                   onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
-                                                   className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                >
-                                                   {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
+                                       {availableSources.length > 0 && (
+                                          <>
+                                             <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                             <div className="px-4 py-2">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
+                                                <div className="mt-2 space-y-1">
+                                                   {availableSources.map(src => (
+                                                      <label key={src} className="flex items-center gap-2 cursor-pointer group">
+                                                         <div
+                                                            onClick={() => toggleFilter(setFilterSources, filterSources, src)}
+                                                            className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                         >
+                                                            {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
+                                                         </div>
+                                                         <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
+                                                      </label>
+                                                   ))}
                                                 </div>
-                                                <span className={`text-sm ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
-                                             </label>
-                                          ))}
-                                       </div>
-                                    </div>
-                                 )}
+                                             </div>
+                                          </>
+                                       )}
 
-                                 {availableSources.length > 0 && (
-                                    <>
-                                       <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                       <div className="px-4 py-2">
-                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
-                                          <div className="mt-2 space-y-1">
-                                             {availableSources.map(src => (
-                                                <label key={src} className="flex items-center gap-2 cursor-pointer group">
-                                                   <div
-                                                      onClick={() => toggleFilter(setFilterSources, filterSources, src)}
-                                                      className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                   >
-                                                      {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
-                                                   </div>
-                                                   <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
-                                                </label>
-                                             ))}
-                                          </div>
-                                       </div>
-                                    </>
-                                 )}
+                                       {availableTags.length > 0 && (
+                                          <>
+                                             <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                             <div className="px-4 py-2">
+                                                <div className="flex items-center justify-between mb-2">
+                                                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('tags')}</span>
+                                                   {availableTags.length > 8 && (
+                                                      <button
+                                                         onClick={() => setShowAllTags(!showAllTags)}
+                                                         className="text-[10px] font-bold text-[#21DBA4] hover:text-[#1BC491]"
+                                                      >
+                                                         {showAllTags ? '접기' : `더보기 (+${availableTags.length - 8})`}
+                                                      </button>
+                                                   )}
+                                                </div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                   {(showAllTags ? availableTags : availableTags.slice(0, 8)).map((tag: string) => (
+                                                      <button
+                                                         key={tag}
+                                                         onClick={() => toggleFilter(setFilterTags, filterTags, tag)}
+                                                         className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${filterTags.includes(tag) ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                                      >
+                                                         #{tag}
+                                                      </button>
+                                                   ))}
+                                                </div>
+                                             </div>
+                                          </>
+                                       )}
 
-                                 {availableTags.length > 0 && (
-                                    <>
-                                       <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                       <div className="px-4 py-2">
-                                          <div className="flex items-center justify-between mb-2">
-                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('tags')}</span>
-                                             {availableTags.length > 8 && (
-                                                <button
-                                                   onClick={() => setShowAllTags(!showAllTags)}
-                                                   className="text-[10px] font-bold text-[#21DBA4] hover:text-[#1BC491]"
-                                                >
-                                                   {showAllTags ? '접기' : `더보기 (+${availableTags.length - 8})`}
-                                                </button>
-                                             )}
+                                       {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0 || filterDateRange !== 'all') && (
+                                          <div className={`p-2 border-t mt-1 ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
+                                             <button
+                                                onClick={() => { setFilterCategories([]); setFilterSources([]); setFilterTags([]); setFilterDateRange('all'); }}
+                                                className="w-full text-center text-xs font-bold text-red-500 hover:text-red-600 py-1"
+                                             >
+                                                {t('resetFilters')}
+                                             </button>
                                           </div>
-                                          <div className="flex flex-wrap gap-1.5">
-                                             {(showAllTags ? availableTags : availableTags.slice(0, 8)).map((tag: string) => (
-                                                <button
-                                                   key={tag}
-                                                   onClick={() => toggleFilter(setFilterTags, filterTags, tag)}
-                                                   className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${filterTags.includes(tag) ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
-                                                >
-                                                   #{tag}
-                                                </button>
-                                             ))}
-                                          </div>
-                                       </div>
-                                    </>
-                                 )}
-
-                                 {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0 || filterDateRange !== 'all') && (
-                                    <div className={`p-2 border-t mt-1 ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
-                                       <button
-                                          onClick={() => { setFilterCategories([]); setFilterSources([]); setFilterTags([]); setFilterDateRange('all'); }}
-                                          className="w-full text-center text-xs font-bold text-red-500 hover:text-red-600 py-1"
-                                       >
-                                          {t('resetFilters')}
-                                       </button>
+                                       )}
                                     </div>
                                  )}
                               </div>
-                           )}
-                        </div>
-                     </div>
-
-                     {/* Grid / List View */}
-                     {activeTab === 'insights' ? (
-                        <AIInsightsDashboard
-                           links={links}
-                           categories={categories}
-                           theme={theme}
-                           t={t}
-                           language={language}
-                           onOpenSettings={() => setIsSettingsOpen(true)}
-                        />
-                     ) : viewMode === 'grid' ? (
-                        <>
-                           {/* Mobile 2-Column Grid View */}
-                           <div className={`md:hidden ${mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden'}`}>
-                              {filteredLinks.map(link => {
-                                 const source = getSourceInfo(link.url);
-                                 const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
-                                 return (
-                                    <div
-                                       key={link.id}
-                                       onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
-                                       className={`rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'
-                                          } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : 'border border-slate-100 shadow-sm'}`}
-                                    >
-                                       {/* 16:9 Image */}
-                                       <div className="relative aspect-video overflow-hidden">
-                                          <img
-                                             src={link.image || '/placeholder.jpg'}
-                                             alt=""
-                                             className="w-full h-full object-cover"
-                                          />
-                                          {/* Source Badge - Always show */}
-                                          <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white ${source.color || 'bg-slate-600'}`}>
-                                             {source.icon}{source.name}
-                                          </div>
-                                          {/* Favorite Star - Always show if favorite */}
-                                          {link.isFavorite && (
-                                             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
-                                                <Star size={12} fill="white" className="text-white" />
-                                             </div>
-                                          )}
-                                       </div>
-                                       {/* Content - flex-1 for consistent height */}
-                                       <div className="p-3 flex flex-col flex-1">
-                                          {/* URL */}
-                                          <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                                             <span className="text-slate-400">⊙</span>
-                                             <span className="truncate">{truncatedUrl}</span>
-                                          </div>
-                                          {/* Title - fixed height for 2 lines */}
-                                          <h3 className={`text-xs font-bold leading-tight line-clamp-2 h-8 mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                                             {link.title}
-                                          </h3>
-                                          {/* AI Summary - pushed to bottom with mt-auto */}
-                                          <div className={`mt-auto text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
-                                             <div className={`flex items-center gap-1 font-bold mb-1 text-[#21DBA4]`}>
-                                                <span>✨</span> AI Summary
-                                             </div>
-                                             <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                                                {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 80) || 'No summary available'}
-                                             </p>
-                                          </div>
-                                       </div>
-                                    </div>
-                                 );
-                              })}
                            </div>
 
-                           {/* Desktop Masonry / Mobile List View */}
-                           <div className={`${mobileViewMode === 'grid' ? 'hidden md:block' : ''}`}>
-                              <ResponsiveMasonry columnsCountBreakPoints={{ 350: 1, 750: 2, 1100: 3, 1400: 4 }}>
-                                 <Masonry gutter="24px">
-                                    {filteredLinks.map(link => (
-                                       <LinkCard
-                                          key={link.id}
-                                          data={link}
-                                          selected={selectedItemIds.has(link.id)}
-                                          selectionMode={isSelectionMode}
-                                          onToggleSelect={() => toggleSelection(link.id)}
-                                          onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
-                                          onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
-                                          onToggleReadLater={(e) => handleToggleReadLater(link.id, e)}
-                                          categories={categories}
-                                          theme={theme}
-                                          showThumbnails={showThumbnails}
-                                          t={t}
-                                       />
-                                    ))}
-                                 </Masonry>
-                              </ResponsiveMasonry>
-                           </div>
-                        </>
-                     ) : (
-                        <div className="space-y-4">
-                           {filteredLinks.map(link => (
-                              <LinkRow
-                                 key={link.id}
-                                 data={link}
-                                 selected={selectedItemIds.has(link.id)}
-                                 selectionMode={isSelectionMode}
-                                 onToggleSelect={() => toggleSelection(link.id)}
-                                 onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
-                                 onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
+                           {/* Grid / List View */}
+                           {activeTab === 'insights' ? (
+                              <AIInsightsDashboard
+                                 links={links}
                                  categories={categories}
                                  theme={theme}
-                                 showThumbnails={showThumbnails}
+                                 t={t}
+                                 language={language}
+                                 onOpenSettings={() => setIsSettingsOpen(true)}
                               />
-                           ))}
+                           ) : viewMode === 'grid' ? (
+                              <>
+                                 {/* Mobile 2-Column Grid View */}
+                                 <div className={`md:hidden ${mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden'}`}>
+                                    {filteredLinks.map(link => {
+                                       const source = getSourceInfo(link.url);
+                                       const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
+                                       return (
+                                          <div
+                                             key={link.id}
+                                             onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                             className={`rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'
+                                                } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : 'border border-slate-100 shadow-sm'}`}
+                                          >
+                                             {/* 16:9 Image */}
+                                             <div className="relative aspect-video overflow-hidden">
+                                                <img
+                                                   src={link.image || '/placeholder.jpg'}
+                                                   alt=""
+                                                   className="w-full h-full object-cover"
+                                                />
+                                                {/* Source Badge - Always show */}
+                                                <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white ${source.color || 'bg-slate-600'}`}>
+                                                   {source.icon}{source.name}
+                                                </div>
+                                                {/* Favorite Star - Always show if favorite */}
+                                                {link.isFavorite && (
+                                                   <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
+                                                      <Star size={12} fill="white" className="text-white" />
+                                                   </div>
+                                                )}
+                                             </div>
+                                             {/* Content - flex-1 for consistent height */}
+                                             <div className="p-3 flex flex-col flex-1">
+                                                {/* URL */}
+                                                <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                   <span className="text-slate-400">⊙</span>
+                                                   <span className="truncate">{truncatedUrl}</span>
+                                                </div>
+                                                {/* Title - fixed height for 2 lines */}
+                                                <h3 className={`text-xs font-bold leading-tight line-clamp-2 h-8 mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                                   {link.title}
+                                                </h3>
+                                                {/* AI Summary - pushed to bottom with mt-auto */}
+                                                <div className={`mt-auto text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
+                                                   <div className={`flex items-center gap-1 font-bold mb-1 text-[#21DBA4]`}>
+                                                      <span>✨</span> AI Summary
+                                                   </div>
+                                                   <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                                      {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 80) || 'No summary available'}
+                                                   </p>
+                                                </div>
+                                             </div>
+                                          </div>
+                                       );
+                                    })}
+                                 </div>
+
+                                 {/* Desktop Masonry / Mobile List View */}
+                                 <div className={`${mobileViewMode === 'grid' ? 'hidden md:block' : ''}`}>
+                                    <ResponsiveMasonry columnsCountBreakPoints={{ 350: 1, 750: 2, 1100: 3, 1400: 4 }}>
+                                       <Masonry gutter="24px">
+                                          {filteredLinks.map(link => (
+                                             <LinkCard
+                                                key={link.id}
+                                                data={link}
+                                                selected={selectedItemIds.has(link.id)}
+                                                selectionMode={isSelectionMode}
+                                                onToggleSelect={() => toggleSelection(link.id)}
+                                                onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                                onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
+                                                onToggleReadLater={(e) => handleToggleReadLater(link.id, e)}
+                                                categories={categories}
+                                                theme={theme}
+                                                showThumbnails={showThumbnails}
+                                                t={t}
+                                             />
+                                          ))}
+                                       </Masonry>
+                                    </ResponsiveMasonry>
+                                 </div>
+                              </>
+                           ) : (
+                              <div className="space-y-4">
+                                 {filteredLinks.map(link => (
+                                    <LinkRow
+                                       key={link.id}
+                                       data={link}
+                                       selected={selectedItemIds.has(link.id)}
+                                       selectionMode={isSelectionMode}
+                                       onToggleSelect={() => toggleSelection(link.id)}
+                                       onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                       onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
+                                       categories={categories}
+                                       theme={theme}
+                                       showThumbnails={showThumbnails}
+                                    />
+                                 ))}
+                              </div>
+                           )}
+
+                           {filteredLinks.length === 0 && activeTab !== 'insights' && (
+                              <div className="py-20 text-center text-slate-400">
+                                 <LinkBrainLogo variant="green" size={48} className="mx-auto mb-4 opacity-20" />
+                                 <p>{t('noLinks')}</p>
+                              </div>
+                           )}
+
+                           <div className="h-20"></div>
                         </div>
                      )}
-
-                     {filteredLinks.length === 0 && activeTab !== 'insights' && (
-                        <div className="py-20 text-center text-slate-400">
-                           <LinkBrainLogo variant="green" size={48} className="mx-auto mb-4 opacity-20" />
-                           <p>{t('noLinks')}</p>
-                        </div>
-                     )}
-
-                     <div className="h-20"></div>
                   </div>
-               )}
-            </div>
 
          </main>
 
