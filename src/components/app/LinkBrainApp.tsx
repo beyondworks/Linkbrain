@@ -1145,9 +1145,11 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
          {/* Loading Overlay for Data Fetch */}
          {dataLoading && links.length === 0 && (
-            <div className="fixed inset-0 z-[200] bg-white/90 dark:bg-slate-950/90 flex flex-col items-center justify-center gap-4">
-               <div className="w-10 h-10 border-4 border-[#21DBA4] border-t-transparent rounded-full animate-spin" />
-               <p className="text-slate-600 dark:text-slate-300 font-medium">
+            <div className={`fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
+               <div className="w-10 h-10 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
+                  <div className="w-4 h-4 rounded-full bg-[#21DBA4]" />
+               </div>
+               <p className={`font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
                   {language === 'ko' ? '데이터를 불러오는 중...' : 'Loading your data...'}
                </p>
             </div>
@@ -1160,10 +1162,12 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[150] bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4"
+                  className={`fixed inset-0 z-[150] backdrop-blur-sm flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950/95' : 'bg-slate-50/95'}`}
                >
-                  <div className="w-16 h-16 border-4 border-[#21DBA4] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-lg font-bold text-slate-800 dark:text-white">
+                  <div className="w-16 h-16 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
+                     <div className="w-8 h-8 rounded-full bg-[#21DBA4]" />
+                  </div>
+                  <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                      {language === 'ko' ? '링크 분석 중...' : 'Analyzing link...'}
                   </p>
                   <p className="text-sm text-slate-500">
