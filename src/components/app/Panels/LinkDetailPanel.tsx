@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import {
     X,
@@ -380,8 +381,8 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         return null;
     };
 
-    return (
-        <div className="fixed inset-0 z-[60] flex justify-end">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex justify-end">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -665,6 +666,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                     );
                 })()}
             </motion.div>
-        </div>
+        </div>,
+        document.body
     );
 };

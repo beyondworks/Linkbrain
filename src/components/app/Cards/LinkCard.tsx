@@ -41,7 +41,7 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
       `}
         >
             <div
-                className={`absolute top-3 left-3 z-30 transition-opacity duration-200 ${selectionMode || selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                className={`absolute top-3 left-3 z-[1] transition-opacity duration-200 ${selectionMode || selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}
             >
                 <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors shadow-sm ${selected ? 'bg-[#21DBA4] text-white' : 'bg-white/90 text-slate-300 hover:text-slate-500 hover:bg-white'}`}>
@@ -53,7 +53,7 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
                 <div className={`relative h-48 overflow-hidden ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
                     <img src={data.image} alt={data.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
 
-                    <div className={`absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 transition-all ${selectionMode || selected ? 'translate-x-8' : 'group-hover:translate-x-8'}`}>
+                    <div className={`absolute top-3 left-3 flex flex-wrap gap-1.5 z-[1] transition-all ${selectionMode || selected ? 'translate-x-8' : 'group-hover:translate-x-8'}`}>
                         <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-white text-[10px] font-bold backdrop-blur-md shadow-sm ${source.color}`}>
                             {source.icon} {source.name}
                         </div>

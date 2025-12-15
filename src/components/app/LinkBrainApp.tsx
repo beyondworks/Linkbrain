@@ -397,7 +397,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
    // Scroll position for scroll-to-top button
    const [showScrollTop, setShowScrollTop] = useState(false);
-   const mainContentRef = useRef<HTMLDivElement>(null);
+   const mainContentRef = useRef<HTMLElement>(null);
 
    // Pull-to-refresh state
    const [isPulling, setIsPulling] = useState(false);
@@ -1210,215 +1210,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    return (
       <div className={`flex h-screen h-[100dvh] font-sans overflow-hidden transition-colors duration-300 ${bgClass}`}>
 
-         {/* Loading Overlay for Data Fetch */}
-         {dataLoading && links.length === 0 && (
-            <div className={`fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
-               <div className="w-10 h-10 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
-                  <div className="w-4 h-4 rounded-full bg-[#21DBA4]" />
-               </div>
-               <p className={`font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                  {language === 'ko' ? '데이터를 불러오는 중...' : 'Loading your data...'}
-               </p>
-            </div>
-         )}
 
-         {/* Analyzing Overlay */}
-         <AnimatePresence>
-            {isAnalyzing && (
-               <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className={`fixed inset-0 z-[150] backdrop-blur-sm flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950/95' : 'bg-slate-50/95'}`}
-               >
-                  <div className="w-16 h-16 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
-                     <div className="w-8 h-8 rounded-full bg-[#21DBA4]" />
-                  </div>
-                  <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                     {language === 'ko' ? '링크 분석 중...' : 'Analyzing link...'}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                     {language === 'ko' ? 'AI가 콘텐츠를 요약하고 있습니다' : 'AI is summarizing the content'}
-                  </p>
-               </motion.div>
-            )}
-         </AnimatePresence>
-
-         {/* Detail Overlay */}
-         <AnimatePresence>
-            {selectedLink && (
-               <LinkDetailPanel
-                  link={selectedLink}
-                  categories={categories}
-                  collections={collections}
-                  onClose={() => setSelectedLinkId(null)}
-                  onToggleFavorite={() => handleToggleFavorite(selectedLink.id)}
-                  onToggleReadLater={() => handleToggleReadLater(selectedLink.id)}
-                  onArchive={() => handleArchive(selectedLink.id)}
-                  onDelete={() => handleDeleteSingleRequest(selectedLink.id)}
-                  onUpdateCategory={handleUpdateLinkCategory}
-                  onUpdateClip={updateClip}
-                  onToggleCollection={handleToggleLinkCollection}
-                  onClearCollections={handleClearCollections}
-                  theme={theme}
-                  t={t}
-               />
-            )}
-         </AnimatePresence>
-
-         {/* Paper Plane Animation */}
-         <AnimatePresence>
-            {showFlyAnimation && (
-               <motion.div
-                  initial={{ x: "-10vw", y: "110vh", rotate: 0, scale: 0.5, opacity: 0 }}
-                  animate={{
-                     x: ["-10vw", "45vw", "35vw", "55vw", "120vw"],
-                     y: ["110vh", "50vh", "35vh", "65vh", "-20vh"],
-                     rotate: [0, -45, -180, -270, 0],
-                     scale: [0.5, 1, 1, 1, 0.5],
-                     opacity: [0, 1, 1, 1, 0]
-                  }}
-                  transition={{ duration: 2.5, ease: "easeInOut", times: [0, 0.4, 0.5, 0.6, 1] }}
-                  className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center"
-               >
-                  <LinkBrainLogo variant="white" size={128} className="drop-shadow-2xl" />
-               </motion.div>
-            )}
-         </AnimatePresence>
-
-         {/* Modals */}
-         <AnimatePresence>
-            {isAddModalOpen && <AddLinkModal onClose={() => setIsAddModalOpen(false)} onAdd={handleAddLink} theme={theme} t={t} />}
-            {isCategoryModalOpen && (
-               <ManagementModal
-                  title={editingCategory ? t('editCategory') : t('newCategory')}
-                  initialData={editingCategory}
-                  type="category"
-                  onClose={() => { setIsCategoryModalOpen(false); setEditingCategory(null); }}
-                  onSave={handleSaveCategory}
-                  theme={theme}
-                  t={t}
-               />
-            )}
-            {isCollectionModalOpen && (
-               <ManagementModal
-                  title={editingCollection ? t('editCollection') : t('newCollection')}
-                  initialData={editingCollection}
-                  type="collection"
-                  onClose={() => { setIsCollectionModalOpen(false); setEditingCollection(null); }}
-                  onSave={handleSaveCollection}
-                  onDelete={editingCollection ? async (id: string) => {
-                     if (!canEdit) {
-                        toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
-                        return;
-                     }
-                     try {
-                        await deleteCollectionApi(id);
-                        setCollections(prev => prev.filter(c => c.id !== id));
-                        setIsCollectionModalOpen(false);
-                        setEditingCollection(null);
-                        toast.success(language === 'ko' ? '컬렉션이 삭제되었습니다.' : 'Collection deleted');
-                     } catch (error) {
-                        console.error('Failed to delete collection:', error);
-                        toast.error('Failed to delete collection');
-                     }
-                  } : undefined}
-                  links={links}
-                  theme={theme}
-                  t={t}
-               />
-            )}
-            {isCategoryManagerOpen && (
-               <CategoryManagerModal
-                  categories={categories}
-                  links={links}
-                  onClose={() => setIsCategoryManagerOpen(false)}
-                  onEdit={(cat: Category) => {
-                     setIsCategoryManagerOpen(false);
-                     setEditingCategory(cat);
-                     setIsCategoryModalOpen(true);
-                  }}
-                  onDelete={handleDeleteCategory}
-                  theme={theme}
-                  t={t}
-               />
-            )}
-            {deleteConfirmation.isOpen && (
-               <DeleteConfirmationModal
-                  count={deleteConfirmation.count}
-                  onCancel={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}
-                  onConfirm={deleteConfirmation.onConfirm}
-                  theme={theme}
-                  t={t}
-               />
-            )}
-            {isSettingsOpen && (
-               <SettingsModal
-                  initialTab={settingsInitialTab}
-                  onClose={() => setIsSettingsOpen(false)}
-                  settings={{ theme, themePreference, language, showThumbnails, notifications }}
-                  setSettings={{ setTheme, setLanguage, setShowThumbnails: handleSetShowThumbnails, setNotifications: handleSetNotifications }}
-                  onLogout={onLogout || (() => { })}
-                  t={t}
-                  user={user}
-               />
-            )}
-         </AnimatePresence>
-
-         {/* Floating Selection Bar */}
-         <AnimatePresence>
-            {isSelectionMode && (
-               <motion.div
-                  initial={{ y: 100, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: 100, opacity: 0 }}
-                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-800 text-white shadow-2xl flex items-center border border-slate-700
-                          px-4 py-2.5 rounded-full gap-3
-                          md:px-6 md:py-3 md:gap-6"
-               >
-                  {/* Count - Number only for mobile */}
-                  <div className="flex items-center gap-1.5">
-                     <span className="font-black text-base md:text-sm">{selectedItemIds.size}</span>
-                     <span className="hidden md:inline text-sm font-medium text-slate-300">
-                        {t('selected')}
-                     </span>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="h-5 md:h-4 w-px bg-white/20"></div>
-
-                  {/* Archive/Home - Conditional based on current tab */}
-                  {activeTab === 'archive' ? (
-                     <button onClick={handleBulkUnarchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
-                        <Home className="w-[18px] h-[18px] md:w-4 md:h-4" />
-                        <span className="hidden md:inline text-sm font-medium">{t('home')}</span>
-                     </button>
-                  ) : (
-                     <button onClick={handleBulkArchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
-                        <Archive className="w-[18px] h-[18px] md:w-4 md:h-4" />
-                        <span className="hidden md:inline text-sm font-medium">{t('archiveClips')}</span>
-                     </button>
-                  )}
-
-                  {/* Divider */}
-                  <div className="h-5 md:h-4 w-px bg-white/20"></div>
-
-                  {/* Delete - Icon only on mobile */}
-                  <button onClick={handleBulkDeleteRequest} className="group flex items-center gap-1.5 hover:text-red-400 transition-colors">
-                     <Trash2 className="w-[18px] h-[18px] md:w-4 md:h-4" />
-                     <span className="hidden md:inline text-sm font-medium">{t('delete')}</span>
-                  </button>
-
-                  {/* Close */}
-                  <button
-                     onClick={() => { setIsSelectionMode(false); setSelectedItemIds(new Set()); }}
-                     className="p-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                  >
-                     <X className="w-3.5 h-3.5 md:w-[14px] md:h-[14px]" />
-                  </button>
-               </motion.div>
-            )}
-         </AnimatePresence>
 
          {/* Mobile Sidebar Overlay */}
          <AnimatePresence>
@@ -1440,7 +1232,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
         ${sidebarClass}
       `}>
             {/* Logo Area */}
-            <div className={`h-16 flex items-center px-6 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-50'}`}>
+            <div className={`h-[72px] flex items-center px-6 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-50'}`}>
                <div className="w-8 h-8 rounded-lg mr-3 shadow-lg shadow-[#21DBA4]/20 cursor-pointer" onClick={onBack}>
                   <Logo className="w-full h-full" />
                </div>
@@ -1692,12 +1484,12 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
          </aside>
 
          {/* Main Content */}
-         <main className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+         <main ref={mainContentRef} className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate">
             {/* Subscription Banner */}
 
 
             {/* Top Header */}
-            <header className={`h-[72px] border-b backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-30 shrink-0 ${headerClass}`}>
+            <header className={`sticky top-0 h-[72px] border-b backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-[10] shrink-0 ${headerClass}`}>
                <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
                   <div className="flex items-center gap-3 md:hidden">
                      <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
@@ -1826,7 +1618,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
             {/* Subscription Banner */}
             {showSubscriptionBanner && status !== 'active' && (
-               <div className="w-full px-4 md:px-8 pt-4 z-20">
+               <div className="w-full px-4 md:px-8 pt-4">
                   <div className="w-full max-w-7xl mx-auto">
                      <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -1880,9 +1672,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
             {/* Scrollable Area */}
             <div
-               ref={mainContentRef}
-               className={`flex-1 overflow-y-auto ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}
-               style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
+               className={`flex-1 ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}
+               style={{ minHeight: 'calc(100vh - 72px)' }}
             >
                {/* Pull-to-Refresh Indicator (mobile only) - using refs for 60fps animation */}
                <div
@@ -1910,7 +1701,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
 
                      {/* Mobile Sticky Header Section */}
                      {activeTab !== 'insights' && (
-                        <div className={`md:hidden sticky top-0 z-20 -mx-4 px-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                        <div className={`md:hidden sticky top-0 z-[5] -mx-4 px-4 pt-4 pb-0 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                            {/* Title + Count */}
                            <div className="mb-3">
                               <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -2386,6 +2177,216 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             </div>
 
          </main>
+
+         {/* --- OVERLAYS & MODALS (Moved to end for correct z-index stacking) --- */}
+
+         {/* Loading Overlay for Data Fetch */}
+         {dataLoading && links.length === 0 && (
+            <div className={`fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
+               <div className="w-10 h-10 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
+                  <div className="w-4 h-4 rounded-full bg-[#21DBA4]" />
+               </div>
+               <p className={`font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                  {language === 'ko' ? '데이터를 불러오는 중...' : 'Loading your data...'}
+               </p>
+            </div>
+         )}
+
+         {/* Analyzing Overlay */}
+         <AnimatePresence>
+            {isAnalyzing && (
+               <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className={`fixed inset-0 z-[150] backdrop-blur-sm flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950/95' : 'bg-slate-50/95'}`}
+               >
+                  <div className="w-16 h-16 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
+                     <div className="w-8 h-8 rounded-full bg-[#21DBA4]" />
+                  </div>
+                  <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                     {language === 'ko' ? '링크 분석 중...' : 'Analyzing link...'}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                     {language === 'ko' ? 'AI가 콘텐츠를 요약하고 있습니다' : 'AI is summarizing the content'}
+                  </p>
+               </motion.div>
+            )}
+         </AnimatePresence>
+
+         {/* Detail Overlay */}
+         {selectedLink && (
+            <LinkDetailPanel
+               link={selectedLink}
+               categories={categories}
+               collections={collections}
+               onClose={() => setSelectedLinkId(null)}
+               onToggleFavorite={() => handleToggleFavorite(selectedLink.id)}
+               onToggleReadLater={() => handleToggleReadLater(selectedLink.id)}
+               onArchive={() => handleArchive(selectedLink.id)}
+               onDelete={() => handleDeleteSingleRequest(selectedLink.id)}
+               onUpdateCategory={handleUpdateLinkCategory}
+               onUpdateClip={updateClip}
+               onToggleCollection={handleToggleLinkCollection}
+               onClearCollections={handleClearCollections}
+               theme={theme}
+               t={t}
+            />
+         )}
+
+         {/* Paper Plane Animation */}
+         <AnimatePresence>
+            {showFlyAnimation && (
+               <motion.div
+                  initial={{ x: "-10vw", y: "110vh", rotate: 0, scale: 0.5, opacity: 0 }}
+                  animate={{
+                     x: ["-10vw", "45vw", "35vw", "55vw", "120vw"],
+                     y: ["110vh", "50vh", "35vh", "65vh", "-20vh"],
+                     rotate: [0, -45, -180, -270, 0],
+                     scale: [0.5, 1, 1, 1, 0.5],
+                     opacity: [0, 1, 1, 1, 0]
+                  }}
+                  transition={{ duration: 2.5, ease: "easeInOut", times: [0, 0.4, 0.5, 0.6, 1] }}
+                  className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center"
+               >
+                  <LinkBrainLogo variant="white" size={128} className="drop-shadow-2xl" />
+               </motion.div>
+            )}
+         </AnimatePresence>
+
+         {/* Modals */}
+         <AnimatePresence>
+            {isAddModalOpen && <AddLinkModal onClose={() => setIsAddModalOpen(false)} onAdd={handleAddLink} theme={theme} t={t} />}
+            {isCategoryModalOpen && (
+               <ManagementModal
+                  title={editingCategory ? t('editCategory') : t('newCategory')}
+                  initialData={editingCategory}
+                  type="category"
+                  onClose={() => { setIsCategoryModalOpen(false); setEditingCategory(null); }}
+                  onSave={handleSaveCategory}
+                  theme={theme}
+                  t={t}
+               />
+            )}
+            {isCollectionModalOpen && (
+               <ManagementModal
+                  title={editingCollection ? t('editCollection') : t('newCollection')}
+                  initialData={editingCollection}
+                  type="collection"
+                  onClose={() => { setIsCollectionModalOpen(false); setEditingCollection(null); }}
+                  onSave={handleSaveCollection}
+                  onDelete={editingCollection ? async (id: string) => {
+                     if (!canEdit) {
+                        toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
+                        return;
+                     }
+                     try {
+                        await deleteCollectionApi(id);
+                        setCollections(prev => prev.filter(c => c.id !== id));
+                        setIsCollectionModalOpen(false);
+                        setEditingCollection(null);
+                        toast.success(language === 'ko' ? '컬렉션이 삭제되었습니다.' : 'Collection deleted');
+                     } catch (error) {
+                        console.error('Failed to delete collection:', error);
+                        toast.error('Failed to delete collection');
+                     }
+                  } : undefined}
+                  links={links}
+                  theme={theme}
+                  t={t}
+               />
+            )}
+            {isCategoryManagerOpen && (
+               <CategoryManagerModal
+                  categories={categories}
+                  links={links}
+                  onClose={() => setIsCategoryManagerOpen(false)}
+                  onEdit={(cat: Category) => {
+                     setIsCategoryManagerOpen(false);
+                     setEditingCategory(cat);
+                     setIsCategoryModalOpen(true);
+                  }}
+                  onDelete={handleDeleteCategory}
+                  theme={theme}
+                  t={t}
+               />
+            )}
+            {deleteConfirmation.isOpen && (
+               <DeleteConfirmationModal
+                  count={deleteConfirmation.count}
+                  onCancel={() => setDeleteConfirmation({ ...deleteConfirmation, isOpen: false })}
+                  onConfirm={deleteConfirmation.onConfirm}
+                  theme={theme}
+                  t={t}
+               />
+            )}
+            {isSettingsOpen && (
+               <SettingsModal
+                  initialTab={settingsInitialTab}
+                  onClose={() => setIsSettingsOpen(false)}
+                  settings={{ theme, themePreference, language, showThumbnails, notifications }}
+                  setSettings={{ setTheme, setLanguage, setShowThumbnails: handleSetShowThumbnails, setNotifications: handleSetNotifications }}
+                  onLogout={onLogout || (() => { })}
+                  t={t}
+                  user={user}
+               />
+            )}
+         </AnimatePresence>
+
+         {/* Floating Selection Bar */}
+         <AnimatePresence>
+            {isSelectionMode && (
+               <motion.div
+                  initial={{ y: 100, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 100, opacity: 0 }}
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-slate-800 text-white shadow-2xl flex items-center border border-slate-700
+                          px-4 py-2.5 rounded-full gap-3
+                          md:px-6 md:py-3 md:gap-6"
+               >
+                  {/* Count - Number only for mobile */}
+                  <div className="flex items-center gap-1.5">
+                     <span className="font-black text-base md:text-sm">{selectedItemIds.size}</span>
+                     <span className="hidden md:inline text-sm font-medium text-slate-300">
+                        {t('selected')}
+                     </span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-5 md:h-4 w-px bg-white/20"></div>
+
+                  {/* Archive/Home - Conditional based on current tab */}
+                  {activeTab === 'archive' ? (
+                     <button onClick={handleBulkUnarchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
+                        <Home className="w-[18px] h-[18px] md:w-4 md:h-4" />
+                        <span className="hidden md:inline text-sm font-medium">{t('home')}</span>
+                     </button>
+                  ) : (
+                     <button onClick={handleBulkArchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
+                        <Archive className="w-[18px] h-[18px] md:w-4 md:h-4" />
+                        <span className="hidden md:inline text-sm font-medium">{t('archiveClips')}</span>
+                     </button>
+                  )}
+
+                  {/* Divider */}
+                  <div className="h-5 md:h-4 w-px bg-white/20"></div>
+
+                  {/* Delete - Icon only on mobile */}
+                  <button onClick={handleBulkDeleteRequest} className="group flex items-center gap-1.5 hover:text-red-400 transition-colors">
+                     <Trash2 className="w-[18px] h-[18px] md:w-4 md:h-4" />
+                     <span className="hidden md:inline text-sm font-medium">{t('delete')}</span>
+                  </button>
+
+                  {/* Close */}
+                  <button
+                     onClick={() => { setIsSelectionMode(false); setSelectedItemIds(new Set()); }}
+                     className="p-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                  >
+                     <X className="w-3.5 h-3.5 md:w-[14px] md:h-[14px]" />
+                  </button>
+               </motion.div>
+            )}
+         </AnimatePresence>
 
          {/* Mobile FAB - outside main for proper fixed positioning */}
          <button
