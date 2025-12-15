@@ -159,9 +159,11 @@ export const AnalysisIndicator: React.FC<AnalysisIndicatorProps> = ({ items, log
                     )}
                 </div>
 
-                {/* Label - show on mobile only when analyzing */}
-                <span className={`${primaryStatus === 'analyzing' ? 'inline' : 'hidden md:inline'} ${config.textColor}`}>
-                    {primaryStatus === 'analyzing' && language === 'ko' ? '분석중입니다' : label}
+                {/* Label - always show when analyzing */}
+                <span className={`${primaryStatus === 'analyzing' ? 'inline text-xs font-semibold' : 'hidden md:inline'} ${config.textColor}`}>
+                    {language === 'ko'
+                        ? (primaryStatus === 'analyzing' ? '분석중' : config.labelKo)
+                        : (primaryStatus === 'analyzing' ? 'Analyzing...' : config.labelEn)}
                 </span>
 
                 {/* Count Badge - hidden on mobile */}

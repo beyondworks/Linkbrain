@@ -80,7 +80,7 @@ export const InstallInstructionModal = ({ isOpen, onClose, theme: propTheme }: I
                 </div>
 
                 {/* Content */}
-                <div className="px-6 pt-2 pb-14">
+                <div className="px-6 pt-2 pb-24">
                     {activeTab === 'ios' ? (
                         <div className="space-y-8">
                             <div className="flex items-start gap-4">
