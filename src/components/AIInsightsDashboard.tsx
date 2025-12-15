@@ -943,7 +943,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                       e.stopPropagation();
                       setPendingDeleteItem({ id: item.id, type: item.type, title: item.title });
                     }}
-                    className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity ${isDark ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                    className={`p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ${isDark ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
                     title={language === 'ko' ? '삭제' : 'Delete'}
                   >
                     <X size={14} />
