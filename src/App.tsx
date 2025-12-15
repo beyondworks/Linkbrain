@@ -23,6 +23,7 @@ import {
 import { FeatureSlider } from './components/landing/FeatureSlider';
 import { Logo } from './components/Logo';
 import { LinkBrainApp } from './components/app/LinkBrainApp';
+import { useUserPreferences } from './hooks/useUserPreferences';
 import { LinkBrainFeatures } from './components/app/LinkBrainFeatures';
 import { LinkBrainHowItWorks } from './components/app/LinkBrainHowItWorks';
 import { LinkBrainPricing } from './components/app/LinkBrainPricing';
@@ -53,15 +54,13 @@ const App = () => {
   });
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [language, setLanguage] = useState<'en' | 'ko'>(() => {
-    return (localStorage.getItem('language') as 'en' | 'ko') || 'ko';
-  });
+  // --- User Preferences (Hybrid Sync) ---
+  const { preferences, updatePreference } = useUserPreferences(user);
 
-  // Theme State
-  const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>(() => {
-    return (localStorage.getItem('themePreference') as 'light' | 'dark' | 'system') || 'system';
-  });
+  // Destructure for easier usage
+  const { theme: themePreference, language } = preferences;
 
+  // System Theme Listener (Keep this here to resolve 'system' preference)
   const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() =>
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
@@ -75,9 +74,13 @@ const App = () => {
 
   const theme = themePreference === 'system' ? systemTheme : themePreference;
 
+  // Handlers adapted to match old signature or direct usage
   const handleSetTheme = (newTheme: 'light' | 'dark' | 'system') => {
-    setThemePreference(newTheme);
-    localStorage.setItem('themePreference', newTheme);
+    updatePreference('theme', newTheme);
+  };
+
+  const handleSetLanguage = (newLang: 'en' | 'ko') => {
+    updatePreference('language', newLang);
   };
 
   // PWA Install Prompt
@@ -231,7 +234,7 @@ const App = () => {
           <LoginPage
             onLogin={() => { }} // Firebase handles auth state automatically
             language={language}
-            setLanguage={setLanguage}
+            setLanguage={handleSetLanguage}
           />
           <Toaster />
         </>
@@ -243,10 +246,12 @@ const App = () => {
           onBack={() => setCurrentView('landing')}
           onLogout={handleLogout}
           language={language}
-          setLanguage={setLanguage}
+          setLanguage={handleSetLanguage}
           theme={theme}
           themePreference={themePreference}
           setTheme={handleSetTheme}
+          preferences={preferences}
+          updatePreference={updatePreference}
         />
         <Toaster />
       </>

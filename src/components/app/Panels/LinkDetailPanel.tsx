@@ -58,10 +58,11 @@ interface LinkDetailPanelProps {
     onToggleCollection: (linkId: string, colId: string) => void;
     onClearCollections: (linkId: string) => void;
     theme: 'light' | 'dark';
+    onUpdateClip?: (id: string, updates: any) => Promise<any>;
     t: (key: string) => string;
 }
 
-export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onToggleCollection, onClearCollections, theme, t }: LinkDetailPanelProps) => {
+export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onUpdateClip, onToggleCollection, onClearCollections, theme, t }: LinkDetailPanelProps) => {
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
 
@@ -80,40 +81,20 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         }
     }, [chatMessages, chatExpanded]);
 
-    // Unique key for this clip's chat history
-    const chatStorageKey = `clip_chat_${link.id || link.url.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 50)}`;
-
-    // Load chat history from localStorage on mount
+    // Sync chat with Firestore/Props
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem(chatStorageKey);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setChatMessages(parsed);
-                    setChatExpanded(true); // Auto-expand if there's history
-                }
-            }
-        } catch (e) {
-            console.error('[Chat] Failed to load chat history:', e);
+        if (link.chatHistory) {
+            setChatMessages(link.chatHistory);
+            if (link.chatHistory.length > 0) setChatExpanded(true);
         }
-    }, [chatStorageKey]);
-
-    // Save chat history to localStorage when messages change
-    useEffect(() => {
-        if (chatMessages.length > 0) {
-            try {
-                localStorage.setItem(chatStorageKey, JSON.stringify(chatMessages.slice(-50))); // Keep last 50 messages
-            } catch (e) {
-                console.error('[Chat] Failed to save chat history:', e);
-            }
-        }
-    }, [chatMessages, chatStorageKey]);
+    }, [link.chatHistory]);
 
     // Clear chat history for this clip
     const clearChatHistory = () => {
         setChatMessages([]);
-        localStorage.removeItem(chatStorageKey);
+        if (onUpdateClip) {
+            onUpdateClip(link.id, { chatHistory: [] });
+        }
     };
 
     // Send chat message to AI with clip context
@@ -143,9 +124,17 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
             const result = await sendAIChat(userMessage, clipContext, language);
 
             if (result.success && result.content) {
-                setChatMessages(prev => [...prev, { role: 'ai', content: result.content!, timestamp: Date.now() }]);
+                const aiMsg = { role: 'ai' as const, content: result.content!, timestamp: Date.now() };
+                const newHistory = [...chatMessages, { role: 'user' as const, content: userMessage, timestamp }, aiMsg];
+                setChatMessages(newHistory);
+
+                // Persist to Firestore
+                if (onUpdateClip) {
+                    onUpdateClip(link.id, { chatHistory: newHistory });
+                }
             } else {
-                setChatMessages(prev => [...prev, { role: 'ai', content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.', timestamp: Date.now() }]);
+                const errorMsg = { role: 'ai' as const, content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.', timestamp: Date.now() };
+                setChatMessages(prev => [...prev, errorMsg]);
             }
         } catch (error) {
             console.error('[Chat] Error:', error);

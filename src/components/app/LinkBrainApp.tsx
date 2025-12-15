@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useClips, ClipData } from '../../hooks/useClips';
+import { UserPreferences } from '../../hooks/useUserPreferences';
 import { TRANSLATIONS, CATEGORY_COLORS } from './constants';
 import { LinkItem, Category, Collection } from './types';
 import { DeleteConfirmationModal, AddLinkModal, ManagementModal, CategoryManagerModal } from './Modals';
@@ -207,7 +208,7 @@ const INITIAL_LINKS: LinkItem[] = [
    }
 ];
 
-export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, themePreference, setTheme, initialTab = 'home' }: { onBack?: () => void, onLogout?: () => void, language: 'en' | 'ko', setLanguage: (lang: 'en' | 'ko') => void, theme: 'light' | 'dark', themePreference: 'light' | 'dark' | 'system', setTheme: (t: 'light' | 'dark' | 'system') => void, initialTab?: string }) => {
+export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, themePreference, setTheme, preferences, updatePreference, initialTab = 'home' }: { onBack?: () => void, onLogout?: () => void, language: 'en' | 'ko', setLanguage: (lang: 'en' | 'ko') => void, theme: 'light' | 'dark', themePreference: 'light' | 'dark' | 'system', setTheme: (t: 'light' | 'dark' | 'system') => void, preferences: UserPreferences, updatePreference: (key: keyof UserPreferences, value: any) => void, initialTab?: string }) => {
    // --- Firebase Data Hook ---
    const {
       clips: firebaseClips,
@@ -231,15 +232,15 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    // --- Global State ---
 
 
-   const [showThumbnails, setShowThumbnails] = useState(true);
-   // language state is now passed from props
 
-   // Notification Settings State
-   const [notifications, setNotifications] = useState({
-      weeklyDigest: true,
-      productUpdates: false,
-      securityAlerts: true
-   });
+   // Preferences Destructuring
+   const { showThumbnails, notifications } = preferences || { showThumbnails: true, notifications: {} };
+
+   // Helper for SettingsModal
+   const handleSetShowThumbnails = (show: boolean) => updatePreference('showThumbnails', show);
+   const handleSetNotifications = (notifs: any) => updatePreference('notifications', notifs);
+
+
 
    // Convert ClipData to LinkItem format
    const clipToLinkItem = (clip: ClipData): LinkItem => {
@@ -494,17 +495,17 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
          }
          if ((e.metaKey || e.ctrlKey) && e.key === "/") {
             e.preventDefault();
-            setShowThumbnails(prev => !prev);
+            updatePreference('showThumbnails', !showThumbnails);
          }
          if ((e.metaKey || e.ctrlKey) && e.key === ".") {
             e.preventDefault();
-            setLanguage(prev => prev === 'en' ? 'ko' : 'en');
+            setLanguage(language === 'en' ? 'ko' : 'en');
          }
       };
 
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
-   }, []);
+   }, [themePreference, showThumbnails, language, setTheme, setLanguage, updatePreference]);
 
 
 
@@ -1177,6 +1178,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                   onArchive={() => handleArchive(selectedLink.id)}
                   onDelete={() => handleDeleteSingleRequest(selectedLink.id)}
                   onUpdateCategory={handleUpdateLinkCategory}
+                  onUpdateClip={updateClip}
                   onToggleCollection={handleToggleLinkCollection}
                   onClearCollections={handleClearCollections}
                   theme={theme}
@@ -1271,7 +1273,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                <SettingsModal
                   onClose={() => setIsSettingsOpen(false)}
                   settings={{ theme, themePreference, language, showThumbnails, notifications }}
-                  setSettings={{ setTheme, setLanguage, setShowThumbnails, setNotifications }}
+                  setSettings={{ setTheme, setLanguage, setShowThumbnails: handleSetShowThumbnails, setNotifications: handleSetNotifications }}
                   onLogout={onLogout || (() => { })}
                   t={t}
                   user={user}

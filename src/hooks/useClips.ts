@@ -16,6 +16,13 @@ import {
     setDoc
 } from 'firebase/firestore';
 
+
+export interface ChatHistoryItem {
+    role: 'user' | 'ai';
+    content: string;
+    timestamp: number;
+}
+
 export interface ClipData {
     id?: string;
     url: string;
@@ -47,6 +54,7 @@ export interface ClipData {
     contentMarkdown?: string;
     contentHtml?: string;
     images?: string[];
+    chatHistory?: ChatHistoryItem[];
     userId?: string;
 }
 
