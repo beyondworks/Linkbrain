@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
 import { Brain, TrendingUp, Clock, BookOpen, Tag, Globe, Zap, Target, Network, Calendar, Loader2, FileText, Sparkles, X, Lightbulb } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 
 type AIInsightsDashboardProps = {
   links: any[];
@@ -130,12 +130,45 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [pendingDeleteItem, setPendingDeleteItem] = useState<{ id: string; type: 'report' | 'article'; title: string } | null>(null);
 
-  // Load history from localStorage
+  // Helper to save history to Firestore
+  const saveHistoryToFirestore = async (type: 'reports' | 'articles', history: any[]) => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await setDoc(doc(db, 'users', user.uid, 'ai_history', type), { items: history }, { merge: true });
+      } catch (e) { console.error("Failed to save history to Firestore", e); }
+    }
+  };
+
+  // Load history from localStorage AND Firestore
   useEffect(() => {
+    // 1. Load from LocalStorage (Instant)
     const savedReports = localStorage.getItem('ai_reports_history');
     const savedArticles = localStorage.getItem('ai_articles_history');
     if (savedReports) setReportHistory(JSON.parse(savedReports));
     if (savedArticles) setArticleHistory(JSON.parse(savedArticles));
+
+    // 2. Sync from Firestore (Async)
+    const loadFirestoreHistory = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      try {
+        const reportDoc = await getDoc(doc(db, 'users', user.uid, 'ai_history', 'reports'));
+        if (reportDoc.exists()) {
+          const data = reportDoc.data().items || [];
+          // Merge or overwrite? Overwrite is safer for sync, assuming Firestore is truth
+          setReportHistory(data);
+          localStorage.setItem('ai_reports_history', JSON.stringify(data));
+        }
+        const articleDoc = await getDoc(doc(db, 'users', user.uid, 'ai_history', 'articles'));
+        if (articleDoc.exists()) {
+          const data = articleDoc.data().items || [];
+          setArticleHistory(data);
+          localStorage.setItem('ai_articles_history', JSON.stringify(data));
+        }
+      } catch (e) { console.error("Error loading AI history from Firestore", e); }
+    };
+    loadFirestoreHistory();
   }, []);
 
   // Check if user has configured AI API key
@@ -238,6 +271,7 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
       const updatedHistory = [newReport, ...reportHistory].slice(0, 20); // Keep last 20
       setReportHistory(updatedHistory);
       localStorage.setItem('ai_reports_history', JSON.stringify(updatedHistory));
+      saveHistoryToFirestore('reports', updatedHistory);
 
     } catch (error) {
       console.error('[AIInsights] Report generation error:', error);
@@ -317,6 +351,7 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
       const updatedHistory = [newArticle, ...articleHistory].slice(0, 20); // Keep last 20
       setArticleHistory(updatedHistory);
       localStorage.setItem('ai_articles_history', JSON.stringify(updatedHistory));
+      saveHistoryToFirestore('articles', updatedHistory);
 
     } catch (error) {
       console.error('[AIInsights] Article generation error:', error);
@@ -898,10 +933,12 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             const updated = reportHistory.filter(r => r.id !== id);
             setReportHistory(updated);
             localStorage.setItem('ai_reports_history', JSON.stringify(updated));
+            saveHistoryToFirestore('reports', updated);
           } else {
             const updated = articleHistory.filter(a => a.id !== id);
             setArticleHistory(updated);
             localStorage.setItem('ai_articles_history', JSON.stringify(updated));
+            saveHistoryToFirestore('articles', updated);
           }
         };
 
@@ -1595,10 +1632,12 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                     const updated = reportHistory.filter(r => r.id !== pendingDeleteItem.id);
                     setReportHistory(updated);
                     localStorage.setItem('ai_reports_history', JSON.stringify(updated));
+                    saveHistoryToFirestore('reports', updated);
                   } else {
                     const updated = articleHistory.filter(a => a.id !== pendingDeleteItem.id);
                     setArticleHistory(updated);
                     localStorage.setItem('ai_articles_history', JSON.stringify(updated));
+                    saveHistoryToFirestore('articles', updated);
                   }
                   setPendingDeleteItem(null);
                 }}

@@ -389,7 +389,14 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
 
    const [sidebarOpen, setSidebarOpen] = useState(false);
    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-   const [activeTab, setActiveTab] = useState(initialTab);
+   const [activeTab, setActiveTab] = useState(() => {
+      return localStorage.getItem('activeTab') || initialTab;
+   });
+
+   // Persist activeTab
+   useEffect(() => {
+      localStorage.setItem('activeTab', activeTab);
+   }, [activeTab]);
    const [searchQuery, setSearchQuery] = useState('');
    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
    const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>('grid');
@@ -652,7 +659,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
    }, [isFilterOpen]);
 
    // Helper for Translation
-   const t = (key: keyof typeof TRANSLATIONS['en']) => TRANSLATIONS[language][key];
+   const t = (key: string) => (TRANSLATIONS[language] as any)[key] || key;
 
    // Derived Data
    const { availableSources, availableTags, availableCategories } = useMemo(() => {

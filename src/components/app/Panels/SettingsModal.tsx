@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../lib/firebase';
 import {
     Settings,
     X,
@@ -221,7 +223,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, use
                         )}
                         {activeTab === 'account' && <AccountSettings theme={theme} t={t} user={user} />}
                         {activeTab === 'security' && <SecuritySettings theme={theme} t={t} />}
-                        {activeTab === 'ai' && <AISettings theme={theme} t={t} />}
+                        {activeTab === 'ai' && <AISettings theme={theme} t={t} user={user} />}
                         {activeTab === 'integrations' && <IntegrationsSettings theme={theme} t={t} />}
                         {activeTab === 'notifications' && <NotificationsSettings theme={theme} t={t} notifications={notifications} setNotifications={setNotifications} />}
                         {activeTab === 'data' && <DataSettings theme={theme} t={t} />}
@@ -642,7 +644,7 @@ const API_LINKS = {
     }
 };
 
-const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) => string }) => {
+const AISettings = ({ theme, t, user }: { theme: 'light' | 'dark', t: (key: string) => string, user?: any }) => {
     // Separate state for each provider
     const [openaiApiKey, setOpenaiApiKey] = useState(() => localStorage.getItem('openai_api_key') || '');
     const [openaiModel, setOpenaiModel] = useState(() => localStorage.getItem('openai_model') || 'gpt-5.2');
@@ -661,6 +663,56 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
     const [activeProvider, setActiveProvider] = useState<'openai' | 'gemini'>(() => {
         return (localStorage.getItem('ai_provider') as 'openai' | 'gemini') || 'gemini';
     });
+
+    // Load from Firestore
+    useEffect(() => {
+        if (!user) return;
+        const loadSettings = async () => {
+            try {
+                const docRef = doc(db, 'users', user.uid, 'settings', 'ai');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+
+                    if (data.openaiApiKey) {
+                        setOpenaiApiKey(data.openaiApiKey);
+                        localStorage.setItem('openai_api_key', data.openaiApiKey);
+                    }
+                    if (data.openaiModel) {
+                        setOpenaiModel(data.openaiModel);
+                        localStorage.setItem('openai_model', data.openaiModel);
+                    }
+
+                    if (data.geminiApiKey) {
+                        setGeminiApiKey(data.geminiApiKey);
+                        localStorage.setItem('gemini_api_key', data.geminiApiKey);
+                    }
+                    if (data.geminiModel) {
+                        setGeminiModel(data.geminiModel);
+                        localStorage.setItem('gemini_model', data.geminiModel);
+                    }
+
+                    if (data.activeProvider) {
+                        setActiveProvider(data.activeProvider as any);
+                        localStorage.setItem('ai_provider', data.activeProvider);
+                    }
+
+                    // Restore active status checks if keys exist
+                    if (data.openaiApiKey && data.openaiStatus === 'active') {
+                        setOpenaiStatus('active');
+                        localStorage.setItem('openai_status', 'active');
+                    }
+                    if (data.geminiApiKey && data.geminiStatus === 'active') {
+                        setGeminiStatus('active');
+                        localStorage.setItem('gemini_status', 'active');
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading AI settings:", err);
+            }
+        };
+        loadSettings();
+    }, [user]);
 
     // Import validation function dynamically
     const validateAndSaveOpenai = async () => {
@@ -685,6 +737,17 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                 localStorage.setItem('ai_model', openaiModel);
                 setOpenaiStatus('active');
                 setActiveProvider('openai');
+
+                if (user) {
+                    await setDoc(doc(db, 'users', user.uid, 'settings', 'ai'), {
+                        openaiApiKey,
+                        openaiModel,
+                        openaiStatus: 'active',
+                        activeProvider: 'openai',
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                }
+
                 toast.success('✅ OpenAI API 연결 성공!');
             } else {
                 localStorage.setItem('openai_status', 'inactive');
@@ -719,6 +782,17 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                 localStorage.setItem('ai_model', geminiModel);
                 setGeminiStatus('active');
                 setActiveProvider('gemini');
+
+                if (user) {
+                    await setDoc(doc(db, 'users', user.uid, 'settings', 'ai'), {
+                        geminiApiKey,
+                        geminiModel,
+                        geminiStatus: 'active',
+                        activeProvider: 'gemini',
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                }
+
                 toast.success('✅ Gemini API 연결 성공!');
             } else {
                 localStorage.setItem('gemini_status', 'inactive');
@@ -732,7 +806,7 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
         }
     };
 
-    const clearOpenai = () => {
+    const clearOpenai = async () => {
         localStorage.removeItem('openai_api_key');
         localStorage.removeItem('openai_model');
         localStorage.removeItem('openai_status');
@@ -743,10 +817,22 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
             localStorage.removeItem('ai_api_key');
             localStorage.removeItem('ai_model');
         }
+
+        if (user) {
+            try {
+                await setDoc(doc(db, 'users', user.uid, 'settings', 'ai'), {
+                    openaiApiKey: '',
+                    openaiStatus: 'idle'
+                }, { merge: true });
+            } catch (e) {
+                console.error("Error clearing Firestore settings", e);
+            }
+        }
+
         toast.success('OpenAI 설정이 초기화되었습니다.');
     };
 
-    const clearGemini = () => {
+    const clearGemini = async () => {
         localStorage.removeItem('gemini_api_key');
         localStorage.removeItem('gemini_model');
         localStorage.removeItem('gemini_status');
@@ -757,6 +843,18 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
             localStorage.removeItem('ai_api_key');
             localStorage.removeItem('ai_model');
         }
+
+        if (user) {
+            try {
+                await setDoc(doc(db, 'users', user.uid, 'settings', 'ai'), {
+                    geminiApiKey: '',
+                    geminiStatus: 'idle'
+                }, { merge: true });
+            } catch (e) {
+                console.error("Error clearing Firestore settings", e);
+            }
+        }
+
         toast.success('Gemini 설정이 초기화되었습니다.');
     };
 
