@@ -53,7 +53,14 @@ const App = () => {
   });
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [language, setLanguage] = useState<'en' | 'ko'>('ko');
+  const [language, setLanguage] = useState<'en' | 'ko'>(() => {
+    return (localStorage.getItem('language') as 'en' | 'ko') || 'ko';
+  });
+
+  // Save language to localStorage
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
 
   // PWA Install Prompt
   const deferredPromptRef = React.useRef<any>(null);
