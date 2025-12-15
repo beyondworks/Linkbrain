@@ -6,8 +6,32 @@
   <link rel="icon" type="image/png" href="/logo.png" />
   <link rel="apple-touch-icon" href="/logo.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#F8FAFC" id="theme-color-meta" />
   <title>LinkBrain</title>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('linkbrain-theme') || 'light';
+        var bgColor = theme === 'dark' ? '#0f172a' : '#F8FAFC';
+        document.documentElement.style.backgroundColor = bgColor;
+        document.body && (document.body.style.backgroundColor = bgColor);
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.setAttribute('content', bgColor);
+      } catch (e) { }
+    })();
+  </script>
+  <style>
+    html,
+    body {
+      background-color: #F8FAFC;
+    }
+
+    html.dark,
+    body.dark {
+      background-color: #0f172a;
+    }
+  </style>
 </head>
 
 <body>

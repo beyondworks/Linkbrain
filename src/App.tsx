@@ -109,6 +109,49 @@ const App = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Mobile/PWA Swipe Back Navigation
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      // Calculate swipe distance and direction
+      const swipeDistanceX = touchEndX - touchStartX;
+      const swipeDistanceY = Math.abs(touchEndY - touchStartY);
+
+      // Only trigger if:
+      // 1. Started from left edge (within 30px from left)
+      // 2. Swiped right more than 80px
+      // 3. Vertical movement less than 100px (mostly horizontal)
+      if (touchStartX < 30 && swipeDistanceX > 80 && swipeDistanceY < 100) {
+        // Go back in history
+        if (window.history.length > 1) {
+          window.history.back();
+        }
+      }
+    };
+
+    // Only add listeners on mobile/touch devices
+    if ('ontouchstart' in window) {
+      document.addEventListener('touchstart', handleTouchStart, { passive: true });
+      document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
   // Firebase Auth State Listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
