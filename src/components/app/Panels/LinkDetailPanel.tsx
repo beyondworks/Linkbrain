@@ -573,7 +573,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 {(() => {
                     const isAIConfigured = (localStorage.getItem('ai_api_key') || '').length > 10;
                     return (
-                        <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl max-h-[50vh] flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+                        <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl max-h-[40vh] flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
                             {/* Toggle Header - show when messages exist */}
                             {chatMessages.length > 0 && (
                                 <div className={`shrink-0 flex items-center justify-between px-4 py-2 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
