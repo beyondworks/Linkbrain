@@ -1191,7 +1191,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
           onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
         >
           <div
-            className={`w-full m-auto max-w-2xl max-h-[85vh] sm:max-h-[95vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            style={{ maxHeight: '80dvh' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1389,7 +1390,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
           onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
         >
           <div
-            className={`w-full m-auto max-w-2xl max-h-[85vh] sm:max-h-[95vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            style={{ maxHeight: '80dvh' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1569,6 +1571,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
         >
           <div
             className={`w-full max-w-sm rounded-2xl border shadow-2xl p-5 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}
+            style={{ maxHeight: '80dvh' }}
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>
