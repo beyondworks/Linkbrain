@@ -28,6 +28,7 @@ export interface ClipData {
     url: string;
     platform: 'youtube' | 'instagram' | 'threads' | 'web';
     template: string;
+    notes?: string; // User memo
     title: string;
     summary: string;
     keywords: string[];

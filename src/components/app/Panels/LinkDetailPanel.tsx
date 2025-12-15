@@ -77,6 +77,33 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Memo Auto-Save Logic
+    const [myNotes, setMyNotes] = useState(link.notes || '');
+
+    // Update local state when link changes
+    useEffect(() => {
+        setMyNotes(link.notes || '');
+    }, [link.id, link.notes]);
+
+    // Debounced auto-save
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (myNotes !== (link.notes || '') && onUpdateClip) {
+                console.log('Auto-saving note...');
+                onUpdateClip(link.id, { notes: myNotes });
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [myNotes, link.id, link.notes, onUpdateClip]);
+
+    const handleClose = () => {
+        // Save immediately on close if dirty
+        if (myNotes !== (link.notes || '') && onUpdateClip) {
+            onUpdateClip(link.id, { notes: myNotes });
+        }
+        onClose();
+    };
+
     // Chat state - persisted per clip
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
@@ -400,7 +427,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-                onClick={onClose}
+                onClick={handleClose}
             />
             <motion.div
                 initial={{ x: "100%" }}
@@ -412,7 +439,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 {/* Header Toolbar */}
                 <div className={`h-16 border-b flex items-center justify-between px-6 shrink-0 ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'}`}>
                     <div className="flex items-center gap-3">
-                        <button onClick={onClose} className={`p-2 -ml-2 rounded-full ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>
+                        <button onClick={handleClose} className={`p-2 -ml-2 rounded-full ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>
                             <X size={20} />
                         </button>
                         <div className={`h-4 w-px ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-200'}`}></div>
@@ -453,7 +480,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 </div>
 
                 {/* Scrollable Content */}
-                <div className={`flex-1 overflow-y-auto ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                <div className={`flex-1 overflow-y-auto no-scrollbar ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                     {renderMediaSection()}
 
                     <div className="p-8 max-w-xl mx-auto">
@@ -569,7 +596,8 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                             <textarea
                                 className={`w-full min-h-[150px] p-4 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 focus:border-[#21DBA4] transition-all resize-y placeholder:text-slate-300 ${theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}
                                 placeholder="Add your thoughts, ideas, or connect this with other concepts..."
-                                defaultValue={link.notes}
+                                value={myNotes}
+                                onChange={(e) => setMyNotes(e.target.value)}
                             />
                         </div>
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { loadPaymentWidget, PaymentWidgetInstance } from '@tosspayments/payment-widget-sdk';
 import { X, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,11 +33,18 @@ export const TossPaymentModal = ({
         const fetchPaymentWidget = async () => {
             try {
                 const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY;
+                console.log("Loading Toss Widget with Client Key:", clientKey ? `${clientKey.substring(0, 5)}...` : 'MISSING');
+
+                if (!clientKey) {
+                    toast.error("결제 연동 키가 설정되지 않았습니다.");
+                    return;
+                }
+
                 const loadedWidget = await loadPaymentWidget(clientKey, customerKey);
                 setPaymentWidget(loadedWidget);
             } catch (error) {
                 console.error("Error loading payment widget:", error);
-                toast.error("결제 위젯을 불러오는데 실패했습니다.");
+                toast.error(`결제 위젯 로드 실패: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         };
 
@@ -76,8 +84,8 @@ export const TossPaymentModal = ({
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
             <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                 {/* Header with Order Summary */}
                 <div className="bg-[#21DBA4]/10 p-6 border-b border-[#21DBA4]/20 flex items-start justify-between">
@@ -123,6 +131,7 @@ export const TossPaymentModal = ({
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

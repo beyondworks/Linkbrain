@@ -673,7 +673,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
 
         {currentView === 'pricing' && (
           <div className="py-20 animate-fade-in-up">
-            <LinkBrainPricing theme="light" language="ko" />
+            <LinkBrainPricing theme="light" language="ko" onEnterApp={onEnterApp} />
           </div>
         )}
       </main>

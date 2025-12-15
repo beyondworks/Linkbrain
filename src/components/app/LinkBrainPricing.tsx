@@ -11,6 +11,7 @@ import { motion } from 'motion/react';
 import { TossPaymentModal } from '../payment/TossPaymentModal';
 import { useClips } from '../../hooks/useClips';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const TRANSLATIONS = {
   en: {
@@ -103,7 +104,13 @@ const TRANSLATIONS = {
   }
 };
 
-export const LinkBrainPricing = ({ theme, language = 'ko' }: { theme: 'light' | 'dark', language?: 'en' | 'ko' }) => {
+interface LinkBrainPricingProps {
+  theme: 'light' | 'dark';
+  language: 'en' | 'ko';
+  onEnterApp?: () => void;
+}
+
+export const LinkBrainPricing = ({ theme, language = 'ko', onEnterApp }: LinkBrainPricingProps) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedPlanPrice, setSelectedPlanPrice] = useState(0);
@@ -139,10 +146,19 @@ export const LinkBrainPricing = ({ theme, language = 'ko' }: { theme: 'light' | 
   ];
 
   const handlePlanSelect = (plan: typeof plans[0]) => {
+    console.log("handlePlanSelect clicked:", plan);
+
     // If user is not logged in, redirect to login
     if (!user) {
-      // You might want to save the intent to return here after login
-      navigate('/login');
+      console.log("User not logged in, redirecting...");
+      toast.info("로그인이 필요합니다. 로그인 화면으로 이동합니다.");
+      if (onEnterApp) {
+        onEnterApp();
+      } else {
+        // Fallback for direct usage
+        navigate('/');
+        // Or specific logic if onEnterApp is missing
+      }
       return;
     }
 

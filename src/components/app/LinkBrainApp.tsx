@@ -284,7 +284,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
          isFavorite: clip.isFavorite || false,
          isReadLater: false,
          isArchived: clip.isArchived || false,
-         notes: '',
+         notes: clip.notes || '',
          keyTakeaways: takeaways,
          content: clip.contentMarkdown || clip.contentHtml || clip.rawMarkdown || '',
          platform: clip.platform || 'web',
@@ -1484,7 +1484,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
          </aside>
 
          {/* Main Content */}
-         <main ref={mainContentRef} className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate">
+         <main ref={mainContentRef} className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar">
             {/* Subscription Banner */}
 
 
