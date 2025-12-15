@@ -597,14 +597,37 @@ const AI_MODELS = {
     openai: [
         { id: 'gpt-4o', name: 'GPT-4o (Recommended)' },
         { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+        { id: 'gpt-4.1', name: 'GPT-4.1' },
         { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
         { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+        { id: 'o3', name: 'o3' },
+        { id: 'o4-mini', name: 'o4-mini' },
+        { id: 'gpt-5.1-instant', name: 'GPT-5.1 Instant' },
+        { id: 'gpt-5.1-thinking', name: 'GPT-5.1 Thinking' },
+        { id: 'gpt-5-instant', name: 'GPT-5 Instant' },
+        { id: 'gpt-5-thinking-mini', name: 'GPT-5 Thinking Mini' },
+        { id: 'gpt-5-thinking', name: 'GPT-5 Thinking' },
     ],
     gemini: [
-        { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Experimental)' },
+        { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash' },
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+        { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (Recommended)' },
+        { id: 'gemini-3.0-flash', name: 'Gemini 3.0 Flash' },
+        { id: 'gemini-3.0-pro', name: 'Gemini 3.0 Pro' },
         { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
         { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
     ]
+};
+
+const API_LINKS = {
+    openai: {
+        url: 'https://platform.openai.com/api-keys',
+        name: 'OpenAI Platform'
+    },
+    gemini: {
+        url: 'https://aistudio.google.com/app/apikey',
+        name: 'Google AI Studio'
+    }
 };
 
 const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) => string }) => {
@@ -691,11 +714,32 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                         {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                 </div>
-                <p className="text-xs text-slate-400">
-                    {provider === 'openai'
-                        ? (t('getOpenAIKey') || 'Get your API key from platform.openai.com')
-                        : (t('getGeminiKey') || 'Get your API key from ai.google.dev')}
-                </p>
+                {/* API Key Link and Instructions */}
+                <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
+                    <a
+                        href={API_LINKS[provider].url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-[#21DBA4] hover:underline mb-2"
+                    >
+                        🔗 {API_LINKS[provider].name}에서 API 키 발급받기
+                    </a>
+                    <div className="text-xs text-slate-400 space-y-1">
+                        {provider === 'openai' ? (
+                            <>
+                                <p>1. OpenAI 계정 로그인 또는 가입</p>
+                                <p>2. API keys 메뉴에서 "Create new secret key" 클릭</p>
+                                <p>3. 생성된 키(sk-...)를 복사하여 위에 붙여넣기</p>
+                            </>
+                        ) : (
+                            <>
+                                <p>1. Google 계정으로 AI Studio 로그인</p>
+                                <p>2. "Create API key" 버튼 클릭</p>
+                                <p>3. 생성된 키(AIza...)를 복사하여 위에 붙여넣기</p>
+                            </>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Model Selection */}

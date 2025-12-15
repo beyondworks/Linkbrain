@@ -10,6 +10,7 @@ type AIInsightsDashboardProps = {
   theme: 'light' | 'dark';
   t: (key: string) => string;
   language?: 'en' | 'ko';
+  onOpenSettings?: () => void;
 };
 
 // URL에서 도메인 추출
@@ -79,7 +80,7 @@ const contentGapTopics = [
   { id: 'performance', labelEn: 'Performance', labelKo: '성능 최적화', keywords: ['performance', 'optimization', 'speed', 'cache'] },
 ];
 
-export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'ko' }: AIInsightsDashboardProps) => {
+export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'ko', onOpenSettings }: AIInsightsDashboardProps) => {
   const isDark = theme === 'dark';
   const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
   const [loading, setLoading] = useState(false);
@@ -109,6 +110,7 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
 
   // Check if user has configured AI API key
   const isAIConfigured = typeof window !== 'undefined' && (localStorage.getItem('ai_api_key') || '').length > 10;
+  const [showApiTooltip, setShowApiTooltip] = useState<'report' | 'article' | null>(null);
 
   // Firestore에서 클립 데이터 가져오기
   useEffect(() => {
@@ -747,54 +749,80 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
         )}
 
         {/* Generation Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative">
           {/* Insights Report Button */}
-          <button
-            onClick={generateReport}
-            disabled={!isAIConfigured || generatingReport || filteredData.length < 3}
-            title={!isAIConfigured ? (language === 'ko' ? 'AI 설정에서 API 키를 입력하세요' : 'Set up API key in AI Settings') : ''}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed
-              ${isDark
-                ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-              }`}
+          <div
+            className="relative flex-1 sm:flex-none"
+            onMouseEnter={() => !isAIConfigured && setShowApiTooltip('report')}
+            onMouseLeave={() => setShowApiTooltip(null)}
           >
-            {generatingReport ? (
-              <>
-                <Loader2 size={12} className="animate-spin" />
-                <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
-              </>
-            ) : (
-              <>
-                <FileText size={12} />
-                <span className="whitespace-nowrap">{language === 'ko' ? '리포트' : 'Report'}</span>
-              </>
+            <button
+              onClick={!isAIConfigured ? onOpenSettings : generateReport}
+              disabled={generatingReport || (isAIConfigured && filteredData.length < 3)}
+              className={`w-full flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all
+                ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
+                ${isDark
+                  ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                }`}
+            >
+              {generatingReport ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" />
+                  <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
+                </>
+              ) : (
+                <>
+                  <FileText size={12} />
+                  <span className="whitespace-nowrap">{language === 'ko' ? '리포트' : 'Report'}</span>
+                </>
+              )}
+            </button>
+            {/* Tooltip for Report */}
+            {showApiTooltip === 'report' && (
+              <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap z-50 shadow-lg ${isDark ? 'bg-slate-800 text-white' : 'bg-slate-900 text-white'}`}>
+                {language === 'ko' ? '⚙️ 설정에서 API 키를 먼저 입력하세요' : '⚙️ Set up API key in Settings first'}
+                <div className={`absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent ${isDark ? 'border-t-slate-800' : 'border-t-slate-900'}`} />
+              </div>
             )}
-          </button>
+          </div>
 
           {/* AI Article Button */}
-          <button
-            onClick={generateArticle}
-            disabled={!isAIConfigured || generatingArticle || filteredData.length < 3}
-            title={!isAIConfigured ? (language === 'ko' ? 'AI 설정에서 API 키를 입력하세요' : 'Set up API key in AI Settings') : ''}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
-              ${generatingArticle
-                ? 'bg-slate-600 text-white'
-                : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'
-              }`}
+          <div
+            className="relative flex-1 sm:flex-none"
+            onMouseEnter={() => !isAIConfigured && setShowApiTooltip('article')}
+            onMouseLeave={() => setShowApiTooltip(null)}
           >
-            {generatingArticle ? (
-              <>
-                <Loader2 size={12} className="animate-spin" />
-                <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
-              </>
-            ) : (
-              <>
-                <Sparkles size={12} />
-                <span className="whitespace-nowrap">{language === 'ko' ? '아티클' : 'Article'}</span>
-              </>
+            <button
+              onClick={!isAIConfigured ? onOpenSettings : generateArticle}
+              disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
+              className={`w-full flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg
+                ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
+                ${generatingArticle
+                  ? 'bg-slate-600 text-white'
+                  : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'
+                }`}
+            >
+              {generatingArticle ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" />
+                  <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={12} />
+                  <span className="whitespace-nowrap">{language === 'ko' ? '아티클' : 'Article'}</span>
+                </>
+              )}
+            </button>
+            {/* Tooltip for Article */}
+            {showApiTooltip === 'article' && (
+              <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap z-50 shadow-lg ${isDark ? 'bg-slate-800 text-white' : 'bg-slate-900 text-white'}`}>
+                {language === 'ko' ? '⚙️ 설정에서 API 키를 먼저 입력하세요' : '⚙️ Set up API key in Settings first'}
+                <div className={`absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent ${isDark ? 'border-t-slate-800' : 'border-t-slate-900'}`} />
+              </div>
             )}
-          </button>
+          </div>
         </div>
       </div>
 

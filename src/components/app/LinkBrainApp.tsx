@@ -2125,6 +2125,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, initialT
                            theme={theme}
                            t={t}
                            language={language}
+                           onOpenSettings={() => setIsSettingsOpen(true)}
                         />
                      ) : viewMode === 'grid' ? (
                         <>
