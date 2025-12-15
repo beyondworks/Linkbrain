@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
     X,
@@ -70,6 +70,14 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     const [chatLoading, setChatLoading] = useState(false);
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; timestamp?: number }>>([]);
     const [chatExpanded, setChatExpanded] = useState(false);
+    const chatMessagesRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom when messages change or chat expands
+    useEffect(() => {
+        if (chatMessagesRef.current && chatExpanded) {
+            chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+        }
+    }, [chatMessages, chatExpanded]);
 
     // Unique key for this clip's chat history
     const chatStorageKey = `clip_chat_${link.id || link.url.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 50)}`;
@@ -597,6 +605,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                             {/* Chat Messages - collapsible with fixed max height */}
                             {chatMessages.length > 0 && chatExpanded && (
                                 <div
+                                    ref={chatMessagesRef}
                                     className={`overflow-y-auto p-4 border-t space-y-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}
                                     style={{ maxHeight: 'calc(40vh - 120px)' }}
                                 >
