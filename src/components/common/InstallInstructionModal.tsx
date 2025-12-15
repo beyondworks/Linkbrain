@@ -52,7 +52,7 @@ export const InstallInstructionModal = ({ isOpen, onClose, theme: propTheme }: I
                         <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : 'bg-[#E0FBF4] text-[#21DBA4]'}`}>
                             <Download size={20} />
                         </div>
-                        <h2 className="text-xl font-bold">Install Linkbrain</h2>
+                        <h2 className="text-xl font-bold">Linkbrain 설치하기</h2>
                     </div>
                     <button onClick={onClose} className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>
                         <X size={20} />
@@ -80,49 +80,49 @@ export const InstallInstructionModal = ({ isOpen, onClose, theme: propTheme }: I
                 </div>
 
                 {/* Content */}
-                <div className="px-6 pb-8">
+                <div className="px-6 pt-2 pb-10">
                     {activeTab === 'ios' ? (
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <div className="flex items-start gap-4">
                                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4]' : 'bg-slate-100 text-[#21DBA4]'}`}>1</div>
                                 <div>
-                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>Tap the Share button</p>
-                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>At the bottom of your browser screen.</p>
+                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>공유 버튼을 탭하세요</p>
+                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>브라우저 하단에 있습니다.</p>
                                     <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm ${theme === 'dark' ? 'border-slate-700 bg-slate-800 text-blue-400' : 'border-slate-200 bg-slate-50 text-blue-500'}`}>
-                                        <Share size={16} /> Share
+                                        <Share size={16} /> 공유
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-start gap-4">
                                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4]' : 'bg-slate-100 text-[#21DBA4]'}`}>2</div>
                                 <div>
-                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>Select 'Add to Home Screen'</p>
-                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Scroll down to find this option.</p>
+                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>'홈 화면에 추가'를 선택하세요</p>
+                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>스크롤하여 해당 옵션을 찾으세요.</p>
                                     <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm ${theme === 'dark' ? 'border-slate-700 bg-slate-800 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
-                                        <PlusSquare size={16} /> Add to Home Screen
+                                        <PlusSquare size={16} /> 홈 화면에 추가
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <div className="flex items-start gap-4">
                                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4]' : 'bg-slate-100 text-[#21DBA4]'}`}>1</div>
                                 <div>
-                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>Tap the Menu button</p>
-                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Usually three dots in the corner.</p>
+                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>메뉴 버튼을 탭하세요</p>
+                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>보통 우측 상단의 점 세 개 아이콘입니다.</p>
                                     <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm ${theme === 'dark' ? 'border-slate-700 bg-slate-800 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
-                                        <MoreVertical size={16} /> Menu
+                                        <MoreVertical size={16} /> 메뉴
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-start gap-4">
                                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4]' : 'bg-slate-100 text-[#21DBA4]'}`}>2</div>
                                 <div>
-                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>Tap 'Install App'</p>
-                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Or 'Add to Home Screen'</p>
+                                    <p className={`font-medium mb-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>'앱 설치' 또는 '홈 화면에 추가'를 탭하세요</p>
+                                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>브라우저에 따라 문구가 다를 수 있습니다.</p>
                                     <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm ${theme === 'dark' ? 'border-slate-700 bg-slate-800 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
-                                        <Smartphone size={16} /> Install App
+                                        <Smartphone size={16} /> 앱 설치
                                     </div>
                                 </div>
                             </div>
