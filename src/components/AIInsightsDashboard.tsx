@@ -773,9 +773,10 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
   return (
     <div className="space-y-8">
       {/* Period Toggle + Generation Buttons */}
-      <div className="mt-4 md:mt-0 flex flex-col gap-3">
+      {/* Period Toggle + Generation Buttons */}
+      <div className="mt-4 md:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Period Toggle */}
-        <div className={`inline-flex rounded-xl p-1 ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+        <div className={`flex sm:inline-flex rounded-xl p-1 w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
           <button
             onClick={() => setPeriod('weekly')}
             className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
@@ -806,7 +807,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
         )}
 
         {/* Generation Buttons - Mobile: full width, Desktop: inline */}
-        <div className="flex items-center gap-2 relative">
+        <div className="flex items-center gap-2 relative w-full sm:w-auto">
           {/* Insights Report Button */}
           <div
             className="relative flex-1 sm:flex-none"
@@ -1185,11 +1186,11 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       {/* Insights Report Modal */}
       {showReport && generatedReport && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
         >
           <div
-            className={`w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[95vh] flex flex-col rounded-t-2xl sm:rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            className={`w-full max-w-2xl max-h-[85vh] sm:max-h-[95vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1382,11 +1383,11 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       {/* AI Article Modal */}
       {showArticle && generatedArticle && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
         >
           <div
-            className={`w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[95vh] flex flex-col rounded-t-2xl sm:rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            className={`w-full max-w-2xl max-h-[85vh] sm:max-h-[95vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
