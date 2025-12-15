@@ -69,6 +69,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string }>>([]);
+    const [chatExpanded, setChatExpanded] = useState(false);
 
     // Send chat message to AI with clip context
     const sendChatMessage = async () => {
@@ -534,10 +535,23 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 {(() => {
                     const isAIConfigured = (localStorage.getItem('ai_api_key') || '').length > 10;
                     return (
-                        <div className={`absolute bottom-0 left-0 right-0 z-20 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-                            {/* Chat Messages */}
+                        <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+                            {/* Toggle Header - show when messages exist */}
                             {chatMessages.length > 0 && (
-                                <div className={`max-h-60 overflow-y-auto p-4 border-t space-y-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+                                <button
+                                    onClick={() => setChatExpanded(!chatExpanded)}
+                                    className={`w-full flex items-center justify-between px-4 py-2 border-t text-xs font-medium transition-colors ${theme === 'dark' ? 'border-slate-800 hover:bg-slate-800 text-slate-400' : 'border-slate-100 hover:bg-slate-50 text-slate-500'}`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <Lightbulb size={12} className="text-[#21DBA4]" />
+                                        {localStorage.getItem('language') === 'en' ? `${chatMessages.length} messages` : `대화 ${chatMessages.length}개`}
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform ${chatExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+                            )}
+                            {/* Chat Messages - collapsible */}
+                            {chatMessages.length > 0 && chatExpanded && (
+                                <div className={`max-h-[280px] overflow-y-auto p-4 border-t space-y-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
                                     {chatMessages.map((msg, idx) => (
                                         <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                             {msg.role === 'ai' && (
@@ -559,7 +573,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                                 <Lightbulb size={12} className="text-white" />
                                             </div>
                                             <div className={`px-3 py-2 rounded-xl text-sm ${theme === 'dark' ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                                                Thinking...
+                                                {localStorage.getItem('language') === 'en' ? 'Thinking...' : '생각 중...'}
                                             </div>
                                         </div>
                                     )}

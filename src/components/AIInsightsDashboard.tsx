@@ -814,7 +814,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateReport}
               disabled={generatingReport || (isAIConfigured && filteredData.length < 3)}
-              className={`w-full flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all
+              className={`min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${isDark
                   ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600'
@@ -823,8 +823,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             >
               {generatingReport ? (
                 <>
-                  <Loader2 size={12} className="animate-spin" />
-                  <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
+                  <Loader2 size={12} className="animate-spin shrink-0" />
+                  <span>{language === 'ko' ? '생성 중' : 'Loading'}</span>
                 </>
               ) : (
                 <>
@@ -851,7 +851,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateArticle}
               disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
-              className={`w-full flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg
+              className={`min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${generatingArticle
                   ? 'bg-slate-600 text-white'
@@ -860,8 +860,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             >
               {generatingArticle ? (
                 <>
-                  <Loader2 size={12} className="animate-spin" />
-                  <span className="hidden sm:inline">{language === 'ko' ? '생성 중...' : 'Generating...'}</span>
+                  <Loader2 size={12} className="animate-spin shrink-0" />
+                  <span>{language === 'ko' ? '생성 중' : 'Loading'}</span>
                 </>
               ) : (
                 <>
@@ -885,7 +885,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       {(reportHistory.length > 0 || articleHistory.length > 0) && (
         <div className={`rounded-xl border p-4 ${cardClass}`}>
           <h3 className={`text-sm font-bold mb-3 ${textPrimary}`}>
-            {language === 'ko' ? '📚 생성 기록' : '📚 Generation History'}
+            {language === 'ko' ? '생성 기록' : 'Generation History'}
           </h3>
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {[...reportHistory.map(r => ({ ...r, type: 'report' as const })),
@@ -1147,7 +1147,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
           onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
         >
           <div
-            className={`w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            className={`w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1185,7 +1185,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                 ))}
               </div>
 
-              <article className={`text-sm leading-relaxed ${textPrimary}`}>
+              <article className={`text-sm leading-relaxed space-y-3 ${textPrimary}`}>
                 {(() => {
                   const content = generatedReport.content;
                   const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
@@ -1272,7 +1272,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
           onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
         >
           <div
-            className={`w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+            className={`w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
