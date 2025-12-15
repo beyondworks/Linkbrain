@@ -159,8 +159,10 @@ export const AnalysisIndicator: React.FC<AnalysisIndicatorProps> = ({ items, log
                     )}
                 </div>
 
-                {/* Label - hidden on mobile */}
-                <span className={`hidden md:inline ${config.textColor}`}>{label}</span>
+                {/* Label - show on mobile only when analyzing */}
+                <span className={`${primaryStatus === 'analyzing' ? 'inline' : 'hidden md:inline'} ${config.textColor}`}>
+                    {primaryStatus === 'analyzing' && language === 'ko' ? '분석중입니다' : label}
+                </span>
 
                 {/* Count Badge - hidden on mobile */}
                 {activeCount > 1 && (

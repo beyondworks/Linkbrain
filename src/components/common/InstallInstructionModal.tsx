@@ -80,9 +80,9 @@ export const InstallInstructionModal = ({ isOpen, onClose, theme: propTheme }: I
                 </div>
 
                 {/* Content */}
-                <div className="px-6 pt-2 pb-10">
+                <div className="px-6 pt-2 pb-14">
                     {activeTab === 'ios' ? (
-                        <div className="space-y-5">
+                        <div className="space-y-8">
                             <div className="flex items-start gap-4">
                                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4]' : 'bg-slate-100 text-[#21DBA4]'}`}>1</div>
                                 <div>
@@ -105,7 +105,7 @@ export const InstallInstructionModal = ({ isOpen, onClose, theme: propTheme }: I
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-5">
+                        <div className="space-y-8">
                             <div className="flex items-start gap-4">
                                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4]' : 'bg-slate-100 text-[#21DBA4]'}`}>1</div>
                                 <div>
