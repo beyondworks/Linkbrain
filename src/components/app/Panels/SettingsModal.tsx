@@ -23,8 +23,6 @@ import {
     Lock,
     Eye,
     EyeOff,
-    Eye,
-    EyeOff,
     Keyboard,
     Key
 } from 'lucide-react';
