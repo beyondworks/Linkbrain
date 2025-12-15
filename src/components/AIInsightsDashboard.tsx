@@ -108,6 +108,33 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   } | null>(null);
   const [showArticle, setShowArticle] = useState(false);
 
+  // History storage for reports and articles
+  const [reportHistory, setReportHistory] = useState<Array<{
+    id: string;
+    title: string;
+    content: string;
+    topics: string[];
+    wordCount: number;
+    generatedAt: string;
+  }>>([]);
+  const [articleHistory, setArticleHistory] = useState<Array<{
+    id: string;
+    title: string;
+    content: string;
+    topics: string[];
+    wordCount: number;
+    generatedAt: string;
+  }>>([]);
+  const [showHistoryList, setShowHistoryList] = useState<'report' | 'article' | null>(null);
+
+  // Load history from localStorage
+  useEffect(() => {
+    const savedReports = localStorage.getItem('ai_reports_history');
+    const savedArticles = localStorage.getItem('ai_articles_history');
+    if (savedReports) setReportHistory(JSON.parse(savedReports));
+    if (savedArticles) setArticleHistory(JSON.parse(savedArticles));
+  }, []);
+
   // Check if user has configured AI API key
   const isAIConfigured = typeof window !== 'undefined' && (localStorage.getItem('ai_api_key') || '').length > 10;
   const [showApiTooltip, setShowApiTooltip] = useState<'report' | 'article' | null>(null);
@@ -190,7 +217,8 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
           : generateEnglishReport(topClips, topTopics, periodText);
       }
 
-      setGeneratedReport({
+      const newReport = {
+        id: Date.now().toString(),
         title: language === 'ko'
           ? `${periodText} 인사이트 리포트`
           : `${periodText} Insights Report`,
@@ -198,8 +226,15 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
         topics: topTopics,
         wordCount: reportContent.length,
         generatedAt: new Date().toISOString()
-      });
+      };
+
+      setGeneratedReport(newReport);
       setShowReport(true);
+
+      // Save to history
+      const updatedHistory = [newReport, ...reportHistory].slice(0, 20); // Keep last 20
+      setReportHistory(updatedHistory);
+      localStorage.setItem('ai_reports_history', JSON.stringify(updatedHistory));
 
     } catch (error) {
       console.error('[AIInsights] Report generation error:', error);
@@ -263,14 +298,22 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
           : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`;
       }
 
-      setGeneratedArticle({
+      const newArticle = {
+        id: Date.now().toString(),
         title: articleTitle,
         content: articleContent,
         topics: topTopics,
         wordCount: articleContent.length,
         generatedAt: new Date().toISOString()
-      });
+      };
+
+      setGeneratedArticle(newArticle);
       setShowArticle(true);
+
+      // Save to history
+      const updatedHistory = [newArticle, ...articleHistory].slice(0, 20); // Keep last 20
+      setArticleHistory(updatedHistory);
+      localStorage.setItem('ai_articles_history', JSON.stringify(updatedHistory));
 
     } catch (error) {
       console.error('[AIInsights] Article generation error:', error);
@@ -838,7 +881,45 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
         </div>
       </div>
 
-      {/* Hero Summary Card */}
+      {/* History Section */}
+      {(reportHistory.length > 0 || articleHistory.length > 0) && (
+        <div className={`rounded-xl border p-4 ${cardClass}`}>
+          <h3 className={`text-sm font-bold mb-3 ${textPrimary}`}>
+            {language === 'ko' ? '📚 생성 기록' : '📚 Generation History'}
+          </h3>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {[...reportHistory.map(r => ({ ...r, type: 'report' as const })),
+            ...articleHistory.map(a => ({ ...a, type: 'article' as const }))]
+              .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())
+              .slice(0, 5)
+              .map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.type === 'report') {
+                      setGeneratedReport(item);
+                      setShowReport(true);
+                    } else {
+                      setGeneratedArticle(item);
+                      setShowArticle(true);
+                    }
+                  }}
+                  className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
+                >
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${item.type === 'report' ? (isDark ? 'bg-slate-700' : 'bg-slate-100') : 'bg-[#21DBA4]/10'}`}>
+                    {item.type === 'report' ? <FileText size={14} className="text-slate-400" /> : <Sparkles size={14} className="text-[#21DBA4]" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-medium truncate ${textPrimary}`}>{item.title}</p>
+                    <p className={`text-xs ${textMuted}`}>
+                      {new Date(item.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
       <div className={`rounded-2xl border p-8 shadow-lg ${cardClass}`}>
         <div className="flex items-start gap-4 mb-6">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center shadow-lg">

@@ -20,7 +20,8 @@ import {
     BookOpen,
     AtSign,
     FileText,
-    Plus
+    Plus,
+    Lightbulb
 } from 'lucide-react';
 import { LinkBrainLogo } from '../LinkBrainLogo';
 import {
@@ -63,6 +64,48 @@ interface LinkDetailPanelProps {
 export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onToggleCollection, onClearCollections, theme, t }: LinkDetailPanelProps) => {
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
+
+    // Chat state
+    const [chatInput, setChatInput] = useState('');
+    const [chatLoading, setChatLoading] = useState(false);
+    const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string }>>([]);
+
+    // Send chat message to AI with clip context
+    const sendChatMessage = async () => {
+        if (!chatInput.trim() || chatLoading) return;
+
+        const userMessage = chatInput.trim();
+        setChatInput('');
+        setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+        setChatLoading(true);
+
+        try {
+            // Build context from clip data
+            const clipContext = [
+                `Title: ${link.title || 'Untitled'}`,
+                `URL: ${link.url}`,
+                link.summary ? `Summary: ${link.summary}` : '',
+                link.description ? `Description: ${link.description}` : '',
+                link.tags?.length ? `Tags: ${link.tags.join(', ')}` : '',
+                link.notes ? `Notes: ${link.notes}` : '',
+            ].filter(Boolean).join('\n');
+
+            const { sendAIChat } = await import('../../../lib/aiService');
+            const language = localStorage.getItem('language') === 'en' ? 'en' : 'ko';
+            const result = await sendAIChat(userMessage, clipContext, language);
+
+            if (result.success && result.content) {
+                setChatMessages(prev => [...prev, { role: 'ai', content: result.content! }]);
+            } else {
+                setChatMessages(prev => [...prev, { role: 'ai', content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.' }]);
+            }
+        } catch (error) {
+            console.error('[Chat] Error:', error);
+            setChatMessages(prev => [...prev, { role: 'ai', content: 'Error occurred. Please check your API settings.' }]);
+        } finally {
+            setChatLoading(false);
+        }
+    };
 
     const getYoutubeId = (url: string) => {
         const match = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^#\&\?]*)/);
@@ -487,26 +530,63 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                     <div className="h-32 md:h-20"></div>
                 </div>
 
-                {/* AI Input Footer */}
+                {/* AI Chat Section */}
                 {(() => {
                     const isAIConfigured = (localStorage.getItem('ai_api_key') || '').length > 10;
                     return (
-                        <div className={`absolute bottom-0 left-0 right-0 p-4 border-t flex items-center gap-2 z-20 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 ${isAIConfigured ? 'bg-[#21DBA4]' : 'bg-slate-400'}`}>
-                                <LinkBrainLogo size={16} variant="green" />
+                        <div className={`absolute bottom-0 left-0 right-0 z-20 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+                            {/* Chat Messages */}
+                            {chatMessages.length > 0 && (
+                                <div className={`max-h-60 overflow-y-auto p-4 border-t space-y-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+                                    {chatMessages.map((msg, idx) => (
+                                        <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            {msg.role === 'ai' && (
+                                                <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shrink-0">
+                                                    <Lightbulb size={12} className="text-white" />
+                                                </div>
+                                            )}
+                                            <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${msg.role === 'user'
+                                                ? 'bg-[#21DBA4] text-white'
+                                                : theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-700'
+                                                }`}>
+                                                {msg.content}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {chatLoading && (
+                                        <div className="flex gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shrink-0 animate-pulse">
+                                                <Lightbulb size={12} className="text-white" />
+                                            </div>
+                                            <div className={`px-3 py-2 rounded-xl text-sm ${theme === 'dark' ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                                                Thinking...
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {/* Input Area */}
+                            <div className={`p-4 border-t flex items-center gap-2 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 ${isAIConfigured ? 'bg-[#21DBA4]' : 'bg-slate-400'}`}>
+                                    <Lightbulb size={16} />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={chatInput}
+                                    onChange={(e) => setChatInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && sendChatMessage()}
+                                    disabled={!isAIConfigured || chatLoading}
+                                    placeholder={isAIConfigured ? (t('askAI') || 'Ask AI about this content...') : (t('aiSetupRequired') || 'Set up your API key in Settings')}
+                                    className={`flex-1 rounded-full h-10 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${!isAIConfigured ? 'cursor-not-allowed opacity-60' : ''} ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700 placeholder:text-slate-500' : 'bg-slate-100 focus:bg-white placeholder:text-slate-400'}`}
+                                />
+                                <button
+                                    onClick={sendChatMessage}
+                                    disabled={!isAIConfigured || chatLoading || !chatInput.trim()}
+                                    className={`p-2 transition-colors ${isAIConfigured && chatInput.trim() ? 'text-[#21DBA4] hover:text-[#1bc290]' : 'text-slate-300 cursor-not-allowed'}`}
+                                >
+                                    <ArrowUpCircle size={24} />
+                                </button>
                             </div>
-                            <input
-                                type="text"
-                                disabled={!isAIConfigured}
-                                placeholder={isAIConfigured ? (t('askAI') || 'Ask AI about this content...') : (t('aiSetupRequired') || 'Set up your API key in Settings')}
-                                className={`flex-1 rounded-full h-10 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${!isAIConfigured ? 'cursor-not-allowed opacity-60' : ''} ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700 placeholder:text-slate-500' : 'bg-slate-100 focus:bg-white placeholder:text-slate-400'}`}
-                            />
-                            <button
-                                disabled={!isAIConfigured}
-                                className={`p-2 transition-colors ${isAIConfigured ? 'text-slate-400 hover:text-[#21DBA4]' : 'text-slate-300 cursor-not-allowed'}`}
-                            >
-                                <ArrowUpCircle size={24} />
-                            </button>
                         </div>
                     );
                 })()}
