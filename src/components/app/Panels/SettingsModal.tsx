@@ -625,40 +625,98 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
     const [openaiApiKey, setOpenaiApiKey] = useState(() => localStorage.getItem('openai_api_key') || '');
     const [openaiModel, setOpenaiModel] = useState(() => localStorage.getItem('openai_model') || 'gpt-5.2');
     const [showOpenaiKey, setShowOpenaiKey] = useState(false);
+    const [openaiStatus, setOpenaiStatus] = useState<'idle' | 'validating' | 'active' | 'inactive'>(() => {
+        return localStorage.getItem('openai_status') as any || 'idle';
+    });
 
     const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
     const [geminiModel, setGeminiModel] = useState(() => localStorage.getItem('gemini_model') || 'gemini-3-pro');
     const [showGeminiKey, setShowGeminiKey] = useState(false);
+    const [geminiStatus, setGeminiStatus] = useState<'idle' | 'validating' | 'active' | 'inactive'>(() => {
+        return localStorage.getItem('gemini_status') as any || 'idle';
+    });
 
     const [activeProvider, setActiveProvider] = useState<'openai' | 'gemini'>(() => {
         return (localStorage.getItem('ai_provider') as 'openai' | 'gemini') || 'gemini';
     });
 
-    const saveOpenai = () => {
-        localStorage.setItem('openai_api_key', openaiApiKey);
-        localStorage.setItem('openai_model', openaiModel);
-        localStorage.setItem('ai_provider', 'openai');
-        localStorage.setItem('ai_api_key', openaiApiKey);
-        localStorage.setItem('ai_model', openaiModel);
-        setActiveProvider('openai');
-        toast.success('OpenAI 설정이 저장되었습니다!');
+    // Import validation function dynamically
+    const validateAndSaveOpenai = async () => {
+        if (!openaiApiKey || openaiApiKey.length < 10) {
+            toast.error('API 키가 올바르지 않습니다.');
+            return;
+        }
+
+        setOpenaiStatus('validating');
+
+        try {
+            // Dynamic import to avoid circular dependencies
+            const { validateApiKey } = await import('../../../lib/aiService');
+            const result = await validateApiKey('openai', openaiApiKey, openaiModel);
+
+            if (result.success) {
+                localStorage.setItem('openai_api_key', openaiApiKey);
+                localStorage.setItem('openai_model', openaiModel);
+                localStorage.setItem('openai_status', 'active');
+                localStorage.setItem('ai_provider', 'openai');
+                localStorage.setItem('ai_api_key', openaiApiKey);
+                localStorage.setItem('ai_model', openaiModel);
+                setOpenaiStatus('active');
+                setActiveProvider('openai');
+                toast.success('✅ OpenAI API 연결 성공!');
+            } else {
+                localStorage.setItem('openai_status', 'inactive');
+                setOpenaiStatus('inactive');
+                toast.error(`❌ OpenAI 연결 실패: ${result.error || 'API 키를 확인해주세요'}`);
+            }
+        } catch (error: any) {
+            localStorage.setItem('openai_status', 'inactive');
+            setOpenaiStatus('inactive');
+            toast.error(`❌ 연결 오류: ${error.message}`);
+        }
     };
 
-    const saveGemini = () => {
-        localStorage.setItem('gemini_api_key', geminiApiKey);
-        localStorage.setItem('gemini_model', geminiModel);
-        localStorage.setItem('ai_provider', 'gemini');
-        localStorage.setItem('ai_api_key', geminiApiKey);
-        localStorage.setItem('ai_model', geminiModel);
-        setActiveProvider('gemini');
-        toast.success('Gemini 설정이 저장되었습니다!');
+    const validateAndSaveGemini = async () => {
+        if (!geminiApiKey || geminiApiKey.length < 10) {
+            toast.error('API 키가 올바르지 않습니다.');
+            return;
+        }
+
+        setGeminiStatus('validating');
+
+        try {
+            const { validateApiKey } = await import('../../../lib/aiService');
+            const result = await validateApiKey('gemini', geminiApiKey, geminiModel);
+
+            if (result.success) {
+                localStorage.setItem('gemini_api_key', geminiApiKey);
+                localStorage.setItem('gemini_model', geminiModel);
+                localStorage.setItem('gemini_status', 'active');
+                localStorage.setItem('ai_provider', 'gemini');
+                localStorage.setItem('ai_api_key', geminiApiKey);
+                localStorage.setItem('ai_model', geminiModel);
+                setGeminiStatus('active');
+                setActiveProvider('gemini');
+                toast.success('✅ Gemini API 연결 성공!');
+            } else {
+                localStorage.setItem('gemini_status', 'inactive');
+                setGeminiStatus('inactive');
+                toast.error(`❌ Gemini 연결 실패: ${result.error || 'API 키를 확인해주세요'}`);
+            }
+        } catch (error: any) {
+            localStorage.setItem('gemini_status', 'inactive');
+            setGeminiStatus('inactive');
+            toast.error(`❌ 연결 오류: ${error.message}`);
+        }
     };
 
     const clearOpenai = () => {
         localStorage.removeItem('openai_api_key');
         localStorage.removeItem('openai_model');
+        localStorage.removeItem('openai_status');
         setOpenaiApiKey('');
         setOpenaiModel('gpt-5.2');
+        setOpenaiStatus('idle');
         if (activeProvider === 'openai') {
             localStorage.removeItem('ai_api_key');
             localStorage.removeItem('ai_model');
@@ -669,8 +727,10 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
     const clearGemini = () => {
         localStorage.removeItem('gemini_api_key');
         localStorage.removeItem('gemini_model');
+        localStorage.removeItem('gemini_status');
         setGeminiApiKey('');
         setGeminiModel('gemini-3-pro');
+        setGeminiStatus('idle');
         if (activeProvider === 'gemini') {
             localStorage.removeItem('ai_api_key');
             localStorage.removeItem('ai_model');
@@ -680,38 +740,49 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
 
     const isOpenaiConfigured = openaiApiKey.length > 10;
     const isGeminiConfigured = geminiApiKey.length > 10;
-    const isAnyConfigured = isOpenaiConfigured || isGeminiConfigured;
+    const isAnyActive = openaiStatus === 'active' || geminiStatus === 'active';
+
+    const getStatusBadge = (status: string, isActive: boolean) => {
+        if (status === 'validating') {
+            return <span className="ml-auto px-2 py-1 text-xs font-bold bg-amber-500 text-white rounded-full animate-pulse">검증 중...</span>;
+        }
+        if (status === 'active' && isActive) {
+            return <span className="ml-auto px-2 py-1 text-xs font-bold bg-[#21DBA4] text-white rounded-full">Active</span>;
+        }
+        if (status === 'inactive') {
+            return <span className="ml-auto px-2 py-1 text-xs font-bold bg-red-500 text-white rounded-full">Inactive</span>;
+        }
+        return null;
+    };
 
     return (
         <div className="max-w-xl space-y-6 md:space-y-8">
             {/* Status Banner */}
-            <div className={`p-4 rounded-xl flex items-center gap-3 ${isAnyConfigured ? 'bg-[#21DBA4]/10 border border-[#21DBA4]/30' : theme === 'dark' ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-amber-50 border border-amber-200'}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isAnyConfigured ? 'bg-[#21DBA4] text-white' : 'bg-amber-500 text-white'}`}>
+            <div className={`p-4 rounded-xl flex items-center gap-3 ${isAnyActive ? 'bg-[#21DBA4]/10 border border-[#21DBA4]/30' : theme === 'dark' ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-amber-50 border border-amber-200'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isAnyActive ? 'bg-[#21DBA4] text-white' : 'bg-amber-500 text-white'}`}>
                     <Brain size={20} />
                 </div>
                 <div className="flex-1">
                     <h5 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                        {isAnyConfigured ? (t('aiEnabled') || 'AI Features Enabled') : (t('aiDisabled') || 'AI Features Disabled')}
+                        {isAnyActive ? 'AI 기능 활성화됨' : 'AI 기능 비활성화'}
                     </h5>
                     <p className="text-xs text-slate-400">
-                        {isAnyConfigured
+                        {isAnyActive
                             ? `현재 활성화된 제공자: ${activeProvider === 'openai' ? 'OpenAI' : 'Google Gemini'}`
-                            : (t('aiDisabledDesc') || 'Enter your API key to enable AI features')}
+                            : 'API 키를 입력하고 연결을 확인하세요'}
                     </p>
                 </div>
             </div>
 
             {/* OpenAI Section */}
-            <div className={`p-4 rounded-2xl border-2 transition-all ${activeProvider === 'openai' && isOpenaiConfigured ? 'border-[#21DBA4] bg-[#E0FBF4]/10' : theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
+            <div className={`p-4 rounded-2xl border-2 transition-all ${openaiStatus === 'active' && activeProvider === 'openai' ? 'border-[#21DBA4] bg-[#E0FBF4]/10' : openaiStatus === 'inactive' ? 'border-red-500/50 bg-red-50/10' : theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
                 <div className="flex items-center gap-3 mb-4">
                     <span className="text-2xl">🤖</span>
                     <div>
                         <h4 className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>OpenAI</h4>
                         <p className="text-xs text-slate-400">GPT-5.2, GPT-4o 모델 지원</p>
                     </div>
-                    {isOpenaiConfigured && activeProvider === 'openai' && (
-                        <span className="ml-auto px-2 py-1 text-xs font-bold bg-[#21DBA4] text-white rounded-full">Active</span>
-                    )}
+                    {getStatusBadge(openaiStatus, activeProvider === 'openai')}
                 </div>
 
                 {/* OpenAI API Key */}
@@ -721,7 +792,7 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                         <input
                             type={showOpenaiKey ? 'text' : 'password'}
                             value={openaiApiKey}
-                            onChange={(e) => setOpenaiApiKey(e.target.value)}
+                            onChange={(e) => { setOpenaiApiKey(e.target.value); setOpenaiStatus('idle'); }}
                             placeholder="sk-..."
                             className={`w-full h-11 rounded-xl px-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/30 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-900'} border`}
                         />
@@ -749,11 +820,11 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                 {/* OpenAI Buttons */}
                 <div className="flex gap-2">
                     <button
-                        onClick={saveOpenai}
-                        disabled={!openaiApiKey}
-                        className="flex-1 h-10 rounded-xl font-bold text-sm bg-[#21DBA4] text-white hover:bg-[#1bc290] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        onClick={validateAndSaveOpenai}
+                        disabled={!openaiApiKey || openaiStatus === 'validating'}
+                        className={`flex-1 h-10 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${openaiStatus === 'validating' ? 'bg-amber-500 text-white' : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'}`}
                     >
-                        {activeProvider === 'openai' ? '저장됨' : 'OpenAI 사용'}
+                        {openaiStatus === 'validating' ? '연결 확인 중...' : openaiStatus === 'active' ? '연결됨 ✓' : '연결 및 저장'}
                     </button>
                     {isOpenaiConfigured && (
                         <button onClick={clearOpenai} className={`px-4 h-10 rounded-xl font-bold text-sm ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
@@ -764,16 +835,14 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
             </div>
 
             {/* Gemini Section */}
-            <div className={`p-4 rounded-2xl border-2 transition-all ${activeProvider === 'gemini' && isGeminiConfigured ? 'border-[#21DBA4] bg-[#E0FBF4]/10' : theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
+            <div className={`p-4 rounded-2xl border-2 transition-all ${geminiStatus === 'active' && activeProvider === 'gemini' ? 'border-[#21DBA4] bg-[#E0FBF4]/10' : geminiStatus === 'inactive' ? 'border-red-500/50 bg-red-50/10' : theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
                 <div className="flex items-center gap-3 mb-4">
                     <span className="text-2xl">✨</span>
                     <div>
                         <h4 className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Google Gemini</h4>
                         <p className="text-xs text-slate-400">Gemini 3 Pro, 2.5 Pro 모델 지원</p>
                     </div>
-                    {isGeminiConfigured && activeProvider === 'gemini' && (
-                        <span className="ml-auto px-2 py-1 text-xs font-bold bg-[#21DBA4] text-white rounded-full">Active</span>
-                    )}
+                    {getStatusBadge(geminiStatus, activeProvider === 'gemini')}
                 </div>
 
                 {/* Gemini API Key */}
@@ -783,7 +852,7 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                         <input
                             type={showGeminiKey ? 'text' : 'password'}
                             value={geminiApiKey}
-                            onChange={(e) => setGeminiApiKey(e.target.value)}
+                            onChange={(e) => { setGeminiApiKey(e.target.value); setGeminiStatus('idle'); }}
                             placeholder="AIza..."
                             className={`w-full h-11 rounded-xl px-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/30 ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-900'} border`}
                         />
@@ -811,11 +880,11 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                 {/* Gemini Buttons */}
                 <div className="flex gap-2">
                     <button
-                        onClick={saveGemini}
-                        disabled={!geminiApiKey}
-                        className="flex-1 h-10 rounded-xl font-bold text-sm bg-[#21DBA4] text-white hover:bg-[#1bc290] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        onClick={validateAndSaveGemini}
+                        disabled={!geminiApiKey || geminiStatus === 'validating'}
+                        className={`flex-1 h-10 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${geminiStatus === 'validating' ? 'bg-amber-500 text-white' : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'}`}
                     >
-                        {activeProvider === 'gemini' ? '저장됨' : 'Gemini 사용'}
+                        {geminiStatus === 'validating' ? '연결 확인 중...' : geminiStatus === 'active' ? '연결됨 ✓' : '연결 및 저장'}
                     </button>
                     {isGeminiConfigured && (
                         <button onClick={clearGemini} className={`px-4 h-10 rounded-xl font-bold text-sm ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
@@ -831,9 +900,9 @@ const AISettings = ({ theme, t }: { theme: 'light' | 'dark', t: (key: string) =>
                     {t('aiFeatures') || 'AI Features'}
                 </h5>
                 <ul className="text-xs text-slate-400 space-y-1">
-                    <li>• {t('aiInsightsReport') || 'AI Insights Report - Summarize your saved content'}</li>
-                    <li>• {t('aiArticle') || 'AI Article - Generate original articles from your clips'}</li>
-                    <li>• {t('aiChat') || 'AI Chat - Ask questions about your content'}</li>
+                    <li>• AI 인사이트 리포트 - 저장된 콘텐츠 요약 분석</li>
+                    <li>• AI 아티클 - 오리지널 콘텐츠 자동 생성</li>
+                    <li>• AI 채팅 - 저장된 콘텐츠에 대해 질문하기</li>
                 </ul>
             </div>
         </div>

@@ -142,10 +142,16 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     fetchClips();
   }, []);
 
-  // 인사이트 리포트 생성 함수 (요약 정리)
+  // 인사이트 리포트 생성 함수 (실제 AI API 사용)
   const generateReport = async () => {
     const user = auth.currentUser;
     if (!user || filteredData.length < 3) return;
+
+    // API 미설정 시 설정 열기
+    if (!isAIConfigured) {
+      onOpenSettings?.();
+      return;
+    }
 
     setGeneratingReport(true);
 
@@ -166,9 +172,23 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
         ? (language === 'ko' ? '이번 주' : 'this week')
         : (language === 'ko' ? '이번 달' : 'this month');
 
-      const reportContent = language === 'ko'
-        ? generateKoreanReport(topClips, topTopics, periodText)
-        : generateEnglishReport(topClips, topTopics, periodText);
+      // 실제 AI API 호출 시도
+      let reportContent = '';
+      try {
+        const { generateAIReport } = await import('../lib/aiService');
+        const result = await generateAIReport(topClips, language);
+        if (result.success && result.content) {
+          reportContent = result.content;
+        } else {
+          throw new Error(result.error || 'AI generation failed');
+        }
+      } catch (aiError) {
+        console.warn('[AIInsights] AI API failed, using local generation:', aiError);
+        // Fallback to local template
+        reportContent = language === 'ko'
+          ? generateKoreanReport(topClips, topTopics, periodText)
+          : generateEnglishReport(topClips, topTopics, periodText);
+      }
 
       setGeneratedReport({
         title: language === 'ko'
@@ -188,77 +208,69 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     }
   };
 
-  // AI 아티클 생성 함수 (새로운 오리지널 콘텐츠)
+  // AI 아티클 생성 함수 (실제 AI API 사용)
   const generateArticle = async () => {
     const user = auth.currentUser;
     if (!user || filteredData.length < 3) return;
 
+    // API 미설정 시 설정 열기
+    if (!isAIConfigured) {
+      onOpenSettings?.();
+      return;
+    }
+
     setGeneratingArticle(true);
 
     try {
-      // 프로덕션: API 호출 시도
-      const isProduction = window.location.hostname !== 'localhost';
-      let apiSuccess = false;
+      const topClips = filteredData
+        .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
+        .slice(0, 8);
 
-      if (isProduction) {
-        try {
-          const response = await fetch('/api/insights/article', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user.uid,
-              period,
-              language,
-              type: 'article'
-            })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.article && data.article.content) {
-              setGeneratedArticle(data.article);
-              setShowArticle(true);
-              apiSuccess = true;
-            }
-          }
-        } catch (apiError) {
-          console.warn('[AIInsights] API call failed, using local generation:', apiError);
-        }
-      }
-
-      // API 실패 또는 로컬: 클립 기반 오리지널 콘텐츠 생성
-      if (!apiSuccess) {
-        const topClips = filteredData
-          .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
-          .slice(0, 8);
-
-        const topicsSet = new Set<string>();
-        topClips.forEach(clip => {
-          (clip.tags || clip.keywords || []).forEach((t: string) => {
-            topicsSet.add(t);
-          });
+      const topicsSet = new Set<string>();
+      topClips.forEach(clip => {
+        (clip.tags || clip.keywords || []).forEach((t: string) => {
+          topicsSet.add(t);
         });
-        const topTopics = Array.from(topicsSet).slice(0, 4);
+      });
+      const topTopics = Array.from(topicsSet).slice(0, 4);
 
-        const periodText = period === 'weekly'
-          ? (language === 'ko' ? '이번 주' : 'this week')
-          : (language === 'ko' ? '이번 달' : 'this month');
+      const periodText = period === 'weekly'
+        ? (language === 'ko' ? '이번 주' : 'this week')
+        : (language === 'ko' ? '이번 달' : 'this month');
 
-        const articleContent = language === 'ko'
+      // 실제 AI API 호출 시도
+      let articleContent = '';
+      let articleTitle = '';
+      try {
+        const { generateAIArticle } = await import('../lib/aiService');
+        const result = await generateAIArticle(topClips, language);
+        if (result.success && result.content) {
+          articleContent = result.content;
+          articleTitle = language === 'ko'
+            ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
+            : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`;
+        } else {
+          throw new Error(result.error || 'AI generation failed');
+        }
+      } catch (aiError) {
+        console.warn('[AIInsights] AI API failed, using local generation:', aiError);
+        // Fallback to local template
+        articleContent = language === 'ko'
           ? generateKoreanOriginalArticle(topClips, topTopics, periodText)
           : generateEnglishOriginalArticle(topClips, topTopics, periodText);
-
-        setGeneratedArticle({
-          title: language === 'ko'
-            ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
-            : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`,
-          content: articleContent,
-          topics: topTopics,
-          wordCount: articleContent.length,
-          generatedAt: new Date().toISOString()
-        });
-        setShowArticle(true);
+        articleTitle = language === 'ko'
+          ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
+          : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`;
       }
+
+      setGeneratedArticle({
+        title: articleTitle,
+        content: articleContent,
+        topics: topTopics,
+        wordCount: articleContent.length,
+        generatedAt: new Date().toISOString()
+      });
+      setShowArticle(true);
 
     } catch (error) {
       console.error('[AIInsights] Article generation error:', error);
