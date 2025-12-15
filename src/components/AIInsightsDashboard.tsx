@@ -817,7 +817,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateReport}
               disabled={generatingReport || (isAIConfigured && filteredData.length < 3)}
-              className={`min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap
+              className={`w-full min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${isDark
                   ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600'
@@ -854,7 +854,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateArticle}
               disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
-              className={`min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
+              className={`w-full min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${generatingArticle
                   ? 'bg-slate-600 text-white'
