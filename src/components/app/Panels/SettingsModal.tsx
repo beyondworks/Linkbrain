@@ -962,14 +962,14 @@ const API_LINKS = {
 const AISettings = ({ theme, t, user }: { theme: 'light' | 'dark', t: (key: string) => string, user?: any }) => {
     // Separate state for each provider
     const [openaiApiKey, setOpenaiApiKey] = useState(() => localStorage.getItem('openai_api_key') || '');
-    const [openaiModel, setOpenaiModel] = useState(() => localStorage.getItem('openai_model') || 'gpt-5.2');
+    const [openaiModel, setOpenaiModel] = useState(() => localStorage.getItem('openai_model') || 'gpt-4o');
     const [showOpenaiKey, setShowOpenaiKey] = useState(false);
     const [openaiStatus, setOpenaiStatus] = useState<'idle' | 'validating' | 'active' | 'inactive'>(() => {
         return localStorage.getItem('openai_status') as any || 'idle';
     });
 
     const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-    const [geminiModel, setGeminiModel] = useState(() => localStorage.getItem('gemini_model') || 'gemini-3-pro');
+    const [geminiModel, setGeminiModel] = useState(() => localStorage.getItem('gemini_model') || 'gemini-1.5-pro');
     const [showGeminiKey, setShowGeminiKey] = useState(false);
     const [geminiStatus, setGeminiStatus] = useState<'idle' | 'validating' | 'active' | 'inactive'>(() => {
         return localStorage.getItem('gemini_status') as any || 'idle';
