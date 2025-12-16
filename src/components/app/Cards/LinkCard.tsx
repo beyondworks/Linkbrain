@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
     CheckSquare,
@@ -28,6 +28,7 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
     const source = getSourceInfo(data.url);
     const categoryId = data.categoryId;
     const categoryName = categories?.find((c: any) => c.id === categoryId)?.name || categoryId;
+    const [isHovered, setIsHovered] = useState(false);
 
     return (
         <motion.div
@@ -35,25 +36,39 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            onClick={onClick}
+            onClick={(e) => {
+                // Check if click was on checkbox
+                const target = e.target as HTMLElement;
+                if (target.closest('[data-checkbox="true"]')) {
+                    return; // Don't open detail, let checkbox handle it
+                }
+                onClick();
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             className={`rounded-2xl border transition-all duration-300 group overflow-hidden flex flex-col h-auto cursor-pointer relative
          ${selected ? 'border-[#21DBA4] ring-2 ring-[#21DBA4]/20 shadow-lg' : theme === 'dark' ? 'bg-slate-900 border-slate-800 shadow-sm hover:shadow-xl hover:shadow-slate-900/50' : 'bg-white border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:shadow-slate-200/50'}
       `}
         >
-            <div
-                className={`absolute top-3 left-3 z-[1] transition-opacity duration-200 ${selectionMode || selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}
-            >
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors shadow-sm ${selected ? 'bg-[#21DBA4] text-white' : 'bg-white/90 text-slate-300 hover:text-slate-500 hover:bg-white'}`}>
-                    {selected ? <CheckSquare size={16} /> : <Square size={16} />}
-                </div>
-            </div>
-
-            {showThumbnails && (
+            {showThumbnails ? (
                 <div className={`relative h-48 overflow-hidden ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
                     <img src={data.image} alt={data.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
 
-                    <div className={`absolute top-3 left-3 flex flex-wrap gap-1.5 z-[1] transition-all ${selectionMode || selected ? 'translate-x-8' : 'group-hover:translate-x-8'}`}>
+                    {/* Checkbox - inside thumbnail for proper stacking */}
+                    <div
+                        data-checkbox="true"
+                        className={`absolute top-3 left-3 z-[10] transition-opacity duration-200 cursor-pointer
+                            ${selectionMode || selected || isHovered ? 'opacity-100' : 'opacity-0'}
+                        `}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect?.(); }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                    >
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors shadow-sm ${selected ? 'bg-[#21DBA4] text-white' : 'bg-white/90 text-slate-300 hover:text-slate-500 hover:bg-white'}`}>
+                            {selected ? <CheckSquare size={16} /> : <Square size={16} />}
+                        </div>
+                    </div>
+
+                    <div className={`absolute top-3 left-3 flex flex-wrap gap-1.5 z-[5] transition-all ${selectionMode || selected || isHovered ? 'translate-x-8' : ''}`}>
                         <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-white text-[10px] font-bold backdrop-blur-md shadow-sm ${source.color}`}>
                             {source.icon} {source.name}
                         </div>
@@ -73,6 +88,20 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
                         >
                             <ExternalLink size={16} />
                         </button>
+                    </div>
+                </div>
+            ) : (
+                /* Checkbox for non-thumbnail mode */
+                <div
+                    data-checkbox="true"
+                    className={`absolute top-3 left-3 z-[10] transition-opacity duration-200 cursor-pointer
+                        ${selectionMode || selected || isHovered ? 'opacity-100' : 'opacity-0'}
+                    `}
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect?.(); }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors shadow-sm ${selected ? 'bg-[#21DBA4] text-white' : 'bg-white/90 text-slate-300 hover:text-slate-500 hover:bg-white'}`}>
+                        {selected ? <CheckSquare size={16} /> : <Square size={16} />}
                     </div>
                 </div>
             )}

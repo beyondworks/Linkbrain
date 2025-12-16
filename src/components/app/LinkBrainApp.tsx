@@ -1525,10 +1525,28 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             </div>
          </aside>
 
+         {/* Pull-to-Refresh Indicator (mobile only) - Fixed at very top of screen, outside main */}
+         <div
+            ref={pullIndicatorRef}
+            className={`md:hidden fixed top-0 left-0 right-0 z-[100] flex flex-col items-center justify-end pb-2 overflow-hidden pointer-events-none ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
+            style={{ height: '0px', willChange: 'transform, height', transition: 'none' }}
+         >
+            <div
+               ref={pullSpinnerRef}
+               className={`w-8 h-8 rounded-full border-[3px] border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
+               style={{ opacity: 0, transform: 'rotate(0deg) scale(0)', willChange: 'transform, opacity', animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none' }}
+            />
+            <span
+               ref={pullTextRef}
+               className={`text-xs font-medium mt-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}
+               style={{ opacity: 0, display: 'none' }}
+            >
+               {isRefreshing ? (language === 'ko' ? '새로고침 중...' : 'Refreshing...') : (language === 'ko' ? '놓으면 새로고침' : 'Release to refresh')}
+            </span>
+         </div>
+
          {/* Main Content */}
          <main ref={mainContentRef} className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar">
-            {/* Subscription Banner */}
-
 
             {/* Top Header */}
             <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
@@ -1717,25 +1735,6 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                className={`flex-1 ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}
                style={{ minHeight: 'calc(100vh - 72px)' }}
             >
-               {/* Pull-to-Refresh Indicator (mobile only) - using refs for 60fps animation */}
-               <div
-                  ref={pullIndicatorRef}
-                  className={`md:hidden flex flex-col items-center justify-center gap-2 overflow-hidden ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
-                  style={{ height: '0px', willChange: 'height' }}
-               >
-                  <div
-                     ref={pullSpinnerRef}
-                     className={`w-8 h-8 rounded-full border-[3px] border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
-                     style={{ opacity: 0, transform: 'rotate(0deg) scale(0)', animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none' }}
-                  />
-                  <span
-                     ref={pullTextRef}
-                     className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}
-                     style={{ opacity: 0, display: 'none' }}
-                  >
-                     {isRefreshing ? (language === 'ko' ? '새로고침 중...' : 'Refreshing...') : (language === 'ko' ? '놓으면 새로고침' : 'Release to refresh')}
-                  </span>
-               </div>
                {activeTab === 'discovery' ? (
                   <LinkBrainArticle theme={theme} />
                ) : (

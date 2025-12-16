@@ -104,6 +104,40 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         onClose();
     };
 
+    // ESC key to close on desktop
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                handleClose();
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [myNotes, link.notes, onUpdateClip, link.id]);
+
+    // Mobile swipe right to close + browser back button
+    const touchStartX = useRef(0);
+    const touchCurrentX = useRef(0);
+
+    useEffect(() => {
+        // Handle browser back button (popstate) on mobile
+        const handlePopState = () => {
+            handleClose();
+        };
+
+        // Push a state so back button can be caught
+        if (isMobile) {
+            window.history.pushState({ detailPanel: true }, '');
+            window.addEventListener('popstate', handlePopState);
+        }
+
+        return () => {
+            if (isMobile) {
+                window.removeEventListener('popstate', handlePopState);
+            }
+        };
+    }, [isMobile]);
+
     // Chat state - persisted per clip
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
