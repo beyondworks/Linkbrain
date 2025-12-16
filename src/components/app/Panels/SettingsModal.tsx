@@ -510,25 +510,235 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
     );
 };
 
-// Integrations Settings
-const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) => string }) => (
-    <div className="max-w-xl space-y-4 md:space-y-6">
-        <div className="p-3 md:p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 text-blue-700 mb-4 md:mb-6">
-            <Zap size={20} className="shrink-0 mt-0.5" />
-            <div className="text-xs md:text-sm">
-                <p className="font-bold mb-0.5">Supercharge your Brain</p>
-                <p className="opacity-80 leading-relaxed">Connect your favorite tools to automatically import content and sync your knowledge base.</p>
+// Integrations Settings - with API Key Management
+const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) => string }) => {
+    const [apiKey, setApiKey] = useState<string | null>(null);
+    const [keyPrefix, setKeyPrefix] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [showKey, setShowKey] = useState(false);
+
+    // Load API key status on mount
+    useEffect(() => {
+        const loadKeyStatus = async () => {
+            try {
+                const { auth } = await import('../../../lib/firebase');
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const token = await user.getIdToken();
+                const response = await fetch('/api/keys/status', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.hasKey) {
+                    setKeyPrefix(data.keyPrefix);
+                }
+            } catch (err) {
+                console.error('Failed to load API key status:', err);
+            }
+        };
+        loadKeyStatus();
+    }, []);
+
+    const handleGenerateKey = async () => {
+        setIsLoading(true);
+        try {
+            const { auth } = await import('../../../lib/firebase');
+            const user = auth.currentUser;
+            if (!user) {
+                toast.error(t('language') === 'ko' ? '로그인이 필요합니다' : 'Login required');
+                return;
+            }
+
+            const token = await user.getIdToken();
+            const response = await fetch('/api/keys/generate', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setApiKey(data.key);
+                setKeyPrefix(data.keyPrefix);
+                setShowKey(true);
+                toast.success(t('language') === 'ko' ? 'API 키가 생성되었습니다!' : 'API key generated!');
+            } else {
+                toast.error(data.error || 'Failed to generate key');
+            }
+        } catch (err) {
+            console.error('Generate key error:', err);
+            toast.error(t('language') === 'ko' ? 'API 키 생성 실패' : 'Failed to generate API key');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleRevokeKey = async () => {
+        setIsLoading(true);
+        try {
+            const { auth } = await import('../../../lib/firebase');
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const token = await user.getIdToken();
+            const response = await fetch('/api/keys/revoke', {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setApiKey(null);
+                setKeyPrefix(null);
+                setShowKey(false);
+                toast.success(t('language') === 'ko' ? 'API 키가 삭제되었습니다' : 'API key revoked');
+            }
+        } catch (err) {
+            toast.error(t('language') === 'ko' ? 'API 키 삭제 실패' : 'Failed to revoke API key');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCopyKey = () => {
+        if (apiKey) {
+            navigator.clipboard.writeText(apiKey);
+            setCopied(true);
+            toast.success(t('language') === 'ko' ? '복사됨!' : 'Copied!');
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    return (
+        <div className="max-w-xl space-y-4 md:space-y-6">
+            {/* API Key Section */}
+            <div className="space-y-3 md:space-y-4">
+                <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <Key size={14} />
+                    {t('language') === 'ko' ? 'API 키' : 'API Key'}
+                </h4>
+
+                <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                    {keyPrefix || apiKey ? (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                    {t('language') === 'ko' ? '현재 키' : 'Current Key'}
+                                </span>
+                                <span className="text-xs text-[#21DBA4] font-medium">Active</span>
+                            </div>
+
+                            <div className={`flex items-center gap-2 p-3 rounded-lg font-mono text-sm ${theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-200'}`}>
+                                <code className={`flex-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                                    {apiKey && showKey ? apiKey : keyPrefix || 'lb_****...'}
+                                </code>
+                                {apiKey && (
+                                    <>
+                                        <button
+                                            onClick={() => setShowKey(!showKey)}
+                                            className="p-1.5 text-slate-400 hover:text-slate-600"
+                                        >
+                                            {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                        <button
+                                            onClick={handleCopyKey}
+                                            className={`p-1.5 rounded transition-colors ${copied ? 'text-[#21DBA4]' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            {copied ? <CheckIcon size={14} /> : <Copy size={14} />}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+
+                            {apiKey && (
+                                <div className={`p-3 rounded-lg text-xs ${theme === 'dark' ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-700'}`}>
+                                    <strong>⚠️ {t('language') === 'ko' ? '중요' : 'Important'}:</strong>{' '}
+                                    {t('language') === 'ko'
+                                        ? '이 키는 한 번만 표시됩니다. 안전한 곳에 저장하세요.'
+                                        : 'This key is only shown once. Save it securely.'}
+                                </div>
+                            )}
+
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    onClick={handleGenerateKey}
+                                    disabled={isLoading}
+                                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-colors ${theme === 'dark' ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+                                >
+                                    {t('language') === 'ko' ? '키 재발급' : 'Regenerate Key'}
+                                </button>
+                                <button
+                                    onClick={handleRevokeKey}
+                                    disabled={isLoading}
+                                    className="py-2 px-3 rounded-lg text-xs font-bold text-red-500 border border-red-200 hover:bg-red-50 transition-colors"
+                                >
+                                    {t('language') === 'ko' ? '삭제' : 'Revoke'}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-4">
+                            <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                {t('language') === 'ko'
+                                    ? 'API 키를 생성하여 외부 서비스에서 LinkBrain을 연동하세요'
+                                    : 'Generate an API key to integrate LinkBrain with external services'}
+                            </p>
+                            <button
+                                onClick={handleGenerateKey}
+                                disabled={isLoading}
+                                className="px-6 py-2.5 bg-[#21DBA4] text-white rounded-xl text-sm font-bold hover:bg-[#1bc290] transition-colors disabled:opacity-50"
+                            >
+                                {isLoading
+                                    ? '...'
+                                    : t('language') === 'ko' ? 'API 키 생성' : 'Generate API Key'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Usage Instructions */}
+                <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
+                    <h5 className={`text-sm font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                        📱 {t('language') === 'ko' ? 'iPhone 단축어로 사용하기' : 'Use with iPhone Shortcuts'}
+                    </h5>
+                    <ol className={`text-xs space-y-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <li>1. {t('language') === 'ko' ? 'API 키를 생성하고 복사하세요' : 'Generate and copy your API key'}</li>
+                        <li>2. {t('language') === 'ko' ? '단축어 앱에서 새 단축어를 만드세요' : 'Create a new shortcut in the Shortcuts app'}</li>
+                        <li>3. {t('language') === 'ko'
+                            ? '"URL 콘텐츠 가져오기" 액션을 추가하세요'
+                            : 'Add "Get Contents of URL" action'}</li>
+                        <li>4. {t('language') === 'ko'
+                            ? `URL: https://linkbrain.cloud/api/analyze, 방식: POST`
+                            : `URL: https://linkbrain.cloud/api/analyze, Method: POST`}</li>
+                        <li>5. {t('language') === 'ko'
+                            ? '헤더에 X-API-Key: [복사한 키] 추가'
+                            : 'Add header X-API-Key: [your key]'}</li>
+                    </ol>
+                </div>
+            </div>
+
+            {/* Existing Integrations */}
+            <div className="p-3 md:p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 text-blue-700">
+                <Zap size={20} className="shrink-0 mt-0.5" />
+                <div className="text-xs md:text-sm">
+                    <p className="font-bold mb-0.5">Supercharge your Brain</p>
+                    <p className="opacity-80 leading-relaxed">Connect your favorite tools to automatically import content and sync your knowledge base.</p>
+                </div>
+            </div>
+
+            <div className="space-y-3 md:space-y-4">
+                <IntegrationCard name="Notion" icon="N" description="Sync your saved links to a Notion database" comingSoon t={t} theme={theme} />
+                <IntegrationCard name="YouTube" icon="Y" description="Import liked videos and playlists automatically" comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Readwise" icon="R" description="Sync highlights from articles and books" comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Slack" icon="S" description="Save links directly from Slack conversations" comingSoon t={t} theme={theme} />
             </div>
         </div>
-
-        <div className="space-y-3 md:space-y-4">
-            <IntegrationCard name="Notion" icon="N" description="Sync your saved links to a Notion database" comingSoon t={t} theme={theme} />
-            <IntegrationCard name="YouTube" icon="Y" description="Import liked videos and playlists automatically" comingSoon t={t} theme={theme} />
-            <IntegrationCard name="Readwise" icon="R" description="Sync highlights from articles and books" comingSoon t={t} theme={theme} />
-            <IntegrationCard name="Slack" icon="S" description="Save links directly from Slack conversations" comingSoon t={t} theme={theme} />
-        </div>
-    </div>
-);
+    );
+};
 
 // Security Settings
 const SecuritySettings = ({ theme, t }: { theme: string; t: (key: string) => string }) => {

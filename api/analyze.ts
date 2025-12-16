@@ -13,7 +13,7 @@
 import { createClipFromContent, detectPlatform } from './_lib/clip-service';
 import { fetchUrlContent } from './_lib/url-content-fetcher';
 import { extractImages } from './_lib/image-extractor';
-import { requireAuth } from './_lib/auth';
+import { authenticateRequest } from './_lib/api-key-auth';
 import { setCorsHeaders, handlePreflight } from './_lib/cors';
 import { validateUrl } from './_lib/url-validator';
 
@@ -41,8 +41,8 @@ export default async function handler(req: any, res: any) {
             return res.status(400).json({ error: urlValidation.error });
         }
 
-        // Require authentication (no userId fallback)
-        const auth = await requireAuth(req, res);
+        // Authenticate via API key OR Firebase token
+        const auth = await authenticateRequest(req, res);
         if (!auth) return; // 401 already sent
 
         const userId = auth.userId;
