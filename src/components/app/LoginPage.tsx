@@ -188,7 +188,7 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
 
       setInviteCodeChecking(true);
       try {
-         const response = await fetch('/api/invite/validate', {
+         const response = await fetch('/api/invite?action=validate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code: code.toUpperCase() }),
@@ -234,7 +234,7 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
 
             // Redeem invite code to set up subscription
             try {
-               await fetch('/api/invite/redeem', {
+               await fetch('/api/invite?action=redeem', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({

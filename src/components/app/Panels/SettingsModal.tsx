@@ -527,7 +527,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
                 if (!user) return;
 
                 const token = await user.getIdToken();
-                const response = await fetch('/api/keys/status', {
+                const response = await fetch('/api/keys', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
@@ -552,7 +552,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
             }
 
             const token = await user.getIdToken();
-            const response = await fetch('/api/keys/generate', {
+            const response = await fetch('/api/keys', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -585,8 +585,8 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
             if (!user) return;
 
             const token = await user.getIdToken();
-            const response = await fetch('/api/keys/revoke', {
-                method: 'DELETE',
+            const response = await fetch('/api/keys?action=revoke', {
+                method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
