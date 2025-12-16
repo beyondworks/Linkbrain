@@ -324,9 +324,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    }, [firebaseCategories]);
 
    // --- Auto-Migration for Legacy/Dynamic Categories ---
-   // If we have links but NO categories (e.g. after moving to real DB),
-   // scan links and create real category documents for them.
-   // This runs once to restore the user's categories as "real" data.
+   // If we have links with categories that don't exist in DB, create them.
+   // Uses auto-generated IDs to avoid conflicts between users.
    // IMPORTANT: Use ref to prevent infinite loop
    const hasAttemptedMigrationRef = useRef(false);
 
@@ -337,45 +336,41 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
       }
 
       const migrateCategories = async () => {
-         // Only run if:
-         // 1. We have loaded links (firebaseClips exists and has items)
-         // 2. Data loading is finished
-         // 3. firebaseCategories is loaded (not null/undefined)
          const hasLinks = firebaseClips && firebaseClips.length > 0;
          const categoriesLoaded = firebaseCategories !== null && firebaseCategories !== undefined;
 
          if (!hasLinks || dataLoading || !categoriesLoaded) {
-            return; // Not ready yet, wait for data
+            return;
          }
 
          // Mark as attempted BEFORE doing anything
          hasAttemptedMigrationRef.current = true;
 
-         // Get existing category IDs
-         const existingCategoryIds = new Set(firebaseCategories.map(c => c.id));
+         // Get existing category NAMES (not IDs) since clips store names
+         const existingCategoryNames = new Set(firebaseCategories.map(c => c.name?.toLowerCase()));
 
-         // Find categories mentioned in clips but not in categories collection
+         // Find categories mentioned in clips but not in categories collection (by name)
          const missingCategories = new Set<string>();
          firebaseClips.forEach(clip => {
-            if (clip.category && clip.category !== 'uncategorized' && !existingCategoryIds.has(clip.category)) {
-               missingCategories.add(clip.category);
+            const catName = clip.category;
+            if (catName && catName !== 'uncategorized' && !existingCategoryNames.has(catName.toLowerCase())) {
+               missingCategories.add(catName);
             }
          });
 
          if (missingCategories.size > 0) {
             console.log('[Category Migration] Restoring:', Array.from(missingCategories));
 
-            // Palette to assign consistent colors
             const palette = Object.keys(CATEGORY_COLORS).filter(c => !c.includes('slate'));
 
             let colorIdx = 0;
-            const promises = Array.from(missingCategories).map(async (catId) => {
+            const promises = Array.from(missingCategories).map(async (catName) => {
                const color = palette[colorIdx % palette.length];
                colorIdx++;
 
+               // DON'T pass id - let Firebase auto-generate a unique ID
                await createCategory({
-                  id: catId,
-                  name: catId.charAt(0).toUpperCase() + catId.slice(1),
+                  name: catName.charAt(0).toUpperCase() + catName.slice(1),
                   color: color
                });
             });
@@ -722,8 +717,10 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
       } else if (activeTab === 'home') {
          result = result.filter(l => !l.isArchived);
       } else {
-         if (categories.some(c => c.id === activeTab)) {
-            result = result.filter(l => l.categoryId === activeTab && !l.isArchived);
+         // Match by ID or by name (since clips may store category name as categoryId)
+         const matchedCat = categories.find(c => c.id === activeTab || c.name?.toLowerCase() === activeTab.toLowerCase());
+         if (matchedCat) {
+            result = result.filter(l => (l.categoryId === matchedCat.id || l.categoryId?.toLowerCase() === matchedCat.name?.toLowerCase()) && !l.isArchived);
          }
          else if (collections.some(c => c.id === activeTab)) {
             result = result.filter(l => l.collectionIds.includes(activeTab) && !l.isArchived);
@@ -740,7 +737,9 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
       }
 
       if (filterCategories.length > 0) {
-         result = result.filter(l => filterCategories.includes(l.categoryId));
+         // Match by both ID and name for backward compatibility
+         const filterCatNames = filterCategories.map(id => categories.find(c => c.id === id)?.name?.toLowerCase()).filter(Boolean);
+         result = result.filter(l => filterCategories.includes(l.categoryId) || filterCatNames.includes(l.categoryId?.toLowerCase()));
       }
       if (filterSources.length > 0) {
          result = result.filter(l => {
@@ -1356,7 +1355,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                            <div className="flex flex-wrap gap-2 px-3 py-2">
                               {categories.map((cat: Category) => {
                                  const isActive = filterCategories.includes(cat.id);
-                                 const count = links.filter((l: LinkItem) => l.categoryId === cat.id && !l.isArchived).length;
+                                 // Match by both ID and name
+                                 const count = links.filter((l: LinkItem) => (l.categoryId === cat.id || l.categoryId?.toLowerCase() === cat.name?.toLowerCase()) && !l.isArchived).length;
                                  return (
                                     <div key={cat.id} className="group relative">
                                        <button
