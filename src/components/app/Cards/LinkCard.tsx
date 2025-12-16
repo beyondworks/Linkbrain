@@ -27,7 +27,9 @@ interface LinkCardProps {
 export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, selected, selectionMode, onToggleSelect, categories, theme, showThumbnails, t }: LinkCardProps) => {
     const source = getSourceInfo(data.url);
     const categoryId = data.categoryId;
-    const categoryName = categories?.find((c: any) => c.id === categoryId)?.name || categoryId;
+    // Match by ID or by name (since clips may store category name as categoryId)
+    const matchedCategory = categories?.find((c: any) => c.id === categoryId || c.name?.toLowerCase() === categoryId?.toLowerCase());
+    const categoryName = matchedCategory?.name || categoryId;
     const [isHovered, setIsHovered] = useState(false);
 
     return (
