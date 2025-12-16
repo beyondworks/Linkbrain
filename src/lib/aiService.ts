@@ -26,7 +26,27 @@ export const getAIConfig = (): AIConfig | null => {
         return null;
     }
 
-    const finalModel = model || getDefaultModel(provider);
+    // Migrate invalid model names to valid ones
+    let finalModel = model || getDefaultModel(provider);
+
+    // List of valid models
+    const validOpenAIModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
+    const validGeminiModels = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.0-flash-exp'];
+
+    if (provider === 'openai' && !validOpenAIModels.includes(finalModel)) {
+        console.warn('[AI Config] Invalid OpenAI model:', finalModel, '- resetting to gpt-4o');
+        finalModel = 'gpt-4o';
+        localStorage.setItem('ai_model', finalModel);
+        localStorage.setItem('openai_model', finalModel);
+    }
+
+    if (provider === 'gemini' && !validGeminiModels.includes(finalModel)) {
+        console.warn('[AI Config] Invalid Gemini model:', finalModel, '- resetting to gemini-1.5-pro');
+        finalModel = 'gemini-1.5-pro';
+        localStorage.setItem('ai_model', finalModel);
+        localStorage.setItem('gemini_model', finalModel);
+    }
+
     console.log('[AI Config] Using model:', finalModel);
 
     return { provider, apiKey, model: finalModel };

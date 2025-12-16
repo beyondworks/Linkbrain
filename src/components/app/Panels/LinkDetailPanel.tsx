@@ -155,6 +155,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
 
     // Sync chat with Firestore/Props
     useEffect(() => {
+        console.log('[LinkDetailPanel] Mounted, onUpdateClip available:', !!onUpdateClip, 'link.id:', link.id);
         if (link.chatHistory) {
             setChatMessages(link.chatHistory);
             if (link.chatHistory.length > 0) setChatExpanded(true);
