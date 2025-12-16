@@ -129,6 +129,9 @@ export const InstallInstructionModal = ({ isOpen, onClose, theme: propTheme }: I
                         </div>
                     )}
                 </div>
+
+                {/* Bottom Spacer - ensures visible padding */}
+                <div className="h-8"></div>
             </motion.div>
         </div>,
         document.body
