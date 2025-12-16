@@ -327,38 +327,60 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    // If we have links but NO categories (e.g. after moving to real DB),
    // scan links and create real category documents for them.
    // This runs once to restore the user's categories as "real" data.
+   // IMPORTANT: Check firebaseCategories directly to avoid race conditions
    useEffect(() => {
       const migrateCategories = async () => {
-         // Only run if we have loaded links, but have 0 categories loaded (and finished loading)
-         if (links.length > 0 && categories.length === 0 && !dataLoading) {
-            console.log("Auto-migrating categories from links...");
-            const uniqueCategories = new Set<string>();
-            links.forEach(l => {
-               if (l.categoryId && l.categoryId !== 'uncategorized') {
-                  uniqueCategories.add(l.categoryId);
+         // Debug logging
+         console.log('[Category Migration] Checking...', {
+            firebaseClipsCount: firebaseClips?.length || 0,
+            firebaseCategoriesCount: firebaseCategories?.length || 0,
+            dataLoading,
+            firebaseCategoriesValue: firebaseCategories
+         });
+
+         // Only run if:
+         // 1. We have loaded links (firebaseClips exists and has items)
+         // 2. Data loading is finished
+         const hasLinks = firebaseClips && firebaseClips.length > 0;
+
+         if (hasLinks && !dataLoading && firebaseCategories !== null && firebaseCategories !== undefined) {
+            // Get existing category IDs
+            const existingCategoryIds = new Set(firebaseCategories.map(c => c.id));
+
+            // Find categories mentioned in clips but not in categories collection
+            const missingCategories = new Set<string>();
+            firebaseClips.forEach(clip => {
+               if (clip.category && clip.category !== 'uncategorized' && !existingCategoryIds.has(clip.category)) {
+                  missingCategories.add(clip.category);
                }
             });
 
-            // Palette to assign consistent colors
-            const palette = Object.keys(CATEGORY_COLORS).filter(c => !c.includes('slate'));
+            console.log('[Category Migration] Missing categories:', Array.from(missingCategories));
 
-            let colorIdx = 0;
-            const promises = Array.from(uniqueCategories).map(async (catId) => {
-               const color = palette[colorIdx % palette.length];
-               colorIdx++;
+            if (missingCategories.size > 0) {
+               console.log("Restoring missing categories from links...");
 
-               // Use the createCategory from useClips which we updated to support UPSERT (setDoc)
-               // This ensures we don't accidentally duplicate if it's lagging
-               await createCategory({
-                  id: catId,
-                  name: catId.charAt(0).toUpperCase() + catId.slice(1),
-                  color: color
+               // Palette to assign consistent colors
+               const palette = Object.keys(CATEGORY_COLORS).filter(c => !c.includes('slate'));
+
+               let colorIdx = 0;
+               const promises = Array.from(missingCategories).map(async (catId) => {
+                  const color = palette[colorIdx % palette.length];
+                  colorIdx++;
+
+                  // Use the createCategory from useClips which we updated to support UPSERT (setDoc)
+                  // This ensures we don't accidentally duplicate if it's lagging
+                  await createCategory({
+                     id: catId,
+                     name: catId.charAt(0).toUpperCase() + catId.slice(1),
+                     color: color
+                  });
                });
-            });
 
-            if (promises.length > 0) {
                await Promise.all(promises);
-               toast.success("Categories restored from links!");
+               toast.success(language === 'ko'
+                  ? `${missingCategories.size}개 카테고리가 복구되었습니다!`
+                  : `${missingCategories.size} categories restored!`);
             }
          }
       };
@@ -367,7 +389,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
       // We rely on dataLoading flag to ensure we don't run too early.
       migrateCategories();
 
-   }, [links.length, categories.length, dataLoading]);
+   }, [firebaseClips, firebaseCategories, dataLoading]);
 
    // Sync Firebase collections to local state
    useEffect(() => {
@@ -2212,27 +2234,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             </div>
          )}
 
-         {/* Analyzing Overlay */}
-         <AnimatePresence>
-            {isAnalyzing && (
-               <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className={`fixed inset-0 z-[150] backdrop-blur-sm hidden md:flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950/95' : 'bg-slate-50/95'}`}
-               >
-                  <div className="w-16 h-16 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
-                     <div className="w-8 h-8 rounded-full bg-[#21DBA4]" />
-                  </div>
-                  <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                     {language === 'ko' ? '링크 분석 중...' : 'Analyzing link...'}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                     {language === 'ko' ? 'AI가 콘텐츠를 요약하고 있습니다' : 'AI is summarizing the content'}
-                  </p>
-               </motion.div>
-            )}
-         </AnimatePresence>
+         {/* Analyzing Overlay - REMOVED: Now using AnalysisIndicator in header only */}
+         {/* Analysis status is shown in the header indicator */}
 
          {/* Detail Overlay */}
          {selectedLink && (
