@@ -291,7 +291,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
          images: clip.images || (clip.image ? [clip.image] : []),
          author: clip.author || '',
          authorHandle: (clip.authorProfile as any)?.handle || '',
-         authorAvatar: (clip.authorProfile as any)?.avatar || ''
+         authorAvatar: (clip.authorProfile as any)?.avatar || '',
+         chatHistory: clip.chatHistory || []  // ← CRITICAL: Include chatHistory!
       };
    };
 

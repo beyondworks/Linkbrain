@@ -153,14 +153,17 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         }
     }, [chatMessages, chatExpanded]);
 
-    // Sync chat with Firestore/Props
+    // Sync chat with Firestore/Props - runs when link data changes
     useEffect(() => {
-        console.log('[LinkDetailPanel] Mounted, onUpdateClip available:', !!onUpdateClip, 'link.id:', link.id);
-        if (link.chatHistory) {
+        console.log('[LinkDetailPanel] link changed, id:', link.id, 'chatHistory:', link.chatHistory?.length || 0, 'messages');
+        if (link.chatHistory && link.chatHistory.length > 0) {
             setChatMessages(link.chatHistory);
-            if (link.chatHistory.length > 0) setChatExpanded(true);
+            setChatExpanded(true);
+        } else {
+            // Reset if no chat history (new clip or cleared)
+            setChatMessages([]);
         }
-    }, [link.chatHistory]);
+    }, [link.id, link.chatHistory?.length, JSON.stringify(link.chatHistory)]);
 
     // Clear chat history for this clip
     const clearChatHistory = () => {

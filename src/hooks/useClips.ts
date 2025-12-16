@@ -255,6 +255,14 @@ export const useClips = (): UseClipsReturn => {
                 id: doc.id,
                 ...doc.data()
             })) as ClipData[];
+
+            // Debug: Check if any clips have chatHistory
+            const clipsWithChat = clipsData.filter(c => c.chatHistory && c.chatHistory.length > 0);
+            console.log('[onSnapshot] Total clips:', clipsData.length, 'with chatHistory:', clipsWithChat.length);
+            if (clipsWithChat.length > 0) {
+                clipsWithChat.forEach(c => console.log('[onSnapshot] Clip', c.id, 'has', c.chatHistory?.length, 'chat messages'));
+            }
+
             // Sort client-side by createdAt (descending)
             clipsData.sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0).getTime();
@@ -273,6 +281,11 @@ export const useClips = (): UseClipsReturn => {
     const updateClip = useCallback(async (id: string, updates: Partial<ClipData>): Promise<ClipData> => {
         if (!user) throw new Error('User must be authenticated');
 
+        console.log('[updateClip] Called with id:', id, 'updates keys:', Object.keys(updates));
+        if (updates.chatHistory) {
+            console.log('[updateClip] chatHistory length:', updates.chatHistory.length);
+        }
+
         setLoading(true);
         setError(null);
         try {
@@ -281,10 +294,13 @@ export const useClips = (): UseClipsReturn => {
                 ...updates,
                 updatedAt: new Date().toISOString(),
             };
+            console.log('[updateClip] Sending to Firestore...');
             await updateDoc(docRef, updateData);
+            console.log('[updateClip] ✅ Firestore write completed');
             // Note: No setClips here - onSnapshot listener handles it
             return { id, ...updateData } as ClipData;
         } catch (err) {
+            console.error('[updateClip] ❌ Firestore write failed:', err);
             handleError(err, 'Failed to update clip');
             throw err;
         } finally {
