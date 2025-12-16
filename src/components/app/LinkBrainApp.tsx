@@ -316,7 +316,19 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    useEffect(() => {
       // Always sync, even when array is empty (for deletion persistence)
       if (firebaseCategories) {
-         setCategories(firebaseCategories.map(c => ({
+         // Deduplicate categories by name (keep first occurrence)
+         const seen = new Set<string>();
+         const uniqueCategories = firebaseCategories.filter(c => {
+            const name = c.name?.toLowerCase() || '';
+            if (seen.has(name)) {
+               console.warn('[Categories] Duplicate found:', c.name, 'id:', c.id);
+               return false;
+            }
+            seen.add(name);
+            return true;
+         });
+
+         setCategories(uniqueCategories.map(c => ({
             id: c.id || '',
             name: c.name || '',
             color: c.color || 'bg-slate-500' // Default fallback
