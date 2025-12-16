@@ -19,11 +19,17 @@ export const getAIConfig = (): AIConfig | null => {
     const apiKey = localStorage.getItem('ai_api_key');
     const model = localStorage.getItem('ai_model');
 
+    console.log('[AI Config] Provider:', provider, 'Model:', model, 'API Key exists:', !!apiKey);
+
     if (!provider || !apiKey || apiKey.length < 10) {
+        console.warn('[AI Config] Missing config - provider:', provider, 'apiKey length:', apiKey?.length);
         return null;
     }
 
-    return { provider, apiKey, model: model || getDefaultModel(provider) };
+    const finalModel = model || getDefaultModel(provider);
+    console.log('[AI Config] Using model:', finalModel);
+
+    return { provider, apiKey, model: finalModel };
 };
 
 const getDefaultModel = (provider: 'openai' | 'gemini'): string => {

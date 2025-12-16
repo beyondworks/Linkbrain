@@ -209,21 +209,22 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
             if (result.success && result.content) {
                 const aiMsg = { role: 'ai' as const, content: result.content!, timestamp: Date.now() };
 
-                // Update state first
-                setChatMessages(prev => {
-                    const newHistory = [...prev, aiMsg];
+                // Get current messages and add AI response
+                const currentMessages = [...chatMessages, userMsg, aiMsg];
+                setChatMessages(currentMessages);
 
-                    // Persist to Firestore (async, don't block UI)
-                    setTimeout(() => {
-                        if (onUpdateClip && link.id) {
-                            console.log('[Chat] Saving history, messages:', newHistory.length);
-                            onUpdateClip(link.id, { chatHistory: newHistory });
-                        }
-                    }, 0);
-
-                    return newHistory;
-                });
+                // Persist to Firestore directly (not in callback)
+                if (onUpdateClip && link.id) {
+                    console.log('[Chat] Saving history to Firestore, messages:', currentMessages.length);
+                    try {
+                        await onUpdateClip(link.id, { chatHistory: currentMessages });
+                        console.log('[Chat] History saved successfully');
+                    } catch (saveError) {
+                        console.error('[Chat] Failed to save history:', saveError);
+                    }
+                }
             } else {
+                console.error('[Chat] AI response failed:', result.error);
                 const errorMsg = { role: 'ai' as const, content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.', timestamp: Date.now() };
                 setChatMessages(prev => [...prev, errorMsg]);
             }

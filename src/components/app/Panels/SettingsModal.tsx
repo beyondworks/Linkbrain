@@ -932,15 +932,14 @@ const IntegrationCard = ({ name, icon, description, connected, comingSoon, t, th
     </div>
 );
 
-// AI Settings Component
+// AI Settings Component - Using REAL OpenAI API model names
 const AI_MODELS = {
     openai: [
-        { id: 'gpt-5.2', name: 'GPT-5.2 (Recommended)' },
-        { id: 'gpt-5.2-pro', name: 'GPT-5.2 Pro (Smartest)' },
-        { id: 'gpt-5-mini', name: 'GPT-5 Mini (Fast)' },
-        { id: 'gpt-5-nano', name: 'GPT-5 Nano (Fastest)' },
-        { id: 'gpt-4.1', name: 'GPT-4.1 (Non-Reasoning)' },
-        { id: 'gpt-4o', name: 'GPT-4o' },
+        { id: 'gpt-4o', name: 'GPT-4o (Recommended)' },
+        { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Fast & Cheap)' },
+        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+        { id: 'gpt-4', name: 'GPT-4' },
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo (Fastest)' },
     ],
     gemini: [
         { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Recommended)' },
