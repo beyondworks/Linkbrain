@@ -373,7 +373,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const pullDistanceRef = useRef(0);
    const pullIndicatorRef = useRef<HTMLDivElement>(null);
    const pullSpinnerRef = useRef<HTMLDivElement>(null);
-   const pullTextRef = useRef<HTMLSpanElement>(null);
+   const pullTextRef = useRef<HTMLDivElement>(null);
    const mainContentWrapperRef = useRef<HTMLDivElement>(null);
 
    // Sidebar Toggles
@@ -1497,13 +1497,26 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                className={`w-7 h-7 rounded-full border-[3px] border-t-transparent ${theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]'}`}
                style={{ opacity: 0, transform: 'rotate(0deg) scale(0)', willChange: 'transform, opacity' }}
             />
-            <span
+            {/* Bounce arrow indicator - shows when ready to release */}
+            <div
                ref={pullTextRef}
-               className={`text-xs font-medium mt-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}
+               className="mt-1"
                style={{ opacity: 0 }}
             >
-               {isRefreshing ? (language === 'ko' ? '새로고침 중...' : 'Refreshing...') : (language === 'ko' ? '놓으면 새로고침' : 'Release to refresh')}
-            </span>
+               <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={theme === 'dark' ? '#64748b' : '#94a3b8'}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="animate-bounce"
+               >
+                  <path d="M12 5v14M5 12l7-7 7 7" />
+               </svg>
+            </div>
          </div>
 
          {/* Main Content Wrapper - translates down for pull-to-refresh */}
@@ -1516,7 +1529,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             <main ref={mainContentRef} className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar">
 
                {/* Top Header */}
-               <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
+               <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 overflow-hidden ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
                   <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
                      <div className="flex items-center gap-3 md:hidden">
                         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
