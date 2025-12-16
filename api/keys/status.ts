@@ -17,7 +17,7 @@ import { setCorsHeaders, handlePreflight } from '../_lib/cors';
 if (getApps().length === 0) {
     initializeApp({
         credential: cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
+            projectId: process.env.VITE_FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
             privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
         })

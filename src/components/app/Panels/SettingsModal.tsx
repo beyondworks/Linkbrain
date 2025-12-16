@@ -547,7 +547,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
             const { auth } = await import('../../../lib/firebase');
             const user = auth.currentUser;
             if (!user) {
-                toast.error(t('language') === 'ko' ? '로그인이 필요합니다' : 'Login required');
+                toast.error(t('loginRequired'));
                 return;
             }
 
@@ -565,13 +565,13 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
                 setApiKey(data.key);
                 setKeyPrefix(data.keyPrefix);
                 setShowKey(true);
-                toast.success(t('language') === 'ko' ? 'API 키가 생성되었습니다!' : 'API key generated!');
+                toast.success(t('apiKeyGenerated'));
             } else {
                 toast.error(data.error || 'Failed to generate key');
             }
         } catch (err) {
             console.error('Generate key error:', err);
-            toast.error(t('language') === 'ko' ? 'API 키 생성 실패' : 'Failed to generate API key');
+            toast.error(t('apiKeyGenerateFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -595,10 +595,10 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
                 setApiKey(null);
                 setKeyPrefix(null);
                 setShowKey(false);
-                toast.success(t('language') === 'ko' ? 'API 키가 삭제되었습니다' : 'API key revoked');
+                toast.success(t('apiKeyRevoked'));
             }
         } catch (err) {
-            toast.error(t('language') === 'ko' ? 'API 키 삭제 실패' : 'Failed to revoke API key');
+            toast.error(t('apiKeyGenerateFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -608,7 +608,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
         if (apiKey) {
             navigator.clipboard.writeText(apiKey);
             setCopied(true);
-            toast.success(t('language') === 'ko' ? '복사됨!' : 'Copied!');
+            toast.success(t('copied'));
             setTimeout(() => setCopied(false), 2000);
         }
     };

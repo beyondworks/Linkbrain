@@ -177,7 +177,20 @@ export const TRANSLATIONS = {
         languageToggleShortcut: "Toggle Language",
         saveShortcuts: "Save Shortcuts",
         scrollToTop: "Scroll to top",
-        aiSetupRequired: "Set up your API key in Settings to use AI features"
+        aiSetupRequired: "Set up your API key in Settings to use AI features",
+        // API Key Integration
+        generateApiKey: "Generate API Key",
+        regenerateKey: "Regenerate Key",
+        revokeKey: "Revoke",
+        currentKey: "Current Key",
+        apiKeyGenerated: "API key generated!",
+        apiKeyRevoked: "API key revoked",
+        apiKeyGenerateFailed: "Failed to generate API key",
+        apiKeyImportant: "This key is only shown once. Save it securely.",
+        apiKeyDescription: "Generate an API key to integrate LinkBrain with external services",
+        iphoneShortcuts: "Use with iPhone Shortcuts",
+        loginRequired: "Login required",
+        copied: "Copied!"
     },
     ko: {
         home: "홈",
@@ -356,7 +369,20 @@ export const TRANSLATIONS = {
         languageToggleShortcut: "언어 전환",
         saveShortcuts: "단축키 저장",
         scrollToTop: "맨 위로 이동",
-        aiSetupRequired: "AI 기능을 사용하려면 설정에서 API 키를 입력하세요"
+        aiSetupRequired: "AI 기능을 사용하려면 설정에서 API 키를 입력하세요",
+        // API Key Integration
+        generateApiKey: "API 키 생성",
+        regenerateKey: "키 재발급",
+        revokeKey: "삭제",
+        currentKey: "현재 키",
+        apiKeyGenerated: "API 키가 생성되었습니다!",
+        apiKeyRevoked: "API 키가 삭제되었습니다",
+        apiKeyGenerateFailed: "API 키 생성 실패",
+        apiKeyImportant: "이 키는 한 번만 표시됩니다. 안전한 곳에 저장하세요.",
+        apiKeyDescription: "API 키를 생성하여 외부 서비스에서 LinkBrain을 연동하세요",
+        iphoneShortcuts: "iPhone 단축어로 사용하기",
+        loginRequired: "로그인이 필요합니다",
+        copied: "복사됨!"
     }
 } as const;
 
