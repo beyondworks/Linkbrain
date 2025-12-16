@@ -324,67 +324,16 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    }, [firebaseCategories]);
 
    // --- Auto-Migration for Legacy/Dynamic Categories ---
-   // If we have links with categories that don't exist in DB, create them.
-   // Uses auto-generated IDs to avoid conflicts between users.
-   // IMPORTANT: Use ref to prevent infinite loop
+   // DISABLED: This was causing categories to be recreated after user deletes them.
+   // Users now have full control over their categories.
+   // If you need to restore categories, do it manually or re-enable this code.
+   /*
    const hasAttemptedMigrationRef = useRef(false);
-
+   
    useEffect(() => {
-      // CRITICAL: Only attempt migration once per session to prevent infinite loop
-      if (hasAttemptedMigrationRef.current) {
-         return;
-      }
-
-      const migrateCategories = async () => {
-         const hasLinks = firebaseClips && firebaseClips.length > 0;
-         const categoriesLoaded = firebaseCategories !== null && firebaseCategories !== undefined;
-
-         if (!hasLinks || dataLoading || !categoriesLoaded) {
-            return;
-         }
-
-         // Mark as attempted BEFORE doing anything
-         hasAttemptedMigrationRef.current = true;
-
-         // Get existing category NAMES (not IDs) since clips store names
-         const existingCategoryNames = new Set(firebaseCategories.map(c => c.name?.toLowerCase()));
-
-         // Find categories mentioned in clips but not in categories collection (by name)
-         const missingCategories = new Set<string>();
-         firebaseClips.forEach(clip => {
-            const catName = clip.category;
-            if (catName && catName !== 'uncategorized' && !existingCategoryNames.has(catName.toLowerCase())) {
-               missingCategories.add(catName);
-            }
-         });
-
-         if (missingCategories.size > 0) {
-            console.log('[Category Migration] Restoring:', Array.from(missingCategories));
-
-            const palette = Object.keys(CATEGORY_COLORS).filter(c => !c.includes('slate'));
-
-            let colorIdx = 0;
-            const promises = Array.from(missingCategories).map(async (catName) => {
-               const color = palette[colorIdx % palette.length];
-               colorIdx++;
-
-               // DON'T pass id - let Firebase auto-generate a unique ID
-               await createCategory({
-                  name: catName.charAt(0).toUpperCase() + catName.slice(1),
-                  color: color
-               });
-            });
-
-            await Promise.all(promises);
-            toast.success(language === 'ko'
-               ? `${missingCategories.size}개 카테고리가 복구되었습니다!`
-               : `${missingCategories.size} categories restored!`);
-         }
-      };
-
-      migrateCategories();
-
+      // ... migration code disabled ...
    }, [firebaseClips, firebaseCategories, dataLoading]);
+   */
 
    // Sync Firebase collections to local state
    useEffect(() => {
