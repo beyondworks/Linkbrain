@@ -3,6 +3,7 @@
  * 
  * Centralized CORS configuration with domain allowlist.
  * Replaces Access-Control-Allow-Origin: * with specific domains.
+ * (Trigger Rebuild)
  */
 
 // Allowed origins for CORS
