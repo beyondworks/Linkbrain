@@ -8,6 +8,7 @@
  * 
  * Request: { url: string, language?: string }
  * Response: Clip object (compatible with existing frontend)
+ * (Trigger Rebuild)
  */
 
 import { createClipFromContent, detectPlatform } from './_lib/clip-service';
