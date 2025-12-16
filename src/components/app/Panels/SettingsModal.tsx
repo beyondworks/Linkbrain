@@ -619,7 +619,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
             <div className="space-y-3 md:space-y-4">
                 <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                     <Key size={14} />
-                    {t('language') === 'ko' ? 'API 키' : 'API Key'}
+                    {t('apiKey')}
                 </h4>
 
                 <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
@@ -627,7 +627,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                                    {t('language') === 'ko' ? '현재 키' : 'Current Key'}
+                                    {t('currentKey')}
                                 </span>
                                 <span className="text-xs text-[#21DBA4] font-medium">Active</span>
                             </div>
@@ -656,10 +656,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
 
                             {apiKey && (
                                 <div className={`p-3 rounded-lg text-xs ${theme === 'dark' ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-700'}`}>
-                                    <strong>⚠️ {t('language') === 'ko' ? '중요' : 'Important'}:</strong>{' '}
-                                    {t('language') === 'ko'
-                                        ? '이 키는 한 번만 표시됩니다. 안전한 곳에 저장하세요.'
-                                        : 'This key is only shown once. Save it securely.'}
+                                    <strong>⚠️ Important:</strong> {t('apiKeyImportant')}
                                 </div>
                             )}
 
@@ -669,32 +666,28 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
                                     disabled={isLoading}
                                     className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-colors ${theme === 'dark' ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
                                 >
-                                    {t('language') === 'ko' ? '키 재발급' : 'Regenerate Key'}
+                                    {t('regenerateKey')}
                                 </button>
                                 <button
                                     onClick={handleRevokeKey}
                                     disabled={isLoading}
                                     className="py-2 px-3 rounded-lg text-xs font-bold text-red-500 border border-red-200 hover:bg-red-50 transition-colors"
                                 >
-                                    {t('language') === 'ko' ? '삭제' : 'Revoke'}
+                                    {t('revokeKey')}
                                 </button>
                             </div>
                         </div>
                     ) : (
                         <div className="text-center py-4">
                             <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                                {t('language') === 'ko'
-                                    ? 'API 키를 생성하여 외부 서비스에서 LinkBrain을 연동하세요'
-                                    : 'Generate an API key to integrate LinkBrain with external services'}
+                                {t('apiKeyDescription')}
                             </p>
                             <button
                                 onClick={handleGenerateKey}
                                 disabled={isLoading}
                                 className="px-6 py-2.5 bg-[#21DBA4] text-white rounded-xl text-sm font-bold hover:bg-[#1bc290] transition-colors disabled:opacity-50"
                             >
-                                {isLoading
-                                    ? '...'
-                                    : t('language') === 'ko' ? 'API 키 생성' : 'Generate API Key'}
+                                {isLoading ? '...' : t('generateApiKey')}
                             </button>
                         </div>
                     )}
@@ -703,20 +696,14 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
                 {/* Usage Instructions */}
                 <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
                     <h5 className={`text-sm font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                        📱 {t('language') === 'ko' ? 'iPhone 단축어로 사용하기' : 'Use with iPhone Shortcuts'}
+                        📱 {t('iphoneShortcuts')}
                     </h5>
                     <ol className={`text-xs space-y-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                         <li>1. {t('language') === 'ko' ? 'API 키를 생성하고 복사하세요' : 'Generate and copy your API key'}</li>
                         <li>2. {t('language') === 'ko' ? '단축어 앱에서 새 단축어를 만드세요' : 'Create a new shortcut in the Shortcuts app'}</li>
-                        <li>3. {t('language') === 'ko'
-                            ? '"URL 콘텐츠 가져오기" 액션을 추가하세요'
-                            : 'Add "Get Contents of URL" action'}</li>
-                        <li>4. {t('language') === 'ko'
-                            ? `URL: https://linkbrain.cloud/api/analyze, 방식: POST`
-                            : `URL: https://linkbrain.cloud/api/analyze, Method: POST`}</li>
-                        <li>5. {t('language') === 'ko'
-                            ? '헤더에 X-API-Key: [복사한 키] 추가'
-                            : 'Add header X-API-Key: [your key]'}</li>
+                        <li>3. {t('language') === 'ko' ? '"URL 콘텐츠 가져오기" 액션을 추가하세요' : 'Add "Get Contents of URL" action'}</li>
+                        <li>4. URL: https://linkbrain.cloud/api/analyze, {t('language') === 'ko' ? '방식: POST' : 'Method: POST'}</li>
+                        <li>5. {t('language') === 'ko' ? '헤더에 X-API-Key: [복사한 키] 추가' : 'Add header X-API-Key: [your key]'}</li>
                     </ol>
                 </div>
             </div>
@@ -725,16 +712,16 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
             <div className="p-3 md:p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 text-blue-700">
                 <Zap size={20} className="shrink-0 mt-0.5" />
                 <div className="text-xs md:text-sm">
-                    <p className="font-bold mb-0.5">Supercharge your Brain</p>
-                    <p className="opacity-80 leading-relaxed">Connect your favorite tools to automatically import content and sync your knowledge base.</p>
+                    <p className="font-bold mb-0.5">{t('language') === 'ko' ? '더 강력한 브레인 만들기' : 'Supercharge your Brain'}</p>
+                    <p className="opacity-80 leading-relaxed">{t('language') === 'ko' ? '자주 사용하는 도구를 연결하여 콘텐츠를 자동으로 가져오고 지식 베이스를 동기화하세요.' : 'Connect your favorite tools to automatically import content and sync your knowledge base.'}</p>
                 </div>
             </div>
 
             <div className="space-y-3 md:space-y-4">
-                <IntegrationCard name="Notion" icon="N" description="Sync your saved links to a Notion database" comingSoon t={t} theme={theme} />
-                <IntegrationCard name="YouTube" icon="Y" description="Import liked videos and playlists automatically" comingSoon t={t} theme={theme} />
-                <IntegrationCard name="Readwise" icon="R" description="Sync highlights from articles and books" comingSoon t={t} theme={theme} />
-                <IntegrationCard name="Slack" icon="S" description="Save links directly from Slack conversations" comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Notion" icon="N" description={t('language') === 'ko' ? 'Notion 데이터베이스와 저장된 링크 동기화' : 'Sync your saved links to a Notion database'} comingSoon t={t} theme={theme} />
+                <IntegrationCard name="YouTube" icon="Y" description={t('language') === 'ko' ? '좋아요한 동영상과 재생목록 자동 가져오기' : 'Import liked videos and playlists automatically'} comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Readwise" icon="R" description={t('language') === 'ko' ? '글과 책에서 하이라이트 동기화' : 'Sync highlights from articles and books'} comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Slack" icon="S" description={t('language') === 'ko' ? 'Slack 대화에서 바로 링크 저장' : 'Save links directly from Slack conversations'} comingSoon t={t} theme={theme} />
             </div>
         </div>
     );
