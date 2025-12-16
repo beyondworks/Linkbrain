@@ -186,13 +186,15 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         const userTimestamp = Date.now();
         const userMsg = { role: 'user' as const, content: userMessage, timestamp: userTimestamp };
 
+        // Build full history including new user message
+        const historyWithUser = [...chatMessages, userMsg];
+
         setChatInput('');
-        setChatMessages(prev => [...prev, userMsg]);
+        setChatMessages(historyWithUser);
         setChatLoading(true);
-        setChatExpanded(true); // Auto-expand when sending message
+        setChatExpanded(true);
 
         try {
-            // Build context from clip data
             const clipContext = [
                 `Title: ${link.title || 'Untitled'}`,
                 `URL: ${link.url}`,
@@ -209,31 +211,28 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
             if (result.success && result.content) {
                 const aiMsg = { role: 'ai' as const, content: result.content!, timestamp: Date.now() };
 
-                // Get current messages and add AI response
-                const currentMessages = [...chatMessages, userMsg, aiMsg];
-                setChatMessages(currentMessages);
+                // Build complete history with AI response
+                const fullHistory = [...historyWithUser, aiMsg];
+                setChatMessages(fullHistory);
 
-                // Persist to Firestore directly (not in callback)
+                // Save to Firestore
                 if (onUpdateClip && link.id) {
-                    console.log('[Chat] Saving history to Firestore, messages:', currentMessages.length);
-                    try {
-                        await onUpdateClip(link.id, { chatHistory: currentMessages });
-                        console.log('[Chat] History saved successfully');
-                    } catch (saveError) {
-                        console.error('[Chat] Failed to save history:', saveError);
-                    }
+                    console.log('[Chat] Saving to Firestore:', fullHistory.length, 'messages');
+                    await onUpdateClip(link.id, { chatHistory: fullHistory });
+                    console.log('[Chat] ✅ Saved successfully');
+                } else {
+                    console.warn('[Chat] Cannot save - onUpdateClip:', !!onUpdateClip, 'link.id:', link.id);
                 }
             } else {
-                console.error('[Chat] AI response failed:', result.error);
-                const errorMsg = { role: 'ai' as const, content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.', timestamp: Date.now() };
-                setChatMessages(prev => [...prev, errorMsg]);
+                console.error('[Chat] AI failed:', result.error);
+                const errorMsg = { role: 'ai' as const, content: language === 'ko' ? '답변을 생성할 수 없습니다.' : 'Unable to generate response.', timestamp: Date.now() };
+                setChatMessages([...historyWithUser, errorMsg]);
             }
         } catch (error) {
             console.error('[Chat] Error:', error);
-            setChatMessages(prev => [...prev, { role: 'ai', content: 'Error occurred. Please check your API settings.', timestamp: Date.now() }]);
+            setChatMessages([...historyWithUser, { role: 'ai', content: 'Error occurred.', timestamp: Date.now() }]);
         } finally {
             setChatLoading(false);
-            // Re-focus input after sending
             setTimeout(() => chatInputRef.current?.focus(), 100);
         }
     };
