@@ -209,13 +209,18 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
             if (result.success && result.content) {
                 const aiMsg = { role: 'ai' as const, content: result.content!, timestamp: Date.now() };
 
-                // Use callback to get current state and add AI response
+                // Update state first
                 setChatMessages(prev => {
                     const newHistory = [...prev, aiMsg];
-                    // Persist to Firestore
-                    if (onUpdateClip) {
-                        onUpdateClip(link.id, { chatHistory: newHistory });
-                    }
+
+                    // Persist to Firestore (async, don't block UI)
+                    setTimeout(() => {
+                        if (onUpdateClip && link.id) {
+                            console.log('[Chat] Saving history, messages:', newHistory.length);
+                            onUpdateClip(link.id, { chatHistory: newHistory });
+                        }
+                    }, 0);
+
                     return newHistory;
                 });
             } else {
