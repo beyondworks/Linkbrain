@@ -230,10 +230,19 @@ Generate JSON metadata based STRICTLY on the CONTENT above:
   "title": "Descriptive title in ${langName} (max 60 chars, from CONTENT only)",
   "summary": "3-5 sentence summary in ${langName} (from CONTENT only, no additions)",
   "keywords": ["5 relevant keywords in ${langName} from CONTENT"],
-  "category": "One of: Design, Dev, AI, Product, Other",
+  "category": "Choose the MOST relevant from: Design, Dev, AI, Product, Business, Marketing, Finance, Stock, Investment, Crypto, Health, Fitness, Education, Science, News, Entertainment, Music, Gaming, Travel, Food, Lifestyle, Sports, Fashion, Art, Photography, Automation, Productivity, Career, Startup, Other",
   "sentiment": "positive | neutral | negative",
   "type": "article | video | image | social_post | website"
 }
+
+CATEGORY HINTS (detect even from small keywords):
+- Stock/Investment/Finance: 주식, 투자, 증권, 배당, ETF, 펀드, 재테크, 경제, stock, invest, dividend, portfolio
+- Crypto: 비트코인, 이더리움, 암호화폐, 코인, NFT, 블록체인, crypto, bitcoin, ethereum
+- Health/Fitness: 건강, 운동, 헬스, 다이어트, 영양, 의료, health, fitness, workout, nutrition
+- Marketing: 마케팅, 광고, 브랜딩, SEO, 콘텐츠, 소셜미디어, marketing, ads, branding
+- Business: 사업, 경영, 창업, 스타트업, 비즈니스, 회사, business, startup, entrepreneur
+- Automation: 자동화, RPA, 워크플로우, 노코드, Zapier, Make, automation, workflow
+- Productivity: 생산성, 효율, 시간관리, 습관, 노션, productivity, efficiency, time management
 
 Return ONLY valid JSON, no markdown or explanations.`;
 
