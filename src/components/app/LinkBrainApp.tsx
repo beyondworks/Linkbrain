@@ -1542,7 +1542,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             <main ref={mainContentRef} className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar">
 
                {/* Top Header */}
-               <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 overflow-hidden ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
+               <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
                   <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
                      <div className="flex items-center gap-3 md:hidden">
                         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
