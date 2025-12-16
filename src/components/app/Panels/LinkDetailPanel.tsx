@@ -183,9 +183,11 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         if (!chatInput.trim() || chatLoading) return;
 
         const userMessage = chatInput.trim();
-        const timestamp = Date.now();
+        const userTimestamp = Date.now();
+        const userMsg = { role: 'user' as const, content: userMessage, timestamp: userTimestamp };
+
         setChatInput('');
-        setChatMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp }]);
+        setChatMessages(prev => [...prev, userMsg]);
         setChatLoading(true);
         setChatExpanded(true); // Auto-expand when sending message
 
@@ -206,13 +208,16 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
 
             if (result.success && result.content) {
                 const aiMsg = { role: 'ai' as const, content: result.content!, timestamp: Date.now() };
-                const newHistory = [...chatMessages, { role: 'user' as const, content: userMessage, timestamp }, aiMsg];
-                setChatMessages(newHistory);
 
-                // Persist to Firestore
-                if (onUpdateClip) {
-                    onUpdateClip(link.id, { chatHistory: newHistory });
-                }
+                // Use callback to get current state and add AI response
+                setChatMessages(prev => {
+                    const newHistory = [...prev, aiMsg];
+                    // Persist to Firestore
+                    if (onUpdateClip) {
+                        onUpdateClip(link.id, { chatHistory: newHistory });
+                    }
+                    return newHistory;
+                });
             } else {
                 const errorMsg = { role: 'ai' as const, content: language === 'ko' ? '답변을 생성할 수 없습니다. 다시 시도해주세요.' : 'Unable to generate response. Please try again.', timestamp: Date.now() };
                 setChatMessages(prev => [...prev, errorMsg]);

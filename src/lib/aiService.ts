@@ -46,13 +46,8 @@ export const validateApiKey = async (provider: 'openai' | 'gemini', apiKey: stri
 // Call OpenAI API
 export const callOpenAI = async (apiKey: string, model: string, prompt: string): Promise<AIResponse> => {
     try {
-        // Map model IDs to actual OpenAI model names
-        const modelMapping: Record<string, string> = {
-            'gpt-5.2': 'gpt-4o', // Fallback to gpt-4o as GPT-5.2 may not exist yet
-            'gpt-4o': 'gpt-4o',
-            'gpt-4o-mini': 'gpt-4o-mini',
-        };
-        const actualModel = modelMapping[model] || 'gpt-4o';
+        // Use model directly - SettingsModal now uses real OpenAI model names
+        const actualModel = model || 'gpt-4o';
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -85,16 +80,8 @@ export const callOpenAI = async (apiKey: string, model: string, prompt: string):
 // Call Gemini API
 export const callGemini = async (apiKey: string, model: string, prompt: string): Promise<AIResponse> => {
     try {
-        // Map model IDs to actual Gemini model names
-        const modelMapping: Record<string, string> = {
-            'gemini-3-pro': 'gemini-1.5-pro', // Fallback as Gemini 3 may not exist yet
-            'gemini-2.5-pro': 'gemini-1.5-pro',
-            'gemini-2.5-flash-lite': 'gemini-1.5-flash',
-            'gemini-2.5-flash': 'gemini-1.5-flash',
-            'gemini-2.0-flash': 'gemini-2.0-flash-exp',
-            'gemini-2.0-flash-lite': 'gemini-1.5-flash',
-        };
-        const actualModel = modelMapping[model] || 'gemini-1.5-flash';
+        // Use model directly - SettingsModal now uses real Gemini model names
+        const actualModel = model || 'gemini-1.5-flash';
 
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${apiKey}`,

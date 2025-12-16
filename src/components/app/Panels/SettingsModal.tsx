@@ -935,17 +935,15 @@ const IntegrationCard = ({ name, icon, description, connected, comingSoon, t, th
 // AI Settings Component
 const AI_MODELS = {
     openai: [
-        { id: 'gpt-5.2', name: 'GPT-5.2 (Recommended)' },
-        { id: 'gpt-4o', name: 'GPT-4o' },
-        { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+        { id: 'o1', name: 'o1 (Most Capable)' },
+        { id: 'gpt-4o', name: 'GPT-4o (Recommended)' },
+        { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Fast)' },
+        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
     ],
     gemini: [
-        { id: 'gemini-3-pro', name: 'Gemini 3 Pro (Recommended)' },
-        { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
-        { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite' },
-        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
-        { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
-        { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash-Lite' },
+        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Recommended)' },
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Fast)' },
+        { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Experimental)' },
     ]
 };
 
