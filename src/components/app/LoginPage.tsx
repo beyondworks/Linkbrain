@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Logo } from '../Logo';
 import { motion } from 'motion/react';
 import { ArrowRight, Check, AlertCircle } from 'lucide-react';
@@ -7,6 +7,8 @@ import {
    signInWithEmailAndPassword,
    createUserWithEmailAndPassword,
    signInWithPopup,
+   signInWithRedirect,
+   getRedirectResult,
    GoogleAuthProvider
 } from 'firebase/auth';
 import { toast } from 'sonner';
@@ -107,6 +109,7 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
          case 'auth/invalid-email':
             return t.errorInvalidEmail;
          case 'auth/wrong-password':
+         case 'auth/invalid-credential':
             return t.errorWrongPassword;
          case 'auth/user-not-found':
             return t.errorUserNotFound;
@@ -114,10 +117,37 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
             return t.errorEmailInUse;
          case 'auth/weak-password':
             return t.errorWeakPassword;
+         case 'auth/popup-blocked':
+            return language === 'ko' ? '팝업이 차단되었습니다. 다시 시도합니다...' : 'Popup blocked. Retrying...';
+         case 'auth/popup-closed-by-user':
+            return language === 'ko' ? '로그인 창이 닫혔습니다.' : 'Login window was closed.';
+         case 'auth/network-request-failed':
+            return language === 'ko' ? '네트워크 오류입니다. 인터넷 연결을 확인해주세요.' : 'Network error. Please check your connection.';
+         case 'auth/cancelled-popup-request':
+            return language === 'ko' ? '이전 로그인 요청이 취소되었습니다.' : 'Previous login request was cancelled.';
+         case 'auth/internal-error':
+            return language === 'ko' ? '내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' : 'Internal error. Please try again later.';
          default:
+            console.log('[Auth Error] Unknown error code:', code);
             return t.errorGeneric;
       }
    };
+
+   // Handle redirect result on component mount (for browsers that used redirect)
+   useEffect(() => {
+      getRedirectResult(auth)
+         .then((result) => {
+            if (result?.user) {
+               toast.success(language === 'ko' ? '로그인 성공!' : 'Login successful!');
+            }
+         })
+         .catch((err) => {
+            if (err.code && err.code !== 'auth/popup-closed-by-user') {
+               console.error('[Firebase Auth] Redirect result error:', err);
+               setError(getErrorMessage(err.code));
+            }
+         });
+   }, []);
 
    const handleGoogleLogin = async () => {
       setIsLoading(true);
@@ -125,11 +155,25 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
       try {
          await signInWithPopup(auth, googleProvider);
          toast.success(language === 'ko' ? '로그인 성공!' : 'Login successful!');
-         // onLogin is not needed - Firebase onAuthStateChanged handles it
       } catch (err: any) {
          console.error('[Firebase Auth] Google login error:', err);
-         setError(getErrorMessage(err.code));
-         toast.error(getErrorMessage(err.code));
+
+         // If popup was blocked or closed, try redirect method
+         if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+            toast.info(language === 'ko' ? '팝업이 차단되어 다른 방식으로 로그인합니다...' : 'Popup blocked, trying alternative login...');
+            try {
+               await signInWithRedirect(auth, googleProvider);
+               // Will redirect, so no need to handle success here
+               return;
+            } catch (redirectErr: any) {
+               console.error('[Firebase Auth] Redirect fallback error:', redirectErr);
+               setError(getErrorMessage(redirectErr.code));
+               toast.error(getErrorMessage(redirectErr.code));
+            }
+         } else {
+            setError(getErrorMessage(err.code));
+            toast.error(getErrorMessage(err.code));
+         }
       } finally {
          setIsLoading(false);
       }
