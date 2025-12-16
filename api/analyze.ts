@@ -1,13 +1,16 @@
 /**
- * URL Analysis API - Server-Side DOM Rendering Version
+ * URL Analysis API - Server-Side DOM Rendering Version (Fire-and-Forget)
  * 
- * This endpoint accepts a URL and returns rich clip metadata using:
- * 1. Jina Reader for content extraction (server-side)
- * 2. OpenAI for AI metadata generation
- * 3. Common clip service for Firestore storage
+ * This endpoint accepts a URL and returns immediately with a pending clip.
+ * Processing continues in the background:
+ * 1. Creates a "pending" clip immediately (returns to client)
+ * 2. Fetches content in background
+ * 3. Updates clip with full data when ready
+ * 
+ * This ensures analysis continues even if user minimizes app or switches tabs.
  * 
  * Request: { url: string, language?: string }
- * Response: Clip object (compatible with existing frontend)
+ * Response: Clip object with status: 'pending' or 'complete'
  */
 
 import { createClipFromContent, detectPlatform } from './_lib/clip-service';
@@ -16,6 +19,21 @@ import { extractImages } from './_lib/image-extractor';
 import { requireAuth } from './_lib/auth';
 import { setCorsHeaders, handlePreflight } from './_lib/cors';
 import { validateUrl } from './_lib/url-validator';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+
+// Initialize Firebase Admin if not already
+if (getApps().length === 0) {
+    initializeApp({
+        credential: cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+        })
+    });
+}
+
+const db = getFirestore();
 
 /**
  * Main handler
@@ -54,53 +72,119 @@ export default async function handler(req: any, res: any) {
         let sourceType = detectPlatform(url);
         console.log(`[URL Import] Initial platform detection: ${sourceType}`);
 
-        // 2. Fetch content from URL (server-side with Jina Reader or Puppeteer)
-        const content = await fetchUrlContent(url);
-        console.log(`[URL Import] Fetched content: ${content.rawText.length} chars`);
-
-        // 2.5. Extract images separately using image-extractor
-        const extractedImages = await extractImages(url);
-        const imageUrls = extractedImages.map(img => img.url);
-        console.log(`[URL Import] Extracted images: ${imageUrls.length} images`);
-        console.log(`[URL Import] Content images: ${content.images?.length || 0} images`);
-
-        // Merge images from both sources (deduplicate)
-        // For Naver Blog: prioritize content.images (Jina extracted)
-        // For general web: prioritize imageUrls (image-extractor filtered)
-        const isNaverBlog = url.toLowerCase().includes('blog.naver.com');
-        const allImages = isNaverBlog
-            ? [...new Set([...(content.images || []), ...imageUrls])]
-            : [...new Set([...imageUrls, ...(content.images || [])])];
-
-        // 3. Re-detect platform from final URL if available (handles redirects)
-        if (content.finalUrl && content.finalUrl !== url) {
-            const finalPlatform = detectPlatform(content.finalUrl);
-            console.log(`[URL Import] Final URL after redirect: ${content.finalUrl}`);
-            console.log(`[URL Import] Re-detected platform: ${finalPlatform}`);
-            sourceType = finalPlatform;
-        }
-
-        // 3. Create clip using common service
-        // This handles AI metadata generation + Firestore save
-        // Gracefully degrades if content is insufficient (creates URL-only clip)
-        const clip = await createClipFromContent({
-            url,
-            sourceType: sourceType as any,
-            rawText: content.rawText,
-            htmlContent: content.htmlContent,
-            images: allImages,  // Use merged images from both extractors
+        // 2. Create a "pending" clip immediately so user sees feedback
+        const now = Timestamp.now();
+        const pendingClip = {
             userId,
-            author: content.author,
-            authorAvatar: content.authorAvatar,
-            authorHandle: content.authorHandle
-        }, {
-            language: language || 'KR'
+            url,
+            platform: sourceType,
+            template: sourceType,
+            source: sourceType,
+            title: new URL(url).hostname.replace('www.', ''),
+            summary: '분석 중...',
+            keywords: [],
+            category: 'Other',
+            sentiment: 'neutral',
+            type: 'website',
+            image: '/fallback-thumbnails/fallback-1.png',
+            author: '',
+            authorProfile: null,
+            mediaItems: [],
+            engagement: { likes: '0', views: '0', comments: '0' },
+            mentions: [{ label: 'Original link', url }],
+            comments: [],
+            publishDate: null,
+            htmlContent: '',
+            collectionIds: [],
+            viewCount: 0,
+            likeCount: 0,
+            createdAt: now,
+            updatedAt: now,
+            rawMarkdown: '',
+            contentMarkdown: '',
+            contentHtml: '',
+            images: [],
+            status: 'pending' // Mark as pending
+        };
+
+        const pendingDocRef = await db.collection('clips').add(pendingClip);
+        console.log(`[URL Import] Pending clip created: ${pendingDocRef.id}`);
+
+        // 3. Return immediately so client doesn't wait
+        res.status(202).json({
+            id: pendingDocRef.id,
+            ...pendingClip,
+            createdAt: now.toDate().toISOString(),
+            updatedAt: now.toDate().toISOString(),
+            status: 'pending'
         });
 
-        console.log(`[URL Import] Clip created: ${clip.id} `);
+        // 4. Process in background (after response is sent)
+        // Using setImmediate to ensure response is sent first
+        setImmediate(async () => {
+            try {
+                console.log(`[URL Import Background] Starting processing for ${pendingDocRef.id}`);
 
-        // 4. Return clip (same format as before for frontend compatibility)
-        return res.status(201).json(clip);
+                // Fetch content from URL
+                const content = await fetchUrlContent(url);
+                console.log(`[URL Import Background] Fetched content: ${content.rawText.length} chars`);
+
+                // Extract images
+                const extractedImages = await extractImages(url);
+                const imageUrls = extractedImages.map(img => img.url);
+
+                // Merge images
+                const isNaverBlog = url.toLowerCase().includes('blog.naver.com');
+                const allImages = isNaverBlog
+                    ? [...new Set([...(content.images || []), ...imageUrls])]
+                    : [...new Set([...imageUrls, ...(content.images || [])])];
+
+                // Re-detect platform from final URL
+                let finalSourceType = sourceType;
+                if (content.finalUrl && content.finalUrl !== url) {
+                    finalSourceType = detectPlatform(content.finalUrl);
+                }
+
+                // Create full clip (this handles AI metadata + image caching)
+                const fullClip = await createClipFromContent({
+                    url,
+                    sourceType: finalSourceType as any,
+                    rawText: content.rawText,
+                    htmlContent: content.htmlContent,
+                    images: allImages,
+                    userId,
+                    author: content.author,
+                    authorAvatar: content.authorAvatar,
+                    authorHandle: content.authorHandle
+                }, {
+                    language: language || 'KR'
+                });
+
+                // Update the pending clip with full data
+                await db.collection('clips').doc(pendingDocRef.id).update({
+                    ...fullClip,
+                    id: pendingDocRef.id, // Keep original ID
+                    status: 'complete',
+                    updatedAt: Timestamp.now()
+                });
+
+                // Delete the duplicate clip created by createClipFromContent
+                if (fullClip.id && fullClip.id !== pendingDocRef.id) {
+                    await db.collection('clips').doc(fullClip.id).delete();
+                }
+
+                console.log(`[URL Import Background] Completed: ${pendingDocRef.id}`);
+
+            } catch (bgError: any) {
+                console.error(`[URL Import Background] Error:`, bgError);
+                // Update clip with error status
+                await db.collection('clips').doc(pendingDocRef.id).update({
+                    status: 'error',
+                    summary: `분석 실패: ${bgError.message}`,
+                    updatedAt: Timestamp.now()
+                });
+            }
+        });
 
     } catch (error: any) {
         console.error('[URL Import] Error:', error);
