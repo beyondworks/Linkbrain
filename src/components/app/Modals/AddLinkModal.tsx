@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { X, ExternalLink, Plus } from 'lucide-react';
-import { LinkBrainLogo } from '../LinkBrainLogo';
 
 interface AddLinkModalProps {
     onClose: () => void;
@@ -12,14 +11,12 @@ interface AddLinkModalProps {
 
 export const AddLinkModal = ({ onClose, onAdd, theme, t }: AddLinkModalProps) => {
     const [url, setUrl] = useState('');
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!url) return;
-        setIsAnalyzing(true);
-        await new Promise(r => setTimeout(r, 1500));
         onAdd(url);
+        // Modal closes via onAdd -> setIsAddModalOpen(false) in parent
     };
 
     return (
@@ -31,28 +28,19 @@ export const AddLinkModal = ({ onClose, onAdd, theme, t }: AddLinkModalProps) =>
                         <h2 className={`text-2xl font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('addLink')}</h2>
                         <button onClick={onClose} className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-900'}`}><X size={18} /></button>
                     </div>
-                    {isAnalyzing ? (
-                        <div className="flex flex-col items-center justify-center py-10 space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                            <label className={`text-sm font-bold ml-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>URL</label>
                             <div className="relative">
-                                <div className="w-16 h-16 rounded-full border-4 border-[#E0FBF4] border-t-[#21DBA4] animate-spin"></div>
-                                <div className="absolute inset-0 flex items-center justify-center"><LinkBrainLogo size={24} variant="green" /></div>
+                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400"><ExternalLink size={18} /></div>
+                                <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste any link here..." className={`w-full h-14 rounded-2xl pl-12 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 border transition-all ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 focus:bg-white'}`} autoFocus />
                             </div>
-                            <div className="text-center space-y-2"><h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Analyzing Content...</h3><p className="text-slate-500 text-sm">Generating summary and extracting tags</p></div>
                         </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2">
-                                <label className={`text-sm font-bold ml-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>URL</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400"><ExternalLink size={18} /></div>
-                                    <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste any link here..." className={`w-full h-14 rounded-2xl pl-12 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 border transition-all ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 focus:bg-white'}`} autoFocus />
-                                </div>
-                            </div>
-                            <button type="submit" disabled={!url} className={`w-full h-14 bg-[#21DBA4] rounded-2xl font-bold text-lg shadow-lg shadow-[#21DBA4]/30 hover:bg-[#1bc290] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}><Plus size={20} /> {t('addLink')}</button>
-                        </form>
-                    )}
+                        <button type="submit" disabled={!url} className={`w-full h-14 bg-[#21DBA4] rounded-2xl font-bold text-lg shadow-lg shadow-[#21DBA4]/30 hover:bg-[#1bc290] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}><Plus size={20} /> {t('addLink')}</button>
+                    </form>
                 </div>
             </motion.div>
         </div>
     );
 };
+
