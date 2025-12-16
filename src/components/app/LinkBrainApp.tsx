@@ -327,66 +327,66 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    // If we have links but NO categories (e.g. after moving to real DB),
    // scan links and create real category documents for them.
    // This runs once to restore the user's categories as "real" data.
-   // IMPORTANT: Check firebaseCategories directly to avoid race conditions
-   useEffect(() => {
-      const migrateCategories = async () => {
-         // Debug logging
-         console.log('[Category Migration] Checking...', {
-            firebaseClipsCount: firebaseClips?.length || 0,
-            firebaseCategoriesCount: firebaseCategories?.length || 0,
-            dataLoading,
-            firebaseCategoriesValue: firebaseCategories
-         });
+   // IMPORTANT: Use ref to prevent infinite loop
+   const hasAttemptedMigrationRef = useRef(false);
 
+   useEffect(() => {
+      // CRITICAL: Only attempt migration once per session to prevent infinite loop
+      if (hasAttemptedMigrationRef.current) {
+         return;
+      }
+
+      const migrateCategories = async () => {
          // Only run if:
          // 1. We have loaded links (firebaseClips exists and has items)
          // 2. Data loading is finished
+         // 3. firebaseCategories is loaded (not null/undefined)
          const hasLinks = firebaseClips && firebaseClips.length > 0;
+         const categoriesLoaded = firebaseCategories !== null && firebaseCategories !== undefined;
 
-         if (hasLinks && !dataLoading && firebaseCategories !== null && firebaseCategories !== undefined) {
-            // Get existing category IDs
-            const existingCategoryIds = new Set(firebaseCategories.map(c => c.id));
+         if (!hasLinks || dataLoading || !categoriesLoaded) {
+            return; // Not ready yet, wait for data
+         }
 
-            // Find categories mentioned in clips but not in categories collection
-            const missingCategories = new Set<string>();
-            firebaseClips.forEach(clip => {
-               if (clip.category && clip.category !== 'uncategorized' && !existingCategoryIds.has(clip.category)) {
-                  missingCategories.add(clip.category);
-               }
+         // Mark as attempted BEFORE doing anything
+         hasAttemptedMigrationRef.current = true;
+
+         // Get existing category IDs
+         const existingCategoryIds = new Set(firebaseCategories.map(c => c.id));
+
+         // Find categories mentioned in clips but not in categories collection
+         const missingCategories = new Set<string>();
+         firebaseClips.forEach(clip => {
+            if (clip.category && clip.category !== 'uncategorized' && !existingCategoryIds.has(clip.category)) {
+               missingCategories.add(clip.category);
+            }
+         });
+
+         if (missingCategories.size > 0) {
+            console.log('[Category Migration] Restoring:', Array.from(missingCategories));
+
+            // Palette to assign consistent colors
+            const palette = Object.keys(CATEGORY_COLORS).filter(c => !c.includes('slate'));
+
+            let colorIdx = 0;
+            const promises = Array.from(missingCategories).map(async (catId) => {
+               const color = palette[colorIdx % palette.length];
+               colorIdx++;
+
+               await createCategory({
+                  id: catId,
+                  name: catId.charAt(0).toUpperCase() + catId.slice(1),
+                  color: color
+               });
             });
 
-            console.log('[Category Migration] Missing categories:', Array.from(missingCategories));
-
-            if (missingCategories.size > 0) {
-               console.log("Restoring missing categories from links...");
-
-               // Palette to assign consistent colors
-               const palette = Object.keys(CATEGORY_COLORS).filter(c => !c.includes('slate'));
-
-               let colorIdx = 0;
-               const promises = Array.from(missingCategories).map(async (catId) => {
-                  const color = palette[colorIdx % palette.length];
-                  colorIdx++;
-
-                  // Use the createCategory from useClips which we updated to support UPSERT (setDoc)
-                  // This ensures we don't accidentally duplicate if it's lagging
-                  await createCategory({
-                     id: catId,
-                     name: catId.charAt(0).toUpperCase() + catId.slice(1),
-                     color: color
-                  });
-               });
-
-               await Promise.all(promises);
-               toast.success(language === 'ko'
-                  ? `${missingCategories.size}개 카테고리가 복구되었습니다!`
-                  : `${missingCategories.size} categories restored!`);
-            }
+            await Promise.all(promises);
+            toast.success(language === 'ko'
+               ? `${missingCategories.size}개 카테고리가 복구되었습니다!`
+               : `${missingCategories.size} categories restored!`);
          }
       };
 
-      // Removed generic setTimeout to speed up appearance.
-      // We rely on dataLoading flag to ensure we don't run too early.
       migrateCategories();
 
    }, [firebaseClips, firebaseCategories, dataLoading]);
