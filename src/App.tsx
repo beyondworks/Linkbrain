@@ -428,18 +428,9 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Language Toggle */}
-            <button
-              onClick={() => onLanguageChange(language === 'ko' ? 'en' : 'ko')}
-              className="text-[13px] font-bold text-slate-500 hover:text-[#21DBA4] transition-colors uppercase tracking-wide"
-              title={language === 'ko' ? 'Switch to English' : '한국어로 변경'}
-            >
-              {language === 'ko' ? 'EN' : 'KO'}
-            </button>
-
             <button
               onClick={onEnterApp}
-              className="text-[13px] font-bold text-slate-500 hover:text-slate-900 hidden sm:block transition-colors uppercase tracking-wide mr-2"
+              className="text-[13px] font-bold text-slate-500 hover:text-slate-900 hidden sm:block transition-colors uppercase tracking-wide"
             >
               {t.login}
             </button>
@@ -448,6 +439,15 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
               className="px-6 py-2.5 rounded-full bg-[#21DBA4] text-white text-[13px] font-bold hover:bg-[#1BC290] hover:shadow-lg hover:shadow-[#21DBA4]/30 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 active:scale-95 duration-200 shadow-md shadow-[#21DBA4]/20"
             >
               <Download size={14} /> <span className="hidden sm:inline">{t.installApp}</span><span className="sm:hidden">App</span>
+            </button>
+
+            {/* Language Toggle */}
+            <button
+              onClick={() => onLanguageChange(language === 'ko' ? 'en' : 'ko')}
+              className="text-[13px] font-bold text-slate-400 hover:text-[#21DBA4] transition-colors uppercase tracking-wide"
+              title={language === 'ko' ? 'Switch to English' : '한국어로 변경'}
+            >
+              {language === 'ko' ? 'EN' : 'KO'}
             </button>
 
             {/* Mobile Menu Toggle */}
@@ -708,13 +708,13 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
 
         {currentView === 'how-it-works' && (
           <div className="py-20 animate-fade-in-up">
-            <LinkBrainHowItWorks theme="light" language="ko" />
+            <LinkBrainHowItWorks theme="light" language={language} />
           </div>
         )}
 
         {currentView === 'pricing' && (
           <div className="py-20">
-            <LinkBrainPricing theme="light" language="ko" onEnterApp={onEnterApp} />
+            <LinkBrainPricing theme="light" language={language} onEnterApp={onEnterApp} />
           </div>
         )}
       </main>
