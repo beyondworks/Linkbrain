@@ -10,6 +10,7 @@ export interface SubscriptionState {
     status: 'trial' | 'active' | 'expired'; // active = paid pro
     tier: 'free' | 'pro' | 'master';
     trialStartDate: string | null; // ISO date
+    proEndDate?: string | null; // Pro subscription end date
     remainingDays: number;
     isReadOnly: boolean;
     canCreate: boolean;
@@ -17,6 +18,7 @@ export interface SubscriptionState {
     canUseAI: boolean;
     loading: boolean;
     isMaster: boolean;
+    referralCount?: number;
 }
 
 export type UseSubscriptionReturn = SubscriptionState;

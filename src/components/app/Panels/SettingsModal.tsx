@@ -541,29 +541,39 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                 <div className="relative z-10">
                     <div className="flex items-center justify-between mb-3 md:mb-4">
                         <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
-                            {isPro ? 'PRO PLAN' : 'FREE TRIAL'}
+                            {isPro
+                                ? (subscription?.isMaster ? 'MASTER' : 'PRO PLAN')
+                                : (t('language') === 'ko' ? '무료 체험' : 'FREE TRIAL')}
                         </span>
                         <CreditCard className="text-white/50" />
                     </div>
                     <h3 className="text-lg md:text-xl font-bold mb-1">
-                        {isPro ? 'LinkBrain Pro' : 'LinkBrain 무료 체험'}
+                        {isPro
+                            ? (subscription?.isMaster ? 'LinkBrain Master' : 'LinkBrain Pro')
+                            : (t('language') === 'ko' ? 'LinkBrain 무료 체험' : 'LinkBrain Free Trial')}
                     </h3>
                     <p className="text-white/70 text-xs md:text-sm mb-4 md:mb-6">
                         {isPro
-                            ? `${formatRenewalDate()}에 갱신 예정`
-                            : `${remainingDays}일 남음`}
+                            ? (subscription?.isMaster
+                                ? (t('language') === 'ko' ? '모든 기능 무제한 이용' : 'Unlimited access to all features')
+                                : (formatRenewalDate()
+                                    ? (t('language') === 'ko' ? `${formatRenewalDate()}에 갱신 예정` : `Renews on ${formatRenewalDate()}`)
+                                    : (t('language') === 'ko' ? '프로 플랜 이용 중' : 'Pro plan active')))
+                            : (t('language') === 'ko' ? `${remainingDays}일 남음` : `${remainingDays} days left`)}
                     </p>
-                    <button
-                        onClick={isPro ? handleBillingPortal : handleUpgrade}
-                        disabled={isPro && isLoadingPortal}
-                        className="bg-white text-slate-900 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap disabled:opacity-70 min-w-[100px] flex items-center justify-center gap-2"
-                    >
-                        {isLoadingPortal ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            isPro ? t('manageBilling') : (t('language') === 'ko' ? '업그레이드' : 'Upgrade')
-                        )}
-                    </button>
+                    {!subscription?.isMaster && (
+                        <button
+                            onClick={isPro ? handleBillingPortal : handleUpgrade}
+                            disabled={isPro && isLoadingPortal}
+                            className="bg-white text-slate-900 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap disabled:opacity-70 min-w-[100px] flex items-center justify-center gap-2"
+                        >
+                            {isLoadingPortal ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                isPro ? t('manageBilling') : (t('language') === 'ko' ? '업그레이드' : 'Upgrade')
+                            )}
+                        </button>
+                    )}
                 </div>
                 <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
                     <LinkBrainLogo variant="white" size={150} />
