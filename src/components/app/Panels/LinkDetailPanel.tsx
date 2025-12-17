@@ -556,7 +556,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                     : 'bg-slate-100 border-slate-200 text-slate-600'
                                 : 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4]'
                                 }`}
-                            title={isPrivate ? 'Private' : 'Public'}
+                            title={isPrivate ? 'Hidden from community' : 'Shared with community'}
                         >
                             {isPrivate ? (
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -569,7 +569,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                     <path d="M7 11V7a5 5 0 019.9-1" />
                                 </svg>
                             )}
-                            {isPrivate ? 'Private' : 'Public'}
+                            {isPrivate ? 'Hidden' : 'Shared'}
                         </button>
                     </div>
                     <div className="flex items-center gap-2">
