@@ -7,9 +7,13 @@ import {
     orderBy,
     limit,
     getDocs,
-    onSnapshot,
-    Unsubscribe
+    addDoc,
+    deleteDoc,
+    doc,
+    updateDoc,
+    increment
 } from 'firebase/firestore';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface PublicClip {
     id: string;
@@ -53,6 +57,35 @@ interface UsePublicClipsReturn {
     incrementSaveCount: (clipId: string) => Promise<void>;
 }
 
+// Simple content moderation check
+function containsInappropriateContent(text: string): boolean {
+    // Basic keyword filter for obvious issues
+    const blockedPatterns = [
+        /정치|politics|선거|election|대통령|president/i,
+        /porn|xxx|성인|adult|19금/i,
+        /gore|horror|공포|blood|murder/i,
+    ];
+    return blockedPatterns.some(pattern => pattern.test(text));
+}
+
+// Simple comment moderation
+function isInappropriateComment(content: string): { inappropriate: boolean; reason: string } {
+    // Check for spam (repeated characters or random text)
+    if (/(.)\1{5,}/.test(content)) {
+        return { inappropriate: true, reason: 'Spam detected' };
+    }
+
+    // Check for profanity (basic Korean/English)
+    const profanityPatterns = [
+        /시발|씨발|좆|병신|개새끼|fuck|shit|ass/i
+    ];
+    if (profanityPatterns.some(pattern => pattern.test(content))) {
+        return { inappropriate: true, reason: 'Inappropriate language' };
+    }
+
+    return { inappropriate: false, reason: '' };
+}
+
 export function usePublicClips(): UsePublicClipsReturn {
     const [publicClips, setPublicClips] = useState<PublicClip[]>([]);
     const [loading, setLoading] = useState(false);
@@ -63,18 +96,31 @@ export function usePublicClips(): UsePublicClipsReturn {
         setError(null);
 
         try {
-            const params = new URLSearchParams();
+            let q;
             if (category && category !== 'All') {
-                params.append('category', category);
+                q = query(
+                    collection(db, 'publicClips'),
+                    where('isApproved', '==', true),
+                    where('category', '==', category),
+                    orderBy('saveCount', 'desc'),
+                    limit(50)
+                );
+            } else {
+                q = query(
+                    collection(db, 'publicClips'),
+                    where('isApproved', '==', true),
+                    orderBy('saveCount', 'desc'),
+                    limit(50)
+                );
             }
-            params.append('limit', '50');
 
-            const response = await fetch(`/api/public-clips?${params.toString()}`);
-            const data = await response.json();
+            const snapshot = await getDocs(q);
+            const clips = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as PublicClip[];
 
-            if (data.clips) {
-                setPublicClips(data.clips);
-            }
+            setPublicClips(clips);
         } catch (err: any) {
             console.error('Failed to fetch public clips:', err);
             setError(err.message || 'Failed to fetch public clips');
@@ -93,14 +139,42 @@ export function usePublicClips(): UsePublicClipsReturn {
         keywords: string[];
     }): Promise<{ success: boolean; reason?: string }> => {
         try {
-            const response = await fetch('/api/public-clips', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(clip)
-            });
+            // Basic moderation check
+            const textToCheck = `${clip.title} ${clip.summary} ${clip.keywords.join(' ')}`;
+            if (containsInappropriateContent(textToCheck)) {
+                return { success: false, reason: 'Content not suitable for community' };
+            }
 
-            const data = await response.json();
-            return { success: data.success, reason: data.reason };
+            // Check if already exists
+            const existingQuery = query(
+                collection(db, 'publicClips'),
+                where('url', '==', clip.url),
+                limit(1)
+            );
+            const existingSnapshot = await getDocs(existingQuery);
+
+            if (!existingSnapshot.empty) {
+                return { success: true, reason: 'Already published' };
+            }
+
+            // Create public clip
+            const publicClip = {
+                url: clip.url,
+                title: clip.title,
+                summary: clip.summary || '',
+                image: clip.image || null,
+                platform: clip.platform || 'web',
+                category: clip.category || 'Uncategorized',
+                keywords: clip.keywords || [],
+                saveCount: 0,
+                viewCount: 0,
+                commentCount: 0,
+                isApproved: true,
+                createdAt: new Date().toISOString()
+            };
+
+            await addDoc(collection(db, 'publicClips'), publicClip);
+            return { success: true };
         } catch (err: any) {
             console.error('Failed to publish clip:', err);
             return { success: false, reason: err.message };
@@ -109,38 +183,40 @@ export function usePublicClips(): UsePublicClipsReturn {
 
     const removeFromPublic = useCallback(async (url: string) => {
         try {
-            await fetch('/api/public-clips', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
-            });
+            const q = query(
+                collection(db, 'publicClips'),
+                where('url', '==', url)
+            );
+            const snapshot = await getDocs(q);
+
+            for (const docSnap of snapshot.docs) {
+                await deleteDoc(doc(db, 'publicClips', docSnap.id));
+            }
         } catch (err) {
             console.error('Failed to remove from public:', err);
         }
     }, []);
 
     const importToMyClips = useCallback(async (publicClip: PublicClip) => {
-        // This will be handled by the component that calls createClip from useClips
-        // Just increment the save count here
-        try {
-            await fetch('/api/public-clips', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'incrementSave',
-                    clipId: publicClip.id
-                })
-            });
-        } catch (err) {
-            console.error('Failed to increment save count:', err);
-        }
+        // This is handled by the component calling createClip
+        // Just increment save count here
+        await incrementSaveCount(publicClip.id);
     }, []);
 
     const fetchComments = useCallback(async (clipId: string): Promise<PublicComment[]> => {
         try {
-            const response = await fetch(`/api/public-comments?clipId=${clipId}`);
-            const data = await response.json();
-            return data.comments || [];
+            const q = query(
+                collection(db, 'publicClips', clipId, 'comments'),
+                where('isHidden', '==', false),
+                orderBy('createdAt', 'desc'),
+                limit(50)
+            );
+
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as PublicComment[];
         } catch (err) {
             console.error('Failed to fetch comments:', err);
             return [];
@@ -149,14 +225,31 @@ export function usePublicClips(): UsePublicClipsReturn {
 
     const addComment = useCallback(async (clipId: string, content: string): Promise<{ success: boolean; reason?: string }> => {
         try {
-            const response = await fetch(`/api/public-comments?clipId=${clipId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content })
+            if (!content.trim() || content.length > 500) {
+                return { success: false, reason: 'Comment must be 1-500 characters' };
+            }
+
+            // Moderation check
+            const moderation = isInappropriateComment(content);
+            if (moderation.inappropriate) {
+                return { success: false, reason: moderation.reason };
+            }
+
+            // Add anonymous comment
+            const comment = {
+                content: content.trim(),
+                createdAt: new Date().toISOString(),
+                isHidden: false
+            };
+
+            await addDoc(collection(db, 'publicClips', clipId, 'comments'), comment);
+
+            // Increment comment count
+            await updateDoc(doc(db, 'publicClips', clipId), {
+                commentCount: increment(1)
             });
 
-            const data = await response.json();
-            return { success: data.success !== false, reason: data.reason };
+            return { success: true };
         } catch (err: any) {
             console.error('Failed to add comment:', err);
             return { success: false, reason: err.message };
@@ -164,15 +257,9 @@ export function usePublicClips(): UsePublicClipsReturn {
     }, []);
 
     const incrementSaveCount = useCallback(async (clipId: string) => {
-        // Called when user imports a public clip
         try {
-            await fetch('/api/public-clips', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'incrementSave',
-                    clipId
-                })
+            await updateDoc(doc(db, 'publicClips', clipId), {
+                saveCount: increment(1)
             });
         } catch (err) {
             console.error('Failed to increment save count:', err);

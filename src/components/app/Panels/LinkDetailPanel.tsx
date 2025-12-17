@@ -37,6 +37,7 @@ import { toast } from 'sonner';
 import { getSourceInfo, GlobeIcon } from '../Cards';
 import { Category, Collection } from '../types';
 import { useSubscription } from '../../../hooks/useSubscription';
+import { usePublicClips } from '../../../hooks/usePublicClips';
 
 // Custom ArrowUpCircle Icon
 const ArrowUpCircle = ({ size, className }: any) => (
@@ -68,6 +69,7 @@ interface LinkDetailPanelProps {
 export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onUpdateClip, onToggleCollection, onClearCollections, theme, t, language = 'ko' }: LinkDetailPanelProps) => {
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
+    const { publishClip, removeFromPublic } = usePublicClips();
 
     // Mobile detection for responsive positioning
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
@@ -520,31 +522,23 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                 if (onUpdateClip) {
                                     await onUpdateClip(link.id, { isPrivate: newPrivacyState });
                                     if (newPrivacyState) {
-                                        // Remove from public
-                                        fetch('/api/public-clips', {
-                                            method: 'DELETE',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ url: link.url })
-                                        }).catch(err => console.error('Failed to remove from public:', err));
+                                        // Remove from public using hook
+                                        removeFromPublic(link.url).catch(err => console.error('Failed to remove from public:', err));
                                         toast.success(isKorean ? '이 게시물은 커뮤니티에 공유되지 않습니다' : 'This clip is now hidden from the community');
                                     } else {
                                         // Show toast immediately
                                         toast.success(isKorean ? '이 게시물이 커뮤니티에 공유됩니다' : 'This clip is now shared with the community');
-                                        // Publish to public in background
-                                        fetch('/api/public-clips', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                url: link.url,
-                                                title: link.title,
-                                                summary: link.summary,
-                                                image: link.image,
-                                                platform: link.platform,
-                                                category: link.category || matchedCategory?.name || 'Uncategorized',
-                                                keywords: link.keywords || []
-                                            })
-                                        }).then(res => res.json()).then(data => {
-                                            if (data.success === false) {
+                                        // Publish to public using hook
+                                        publishClip({
+                                            url: link.url,
+                                            title: link.title,
+                                            summary: link.summary,
+                                            image: link.image,
+                                            platform: link.platform,
+                                            category: link.category || matchedCategory?.name || 'Uncategorized',
+                                            keywords: link.keywords || []
+                                        }).then(result => {
+                                            if (!result.success) {
                                                 setIsPrivate(true); // Revert on failure
                                                 toast.error(isKorean ? '커뮤니티 공유가 불가능합니다' : 'Cannot share with community');
                                             }
