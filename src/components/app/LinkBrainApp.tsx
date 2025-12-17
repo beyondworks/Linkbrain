@@ -301,7 +301,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const [categories, setCategories] = useState<Category[]>([]);
    const [collections, setCollections] = useState<Collection[]>([]);
 
-   const { isReadOnly, remainingDays, status, canCreate, canEdit } = useSubscription();
+   const { isReadOnly, remainingDays, status, canCreate, canEdit, tier } = useSubscription();
    const [showSubscriptionBanner, setShowSubscriptionBanner] = useState(true);
 
    // Sync Firebase clips to local state
@@ -1496,7 +1496,13 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                   </div>
                   <div className="flex-1 min-w-0">
                      <div className={`text-sm font-bold truncate group-hover:text-[#21DBA4] ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>{user?.displayName || 'User'}</div>
-                     <div className="text-[10px] text-slate-400">{t('proPlan')}</div>
+                     <div className="text-[10px] text-slate-400">
+                        {status === 'active' || tier === 'pro'
+                           ? 'LinkBrain Pro'
+                           : status === 'trial'
+                              ? (language === 'ko' ? '무료 체험 중' : 'Free Trial')
+                              : (language === 'ko' ? '무료 플랜' : 'Free Plan')}
+                     </div>
                   </div>
                   <button className="text-slate-400 group-hover:text-slate-600 transition-colors">
                      <Settings size={18} />
