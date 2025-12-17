@@ -3,9 +3,12 @@ import { useClips } from './useClips';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
+// Master accounts with full permissions regardless of subscription
+const MASTER_ACCOUNTS = ['beyondworks.br@gmail.com'];
+
 export interface SubscriptionState {
     status: 'trial' | 'active' | 'expired'; // active = paid pro
-    tier: 'free' | 'pro';
+    tier: 'free' | 'pro' | 'master';
     trialStartDate: string | null; // ISO date
     remainingDays: number;
     isReadOnly: boolean;
@@ -13,6 +16,7 @@ export interface SubscriptionState {
     canEdit: boolean;
     canUseAI: boolean;
     loading: boolean;
+    isMaster: boolean;
 }
 
 export type UseSubscriptionReturn = SubscriptionState;
@@ -28,12 +32,33 @@ export const useSubscription = () => {
         canCreate: true,
         canEdit: true,
         canUseAI: true,
-        loading: true
+        loading: true,
+        isMaster: false
     });
 
     useEffect(() => {
         if (!user) {
             setSubscription(prev => ({ ...prev, loading: false }));
+            return;
+        }
+
+        // Check if user is a master account
+        const isMaster = MASTER_ACCOUNTS.includes(user.email || '');
+
+        if (isMaster) {
+            // Master accounts have full permissions
+            setSubscription({
+                status: 'active',
+                tier: 'master',
+                trialStartDate: null,
+                remainingDays: 999,
+                isReadOnly: false,
+                canCreate: true,
+                canEdit: true,
+                canUseAI: true,
+                loading: false,
+                isMaster: true
+            });
             return;
         }
 
@@ -75,7 +100,8 @@ export const useSubscription = () => {
                 canCreate: isPro || !isExpired,
                 canEdit: isPro || !isExpired,
                 canUseAI: isPro || !isExpired,
-                loading: false
+                loading: false,
+                isMaster: false
             });
         });
 
