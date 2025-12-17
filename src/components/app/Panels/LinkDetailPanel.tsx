@@ -77,6 +77,20 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Match category by ID or name (for backward compatibility with legacy data)
+    const matchedCategory = categories.find((c: Category) =>
+        c.id === link.categoryId || c.name?.toLowerCase() === link.categoryId?.toLowerCase()
+    );
+    const matchedCategoryId = matchedCategory?.id || categories[0]?.id || '';
+
+    // Debug: Log category matching
+    console.log('[DetailPanel] Category matching:', {
+        linkCategoryId: link.categoryId,
+        availableCategories: categories.map(c => ({ id: c.id, name: c.name })),
+        matchedCategory: matchedCategory?.name || 'NONE',
+        matchedCategoryId
+    });
+
     // Memo Auto-Save Logic
     const [myNotes, setMyNotes] = useState(link.notes || '');
 
@@ -552,7 +566,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                 <div>
                                     <div className="relative inline-block w-full max-w-[200px]">
                                         <select
-                                            value={link.categoryId}
+                                            value={matchedCategoryId}
                                             onChange={(e) => onUpdateCategory(link.id, e.target.value)}
                                             className={`appearance-none w-full text-sm font-bold px-4 py-2.5 rounded-xl border outline-none focus:border-[#21DBA4] focus:ring-2 focus:ring-[#21DBA4]/20 transition-all cursor-pointer ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
                                         >
