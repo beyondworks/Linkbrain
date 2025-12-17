@@ -508,6 +508,65 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                         <div className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-white text-xs font-bold ${source.color}`}>
                             {source.icon} {source.name}
                         </div>
+                        {/* Privacy Toggle */}
+                        <button
+                            onClick={async () => {
+                                const newPrivacyState = !link.isPrivate;
+                                if (onUpdateClip) {
+                                    await onUpdateClip(link.id, { isPrivate: newPrivacyState });
+                                    if (newPrivacyState) {
+                                        // Remove from public
+                                        fetch('/api/public-clips', {
+                                            method: 'DELETE',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ url: link.url })
+                                        });
+                                        toast.success(t('language') === 'ko' ? '비공개로 전환되었습니다' : 'Set to private');
+                                    } else {
+                                        // Publish to public
+                                        fetch('/api/public-clips', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                url: link.url,
+                                                title: link.title,
+                                                summary: link.summary,
+                                                image: link.image,
+                                                platform: link.platform,
+                                                category: link.category || matchedCategory?.name || 'Uncategorized',
+                                                keywords: link.keywords || []
+                                            })
+                                        }).then(res => res.json()).then(data => {
+                                            if (data.success === false) {
+                                                toast.error(data.reason || (t('language') === 'ko' ? '공개 불가' : 'Cannot publish'));
+                                            } else {
+                                                toast.success(t('language') === 'ko' ? '커뮤니티에 공개되었습니다' : 'Published to community');
+                                            }
+                                        });
+                                    }
+                                }
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${link.isPrivate
+                                    ? theme === 'dark'
+                                        ? 'bg-slate-800 border-slate-700 text-slate-300'
+                                        : 'bg-slate-100 border-slate-200 text-slate-600'
+                                    : 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4]'
+                                }`}
+                            title={link.isPrivate ? 'Private' : 'Public'}
+                        >
+                            {link.isPrivate ? (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                                </svg>
+                            ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 019.9-1" />
+                                </svg>
+                            )}
+                            {link.isPrivate ? 'Private' : 'Public'}
+                        </button>
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={onToggleReadLater} className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} ${link.isReadLater ? 'text-[#21DBA4]' : 'text-slate-400'}`} title="Read Later">

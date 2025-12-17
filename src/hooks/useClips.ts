@@ -51,6 +51,7 @@ export interface ClipData {
     updatedAt?: string;
     isFavorite?: boolean;
     isArchived?: boolean;
+    isPrivate?: boolean; // Privacy toggle: true = hidden from community
     rawMarkdown?: string;
     contentMarkdown?: string;
     contentHtml?: string;
