@@ -60,7 +60,7 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
                     <div
                         data-checkbox="true"
                         className={`absolute top-3 left-3 z-[10] transition-opacity duration-200 cursor-pointer
-                            ${selectionMode || selected || isHovered ? 'opacity-100' : 'opacity-0'}
+                            ${selectionMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}
                         `}
                         onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect?.(); }}
                         onPointerDown={(e) => e.stopPropagation()}
@@ -70,7 +70,7 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
                         </div>
                     </div>
 
-                    <div className={`absolute top-3 left-3 flex flex-wrap gap-1.5 z-[5] transition-all ${selectionMode || selected || isHovered ? 'translate-x-8' : ''}`}>
+                    <div className={`absolute top-3 left-3 flex flex-wrap gap-1.5 z-[5] transition-all ${selectionMode ? 'translate-x-8' : ''}`}>
                         <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-white text-[10px] font-bold backdrop-blur-md shadow-sm ${source.color}`}>
                             {source.icon} {source.name}
                         </div>
@@ -97,7 +97,7 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
                 <div
                     data-checkbox="true"
                     className={`absolute top-3 left-3 z-[10] transition-opacity duration-200 cursor-pointer
-                        ${selectionMode || selected || isHovered ? 'opacity-100' : 'opacity-0'}
+                        ${selectionMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}
                     `}
                     onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect?.(); }}
                     onPointerDown={(e) => e.stopPropagation()}
