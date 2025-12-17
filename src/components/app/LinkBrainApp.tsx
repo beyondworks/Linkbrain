@@ -1055,6 +1055,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
          // Note: No manual state update - real-time listener will sync
          setIsCategoryModalOpen(false);
          setEditingCategory(null);
+         // Reopen category manager modal after saving
+         setIsCategoryManagerOpen(true);
       } catch (error) {
          console.error('Failed to save category:', error);
          toast.error('Failed to save category');
