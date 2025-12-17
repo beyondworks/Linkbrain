@@ -388,16 +388,16 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
                   </button>
                 );
               })}
-            </div>
 
-            {/* Language Toggle for Mobile */}
-            <button
-              onClick={() => onLanguageChange(language === 'ko' ? 'en' : 'ko')}
-              className="mt-6 flex items-center gap-2 text-slate-500 font-bold"
-            >
-              <Languages size={18} />
-              {language === 'ko' ? 'Switch to English' : '한국어로 변경'}
-            </button>
+              {/* Language Toggle - Consistent with menu items */}
+              <button
+                onClick={() => onLanguageChange(language === 'ko' ? 'en' : 'ko')}
+                className="text-lg font-bold text-left tracking-tight bg-transparent border-none p-0 flex items-center gap-2 text-slate-900 hover:text-[#21DBA4] transition-colors"
+              >
+                <Languages size={20} className="text-slate-400" />
+                {language === 'ko' ? 'English' : '한국어'}
+              </button>
+            </div>
 
             <div className="mt-8 pt-8 border-t border-slate-50 flex flex-col gap-4">
               <button

@@ -157,7 +157,7 @@ export const ContactContent = ({ language = 'en' }: { language?: 'en' | 'ko' }) 
                     </h4>
                     <p className="text-sm">support@linkbrain.cloud</p>
                     <div className="mt-4">
-                        <a href="mailto:support@linkbrain.cloud" className="text-sm font-bold text-[#21DBA4] hover:underline">
+                        <a href="mailto:beyondworks.br@gmail.com" className="text-sm font-bold text-[#21DBA4] hover:underline">
                             {isKo ? '이메일 보내기 →' : 'Send Email →'}
                         </a>
                     </div>
