@@ -431,11 +431,10 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
             {/* Language Toggle */}
             <button
               onClick={() => onLanguageChange(language === 'ko' ? 'en' : 'ko')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all border border-slate-200"
+              className="text-[13px] font-bold text-slate-500 hover:text-[#21DBA4] transition-colors uppercase tracking-wide"
               title={language === 'ko' ? 'Switch to English' : '한국어로 변경'}
             >
-              <Languages size={14} />
-              {language === 'ko' ? 'EN' : '한국어'}
+              {language === 'ko' ? 'EN' : 'KO'}
             </button>
 
             <button
