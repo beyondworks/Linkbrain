@@ -62,9 +62,10 @@ interface LinkDetailPanelProps {
     theme: 'light' | 'dark';
     onUpdateClip?: (id: string, updates: any) => Promise<any>;
     t: (key: string) => string;
+    language?: 'en' | 'ko';
 }
 
-export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onUpdateClip, onToggleCollection, onClearCollections, theme, t }: LinkDetailPanelProps) => {
+export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onUpdateClip, onToggleCollection, onClearCollections, theme, t, language = 'ko' }: LinkDetailPanelProps) => {
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
 
@@ -515,7 +516,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                             onClick={async () => {
                                 const newPrivacyState = !isPrivate;
                                 setIsPrivate(newPrivacyState); // Update UI immediately
-                                const isKorean = navigator.language.startsWith('ko');
+                                const isKorean = language === 'ko';
                                 if (onUpdateClip) {
                                     await onUpdateClip(link.id, { isPrivate: newPrivacyState });
                                     if (newPrivacyState) {
