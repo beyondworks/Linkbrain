@@ -50,7 +50,7 @@ interface SettingsModalProps {
     };
     onLogout: () => void;
     t: (key: string) => string;
-    user?: { displayName: string | null; email: string | null; photoURL: string | null } | null;
+    user?: { uid?: string; displayName: string | null; email: string | null; photoURL: string | null } | null;
     initialTab?: string;
 }
 
@@ -391,7 +391,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, use
 };
 
 // Account Settings
-const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) => string; user?: { displayName: string | null; email: string | null; photoURL: string | null } | null }) => {
+const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) => string; user?: { uid?: string; displayName: string | null; email: string | null; photoURL: string | null } | null }) => {
     // Parse display name into first/last name
     const displayName = user?.displayName || 'User';
     const nameParts = displayName.split(' ');
@@ -404,9 +404,37 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
     const [firstNameInput, setFirstNameInput] = useState(initialFirstName);
     const [lastNameInput, setLastNameInput] = useState(initialLastName);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoadingPortal, setIsLoadingPortal] = useState(false);
 
     // Check if there are unsaved changes
     const hasChanges = firstNameInput !== initialFirstName || lastNameInput !== initialLastName;
+
+    // Open Stripe Customer Portal
+    const handleBillingPortal = async () => {
+        if (!user?.uid) {
+            toast.error('로그인이 필요합니다.');
+            return;
+        }
+        setIsLoadingPortal(true);
+        try {
+            const response = await fetch('/api/payment/stripe-portal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    returnUrl: window.location.href,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to open billing portal');
+            if (data.url) window.location.href = data.url;
+        } catch (error: any) {
+            console.error('Billing portal error:', error);
+            toast.error(error.message || '결제 포털을 열 수 없습니다.');
+        } finally {
+            setIsLoadingPortal(false);
+        }
+    };
 
     const handleSaveProfile = async () => {
         if (!hasChanges) return;
@@ -498,8 +526,20 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                     <h3 className="text-lg md:text-xl font-bold mb-1">LinkBrain Pro</h3>
                     <p className="text-slate-400 text-xs md:text-sm mb-4 md:mb-6">Renews on Oct 24, 2025</p>
                     <div className="flex gap-2 md:gap-3">
-                        <button onClick={() => toast.info("Redirecting to billing portal...")} className="bg-white text-slate-900 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap">{t('manageBilling')}</button>
-                        <button onClick={() => toast.info("Please contact support to cancel")} className="text-white/70 hover:text-white px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold whitespace-nowrap">{t('cancelPlan')}</button>
+                        <button
+                            onClick={handleBillingPortal}
+                            disabled={isLoadingPortal}
+                            className="bg-white text-slate-900 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap disabled:opacity-50"
+                        >
+                            {isLoadingPortal ? '...' : t('manageBilling')}
+                        </button>
+                        <button
+                            onClick={handleBillingPortal}
+                            disabled={isLoadingPortal}
+                            className="text-white/70 hover:text-white px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold whitespace-nowrap disabled:opacity-50"
+                        >
+                            {t('cancelPlan')}
+                        </button>
                     </div>
                 </div>
                 <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
