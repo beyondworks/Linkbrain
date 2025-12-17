@@ -62,7 +62,7 @@ const InviteCodesSection = ({ theme, t }: { theme: string; t: (key: string) => s
     const handleCopyCode = (code: string) => {
         navigator.clipboard.writeText(code);
         setCopiedCode(code);
-        toast.success(t('language') === 'ko' ? '코드가 복사되었습니다!' : 'Code copied!');
+        toast.success(t('language') === '언어' ? '코드가 복사되었습니다!' : 'Code copied!');
         setTimeout(() => setCopiedCode(null), 2000);
     };
 
@@ -76,14 +76,14 @@ const InviteCodesSection = ({ theme, t }: { theme: string; t: (key: string) => s
                 <div className="flex items-center gap-2">
                     <Gift size={18} className="text-[#21DBA4]" />
                     <h4 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                        {t('language') === 'ko' ? '내 초대 코드' : 'My Invite Codes'}
+                        {t('language') === '언어' ? '내 초대 코드' : 'My Invite Codes'}
                     </h4>
                 </div>
                 {isTrial && (
                     <div className="flex items-center gap-1.5 text-xs">
                         <Clock size={12} className="text-amber-500" />
                         <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>
-                            {t('language') === 'ko' ? `${remainingDays}일 남음` : `${remainingDays} days left`}
+                            {t('language') === '언어' ? `${remainingDays}일 남음` : `${remainingDays} days left`}
                             {extensionDays > 0 && (
                                 <span className="text-[#21DBA4] ml-1">(+{extensionDays}일)</span>
                             )}
@@ -93,7 +93,7 @@ const InviteCodesSection = ({ theme, t }: { theme: string; t: (key: string) => s
             </div>
 
             <p className={`text-xs mb-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                {t('language') === 'ko'
+                {t('language') === '언어'
                     ? '친구를 초대하면 체험 기간이 2일 연장됩니다!'
                     : 'Invite friends to extend your trial by 2 days each!'}
             </p>
@@ -126,13 +126,13 @@ const InviteCodesSection = ({ theme, t }: { theme: string; t: (key: string) => s
                                 {isUsed ? (
                                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${theme === 'dark' ? 'bg-slate-600 text-slate-300' : 'bg-slate-200 text-slate-500'
                                         }`}>
-                                        {t('language') === 'ko' ? '사용완료' : 'Used'}
+                                        {t('language') === '언어' ? '사용완료' : 'Used'}
                                     </span>
                                 ) : (
                                     <>
                                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'
                                             }`}>
-                                            {t('language') === 'ko' ? '대기중' : 'Available'}
+                                            {t('language') === '언어' ? '대기중' : 'Available'}
                                         </span>
                                         <button
                                             onClick={() => handleCopyCode(invite.code)}
@@ -155,11 +155,11 @@ const InviteCodesSection = ({ theme, t }: { theme: string; t: (key: string) => s
 
             <div className={`mt-4 pt-4 border-t flex items-center justify-between text-xs ${theme === 'dark' ? 'border-slate-700 text-slate-400' : 'border-slate-200 text-slate-500'
                 }`}>
-                <span>{t('language') === 'ko' ? '초대 현황' : 'Invite Status'}</span>
+                <span>{t('language') === '언어' ? '초대 현황' : 'Invite Status'}</span>
                 <span className="font-bold">
-                    {usedCodesCount}/{inviteCodes.length} {t('language') === 'ko' ? '사용됨' : 'used'}
+                    {usedCodesCount}/{inviteCodes.length} {t('language') === '언어' ? '사용됨' : 'used'}
                     {extensionDays > 0 && (
-                        <span className="text-[#21DBA4] ml-2">(+{extensionDays} {t('language') === 'ko' ? '일 연장' : 'days extended'})</span>
+                        <span className="text-[#21DBA4] ml-2">(+{extensionDays} {t('language') === '언어' ? '일 연장' : 'days extended'})</span>
                     )}
                 </span>
             </div>
@@ -543,23 +543,23 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                         <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
                             {isPro
                                 ? (subscription?.isMaster ? 'MASTER' : 'PRO PLAN')
-                                : (t('language') === 'ko' ? '무료 체험' : 'FREE TRIAL')}
+                                : (t('language') === '언어' ? '무료 체험' : 'FREE TRIAL')}
                         </span>
                         <CreditCard className="text-white/50" />
                     </div>
                     <h3 className="text-lg md:text-xl font-bold mb-1">
                         {isPro
                             ? (subscription?.isMaster ? 'LinkBrain Master' : 'LinkBrain Pro')
-                            : (t('language') === 'ko' ? 'LinkBrain 무료 체험' : 'LinkBrain Free Trial')}
+                            : (t('language') === '언어' ? 'LinkBrain 무료 체험' : 'LinkBrain Free Trial')}
                     </h3>
                     <p className="text-white/70 text-xs md:text-sm mb-4 md:mb-6">
                         {isPro
                             ? (subscription?.isMaster
-                                ? (t('language') === 'ko' ? '모든 기능 무제한 이용' : 'Unlimited access to all features')
+                                ? (t('language') === '언어' ? '모든 기능 무제한 이용' : 'Unlimited access to all features')
                                 : (formatRenewalDate()
-                                    ? (t('language') === 'ko' ? `${formatRenewalDate()}에 갱신 예정` : `Renews on ${formatRenewalDate()}`)
-                                    : (t('language') === 'ko' ? '프로 플랜 이용 중' : 'Pro plan active')))
-                            : (t('language') === 'ko' ? `${remainingDays}일 남음` : `${remainingDays} days left`)}
+                                    ? (t('language') === '언어' ? `${formatRenewalDate()}에 갱신 예정` : `Renews on ${formatRenewalDate()}`)
+                                    : (t('language') === '언어' ? '프로 플랜 이용 중' : 'Pro plan active')))
+                            : (t('language') === '언어' ? `${remainingDays}일 남음` : `${remainingDays} days left`)}
                     </p>
                     {!subscription?.isMaster && (
                         <button
@@ -570,7 +570,7 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                             {isLoadingPortal ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                                isPro ? t('manageBilling') : (t('language') === 'ko' ? '업그레이드' : 'Upgrade')
+                                isPro ? t('manageBilling') : (t('language') === '언어' ? '업그레이드' : 'Upgrade')
                             )}
                         </button>
                     )}
@@ -772,11 +772,11 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
                         📱 {t('iphoneShortcuts')}
                     </h5>
                     <ol className={`text-xs space-y-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                        <li>1. {t('language') === 'ko' ? 'API 키를 생성하고 복사하세요' : 'Generate and copy your API key'}</li>
-                        <li>2. {t('language') === 'ko' ? '단축어 앱에서 새 단축어를 만드세요' : 'Create a new shortcut in the Shortcuts app'}</li>
-                        <li>3. {t('language') === 'ko' ? '"URL 콘텐츠 가져오기" 액션을 추가하세요' : 'Add "Get Contents of URL" action'}</li>
-                        <li>4. URL: https://linkbrain.cloud/api/analyze, {t('language') === 'ko' ? '방식: POST' : 'Method: POST'}</li>
-                        <li>5. {t('language') === 'ko' ? '헤더에 X-API-Key: [복사한 키] 추가' : 'Add header X-API-Key: [your key]'}</li>
+                        <li>1. {t('language') === '언어' ? 'API 키를 생성하고 복사하세요' : 'Generate and copy your API key'}</li>
+                        <li>2. {t('language') === '언어' ? '단축어 앱에서 새 단축어를 만드세요' : 'Create a new shortcut in the Shortcuts app'}</li>
+                        <li>3. {t('language') === '언어' ? '"URL 콘텐츠 가져오기" 액션을 추가하세요' : 'Add "Get Contents of URL" action'}</li>
+                        <li>4. URL: https://linkbrain.cloud/api/analyze, {t('language') === '언어' ? '방식: POST' : 'Method: POST'}</li>
+                        <li>5. {t('language') === '언어' ? '헤더에 X-API-Key: [복사한 키] 추가' : 'Add header X-API-Key: [your key]'}</li>
                     </ol>
                 </div>
             </div>
@@ -785,16 +785,16 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
             <div className="p-3 md:p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 text-blue-700">
                 <Zap size={20} className="shrink-0 mt-0.5" />
                 <div className="text-xs md:text-sm">
-                    <p className="font-bold mb-0.5">{t('language') === 'ko' ? '더 강력한 브레인 만들기' : 'Supercharge your Brain'}</p>
-                    <p className="opacity-80 leading-relaxed">{t('language') === 'ko' ? '자주 사용하는 도구를 연결하여 콘텐츠를 자동으로 가져오고 지식 베이스를 동기화하세요.' : 'Connect your favorite tools to automatically import content and sync your knowledge base.'}</p>
+                    <p className="font-bold mb-0.5">{t('language') === '언어' ? '더 강력한 브레인 만들기' : 'Supercharge your Brain'}</p>
+                    <p className="opacity-80 leading-relaxed">{t('language') === '언어' ? '자주 사용하는 도구를 연결하여 콘텐츠를 자동으로 가져오고 지식 베이스를 동기화하세요.' : 'Connect your favorite tools to automatically import content and sync your knowledge base.'}</p>
                 </div>
             </div>
 
             <div className="space-y-3 md:space-y-4">
-                <IntegrationCard name="Notion" icon="N" description={t('language') === 'ko' ? 'Notion 데이터베이스와 저장된 링크 동기화' : 'Sync your saved links to a Notion database'} comingSoon t={t} theme={theme} />
-                <IntegrationCard name="YouTube" icon="Y" description={t('language') === 'ko' ? '좋아요한 동영상과 재생목록 자동 가져오기' : 'Import liked videos and playlists automatically'} comingSoon t={t} theme={theme} />
-                <IntegrationCard name="Readwise" icon="R" description={t('language') === 'ko' ? '글과 책에서 하이라이트 동기화' : 'Sync highlights from articles and books'} comingSoon t={t} theme={theme} />
-                <IntegrationCard name="Slack" icon="S" description={t('language') === 'ko' ? 'Slack 대화에서 바로 링크 저장' : 'Save links directly from Slack conversations'} comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Notion" icon="N" description={t('language') === '언어' ? 'Notion 데이터베이스와 저장된 링크 동기화' : 'Sync your saved links to a Notion database'} comingSoon t={t} theme={theme} />
+                <IntegrationCard name="YouTube" icon="Y" description={t('language') === '언어' ? '좋아요한 동영상과 재생목록 자동 가져오기' : 'Import liked videos and playlists automatically'} comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Readwise" icon="R" description={t('language') === '언어' ? '글과 책에서 하이라이트 동기화' : 'Sync highlights from articles and books'} comingSoon t={t} theme={theme} />
+                <IntegrationCard name="Slack" icon="S" description={t('language') === '언어' ? 'Slack 대화에서 바로 링크 저장' : 'Save links directly from Slack conversations'} comingSoon t={t} theme={theme} />
             </div>
         </div>
     );
