@@ -7,7 +7,7 @@ export interface SubscriptionState {
     status: 'trial' | 'active' | 'expired'; // active = paid pro
     tier: 'free' | 'pro';
     trialStartDate: string | null; // ISO date
-    daysRemaining: number;
+    remainingDays: number;
     isReadOnly: boolean;
     canCreate: boolean;
     canEdit: boolean;
@@ -15,13 +15,15 @@ export interface SubscriptionState {
     loading: boolean;
 }
 
+export type UseSubscriptionReturn = SubscriptionState;
+
 export const useSubscription = () => {
     const { user } = useClips();
     const [subscription, setSubscription] = useState<SubscriptionState>({
         status: 'trial',
         tier: 'free',
         trialStartDate: null,
-        daysRemaining: 15,
+        remainingDays: 15,
         isReadOnly: false,
         canCreate: true,
         canEdit: true,
@@ -58,17 +60,17 @@ export const useSubscription = () => {
             const now = new Date();
             const diffTime = Math.abs(now.getTime() - trialStartDate.getTime());
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            const daysRemaining = Math.max(0, 15 - diffDays);
+            const remainingDays = Math.max(0, 15 - diffDays);
 
             const isPro = data.subscriptionTier === 'pro' || data.subscriptionStatus === 'active';
-            const isTrialActive = daysRemaining > 0;
+            const isTrialActive = remainingDays > 0;
             const isExpired = !isPro && !isTrialActive;
 
             setSubscription({
                 status: isPro ? 'active' : (isExpired ? 'expired' : 'trial'),
                 tier: isPro ? 'pro' : 'free',
                 trialStartDate: data.trialStartDate,
-                daysRemaining: isPro ? 30 : daysRemaining, // Arbitrary number for pro
+                remainingDays: isPro ? 30 : remainingDays, // Arbitrary number for pro
                 isReadOnly: isExpired,
                 canCreate: isPro || !isExpired,
                 canEdit: isPro || !isExpired,
