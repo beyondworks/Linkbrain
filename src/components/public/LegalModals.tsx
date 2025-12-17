@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Globe, MapPin, Building2, Shield, FileText } from 'lucide-react';
 
@@ -9,50 +10,64 @@ interface LegalModalProps {
     children: React.ReactNode;
 }
 
-const Modal = ({ isOpen, onClose, title, children }: LegalModalProps) => (
-    <AnimatePresence>
-        {isOpen && (
-            <>
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999]"
-                    onClick={onClose}
-                />
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="fixed inset-0 flex items-center justify-center p-4 z-[99999] pointer-events-none"
-                >
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col pointer-events-auto border border-slate-200 dark:border-slate-800">
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                {title === 'Privacy Policy' && <Shield className="text-[#21DBA4]" size={24} />}
-                                {title === 'Terms of Service' && <FileText className="text-[#21DBA4]" size={24} />}
-                                {title === 'Contact Us' && <Mail className="text-[#21DBA4]" size={24} />}
-                                {title}
-                            </h2>
-                            <button
-                                onClick={onClose}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
+const Modal = ({ isOpen, onClose, title, children }: LegalModalProps) => {
+    const [mounted, setMounted] = useState(false);
 
-                        {/* Content */}
-                        <div className="p-6 overflow-y-auto leading-relaxed text-slate-600 dark:text-slate-300 space-y-4">
-                            {children}
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    const modalContent = (
+        <AnimatePresence>
+            {isOpen && (
+                <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999]"
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="fixed inset-0 flex items-center justify-center p-4 z-[999999] pointer-events-none"
+                    >
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col pointer-events-auto border border-slate-200 dark:border-slate-800 relative">
+                            {/* Header */}
+                            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    {title === 'Privacy Policy' && <Shield className="text-[#21DBA4]" size={24} />}
+                                    {title === 'Terms of Service' && <FileText className="text-[#21DBA4]" size={24} />}
+                                    {title === 'Contact Us' && <Mail className="text-[#21DBA4]" size={24} />}
+                                    {title}
+                                </h2>
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6 overflow-y-auto leading-relaxed text-slate-600 dark:text-slate-300 space-y-4">
+                                {children}
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
-            </>
-        )}
-    </AnimatePresence>
-);
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+    );
+
+    if (!mounted) return null;
+
+    const modalRoot = document.getElementById('modal-root') || document.body;
+    return createPortal(modalContent, modalRoot);
+};
 
 export const PrivacyContent = () => (
     <div className="space-y-6">
