@@ -579,7 +579,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
                 </div>
 
                 <div className="mt-16">
-                  <FeatureSlider />
+                  <FeatureSlider language={language} />
                 </div>
               </div>
             </section>
