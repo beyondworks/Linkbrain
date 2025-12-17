@@ -400,6 +400,9 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
     const email = user?.email || '';
     const photoURL = user?.photoURL;
 
+    // Subscription data
+    const { subscription, isPro, isTrial, remainingDays } = useSubscriptionContext();
+
     // State for editable fields
     const [firstNameInput, setFirstNameInput] = useState(initialFirstName);
     const [lastNameInput, setLastNameInput] = useState(initialLastName);
@@ -436,6 +439,20 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
         }
     };
 
+    // Navigate to pricing page for upgrade
+    const handleUpgrade = () => {
+        window.location.href = '/#pricing';
+    };
+
+    // Format renewal date
+    const formatRenewalDate = () => {
+        if (subscription?.proEndDate) {
+            const date = new Date(subscription.proEndDate);
+            return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        return '';
+    };
+
     const handleSaveProfile = async () => {
         if (!hasChanges) return;
         setIsSaving(true);
@@ -453,56 +470,66 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
     };
 
     return (
-        <div className="max-w-xl space-y-6 md:space-y-8">
-            <div className="flex items-center gap-4 md:gap-6">
-                <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-slate-100 relative group cursor-pointer overflow-hidden border-4 border-white shadow-lg shrink-0">
-                    {photoURL ? (
-                        <img src={photoURL} className="w-full h-full object-cover" alt="Profile" />
-                    ) : (
-                        <div className={`w-full h-full flex items-center justify-center text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-500'}`}>
-                            {firstNameInput.charAt(0).toUpperCase()}
-                        </div>
-                    )}
-                    <div onClick={() => toast.info("Avatar change disabled")} className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Edit2 className="text-white" size={24} />
+        <div className="space-y-6">
+            {/* Profile Section */}
+            <div className={`p-4 md:p-6 rounded-2xl ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-50'}`}>
+                <div className="flex items-center gap-4 mb-6">
+                    <div className="relative">
+                        {photoURL ? (
+                            <img src={photoURL} alt="Profile" className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover" />
+                        ) : (
+                            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                                <User size={28} className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'} />
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{displayName}</h3>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{email}</p>
+                        <button className="text-[#21DBA4] text-sm font-bold mt-1">{t('editProfile')}</button>
                     </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                    <h4 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{displayName}</h4>
-                    <p className="text-slate-400 text-sm truncate">{email}</p>
-                    <button onClick={() => toast.info("Avatar change disabled")} className="mt-2 md:mt-3 text-xs font-bold text-[#21DBA4] border border-[#21DBA4]/30 px-3 py-1.5 rounded-full hover:bg-[#21DBA4] hover:text-white transition-all">
-                        {t('changeAvatar')}
-                    </button>
-                </div>
-            </div>
-
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
-                    <div className="space-y-1.5 md:space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">{t('firstName')}</label>
+                {/* Name inputs */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label className={`block text-xs font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('firstName')}</label>
                         <input
                             type="text"
                             value={firstNameInput}
                             onChange={(e) => setFirstNameInput(e.target.value)}
-                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                            className={`w-full p-3 rounded-xl border text-sm font-medium ${theme === 'dark'
+                                ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-500'
+                                : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                                }`}
                         />
                     </div>
-                    <div className="space-y-1.5 md:space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">{t('lastName')}</label>
+                    <div>
+                        <label className={`block text-xs font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('lastName')}</label>
                         <input
                             type="text"
                             value={lastNameInput}
                             onChange={(e) => setLastNameInput(e.target.value)}
-                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                            className={`w-full p-3 rounded-xl border text-sm font-medium ${theme === 'dark'
+                                ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-500'
+                                : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                                }`}
                         />
                     </div>
                 </div>
-                <div className="space-y-1.5 md:space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">{t('email')}</label>
-                    <input type="email" defaultValue={email} disabled className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm opacity-60 cursor-not-allowed ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`} />
+                {/* Email (read-only) */}
+                <div className="mb-4">
+                    <label className={`block text-xs font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('email')}</label>
+                    <input
+                        type="email"
+                        value={email}
+                        disabled
+                        className={`w-full p-3 rounded-xl border text-sm font-medium cursor-not-allowed ${theme === 'dark'
+                            ? 'bg-slate-700/50 border-slate-600 text-slate-400'
+                            : 'bg-slate-100 border-slate-200 text-slate-500'
+                            }`}
+                    />
                 </div>
-
-                {/* Save Button - Only visible when there are changes */}
+                {/* Save Button */}
                 {hasChanges && (
                     <button
                         onClick={handleSaveProfile}
@@ -517,30 +544,36 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
             {/* Invite Codes Section */}
             <InviteCodesSection theme={theme} t={t} />
 
-            <div className="p-4 md:p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white relative overflow-hidden">
+            {/* Subscription Card */}
+            <div className={`p-4 md:p-6 rounded-2xl relative overflow-hidden ${isPro
+                ? 'bg-gradient-to-br from-slate-900 to-slate-800 text-white'
+                : 'bg-gradient-to-br from-[#21DBA4] to-[#1bc290] text-white'}`}>
                 <div className="relative z-10">
                     <div className="flex items-center justify-between mb-3 md:mb-4">
-                        <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">PRO PLAN</span>
+                        <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
+                            {isPro ? 'PRO PLAN' : 'FREE TRIAL'}
+                        </span>
                         <CreditCard className="text-white/50" />
                     </div>
-                    <h3 className="text-lg md:text-xl font-bold mb-1">LinkBrain Pro</h3>
-                    <p className="text-slate-400 text-xs md:text-sm mb-4 md:mb-6">Renews on Oct 24, 2025</p>
-                    <div className="flex gap-2 md:gap-3">
-                        <button
-                            onClick={handleBillingPortal}
-                            disabled={isLoadingPortal}
-                            className="bg-white text-slate-900 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap disabled:opacity-70 min-w-[80px] flex items-center justify-center gap-2"
-                        >
-                            {isLoadingPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : t('manageBilling')}
-                        </button>
-                        <button
-                            onClick={handleBillingPortal}
-                            disabled={isLoadingPortal}
-                            className="text-white/70 hover:text-white px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-bold whitespace-nowrap disabled:opacity-50"
-                        >
-                            {t('cancelPlan')}
-                        </button>
-                    </div>
+                    <h3 className="text-lg md:text-xl font-bold mb-1">
+                        {isPro ? 'LinkBrain Pro' : 'LinkBrain 무료 체험'}
+                    </h3>
+                    <p className="text-white/70 text-xs md:text-sm mb-4 md:mb-6">
+                        {isPro
+                            ? `${formatRenewalDate()}에 갱신 예정`
+                            : `${remainingDays}일 남음`}
+                    </p>
+                    <button
+                        onClick={isPro ? handleBillingPortal : handleUpgrade}
+                        disabled={isPro && isLoadingPortal}
+                        className="bg-white text-slate-900 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap disabled:opacity-70 min-w-[100px] flex items-center justify-center gap-2"
+                    >
+                        {isLoadingPortal ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            isPro ? t('manageBilling') : (t('language') === 'ko' ? '업그레이드' : 'Upgrade')
+                        )}
+                    </button>
                 </div>
                 <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
                     <LinkBrainLogo variant="white" size={150} />
