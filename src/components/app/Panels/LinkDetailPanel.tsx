@@ -172,7 +172,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         console.log('[LinkDetailPanel] link changed, id:', link.id, 'chatHistory:', link.chatHistory?.length || 0, 'messages');
         if (link.chatHistory && link.chatHistory.length > 0) {
             setChatMessages(link.chatHistory);
-            setChatExpanded(true);
+            // Keep chat collapsed by default - user can expand if needed
         } else {
             // Reset if no chat history (new clip or cleared)
             setChatMessages([]);
