@@ -217,17 +217,35 @@ const App = () => {
     }
   };
 
+  // Detect if user is on mobile device
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+  };
+
   const handleInstallApp = async () => {
-    if (deferredPromptRef.current) {
-      deferredPromptRef.current.prompt();
-      const { outcome } = await deferredPromptRef.current.userChoice;
-      if (outcome === 'accepted') {
-        toast.success(language === 'ko' ? '앱이 설치되었습니다!' : 'App installed!');
+    if (isMobileDevice()) {
+      // Mobile: Try PWA install prompt, fallback to instruction modal
+      if (deferredPromptRef.current) {
+        deferredPromptRef.current.prompt();
+        const { outcome } = await deferredPromptRef.current.userChoice;
+        if (outcome === 'accepted') {
+          toast.success(language === 'ko' ? '앱이 홈 화면에 추가되었습니다!' : 'App added to home screen!');
+        }
+        deferredPromptRef.current = null;
+      } else {
+        // iOS Safari or already installed - show instruction modal
+        setShowInstallModal(true);
       }
-      deferredPromptRef.current = null;
     } else {
-      // If no system prompt is available (e.g. iOS or already installed/dismissed), show instruction modal
-      setShowInstallModal(true);
+      // Desktop: Download the app zip file
+      const link = document.createElement('a');
+      link.href = '/LinkBrain.app.zip';
+      link.download = 'LinkBrain.app.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(language === 'ko' ? '다운로드가 시작되었습니다!' : 'Download started!');
     }
   };
 
