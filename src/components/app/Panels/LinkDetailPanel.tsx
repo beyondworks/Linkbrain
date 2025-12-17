@@ -524,7 +524,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ url: link.url })
                                         });
-                                        toast.success(t('language') === 'ko' ? '비공개로 전환되었습니다' : 'Set to private');
+                                        toast.success(t('language') === 'ko' ? '이 게시물은 커뮤니티에 공유되지 않습니다' : 'This clip is now hidden from the community');
                                     } else {
                                         // Publish to public
                                         fetch('/api/public-clips', {
@@ -542,9 +542,9 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                         }).then(res => res.json()).then(data => {
                                             if (data.success === false) {
                                                 setIsPrivate(true); // Revert on failure
-                                                toast.error(data.reason || (t('language') === 'ko' ? '공개 불가' : 'Cannot publish'));
+                                                toast.error(data.reason || (t('language') === 'ko' ? '커뮤니티 공유가 불가능합니다' : 'Cannot share with community'));
                                             } else {
-                                                toast.success(t('language') === 'ko' ? '커뮤니티에 공개되었습니다' : 'Published to community');
+                                                toast.success(t('language') === 'ko' ? '이 게시물이 커뮤니티에 공유됩니다' : 'This clip is now shared with the community');
                                             }
                                         });
                                     }
