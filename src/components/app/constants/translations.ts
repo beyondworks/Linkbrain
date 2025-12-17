@@ -201,7 +201,7 @@ export const TRANSLATIONS = {
         archive: "보관함",
         smartFolders: "카테고리",
         sources: "출처",
-        collections: "컨렉션",
+        collections: "컬렉션",
         settings: "설정",
         aiInsights: "AI 인사이트 [Beta]",
         discovery: "탐색 [Beta]",
