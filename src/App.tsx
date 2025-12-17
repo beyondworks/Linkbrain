@@ -17,7 +17,8 @@ import {
   Link as LinkIcon,
   Globe,
   Menu,
-  X
+  X,
+  Languages
 } from 'lucide-react';
 
 import { FeatureSlider } from './components/landing/FeatureSlider';
@@ -37,6 +38,7 @@ import { SubscriptionProvider } from './context/SubscriptionContext';
 
 import { InstallInstructionModal } from './components/common/InstallInstructionModal';
 import { LegalModals } from './components/public/LegalModals';
+import { landingTranslations, LandingLanguage } from './constants/landingTranslations';
 
 // Brand Color Constants
 const PRIMARY_COLOR = "#21DBA4";
@@ -279,6 +281,8 @@ const App = () => {
         onEnterApp={() => handleNavigate('app')}
         onNavigate={handleNavigate}
         onInstallApp={handleInstallApp}
+        language={language}
+        onLanguageChange={handleSetLanguage}
       />
       <InstallInstructionModal
         isOpen={showInstallModal}
@@ -295,9 +299,12 @@ interface LandingPageProps {
   onEnterApp: () => void;
   onNavigate: (view: string) => void;
   onInstallApp: () => void;
+  language: LandingLanguage;
+  onLanguageChange: (lang: LandingLanguage) => void;
 }
 
-const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp }: LandingPageProps) => {
+const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp, language, onLanguageChange }: LandingPageProps) => {
+  const t = landingTranslations[language];
   const [scrolled, setScrolled] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -359,24 +366,33 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
                     }}
                     className={`text-lg font-bold text-left tracking-tight transition-colors ${isActive ? 'text-[#21DBA4]' : 'text-slate-900 hover:text-[#21DBA4]'}`}
                   >
-                    {item}
+                    {item === 'FEATURES' ? t.features : item === 'HOW IT WORKS' ? t.howItWorks : t.pricing}
                   </button>
                 );
               })}
             </div>
+
+            {/* Language Toggle for Mobile */}
+            <button
+              onClick={() => onLanguageChange(language === 'ko' ? 'en' : 'ko')}
+              className="mt-6 flex items-center gap-2 text-slate-500 font-bold"
+            >
+              <Languages size={18} />
+              {language === 'ko' ? 'Switch to English' : '한국어로 변경'}
+            </button>
 
             <div className="mt-8 pt-8 border-t border-slate-50 flex flex-col gap-4">
               <button
                 onClick={() => { onEnterApp(); setMobileMenuOpen(false); }}
                 className="w-full py-3 rounded-lg border border-[#21DBA4] text-[#21DBA4] font-bold text-base transition-transform active:scale-95 bg-white"
               >
-                Log in
+                {t.login}
               </button>
               <button
                 onClick={() => { onInstallApp(); setMobileMenuOpen(false); }}
                 className="w-full py-3 rounded-lg bg-[#21DBA4] text-white font-bold text-base shadow-md shadow-[#21DBA4]/20 active:scale-95 transition-transform hover:bg-[#1BC290]"
               >
-                App 설치하기
+                {t.installApp}
               </button>
             </div>
           </div>
@@ -405,24 +421,34 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
                   onClick={() => onNavigate(viewName)}
                   className={`transition-colors relative group ${isActive ? 'text-[#21DBA4]' : 'hover:text-[#21DBA4]'}`}
                 >
-                  {item}
+                  {item === 'FEATURES' ? t.features : item === 'HOW IT WORKS' ? t.howItWorks : t.pricing}
                 </button>
               );
             })}
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
+            {/* Language Toggle */}
+            <button
+              onClick={() => onLanguageChange(language === 'ko' ? 'en' : 'ko')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200"
+              title={language === 'ko' ? 'Switch to English' : '한국어로 변경'}
+            >
+              <Languages size={14} />
+              {language === 'ko' ? 'EN' : '한국어'}
+            </button>
+
             <button
               onClick={onEnterApp}
               className="text-[13px] font-bold text-slate-500 hover:text-slate-900 hidden sm:block transition-colors uppercase tracking-wide mr-2"
             >
-              Log in
+              {t.login}
             </button>
             <button
               onClick={onInstallApp}
               className="px-6 py-2.5 rounded-full bg-[#21DBA4] text-white text-[13px] font-bold hover:bg-[#1BC290] hover:shadow-lg hover:shadow-[#21DBA4]/30 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 active:scale-95 duration-200 shadow-md shadow-[#21DBA4]/20"
             >
-              <Download size={14} /> <span className="hidden sm:inline">App 설치</span><span className="sm:hidden">App</span>
+              <Download size={14} /> <span className="hidden sm:inline">{t.installApp}</span><span className="sm:hidden">App</span>
             </button>
 
             {/* Mobile Menu Toggle */}
@@ -447,19 +473,18 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-100 shadow-sm mb-12 animate-fade-in-up hover:scale-105 transition-transform cursor-default">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></span>
-                  <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Linkbrain is here</span>
+                  <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">{t.badgeText}</span>
                 </div>
 
                 {/* Headline */}
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[1.1] mb-8 animate-fade-in-up delay-100 max-w-4xl text-[rgb(26,26,26)] drop-shadow-sm">
-                  흩어진 링크들을 모아<br />
-                  <span className="text-[#21DBA4]">두 번째 뇌를 만드세요</span>
+                  {t.heroTitle1}<br />
+                  <span className="text-[#21DBA4]">{t.heroTitle2}</span>
                 </h1>
 
                 <p className="text-base md:text-lg text-slate-500 mb-14 max-w-xl leading-relaxed animate-fade-in-up delay-200 font-medium tracking-tight">
-                  저장만 해두고 잊어버리셨나요?<br />
-                  LinkBrain AI가 당신의 링크를 분석해<br className="md:hidden" />
-                  <span className="text-slate-900 font-bold underline decoration-[#21DBA4]/40 decoration-2 underline-offset-4">살아있는 인사이트</span>로 바꿉니다.
+                  {t.heroSubtitle1}<br />
+                  {t.heroSubtitle2}
                 </p>
 
                 {/* CTA Group */}
@@ -469,7 +494,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
                     className="group relative px-10 py-4 bg-[#21DBA4] text-white rounded-full font-bold text-base flex items-center gap-2 hover:bg-[#1BC290] hover:shadow-2xl hover:shadow-[#21DBA4]/25 transition-all overflow-hidden shadow-xl shadow-[#21DBA4]/15 active:scale-95 duration-200"
                   >
                     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
-                    앱 무료 설치하기 <Download size={18} className="group-hover:translate-x-1 transition-transform" />
+                    {t.ctaStart} <Download size={18} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
 
