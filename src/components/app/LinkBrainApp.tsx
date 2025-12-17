@@ -2259,6 +2259,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                onClearCollections={handleClearCollections}
                theme={theme}
                t={t}
+               language={language}
             />
          )}
 
