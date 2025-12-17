@@ -5,10 +5,9 @@ import {
   Zap,
   Crown,
   Building2,
-  HelpCircle
+  HelpCircle,
+  Loader2
 } from 'lucide-react';
-import { motion } from 'motion/react';
-import { TossPaymentModal } from '../payment/TossPaymentModal';
 import { useClips } from '../../hooks/useClips';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -113,9 +112,6 @@ interface LinkBrainPricingProps {
 export const LinkBrainPricing = ({ theme, language = 'ko', onEnterApp }: LinkBrainPricingProps) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedPlanPrice, setSelectedPlanPrice] = useState(0);
-  const [selectedPlanName, setSelectedPlanName] = useState('');
-  const [orderId, setOrderId] = useState('');
 
   const { user } = useClips();
   const navigate = useNavigate();
@@ -145,19 +141,17 @@ export const LinkBrainPricing = ({ theme, language = 'ko', onEnterApp }: LinkBra
     }
   ];
 
-  const handlePlanSelect = (plan: typeof plans[0]) => {
+  const handlePlanSelect = async (plan: typeof plans[0]) => {
     console.log("handlePlanSelect clicked:", plan);
 
     // If user is not logged in, redirect to login
     if (!user) {
       console.log("User not logged in, redirecting...");
-      toast.info("로그인이 필요합니다. 로그인 화면으로 이동합니다.");
+      toast.info(language === 'ko' ? "로그인이 필요합니다." : "Please login first.");
       if (onEnterApp) {
         onEnterApp();
       } else {
-        // Fallback for direct usage
         navigate('/');
-        // Or specific logic if onEnterApp is missing
       }
       return;
     }
@@ -168,31 +162,49 @@ export const LinkBrainPricing = ({ theme, language = 'ko', onEnterApp }: LinkBra
       return;
     }
 
-    // Paid plan -> Open Payment Modal
-    // Generate a simple Order ID
-    const newOrderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const finalPrice = plan.price * (language === 'ko' ? 1400 : 1); // Simple conversion or keep USD?
-    // Note: The UI shows '$', so if we want KRW payment via Toss, we should exchange or assume logic.
-    // However, the text says "$" for EN and implies KRW context for KO usually, but styling is fixed to '$'.
-    // Let's assume we stick to the displayed currency or convert for Toss. 
-    // Toss usually expects KRW. 
-    // Let's dynamically adjust: if KO, maybe we assume the '$' is just visual or we convert.
-    // Strategy: If language is KO, use KRW price ~ x1400. 
-    // Re-reading code: The price is simply `9` or `12` number.
-    // Let's set a distinct KRW price if language is KO.
+    // Paid plan -> Stripe Checkout
+    try {
+      setIsPaymentModalOpen(true); // Show loading state
 
-    let amount = plan.price;
-    if (language === 'ko') {
-      // Approximate exchange rate for better UX
-      amount = plan.price * 1500;
-      // Round to nice number
-      amount = Math.ceil(amount / 100) * 100;
+      const priceId = billingCycle === 'yearly'
+        ? import.meta.env.VITE_STRIPE_PRICE_ID_YEARLY
+        : import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY;
+
+      if (!priceId) {
+        toast.error(language === 'ko' ? '결제 설정이 완료되지 않았습니다.' : 'Payment not configured');
+        setIsPaymentModalOpen(false);
+        return;
+      }
+
+      const response = await fetch('/api/payment/stripe-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId,
+          successUrl: `${window.location.origin}/payment/success`,
+          cancelUrl: `${window.location.origin}/pricing`,
+          customerEmail: user.email,
+          userId: user.uid,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Payment failed');
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error: any) {
+      console.error('Stripe checkout error:', error);
+      toast.error(error.message || (language === 'ko' ? '결제 오류가 발생했습니다.' : 'Payment error'));
+      setIsPaymentModalOpen(false);
     }
-
-    setSelectedPlanPrice(amount);
-    setSelectedPlanName(plan.name);
-    setOrderId(newOrderId);
-    setIsPaymentModalOpen(true);
   };
 
   return (
@@ -236,14 +248,10 @@ export const LinkBrainPricing = ({ theme, language = 'ko', onEnterApp }: LinkBra
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pb-20">
           {plans.map((plan, idx) => (
-            <motion.div
+            <div
               key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              viewport={{ once: true }}
               className={`relative rounded-3xl p-8 border flex flex-col ${plan.highlight
-                ? `border-[#21DBA4] shadow-2xl shadow-[#21DBA4]/10 scale-105 z-10 ${isDark ? 'bg-slate-900' : 'bg-white'}`
+                ? `border-[#21DBA4] shadow-2xl shadow-[#21DBA4]/10 scale-105 ${isDark ? 'bg-slate-900' : 'bg-white'}`
                 : `${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`
                 }`}
             >
@@ -288,7 +296,7 @@ export const LinkBrainPricing = ({ theme, language = 'ko', onEnterApp }: LinkBra
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -299,18 +307,16 @@ export const LinkBrainPricing = ({ theme, language = 'ko', onEnterApp }: LinkBra
           </p>
         </div>
 
-        {/* Payment Modal */}
-        {isPaymentModalOpen && user && (
-          <TossPaymentModal
-            amount={selectedPlanPrice}
-            orderId={orderId}
-            orderName={selectedPlanName}
-            customerKey={user.uid}
-            customerEmail={user.email || ''}
-            successUrl={`${window.location.origin}/payment/success`}
-            failUrl={`${window.location.origin}/payment/fail`}
-            onClose={() => setIsPaymentModalOpen(false)}
-          />
+        {/* Loading Overlay for Stripe Redirect */}
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl">
+              <Loader2 className="w-10 h-10 text-[#21DBA4] animate-spin" />
+              <p className="text-slate-700 font-medium">
+                {language === 'ko' ? '결제 페이지로 이동 중...' : 'Redirecting to checkout...'}
+              </p>
+            </div>
+          </div>
         )}
 
       </div>
