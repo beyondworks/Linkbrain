@@ -36,6 +36,7 @@ import { toast } from 'sonner';
 import { SubscriptionProvider } from './context/SubscriptionContext';
 
 import { InstallInstructionModal } from './components/common/InstallInstructionModal';
+import { LegalModals } from './components/public/LegalModals';
 
 // Brand Color Constants
 const PRIMARY_COLOR = "#21DBA4";
@@ -300,6 +301,7 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
   const [scrolled, setScrolled] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'contact' | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -701,15 +703,26 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp 
             <span className="font-bold text-[#21DBA4] text-sm text-[18px]">Linkbrain</span>
           </div>
           <div className="flex gap-8 text-[12px] font-medium text-slate-500">
-            <a href="#" className="hover:text-[#21DBA4] transition-colors">Privacy</a>
-            <a href="#" className="hover:text-[#21DBA4] transition-colors">Terms</a>
-            <a href="#" className="hover:text-[#21DBA4] transition-colors">Contact</a>
+            <button onClick={() => setActiveModal('privacy')} className="hover:text-[#21DBA4] transition-colors">Privacy</button>
+            <button onClick={() => setActiveModal('terms')} className="hover:text-[#21DBA4] transition-colors">Terms</button>
+            <button onClick={() => setActiveModal('contact')} className="hover:text-[#21DBA4] transition-colors">Contact</button>
           </div>
           <div className="text-[12px] text-slate-300">
             © 2025 Linkbrain Inc. All rights reserved.
           </div>
         </div>
       </footer>
+
+      {/* Legal Modals */}
+      <LegalModals.Modal
+        isOpen={!!activeModal}
+        onClose={() => setActiveModal(null)}
+        title={activeModal === 'privacy' ? 'Privacy Policy' : activeModal === 'terms' ? 'Terms of Service' : 'Contact Us'}
+      >
+        {activeModal === 'privacy' && <LegalModals.PrivacyContent />}
+        {activeModal === 'terms' && <LegalModals.TermsContent />}
+        {activeModal === 'contact' && <LegalModals.ContactContent />}
+      </LegalModals.Modal>
 
       {/* Global Styles for Animations */}
       <style>{`
