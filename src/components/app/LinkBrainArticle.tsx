@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Heart,
   Bookmark,
@@ -18,7 +18,32 @@ import { toast } from 'sonner';
 import { usePublicClips, PublicClip, PublicComment } from '../../hooks/usePublicClips';
 import { useClips } from '../../hooks/useClips';
 
-const CATEGORIES = ["All", "Design", "Development", "Crypto", "Startup", "Marketing", "Productivity"];
+// Standard categories for normalization
+const STANDARD_CATEGORIES: Record<string, string[]> = {
+  'Design': ['design', 'ui', 'ux', 'graphic', 'figma', 'sketch', 'interface', 'visual', 'branding', 'logo'],
+  'Development': ['development', 'dev', 'coding', 'programming', 'frontend', 'backend', 'web', 'app', 'software', 'code', 'react', 'javascript', 'typescript', 'python'],
+  'AI': ['ai', 'artificial intelligence', 'machine learning', 'ml', 'llm', 'gpt', 'gemini', 'claude', 'chatgpt', 'deep learning'],
+  'Crypto': ['crypto', 'blockchain', 'bitcoin', 'ethereum', 'web3', 'nft', 'defi'],
+  'Startup': ['startup', 'entrepreneur', 'business', 'founder', 'vc', 'venture', 'funding'],
+  'Marketing': ['marketing', 'growth', 'seo', 'ads', 'advertising', 'social media', 'brand'],
+  'Productivity': ['productivity', 'efficiency', 'workflow', 'automation', 'tools', 'notion', 'obsidian'],
+  'Finance': ['finance', 'investment', 'stock', 'money', 'economics'],
+  'Health': ['health', 'fitness', 'wellness', 'medical', 'exercise'],
+  'Other': ['other', 'uncategorized', 'misc']
+};
+
+// Normalize category name to standard category
+const normalizeCategory = (category: string): string => {
+  const lowerCategory = category.toLowerCase().trim();
+
+  for (const [standard, keywords] of Object.entries(STANDARD_CATEGORIES)) {
+    if (keywords.some(keyword => lowerCategory.includes(keyword) || keyword.includes(lowerCategory))) {
+      return standard;
+    }
+  }
+
+  return 'Other';
+};
 
 // Placeholder image for clips without images
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=800&q=80";
@@ -35,6 +60,29 @@ export const LinkBrainArticle = ({ theme }: { theme: 'light' | 'dark' }) => {
   const { createClip, user } = useClips();
 
   const isDark = theme === 'dark';
+
+  // Extract and normalize categories from public clips
+  const dynamicCategories = useMemo(() => {
+    if (publicClips.length === 0) return ['All'];
+
+    const normalizedCats = new Set<string>();
+    publicClips.forEach(clip => {
+      if (clip.category) {
+        normalizedCats.add(normalizeCategory(clip.category));
+      }
+    });
+
+    // Sort alphabetically and prepend "All"
+    const sorted = Array.from(normalizedCats).sort();
+    return ['All', ...sorted];
+  }, [publicClips]);
+
+  // Reset to All if current category doesn't exist anymore
+  useEffect(() => {
+    if (activeCategory !== 'All' && !dynamicCategories.includes(activeCategory)) {
+      setActiveCategory('All');
+    }
+  }, [dynamicCategories, activeCategory]);
 
   // Fetch public clips on mount and category change
   useEffect(() => {
@@ -218,21 +266,23 @@ export const LinkBrainArticle = ({ theme }: { theme: 'light' | 'dark' }) => {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible items-center gap-2 mb-8 sticky top-0 z-20 py-4 -mx-4 px-4 bg-inherit backdrop-blur-sm no-scrollbar">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${activeCategory === cat
+        {/* Filters - Only show if there are clips */}
+        {publicClips.length > 0 && (
+          <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible items-center gap-2 mb-8 sticky top-0 z-20 py-4 -mx-4 px-4 bg-inherit backdrop-blur-sm no-scrollbar">
+            {dynamicCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${activeCategory === cat
                   ? 'bg-[#21DBA4] text-white shadow-lg shadow-[#21DBA4]/20 scale-105'
                   : isDark ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50 shadow-sm'
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+                  }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Article Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
