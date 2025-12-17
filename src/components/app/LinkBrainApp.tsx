@@ -316,6 +316,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    useEffect(() => {
       // Always sync, even when array is empty (for deletion persistence)
       if (firebaseCategories) {
+         console.log('[Categories] Received from Firebase:', firebaseCategories.length, firebaseCategories.map(c => c.name));
+
          // Deduplicate categories by name (keep first occurrence)
          const seen = new Set<string>();
          const uniqueCategories = firebaseCategories.filter(c => {
@@ -327,6 +329,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
             seen.add(name);
             return true;
          });
+
+         console.log('[Categories] After dedupe:', uniqueCategories.length, uniqueCategories.map(c => c.name));
 
          setCategories(uniqueCategories.map(c => ({
             id: c.id || '',

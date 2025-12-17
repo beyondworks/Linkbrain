@@ -182,6 +182,58 @@ const fallbackSummary = (rawText: string, language: string = 'KR'): string => {
     return rawText.substring(0, 300).trim() + '…';
 };
 
+// Category colors for new categories
+const CATEGORY_COLORS = [
+    'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500',
+    'bg-yellow-500', 'bg-orange-500', 'bg-teal-500', 'bg-indigo-500',
+    'bg-rose-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-violet-500'
+];
+
+/**
+ * Get or create category
+ * - Finds existing category by name (case-insensitive)
+ * - If not found, creates new category
+ * - Returns category ID (not name)
+ */
+const getOrCreateCategory = async (
+    userId: string,
+    categoryName: string
+): Promise<string> => {
+    try {
+        // Query existing categories for this user
+        const categoriesRef = db.collection('categories');
+        const snapshot = await categoriesRef
+            .where('userId', '==', userId)
+            .get();
+
+        // Case-insensitive match
+        const existingCategory = snapshot.docs.find(
+            doc => doc.data().name?.toLowerCase() === categoryName.toLowerCase()
+        );
+
+        if (existingCategory) {
+            console.log(`[Category] Found existing: "${categoryName}" -> ${existingCategory.id}`);
+            return existingCategory.id;
+        }
+
+        // Create new category
+        const randomColor = CATEGORY_COLORS[Math.floor(Math.random() * CATEGORY_COLORS.length)];
+        const newCategoryRef = await categoriesRef.add({
+            userId,
+            name: categoryName,
+            color: randomColor,
+            createdAt: new Date().toISOString()
+        });
+
+        console.log(`[Category] Created new: "${categoryName}" -> ${newCategoryRef.id}`);
+        return newCategoryRef.id;
+    } catch (error) {
+        console.error('[Category] Error in getOrCreateCategory:', error);
+        // Fallback to storing category name if creation fails
+        return categoryName;
+    }
+};
+
 /**
  * Generate metadata using OpenAI
  * 
@@ -347,9 +399,12 @@ export const createClipFromContent = async (
     const title = metadata?.title || fallbackTitle(url, rawText || '');
     const summary = metadata?.summary || fallbackSummary(rawText || '', language);
     const keywords = metadata?.keywords || [];
-    const category = metadata?.category || 'Other';
+    const categoryName = metadata?.category || 'Other';
     const sentiment = metadata?.sentiment || 'neutral';
     const type = metadata?.type || 'website';
+
+    // Get or create category - this ensures category ID is used, not just name
+    const categoryId = await getOrCreateCategory(userId, categoryName);
 
     console.log(`[Clip Service] - AI metadata: ${metadata ? 'generated' : 'skipped (no text)'}`);
     console.log(`[Clip Service] - Title: ${title}`);
@@ -388,7 +443,7 @@ export const createClipFromContent = async (
         title,
         summary,
         keywords,
-        category,
+        category: categoryId,
         sentiment,
         type,
         image: thumbnailImage,
