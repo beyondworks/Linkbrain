@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2024-11-20.acacia', // Or latest
+        apiVersion: '2025-12-15.clover',
     });
 
     try {
