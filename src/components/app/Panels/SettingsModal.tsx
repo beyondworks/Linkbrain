@@ -31,7 +31,7 @@ import {
 import { toast } from 'sonner';
 import { LinkBrainLogo } from '../LinkBrainLogo';
 import { useSubscriptionContext } from '../../../context/SubscriptionContext';
-import { Copy, Gift, Check as CheckIcon, Clock } from 'lucide-react';
+import { Copy, Gift, Check as CheckIcon, Clock, Loader2 } from 'lucide-react';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -529,9 +529,9 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                         <button
                             onClick={handleBillingPortal}
                             disabled={isLoadingPortal}
-                            className="bg-white text-slate-900 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap disabled:opacity-50"
+                            className="bg-white text-slate-900 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-100 whitespace-nowrap disabled:opacity-70 min-w-[80px] flex items-center justify-center gap-2"
                         >
-                            {isLoadingPortal ? '...' : t('manageBilling')}
+                            {isLoadingPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : t('manageBilling')}
                         </button>
                         <button
                             onClick={handleBillingPortal}
