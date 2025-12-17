@@ -301,7 +301,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const [categories, setCategories] = useState<Category[]>([]);
    const [collections, setCollections] = useState<Collection[]>([]);
 
-   const { isReadOnly, daysRemaining, status, canCreate, canEdit } = useSubscription();
+   const { isReadOnly, remainingDays, status, canCreate, canEdit } = useSubscription();
    const [showSubscriptionBanner, setShowSubscriptionBanner] = useState(true);
 
    // Sync Firebase clips to local state
@@ -1706,13 +1706,13 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                                  <span className={`text-xs md:text-sm font-medium ${status === 'expired' || theme === 'dark' ? 'opacity-90' : 'text-slate-600'}`}>
                                     {status === 'expired'
                                        ? (language === 'ko' ? '기능이 제한됩니다.' : 'Read-only mode.')
-                                       : (language === 'ko' ? `${daysRemaining}일 남음` : `${daysRemaining} days left`)}
+                                       : (language === 'ko' ? `${remainingDays}일 남음` : `${remainingDays} days left`)}
                                  </span>
                               </div>
                            </div>
                            <div className={`flex items-center gap-3 pl-4 border-l ml-auto ${status === 'expired' || theme === 'dark' ? 'border-white/10' : 'border-slate-900/10'}`}>
                               <button
-                                 onClick={() => window.history.pushState({}, '', '/pricing')}
+                                 onClick={() => window.location.href = '/#pricing'}
                                  className={`whitespace-nowrap font-bold transition-colors text-xs md:text-sm ${status === 'expired' || theme === 'dark' ? 'hover:text-[#21DBA4]' : 'text-[#059669] hover:text-[#047857]'}`}
                               >
                                  {language === 'ko' ? '업그레이드' : 'Upgrade'}
