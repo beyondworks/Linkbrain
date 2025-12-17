@@ -470,66 +470,56 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
     };
 
     return (
-        <div className="space-y-6">
-            {/* Profile Section */}
-            <div className={`p-4 md:p-6 rounded-2xl ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-50'}`}>
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="relative">
-                        {photoURL ? (
-                            <img src={photoURL} alt="Profile" className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover" />
-                        ) : (
-                            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                                <User size={28} className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'} />
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{displayName}</h3>
-                        <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{email}</p>
-                        <button className="text-[#21DBA4] text-sm font-bold mt-1">{t('editProfile')}</button>
+        <div className="max-w-xl space-y-6 md:space-y-8">
+            <div className="flex items-center gap-4 md:gap-6">
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-slate-100 relative group cursor-pointer overflow-hidden border-4 border-white shadow-lg shrink-0">
+                    {photoURL ? (
+                        <img src={photoURL} className="w-full h-full object-cover" alt="Profile" />
+                    ) : (
+                        <div className={`w-full h-full flex items-center justify-center text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-500'}`}>
+                            {firstNameInput.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                    <div onClick={() => toast.info("Avatar change disabled")} className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Edit2 className="text-white" size={24} />
                     </div>
                 </div>
-                {/* Name inputs */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label className={`block text-xs font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('firstName')}</label>
+                <div className="flex-1 min-w-0">
+                    <h4 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{displayName}</h4>
+                    <p className="text-slate-400 text-sm truncate">{email}</p>
+                    <button onClick={() => toast.info("Avatar change disabled")} className="mt-2 md:mt-3 text-xs font-bold text-[#21DBA4] border border-[#21DBA4]/30 px-3 py-1.5 rounded-full hover:bg-[#21DBA4] hover:text-white transition-all">
+                        {t('changeAvatar')}
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="space-y-1.5 md:space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase">{t('firstName')}</label>
                         <input
                             type="text"
                             value={firstNameInput}
                             onChange={(e) => setFirstNameInput(e.target.value)}
-                            className={`w-full p-3 rounded-xl border text-sm font-medium ${theme === 'dark'
-                                ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-500'
-                                : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
-                                }`}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
                         />
                     </div>
-                    <div>
-                        <label className={`block text-xs font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('lastName')}</label>
+                    <div className="space-y-1.5 md:space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase">{t('lastName')}</label>
                         <input
                             type="text"
                             value={lastNameInput}
                             onChange={(e) => setLastNameInput(e.target.value)}
-                            className={`w-full p-3 rounded-xl border text-sm font-medium ${theme === 'dark'
-                                ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-500'
-                                : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
-                                }`}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
                         />
                     </div>
                 </div>
-                {/* Email (read-only) */}
-                <div className="mb-4">
-                    <label className={`block text-xs font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('email')}</label>
-                    <input
-                        type="email"
-                        value={email}
-                        disabled
-                        className={`w-full p-3 rounded-xl border text-sm font-medium cursor-not-allowed ${theme === 'dark'
-                            ? 'bg-slate-700/50 border-slate-600 text-slate-400'
-                            : 'bg-slate-100 border-slate-200 text-slate-500'
-                            }`}
-                    />
+                <div className="space-y-1.5 md:space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase">{t('email')}</label>
+                    <input type="email" defaultValue={email} disabled className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm opacity-60 cursor-not-allowed ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`} />
                 </div>
-                {/* Save Button */}
+
+                {/* Save Button - Only visible when there are changes */}
                 {hasChanges && (
                     <button
                         onClick={handleSaveProfile}
