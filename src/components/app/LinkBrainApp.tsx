@@ -1620,7 +1620,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                                  : theme === 'dark' ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                            >
                               {isAllSelected ? <CheckSquare size={16} /> : <Square size={16} />}
-                              <span className="hidden sm:inline">{t('selected')}</span>
+                              <span className="hidden sm:inline">{isAllSelected ? t('deselectAllItems') : t('selectAll')}</span>
                            </button>
                         )}
 

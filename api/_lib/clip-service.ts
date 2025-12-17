@@ -306,18 +306,10 @@ Return ONLY valid JSON, no markdown or explanations.`;
  */
 export const createClipFromContent = async (
     input: ClipContentInput,
-    options?: {
-        language?: string;
-        skipAI?: boolean;           // Skip AI metadata generation (for fast fallback)
-        skipImageCache?: boolean;   // Skip Firebase image caching (for speed)
-        fallbackTitle?: string;     // Use this title when skipAI is true
-    }
+    options?: { language?: string }
 ): Promise<Clip> => {
     const { url, sourceType, rawText, htmlContent, images, userId, author, authorAvatar, authorHandle } = input;
     const language = options?.language || 'KR';
-    const skipAI = options?.skipAI || false;
-    const skipImageCache = options?.skipImageCache || false;
-    const providedFallbackTitle = options?.fallbackTitle;
 
     console.log(`[Clip Service] Creating clip from raw content`);
     console.log(`[Clip Service] - URL: ${url}`);
@@ -339,25 +331,20 @@ export const createClipFromContent = async (
     // Cache images to Firebase Storage for permanent access
     // This prevents image loss from expired CDN URLs (especially Instagram/Threads)
     let clipImages: string[] = filteredImages;
-    if (filteredImages.length > 0 && !skipImageCache) {
+    if (filteredImages.length > 0) {
         console.log(`[Clip Service] Caching ${filteredImages.length} images to Firebase Storage...`);
         clipImages = await cacheImagesWithFallback(filteredImages, userId);
         console.log(`[Clip Service] - Cached images: ${clipImages.length}`);
-    } else if (skipImageCache) {
-        console.log(`[Clip Service] Skipping image cache (skipImageCache=true)`);
     }
 
-    // Try to generate AI metadata (only if rawText exists and skipAI is false)
+    // Try to generate AI metadata (only if rawText exists)
     let metadata: ClipMetadata | null = null;
-    if (!skipAI && rawText && rawText.trim().length > 0) {
+    if (rawText && rawText.trim().length > 0) {
         metadata = await safeGenerateMetadata(rawText, url, sourceType, language);
-    } else if (skipAI) {
-        console.log(`[Clip Service] Skipping AI metadata generation (skipAI=true)`);
     }
 
     // Use AI metadata if available, otherwise use fallbacks
-    // If providedFallbackTitle is set (from lightweight extraction), use it as primary fallback
-    const title = metadata?.title || providedFallbackTitle || fallbackTitle(url, rawText || '');
+    const title = metadata?.title || fallbackTitle(url, rawText || '');
     const summary = metadata?.summary || fallbackSummary(rawText || '', language);
     const keywords = metadata?.keywords || [];
     const category = metadata?.category || 'Other';
