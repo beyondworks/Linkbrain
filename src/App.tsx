@@ -740,11 +740,11 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
       <LegalModals.Modal
         isOpen={!!activeModal}
         onClose={() => setActiveModal(null)}
-        title={activeModal === 'privacy' ? 'Privacy Policy' : activeModal === 'terms' ? 'Terms of Service' : 'Contact Us'}
+        title={activeModal === 'privacy' ? t.privacyPolicy : activeModal === 'terms' ? t.termsOfService : t.contactUs}
       >
-        {activeModal === 'privacy' && <LegalModals.PrivacyContent />}
-        {activeModal === 'terms' && <LegalModals.TermsContent />}
-        {activeModal === 'contact' && <LegalModals.ContactContent />}
+        {activeModal === 'privacy' && <LegalModals.PrivacyContent language={language} />}
+        {activeModal === 'terms' && <LegalModals.TermsContent language={language} />}
+        {activeModal === 'contact' && <LegalModals.ContactContent language={language} />}
       </LegalModals.Modal>
 
       {/* Global Styles for Animations */}
