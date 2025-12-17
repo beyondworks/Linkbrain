@@ -568,11 +568,11 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
             <section id="features" className="relative z-10 md:pt-[100px] md:pb-[120px] px-0 pt-[60px] pr-[0px] pb-[50px] pl-[0px]">
               <div className="max-w-5xl mx-auto px-6">
                 <div className="text-center mb-28">
-                  <span className="text-[#21DBA4] font-bold text-[12px] uppercase tracking-[0.2em] mb-4 block">Core Features</span>
+                  <span className="text-[#21DBA4] font-bold text-[12px] uppercase tracking-[0.2em] mb-4 block">{t.coreFeatures}</span>
                   <h2 className="text-3xl md:text-4xl font-black text-[rgb(26,26,26)] leading-tight font-bold">
-                    링크를 복사하세요,<br />
+                    {t.coreFeaturesTitle1}<br />
                     <span className="relative inline-block">
-                      나머지는 AI가 합니다
+                      {t.coreFeaturesTitle2}
                       <span className="absolute bottom-1 left-0 w-full h-3 bg-[#21DBA4]/20 -z-10 rounded-sm"></span>
                     </span>
                   </h2>
@@ -597,21 +597,21 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
                     <div className="mt-[0px] mr-[-16px] mb-[0px] ml-[0px]">
                       <div className="flex items-center gap-3 mb-8">
                         <div className="inline-block px-2.5 py-0.5 rounded-full bg-slate-900 text-white font-bold text-[9px] uppercase tracking-wider shadow-md">
-                          Coming Soon
+                          {t.comingSoon}
                         </div>
                         <span className="text-[10px] font-bold text-[#21DBA4] animate-pulse flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></div> 준비중인 기능
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></div> {t.upcomingFeature}
                         </span>
                       </div>
 
                       <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-8 leading-tight">
-                        나만의 인사이트 매거진<br />
-                        <span className="text-[#21DBA4]">자동 발행</span>
+                        {t.curationTitle1}<br />
+                        <span className="text-[#21DBA4]">{t.curationTitle2}</span>
                       </h2>
                       <p className="md:text-base text-slate-500 mb-10 leading-relaxed text-[16px]">
-                        "이거 나중에 봐야지" 하고 저장한 링크들, 다시 찾기 힘드셨죠?<br />
-                        LinkBrain은 흩어진 조각들을 모아 <span className="text-slate-900 font-bold bg-[#E0FBF4] px-1">하나의 완성된 아티클</span>로 엮어냅니다.
-                        매주 발행되는 나만의 지식 매거진을 받아보세요.
+                        {t.curationDesc1}<br />
+                        {t.curationDesc2} <span className="text-slate-900 font-bold bg-[#E0FBF4] px-1">{t.curationDesc3}</span>
+                        {' '}{t.curationDesc4}
                       </p>
 
                       <div className="flex flex-col gap-4">
@@ -620,8 +620,8 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
                             <Zap size={18} fill="currentColor" />
                           </div>
                           <div>
-                            <h4 className="font-bold text-sm text-slate-800">Smart Digest</h4>
-                            <p className="text-xs text-slate-400 mt-0.5">저장된 콘텐츠를 요약하고 재구성합니다.</p>
+                            <h4 className="font-bold text-sm text-slate-800">{t.smartDigest}</h4>
+                            <p className="text-xs text-slate-400 mt-0.5">{t.smartDigestDesc}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-[#21DBA4]/30 transition-colors group cursor-default">
@@ -629,8 +629,8 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
                             <MessageCircle size={18} />
                           </div>
                           <div>
-                            <h4 className="font-bold text-sm text-slate-800">Knowledge Network</h4>
-                            <p className="text-xs text-slate-400 mt-0.5">관련된 주제끼리 자동으로 연결하여 지식망을 형성합니다.</p>
+                            <h4 className="font-bold text-sm text-slate-800">{t.knowledgeNetwork}</h4>
+                            <p className="text-xs text-slate-400 mt-0.5">{t.knowledgeNetworkDesc}</p>
                           </div>
                         </div>
                       </div>
@@ -675,12 +675,11 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
             <section className="relative z-10 pt-[80px] pb-[120px] md:pt-[120px] md:pb-[192px] px-0">
               <div className="max-w-3xl mx-auto px-6 text-center">
                 <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-8 tracking-tight">
-                  당신의 <span className="text-[#21DBA4]">Second Brain</span>을<br />
-                  지금 바로 구축하세요.
+                  {t.finalCtaTitle1} <span className="text-[#21DBA4]">{t.finalCtaTitle2}</span><br />
+                  {t.finalCtaSubtitle}
                 </h2>
                 <p className="text-base text-slate-500 mb-14">
-                  앱 설치 한 번으로, 흩어진 정보들이 지식이 됩니다.<br />
-                  지금 무료로 시작하고, 한 달 뒤 달라진 인사이트를 경험하세요.
+                  {t.finalCtaDesc}
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
@@ -688,11 +687,11 @@ const LandingPageContent = ({ currentView, onEnterApp, onNavigate, onInstallApp,
                     onClick={onEnterApp}
                     className="px-[36px] py-[15px] bg-[#21DBA4] text-white rounded-full font-bold text-base shadow-2xl shadow-[#21DBA4]/40 hover:bg-[#1BC290] hover:scale-105 transition-all w-full sm:w-auto flex items-center justify-center gap-2 active:scale-95 duration-200 text-[15px]"
                   >
-                    <Download size={18} /> 앱 무료 설치하기
+                    <Download size={18} /> {t.finalCtaButton}
                   </button>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-4 sm:mt-0 bg-white p-[16px] rounded-full border border-slate-100 shadow-sm px-[16px] py-[17px]">
                     <Smartphone size={14} />
-                    <span>iOS / Android PWA 지원</span>
+                    <span>iOS / Android PWA</span>
                   </div>
                 </div>
               </div>

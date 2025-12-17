@@ -83,6 +83,32 @@ export const landingTranslations = {
         proTierFeature6: '10GB storage',
         proTierFeature7: 'Priority support',
 
+        // Core Features Section
+        coreFeatures: 'Core Features',
+        coreFeaturesTitle1: 'Just paste a link',
+        coreFeaturesTitle2: 'AI does the rest',
+
+        // Curation Magazine Section
+        comingSoon: 'Coming Soon',
+        upcomingFeature: 'Upcoming Feature',
+        curationTitle1: 'Your personal insight magazine',
+        curationTitle2: 'Auto-published',
+        curationDesc1: '"I\'ll check this later" - sound familiar?',
+        curationDesc2: 'LinkBrain collects scattered pieces into',
+        curationDesc3: 'one complete article.',
+        curationDesc4: 'Get your weekly knowledge magazine.',
+        smartDigest: 'Smart Digest',
+        smartDigestDesc: 'Summarizes and reorganizes your saved content.',
+        knowledgeNetwork: 'Knowledge Network',
+        knowledgeNetworkDesc: 'Visualizes connections between topics.',
+
+        // Final CTA Section
+        finalCtaTitle1: 'Your',
+        finalCtaTitle2: 'Second Brain',
+        finalCtaSubtitle: 'Build it now.',
+        finalCtaDesc: 'Stop saving links that disappear. Start building knowledge that compounds.',
+        finalCtaButton: 'Start Free',
+
         // Footer
         copyright: '© 2024 Linkbrain. All rights reserved.',
         privacy: 'Privacy',
@@ -174,6 +200,32 @@ export const landingTranslations = {
         proTierFeature5: '전체 텍스트 검색',
         proTierFeature6: '10GB 저장 공간',
         proTierFeature7: '우선 지원',
+
+        // Core Features Section
+        coreFeatures: 'Core Features',
+        coreFeaturesTitle1: '링크를 복사하세요,',
+        coreFeaturesTitle2: '나머지는 AI가 합니다',
+
+        // Curation Magazine Section
+        comingSoon: 'Coming Soon',
+        upcomingFeature: '준비중인 기능',
+        curationTitle1: '나만의 인사이트 매거진',
+        curationTitle2: '자동 발행',
+        curationDesc1: '"이거 나중에 봐야지" 하고 저장한 링크들, 다시 찾기 힘드셨죠?',
+        curationDesc2: 'LinkBrain은 흩어진 조각들을 모아',
+        curationDesc3: '하나의 완성된 아티클로 엮어냅니다.',
+        curationDesc4: '매주 발행되는 나만의 지식 매거진을 받아보세요.',
+        smartDigest: 'Smart Digest',
+        smartDigestDesc: '저장된 콘텐츠를 요약하고 재구성합니다.',
+        knowledgeNetwork: 'Knowledge Network',
+        knowledgeNetworkDesc: '주제 간의 연결을 시각화합니다.',
+
+        // Final CTA Section
+        finalCtaTitle1: '당신의',
+        finalCtaTitle2: 'Second Brain을',
+        finalCtaSubtitle: '지금 바로 구축하세요.',
+        finalCtaDesc: '그냥 저장하고 잊는 링크는 그만. 시간이 지날수록 쌓이는 지식을 만드세요.',
+        finalCtaButton: '무료로 시작하기',
 
         // Footer
         copyright: '© 2024 Linkbrain. All rights reserved.',
