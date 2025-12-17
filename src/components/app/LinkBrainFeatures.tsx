@@ -113,8 +113,7 @@ export const LinkBrainFeatures = ({ theme, language = 'en', onEnterApp }: { them
             )}
           </h1>
           <p className={`text-base md:text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'} break-keep`}>
-            Linkbrain은 단순한 북마크 관리자가 아닙니다.<br className="hidden md:block" />
-            더 빨리 배우고 더 많이 기억할 수 있도록 돕는 지능형 작업 공간입니다.
+            {t.description}
           </p>
         </div>
 
