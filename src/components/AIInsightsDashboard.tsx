@@ -954,10 +954,10 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
         {/* Period Toggle + Custom Date Picker in same row on desktop */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:h-[40px]">
           {/* Period Toggle */}
-          <div className={`flex sm:inline-flex rounded-xl p-1 w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+          <div className={`flex inline-flex rounded-xl p-1 w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
             <button
               onClick={() => setPeriod('weekly')}
-              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
+              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -967,7 +967,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </button>
             <button
               onClick={() => setPeriod('monthly')}
-              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
+              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -977,7 +977,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </button>
             <button
               onClick={() => setPeriod('custom')}
-              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
+              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
