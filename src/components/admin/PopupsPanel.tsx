@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAdmin, Popup } from '../../hooks/useAdmin';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../lib/firebase';
 import {
     Plus,
     Edit2,
@@ -8,7 +10,10 @@ import {
     Megaphone,
     ToggleLeft,
     ToggleRight,
-    Calendar
+    Calendar,
+    Upload,
+    X,
+    Image as ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,12 +31,14 @@ interface FormState {
     imageUrl: string;
     linkUrl: string;
     isActive: boolean;
+    displayType: 'modal' | 'banner';
     startDate: string;
     endDate: string;
 }
 
 export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
     const { popups, createPopup, updatePopup, deletePopup } = admin;
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [form, setForm] = useState<FormState>({
         isOpen: false,
@@ -41,10 +48,12 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
         imageUrl: '',
         linkUrl: '',
         isActive: true,
+        displayType: 'modal',
         startDate: '',
         endDate: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     const t = {
         title: language === 'ko' ? '팝업 관리' : 'Popup Management',
@@ -55,15 +64,17 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
         cancel: language === 'ko' ? '취소' : 'Cancel',
         titleLabel: language === 'ko' ? '제목' : 'Title',
         contentLabel: language === 'ko' ? '내용' : 'Content',
-        imageUrlLabel: language === 'ko' ? '이미지 URL' : 'Image URL',
-        linkUrlLabel: language === 'ko' ? '링크 URL' : 'Link URL',
+        imageLabel: language === 'ko' ? '이미지 (선택)' : 'Image (Optional)',
+        linkUrlLabel: language === 'ko' ? '링크 URL (선택)' : 'Link URL (Optional)',
         activeLabel: language === 'ko' ? '활성화' : 'Active',
         startDateLabel: language === 'ko' ? '시작일' : 'Start Date',
         endDateLabel: language === 'ko' ? '종료일' : 'End Date',
         empty: language === 'ko' ? '등록된 팝업이 없습니다' : 'No popups yet',
         confirmDelete: language === 'ko' ? '정말 삭제하시겠습니까?' : 'Are you sure you want to delete?',
         success: language === 'ko' ? '저장되었습니다' : 'Saved successfully',
-        deleted: language === 'ko' ? '삭제되었습니다' : 'Deleted successfully'
+        deleted: language === 'ko' ? '삭제되었습니다' : 'Deleted successfully',
+        uploadImage: language === 'ko' ? '이미지 업로드' : 'Upload Image',
+        removeImage: language === 'ko' ? '이미지 제거' : 'Remove Image'
     };
 
     const cardBg = theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
@@ -80,6 +91,7 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
             imageUrl: '',
             linkUrl: '',
             isActive: true,
+            displayType: 'modal',
             startDate: '',
             endDate: ''
         });
@@ -94,6 +106,7 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
             imageUrl: item.imageUrl || '',
             linkUrl: item.linkUrl || '',
             isActive: item.isActive,
+            displayType: item.displayType || 'modal',
             startDate: item.startDate || '',
             endDate: item.endDate || ''
         });
@@ -103,25 +116,70 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
         setForm(prev => ({ ...prev, isOpen: false }));
     };
 
+    // 이미지 업로드 핸들러
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // 파일 크기 제한 (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error(language === 'ko' ? '이미지 크기는 5MB 이하여야 합니다' : 'Image must be less than 5MB');
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const fileName = `popups/${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, fileName);
+            await uploadBytes(storageRef, file);
+            const downloadUrl = await getDownloadURL(storageRef);
+            setForm(prev => ({ ...prev, imageUrl: downloadUrl }));
+            toast.success(language === 'ko' ? '이미지가 업로드되었습니다' : 'Image uploaded');
+        } catch (error) {
+            console.error('Image upload failed:', error);
+            toast.error(language === 'ko' ? '이미지 업로드 실패' : 'Image upload failed');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const removeImage = () => {
+        setForm(prev => ({ ...prev, imageUrl: '' }));
+    };
+
     const handleSubmit = async () => {
-        if (!form.title.trim() || !form.content.trim()) return;
+        console.log('[PopupsPanel] handleSubmit called', {
+            title: form.title,
+            content: form.content,
+            titleTrimmed: form.title.trim(),
+            contentTrimmed: form.content.trim()
+        });
+        if (!form.title.trim() || !form.content.trim()) {
+            console.log('[PopupsPanel] Validation failed - title or content empty');
+            return;
+        }
 
         setIsSubmitting(true);
         try {
-            const data: Omit<Popup, 'id' | 'createdAt'> = {
+            // Firestore doesn't accept undefined, so only include fields with values
+            const data: Record<string, any> = {
                 title: form.title,
                 content: form.content,
-                imageUrl: form.imageUrl || undefined,
-                linkUrl: form.linkUrl || undefined,
                 isActive: form.isActive,
-                startDate: form.startDate || undefined,
-                endDate: form.endDate || undefined
+                displayType: form.displayType
             };
 
+            // Only include optional fields if they have values
+            if (form.imageUrl) data.imageUrl = form.imageUrl;
+            if (form.linkUrl) data.linkUrl = form.linkUrl;
+            if (form.startDate) data.startDate = form.startDate;
+            if (form.endDate) data.endDate = form.endDate;
+
             if (form.editingId) {
-                await updatePopup(form.editingId, data);
+                await updatePopup(form.editingId, data as any);
             } else {
-                await createPopup(data);
+                await createPopup(data as any);
             }
             toast.success(t.success);
             closeForm();
@@ -190,28 +248,64 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
                                 placeholder={language === 'ko' ? '팝업 내용' : 'Popup content'}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className={`block text-sm font-medium mb-1.5 ${textSecondary}`}>{t.imageUrlLabel}</label>
-                                <input
-                                    type="url"
-                                    value={form.imageUrl}
-                                    onChange={e => setForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${inputBg}`}
-                                    placeholder="https://..."
-                                />
-                            </div>
-                            <div>
-                                <label className={`block text-sm font-medium mb-1.5 ${textSecondary}`}>{t.linkUrlLabel}</label>
-                                <input
-                                    type="url"
-                                    value={form.linkUrl}
-                                    onChange={e => setForm(prev => ({ ...prev, linkUrl: e.target.value }))}
-                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${inputBg}`}
-                                    placeholder="https://..."
-                                />
-                            </div>
+
+                        {/* Image Upload */}
+                        <div>
+                            <label className={`block text-sm font-medium mb-1.5 ${textSecondary}`}>{t.imageLabel}</label>
+                            {form.imageUrl ? (
+                                <div className="relative inline-block">
+                                    <img
+                                        src={form.imageUrl}
+                                        alt="Preview"
+                                        className="w-32 h-20 object-cover rounded-lg border"
+                                    />
+                                    <button
+                                        onClick={removeImage}
+                                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isUploading}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${inputBg} hover:border-[#21DBA4] transition-colors`}
+                                    >
+                                        {isUploading ? (
+                                            <div className="w-4 h-4 border-2 border-[#21DBA4] border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <Upload size={16} />
+                                        )}
+                                        {isUploading
+                                            ? (language === 'ko' ? '업로드 중...' : 'Uploading...')
+                                            : t.uploadImage}
+                                    </button>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Link URL */}
+                        <div>
+                            <label className={`block text-sm font-medium mb-1.5 ${textSecondary}`}>{t.linkUrlLabel}</label>
+                            <input
+                                type="text"
+                                value={form.linkUrl}
+                                onChange={e => setForm(prev => ({ ...prev, linkUrl: e.target.value }))}
+                                className={`w-full px-3 py-2 rounded-lg border text-sm ${inputBg}`}
+                                placeholder="https://..."
+                            />
+                        </div>
+
+                        {/* Dates */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={`block text-sm font-medium mb-1.5 ${textSecondary}`}>{t.startDateLabel}</label>
@@ -232,6 +326,8 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
                                 />
                             </div>
                         </div>
+
+                        {/* Active Toggle */}
                         <div className="flex items-center">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -243,6 +339,41 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
                                 <span className={`text-sm ${textSecondary}`}>{t.activeLabel}</span>
                             </label>
                         </div>
+
+                        {/* Display Type */}
+                        <div>
+                            <label className={`block text-sm font-medium mb-2 ${textSecondary}`}>
+                                {language === 'ko' ? '표시 유형' : 'Display Type'}
+                            </label>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="displayType"
+                                        checked={form.displayType === 'modal'}
+                                        onChange={() => setForm(prev => ({ ...prev, displayType: 'modal' }))}
+                                        className="w-4 h-4 text-[#21DBA4] focus:ring-[#21DBA4]"
+                                    />
+                                    <span className={`text-sm ${textSecondary}`}>
+                                        {language === 'ko' ? '모달 팝업' : 'Modal Popup'}
+                                    </span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="displayType"
+                                        checked={form.displayType === 'banner'}
+                                        onChange={() => setForm(prev => ({ ...prev, displayType: 'banner' }))}
+                                        className="w-4 h-4 text-[#21DBA4] focus:ring-[#21DBA4]"
+                                    />
+                                    <span className={`text-sm ${textSecondary}`}>
+                                        {language === 'ko' ? '상단 배너' : 'Top Banner'}
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Submit Buttons */}
                         <div className="flex justify-end gap-2 pt-2">
                             <button
                                 onClick={closeForm}
@@ -251,8 +382,9 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
                                 {t.cancel}
                             </button>
                             <button
+                                type="button"
                                 onClick={handleSubmit}
-                                disabled={isSubmitting || !form.title.trim() || !form.content.trim()}
+                                disabled={isSubmitting}
                                 className="px-4 py-2 bg-[#21DBA4] text-white rounded-lg text-sm font-medium hover:bg-[#1bc290] disabled:opacity-50"
                             >
                                 {t.save}
@@ -283,7 +415,17 @@ export function PopupsPanel({ theme, language, admin }: PopupsPanelProps) {
                                         />
                                     )}
                                     <div className="min-w-0">
-                                        <h3 className={`font-medium ${textPrimary}`}>{item.title}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className={`font-medium ${textPrimary}`}>{item.title}</h3>
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${item.displayType === 'banner'
+                                                ? 'bg-blue-100 text-blue-600'
+                                                : 'bg-purple-100 text-purple-600'
+                                                }`}>
+                                                {item.displayType === 'banner'
+                                                    ? (language === 'ko' ? '배너' : 'Banner')
+                                                    : (language === 'ko' ? '모달' : 'Modal')}
+                                            </span>
+                                        </div>
                                         <p className={`text-sm mt-1 line-clamp-2 ${textSecondary}`}>{item.content}</p>
                                         {(item.startDate || item.endDate) && (
                                             <div className={`flex items-center gap-1.5 mt-2 text-xs ${textSecondary}`}>

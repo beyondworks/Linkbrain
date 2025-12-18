@@ -23,6 +23,7 @@ export interface AppPopup {
     content: string;
     imageUrl?: string;
     linkUrl?: string;
+    displayType: 'modal' | 'banner';
     startDate?: string;
     endDate?: string;
 }
@@ -163,39 +164,54 @@ export const usePopups = () => {
 
     // Fetch active popups from Firestore
     useEffect(() => {
-        // Simple query without compound index - filter on client side
-        const q = query(
-            collection(db, 'popups'),
-            orderBy('createdAt', 'desc')
-        );
+        // Simple query without any index requirement
+        const q = query(collection(db, 'popups'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const now = new Date();
+            console.log('[usePopups] Raw docs count:', snapshot.docs.length);
+
             const items = snapshot.docs
                 .map(doc => {
                     const data = doc.data();
+                    console.log('[usePopups] Doc:', doc.id, 'isActive:', data.isActive, 'displayType:', data.displayType);
                     return {
                         id: doc.id,
                         title: data.title,
                         content: data.content,
                         imageUrl: data.imageUrl,
                         linkUrl: data.linkUrl,
+                        displayType: data.displayType || 'modal', // 기본값 modal
                         startDate: data.startDate,
                         endDate: data.endDate,
-                        isActive: data.isActive
+                        isActive: data.isActive,
+                        createdAt: data.createdAt
                     };
                 })
                 .filter(popup => {
                     // Filter by active status
-                    if (popup.isActive !== true) return false;
+                    if (popup.isActive !== true) {
+                        console.log('[usePopups] Filtered:', popup.id, '(isActive:', popup.isActive, ')');
+                        return false;
+                    }
                     // Filter by date range
-                    if (popup.startDate && new Date(popup.startDate) > now) return false;
-                    if (popup.endDate && new Date(popup.endDate) < now) return false;
+                    if (popup.startDate && new Date(popup.startDate) > now) {
+                        console.log('[usePopups] Filtered:', popup.id, '(startDate:', popup.startDate, 'is after now)');
+                        return false;
+                    }
+                    if (popup.endDate && new Date(popup.endDate) < now) {
+                        console.log('[usePopups] Filtered:', popup.id, '(endDate:', popup.endDate, 'is before now)');
+                        return false;
+                    }
+                    console.log('[usePopups] PASSED:', popup.id);
                     return true;
                 })
-                .map(({ isActive, ...rest }) => rest as AppPopup);
+                .sort((a, b) =>
+                    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+                )
+                .map(({ isActive, createdAt, ...rest }) => rest as AppPopup);
 
-            console.log('[usePopups] Fetched:', items.length, 'active popups');
+            console.log('[usePopups] Final active popups:', items.length);
             setPopups(items);
             setLoading(false);
         }, (error) => {
