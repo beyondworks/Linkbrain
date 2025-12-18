@@ -950,14 +950,14 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
     <div className="space-y-8">
       {/* Period Toggle + Generation Buttons */}
       {/* Period Toggle + Generation Buttons */}
-      <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="mt-4 md:mt-0 flex flex-row items-center justify-between gap-4">
         {/* Left Side: Period Toggle + Custom Date Picker + Loading */}
         <div className="flex items-center gap-2 h-[40px]">
           {/* Period Toggle */}
           <div className={`flex inline-flex rounded-xl p-1 w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
             <button
               onClick={() => setPeriod('weekly')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
+              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'weekly'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -967,7 +967,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </button>
             <button
               onClick={() => setPeriod('monthly')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
+              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'monthly'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
