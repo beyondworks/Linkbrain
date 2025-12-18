@@ -85,6 +85,7 @@ import { useSubscription } from '../../hooks/useSubscription';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useAnnouncements, usePopups } from '../../hooks/useAnnouncements';
 import { AnnouncementPopup } from './Modals/AnnouncementPopup';
+import { TopBannerPopup } from './Modals/TopBannerPopup';
 
 // --- Mock Data ---
 const INITIAL_CATEGORIES: Category[] = [
@@ -499,22 +500,29 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
    // Popups from Firestore
    const { popups: activePopups, dismissPopup, dismissPopupForever } = usePopups();
-   const [currentPopupIndex, setCurrentPopupIndex] = useState(0);
-   const currentPopup = activePopups[currentPopupIndex];
+   const [closedPopupIds, setClosedPopupIds] = useState<Set<string>>(new Set()); // 그냥 닫기 (세션 동안만)
 
-   // Handle popup dismiss
-   const handlePopupDismiss = (id: string) => {
-      dismissPopup(id);
-      if (currentPopupIndex < activePopups.length - 1) {
-         setCurrentPopupIndex(prev => prev + 1);
-      }
+   // 모달 팝업과 배너 팝업 분리
+   const modalPopups = activePopups.filter(p => p.displayType !== 'banner' && !closedPopupIds.has(p.id));
+   const bannerPopups = activePopups.filter(p => p.displayType === 'banner' && !closedPopupIds.has(p.id));
+   const currentModalPopup = modalPopups[0];
+   const currentBannerPopup = bannerPopups[0];
+
+   // 그냥 닫기 (새로고침 시 다시 표시)
+   const handlePopupClose = (id: string) => {
+      setClosedPopupIds(prev => new Set([...prev, id]));
    };
 
+   // 오늘 하루 안보기
+   const handlePopupDismissToday = (id: string) => {
+      dismissPopup(id);
+      setClosedPopupIds(prev => new Set([...prev, id]));
+   };
+
+   // 다시 보지 않기
    const handlePopupDismissForever = (id: string) => {
       dismissPopupForever(id);
-      if (currentPopupIndex < activePopups.length - 1) {
-         setCurrentPopupIndex(prev => prev + 1);
-      }
+      setClosedPopupIds(prev => new Set([...prev, id]));
    };
 
    // Delete Confirmation State
@@ -1853,6 +1861,17 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   </div>
                )}
 
+               {/* Admin Banner Popup */}
+               {currentBannerPopup && (
+                  <TopBannerPopup
+                     popup={currentBannerPopup}
+                     theme={theme}
+                     language={language}
+                     onClose={() => handlePopupClose(currentBannerPopup.id)}
+                     onDismissToday={() => handlePopupDismissToday(currentBannerPopup.id)}
+                  />
+               )}
+
                {/* Scrollable Area */}
                <div
                   className={`flex-1 ${['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8'}`}
@@ -2563,13 +2582,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          </AnimatePresence>
 
          {/* Announcement Popup from Admin */}
-         {currentPopup && (
+         {currentModalPopup && (
             <AnnouncementPopup
-               popup={currentPopup}
+               popup={currentModalPopup}
                theme={theme}
                language={language}
-               onDismiss={() => handlePopupDismiss(currentPopup.id)}
-               onDismissForever={() => handlePopupDismissForever(currentPopup.id)}
+               onClose={() => handlePopupClose(currentModalPopup.id)}
+               onDismissToday={() => handlePopupDismissToday(currentModalPopup.id)}
+               onDismissForever={() => handlePopupDismissForever(currentModalPopup.id)}
             />
          )}
 

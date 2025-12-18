@@ -46,6 +46,7 @@ export interface Popup {
     imageUrl?: string;
     linkUrl?: string;
     isActive: boolean;
+    displayType: 'modal' | 'banner'; // 모달 팝업 또는 상단 배너
     startDate?: string;
     endDate?: string;
     createdAt?: string;
