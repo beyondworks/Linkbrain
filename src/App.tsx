@@ -46,9 +46,18 @@ const PRIMARY_COLOR = "#21DBA4";
 
 type ViewType = 'landing' | 'features' | 'how-it-works' | 'pricing' | 'app' | 'admin';
 
+import { ShareTarget } from './components/app/ShareTarget';
+
+// ... (other imports)
+
 const App = () => {
+  // Share Target Route Handling
+  const isShareTarget = window.location.pathname === '/share-target';
+
   // Initialize from localStorage or URL hash
   const [currentView, setCurrentView] = useState<ViewType>(() => {
+    if (isShareTarget) return 'app'; // Dummy value, won't be used if isShareTarget is true
+
     const hash = window.location.hash.replace('#', '');
     if (['landing', 'features', 'how-it-works', 'pricing', 'app', 'admin'].includes(hash)) {
       return hash as ViewType;
@@ -249,6 +258,16 @@ const App = () => {
       toast.success(language === 'ko' ? '다운로드가 시작되었습니다!' : 'Download started!');
     }
   };
+
+  // Share Target View
+  if (isShareTarget) {
+    return (
+      <SubscriptionProvider>
+        <ShareTarget />
+        <Toaster />
+      </SubscriptionProvider>
+    );
+  }
 
   // Admin view - requires authentication
   if (currentView === 'admin') {
