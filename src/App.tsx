@@ -234,28 +234,18 @@ const App = () => {
   };
 
   const handleInstallApp = async () => {
-    if (isMobileDevice()) {
-      // Mobile: Try PWA install prompt, fallback to instruction modal
-      if (deferredPromptRef.current) {
-        deferredPromptRef.current.prompt();
-        const { outcome } = await deferredPromptRef.current.userChoice;
-        if (outcome === 'accepted') {
-          toast.success(language === 'ko' ? '앱이 홈 화면에 추가되었습니다!' : 'App added to home screen!');
-        }
-        deferredPromptRef.current = null;
-      } else {
-        // iOS Safari or already installed - show instruction modal
-        setShowInstallModal(true);
+    // 1. Try native PWA install prompt (Chrome/Edge Desktop & Android)
+    if (deferredPromptRef.current) {
+      deferredPromptRef.current.prompt();
+      const { outcome } = await deferredPromptRef.current.userChoice;
+      if (outcome === 'accepted') {
+        toast.success(language === 'ko' ? '앱이 설치되었습니다!' : 'App installed successfully!');
       }
+      deferredPromptRef.current = null;
     } else {
-      // Desktop: Download the app zip file
-      const link = document.createElement('a');
-      link.href = '/LinkBrain.app.zip';
-      link.download = 'LinkBrain.app.zip';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success(language === 'ko' ? '다운로드가 시작되었습니다!' : 'Download started!');
+      // 2. If prompt not available (iOS, Safari, Firefox, or Already Installed)
+      // Show instructions modal instead of confusing zip download
+      setShowInstallModal(true);
     }
   };
 
