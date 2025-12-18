@@ -1034,7 +1034,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateReport}
               disabled={generatingReport || (isAIConfigured && filteredData.length < 3)}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-bold text-sm transition-all shadow-sm whitespace-nowrap
+              className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-10 py-2 rounded-lg font-bold text-sm transition-all shadow-sm whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${isDark
                   ? 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
@@ -1071,7 +1071,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateArticle}
               disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-bold text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
+              className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-10 py-2 rounded-lg font-bold text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
                 ${!isAIConfigured && !generatingArticle ? 'opacity-50 cursor-pointer' : ''}
                 ${generatingArticle
                   ? 'bg-[#21DBA4] text-white cursor-wait'
