@@ -155,7 +155,7 @@ export const AnalysisIndicator: React.FC<AnalysisIndicatorProps> = ({ items, log
                             />
                         </>
                     ) : (
-                        <div className={`w-2.5 h-2.5 rounded-full ${config.color}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${config.color}`} />
                     )}
                 </div>
 
