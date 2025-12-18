@@ -1025,8 +1025,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
           )}
         </div>
 
-        {/* Row 2: Generation Buttons (Full Width) */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+        {/* Row 2: Generation Buttons (Full Width Stacked) */}
+        <div className="flex flex-col gap-3 w-full">
           {/* Insights Report Button */}
           <div
             className="relative flex-1 w-full"
