@@ -950,95 +950,97 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
     <div className="space-y-8">
       {/* Period Toggle + Generation Buttons */}
       {/* Period Toggle + Generation Buttons */}
-      <div className="mt-4 md:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Period Toggle + Custom Date Picker in same row on desktop */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:h-[40px]">
-          {/* Period Toggle */}
-          <div className={`flex inline-flex rounded-xl p-1 w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-            <button
-              onClick={() => setPeriod('weekly')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
-                ? 'bg-[#21DBA4] text-white shadow-md'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
-              {language === 'ko' ? '주간' : 'Weekly'}
-            </button>
-            <button
-              onClick={() => setPeriod('monthly')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
-                ? 'bg-[#21DBA4] text-white shadow-md'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
-              {language === 'ko' ? '월간' : 'Monthly'}
-            </button>
-            <button
-              onClick={() => setPeriod('custom')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
-                ? 'bg-[#21DBA4] text-white shadow-md'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Calendar size={12} className="sm:w-[14px] sm:h-[14px] shrink-0" />
-              {language === 'ko' ? '기간 선택' : 'Custom'}
-            </button>
+      <div className="mt-4 md:mt-0 flex flex-col gap-4">
+        {/* Row 1: Period Toggle + Custom Date Picker + Loading */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:h-[40px]">
+            {/* Period Toggle */}
+            <div className={`flex inline-flex rounded-xl p-1 w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <button
+                onClick={() => setPeriod('weekly')}
+                className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
+                  ? 'bg-[#21DBA4] text-white shadow-md'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+              >
+                <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
+                {language === 'ko' ? '주간' : 'Weekly'}
+              </button>
+              <button
+                onClick={() => setPeriod('monthly')}
+                className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
+                  ? 'bg-[#21DBA4] text-white shadow-md'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+              >
+                <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
+                {language === 'ko' ? '월간' : 'Monthly'}
+              </button>
+              <button
+                onClick={() => setPeriod('custom')}
+                className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
+                  ? 'bg-[#21DBA4] text-white shadow-md'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+              >
+                <Calendar size={12} className="sm:w-[14px] sm:h-[14px] shrink-0" />
+                {language === 'ko' ? '기간 선택' : 'Custom'}
+              </button>
+            </div>
+
+            {/* Custom Date Range Picker */}
+            {period === 'custom' && (
+              <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-2xl w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
+                  <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    max={customEndDate}
+                    className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                  />
+                </div>
+                <span className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>~</span>
+                <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
+                  <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    min={customStartDate}
+                    max={new Date().toISOString().split('T')[0]}
+                    className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Custom Date Range Picker - inline on desktop, full width on mobile */}
-          {period === 'custom' && (
-            <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-2xl w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
-                <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  max={customEndDate}
-                  className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
-                />
-              </div>
-              <span className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>~</span>
-              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
-                <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  min={customStartDate}
-                  max={new Date().toISOString().split('T')[0]}
-                  className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
-                />
-              </div>
+          {loading && (
+            <div className="flex items-center gap-2 text-[#21DBA4]">
+              <Loader2 size={14} className="animate-spin" />
+              <span className="text-xs sm:text-sm">{language === 'ko' ? '로딩...' : 'Loading...'}</span>
             </div>
           )}
         </div>
 
-        {loading && (
-          <div className="flex items-center gap-2 text-[#21DBA4]">
-            <Loader2 size={14} className="animate-spin" />
-            <span className="text-xs sm:text-sm">{language === 'ko' ? '로딩...' : 'Loading...'}</span>
-          </div>
-        )}
-
-        {/* Generation Buttons - Mobile: full width, Desktop: inline */}
-        <div className="flex items-center gap-2 relative w-full sm:w-auto">
+        {/* Row 2: Generation Buttons (Full Width) */}
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
           {/* Insights Report Button */}
           <div
-            className="relative flex-1 sm:flex-none"
+            className="relative flex-1 w-full"
             onMouseEnter={() => !isAIConfigured && setShowApiTooltip('report')}
             onMouseLeave={() => setShowApiTooltip(null)}
           >
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateReport}
               disabled={generatingReport || (isAIConfigured && filteredData.length < 3)}
-              className={`w-full min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap
+              className={`w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-sm whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${isDark
-                  ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                  ? 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-100'
                 }`}
             >
               {generatingReport ? (
@@ -1048,7 +1050,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                 </>
               ) : (
                 <>
-                  <FileText size={12} />
+                  <FileText size={16} />
                   <span className="whitespace-nowrap">{language === 'ko' ? '리포트' : 'Report'}</span>
                 </>
               )}
@@ -1064,14 +1066,14 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
 
           {/* AI Article Button */}
           <div
-            className="relative flex-1 sm:flex-none"
+            className="relative flex-1 w-full"
             onMouseEnter={() => !isAIConfigured && setShowApiTooltip('article')}
             onMouseLeave={() => setShowApiTooltip(null)}
           >
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateArticle}
               disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
-              className={`w-full min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
+              className={`w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
                 ${!isAIConfigured && !generatingArticle ? 'opacity-50 cursor-pointer' : ''}
                 ${generatingArticle
                   ? 'bg-[#21DBA4] text-white cursor-wait'
@@ -1087,7 +1089,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                 </>
               ) : (
                 <>
-                  <Sparkles size={12} />
+                  <Sparkles size={16} />
                   <span className="whitespace-nowrap">{language === 'ko' ? '아티클' : 'Article'}</span>
                 </>
               )}
@@ -1104,86 +1106,88 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       </div>
 
       {/* History Section */}
-      {(reportHistory.length > 0 || articleHistory.length > 0) && (() => {
-        const allItems = [...reportHistory.map(r => ({ ...r, type: 'report' as const })),
-        ...articleHistory.map(a => ({ ...a, type: 'article' as const }))]
-          .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime());
-        const displayItems = showAllHistory ? allItems : allItems.slice(0, 5);
-        const hasMore = allItems.length > 5;
+      {
+        (reportHistory.length > 0 || articleHistory.length > 0) && (() => {
+          const allItems = [...reportHistory.map(r => ({ ...r, type: 'report' as const })),
+          ...articleHistory.map(a => ({ ...a, type: 'article' as const }))]
+            .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime());
+          const displayItems = showAllHistory ? allItems : allItems.slice(0, 5);
+          const hasMore = allItems.length > 5;
 
-        const deleteHistoryItem = (id: string, type: 'report' | 'article') => {
-          if (type === 'report') {
-            const updated = reportHistory.filter(r => r.id !== id);
-            setReportHistory(updated);
-            localStorage.setItem('ai_reports_history', JSON.stringify(updated));
-            saveHistoryToFirestore('reports', updated);
-          } else {
-            const updated = articleHistory.filter(a => a.id !== id);
-            setArticleHistory(updated);
-            localStorage.setItem('ai_articles_history', JSON.stringify(updated));
-            saveHistoryToFirestore('articles', updated);
-          }
-        };
+          const deleteHistoryItem = (id: string, type: 'report' | 'article') => {
+            if (type === 'report') {
+              const updated = reportHistory.filter(r => r.id !== id);
+              setReportHistory(updated);
+              localStorage.setItem('ai_reports_history', JSON.stringify(updated));
+              saveHistoryToFirestore('reports', updated);
+            } else {
+              const updated = articleHistory.filter(a => a.id !== id);
+              setArticleHistory(updated);
+              localStorage.setItem('ai_articles_history', JSON.stringify(updated));
+              saveHistoryToFirestore('articles', updated);
+            }
+          };
 
-        return (
-          <div className={`rounded-xl border p-4 ${cardClass}`}>
-            <h3 className={`text-sm font-bold mb-3 ${textPrimary}`}>
-              {language === 'ko' ? '생성 기록' : 'Generation History'}
-            </h3>
-            <div className="space-y-2">
-              {displayItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-2 p-2 rounded-lg transition-colors group ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
+          return (
+            <div className={`rounded-xl border p-4 ${cardClass}`}>
+              <h3 className={`text-sm font-bold mb-3 ${textPrimary}`}>
+                {language === 'ko' ? '생성 기록' : 'Generation History'}
+              </h3>
+              <div className="space-y-2">
+                {displayItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-2 p-2 rounded-lg transition-colors group ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
+                  >
+                    <button
+                      onClick={() => {
+                        if (item.type === 'report') {
+                          setGeneratedReport(item);
+                          setShowReport(true);
+                        } else {
+                          setGeneratedArticle(item);
+                          setShowArticle(true);
+                        }
+                      }}
+                      className="flex-1 flex items-center gap-3 text-left"
+                    >
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${item.type === 'report' ? (isDark ? 'bg-slate-700' : 'bg-slate-100') : 'bg-[#21DBA4]/10'}`}>
+                        {item.type === 'report' ? <FileText size={14} className="text-slate-400" /> : <Sparkles size={14} className="text-[#21DBA4]" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-medium truncate ${textPrimary}`}>{item.title}</p>
+                        <p className={`text-xs ${textMuted}`}>
+                          {new Date(item.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPendingDeleteItem({ id: item.id, type: item.type, title: item.title });
+                      }}
+                      className={`p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ${isDark ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                      title={language === 'ko' ? '삭제' : 'Delete'}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {hasMore && (
+                <button
+                  onClick={() => setShowAllHistory(!showAllHistory)}
+                  className={`w-full mt-3 py-2 text-xs font-medium rounded-lg transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
                 >
-                  <button
-                    onClick={() => {
-                      if (item.type === 'report') {
-                        setGeneratedReport(item);
-                        setShowReport(true);
-                      } else {
-                        setGeneratedArticle(item);
-                        setShowArticle(true);
-                      }
-                    }}
-                    className="flex-1 flex items-center gap-3 text-left"
-                  >
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${item.type === 'report' ? (isDark ? 'bg-slate-700' : 'bg-slate-100') : 'bg-[#21DBA4]/10'}`}>
-                      {item.type === 'report' ? <FileText size={14} className="text-slate-400" /> : <Sparkles size={14} className="text-[#21DBA4]" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-medium truncate ${textPrimary}`}>{item.title}</p>
-                      <p className={`text-xs ${textMuted}`}>
-                        {new Date(item.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPendingDeleteItem({ id: item.id, type: item.type, title: item.title });
-                    }}
-                    className={`p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ${isDark ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                    title={language === 'ko' ? '삭제' : 'Delete'}
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
+                  {showAllHistory
+                    ? (language === 'ko' ? '접기' : 'Show less')
+                    : (language === 'ko' ? `더 보기 (${allItems.length - 5}개)` : `Show more (${allItems.length - 5})`)}
+                </button>
+              )}
             </div>
-            {hasMore && (
-              <button
-                onClick={() => setShowAllHistory(!showAllHistory)}
-                className={`w-full mt-3 py-2 text-xs font-medium rounded-lg transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
-              >
-                {showAllHistory
-                  ? (language === 'ko' ? '접기' : 'Show less')
-                  : (language === 'ko' ? `더 보기 (${allItems.length - 5}개)` : `Show more (${allItems.length - 5})`)}
-              </button>
-            )}
-          </div>
-        );
-      })()}
+          );
+        })()
+      }
       <div className={`rounded-2xl border p-8 shadow-lg ${cardClass}`}>
         <div className="flex items-start gap-4 mb-6">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center shadow-lg">
@@ -1405,423 +1409,429 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       </div>
 
       {/* Insights Report Modal */}
-      {showReport && generatedReport && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
-        >
+      {
+        showReport && generatedReport && createPortal(
           <div
-            className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
-            style={{ maxHeight: '80dvh' }}
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
           >
-            {/* Header */}
-            <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
-                  <FileText className="text-[#21DBA4]" size={18} />
+            <div
+              className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+              style={{ maxHeight: '80dvh' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
+                    <FileText className="text-[#21DBA4]" size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedReport.title}</h2>
+                    <p className={`text-xs ${textMuted}`}>
+                      {language === 'ko' ? `${generatedReport.wordCount}자` : `${generatedReport.wordCount} chars`} •
+                      {new Date(generatedReport.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en')}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedReport.title}</h2>
-                  <p className={`text-xs ${textMuted}`}>
-                    {language === 'ko' ? `${generatedReport.wordCount}자` : `${generatedReport.wordCount} chars`} •
-                    {new Date(generatedReport.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en')}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowReport(false)}
-                className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-5">
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {generatedReport.topics.map((topic, idx) => (
-                  <span
-                    key={idx}
-                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
-                  >
-                    #{topic}
-                  </span>
-                ))}
+                <button
+                  onClick={() => setShowReport(false)}
+                  className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+                >
+                  <X size={18} />
+                </button>
               </div>
 
-              <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
-                {(() => {
-                  const content = generatedReport.content;
-                  const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-5">
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {generatedReport.topics.map((topic, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
+                    >
+                      #{topic}
+                    </span>
+                  ))}
+                </div>
 
-                  return parts.map((part, idx) => {
-                    // Callout insight box
-                    if (part.startsWith(':::callout-insight')) {
-                      const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
-                      const lines = inner.split('\n').filter(l => l.trim());
-                      const title = lines[0];
-                      const items = lines.slice(1);
-                      return (
-                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
-                              <Lightbulb size={16} className="text-white" />
+                <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
+                  {(() => {
+                    const content = generatedReport.content;
+                    const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
+
+                    return parts.map((part, idx) => {
+                      // Callout insight box
+                      if (part.startsWith(':::callout-insight')) {
+                        const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
+                        const lines = inner.split('\n').filter(l => l.trim());
+                        const title = lines[0];
+                        const items = lines.slice(1);
+                        return (
+                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
+                                <Lightbulb size={16} className="text-white" />
+                              </div>
+                              <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
                             </div>
-                            <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
+                            <ul className="space-y-2 ml-1">
+                              {items.map((item, i) => (
+                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
+                                  {item.replace(/^[-\d.]\s*/, '')}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
-                          <ul className="space-y-2 ml-1">
-                            {items.map((item, i) => (
-                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
-                                {item.replace(/^[-\d.]\s*/, '')}
-                              </li>
-                            ))}
-                          </ul>
+                        );
+                      }
+                      // Callout action box
+                      if (part.startsWith(':::callout-action')) {
+                        const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
+                        const lines = inner.split('\n').filter(l => l.trim());
+                        const title = lines[0];
+                        const items = lines.slice(1);
+                        return (
+                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                                <Zap size={16} className="text-white" />
+                              </div>
+                              <h4 className="font-bold text-sm text-blue-500">{title}</h4>
+                            </div>
+                            <ul className="space-y-2 ml-1">
+                              {items.map((item, i) => (
+                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                                  {item.replace(/^[-\d.]\s*/, '')}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      }
+                      // Regular content - enhanced markdown rendering
+                      return (
+                        <div key={idx} className="space-y-4">
+                          {part.split('\n').map((line, lineIdx) => {
+                            const trimmedLine = line.trim();
+                            if (!trimmedLine) return null;
+
+                            // H2 heading
+                            if (trimmedLine.startsWith('## ')) {
+                              return (
+                                <h2 key={lineIdx} className={`text-lg font-bold mt-6 mb-3 pb-2 border-b ${isDark ? 'text-white border-slate-700' : 'text-slate-900 border-slate-200'}`}>
+                                  {renderInlineMarkdown(trimmedLine.replace('## ', ''))}
+                                </h2>
+                              );
+                            }
+
+                            // H3 heading
+                            if (trimmedLine.startsWith('### ')) {
+                              return (
+                                <h3 key={lineIdx} className={`text-base font-bold mt-4 mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                  {renderInlineMarkdown(trimmedLine.replace('### ', ''))}
+                                </h3>
+                              );
+                            }
+
+                            // Numbered list item
+                            if (/^\d+\.\s/.test(trimmedLine)) {
+                              return (
+                                <div key={lineIdx} className={`flex items-start gap-3 text-sm ${textMuted}`}>
+                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#21DBA4] text-white text-xs font-bold shrink-0">
+                                    {trimmedLine.match(/^(\d+)\./)?.[1]}
+                                  </span>
+                                  <span className="flex-1 leading-relaxed">
+                                    {renderInlineMarkdown(trimmedLine.replace(/^\d+\.\s*/, ''))}
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            // Bullet list item
+                            if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+                              return (
+                                <div key={lineIdx} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-2 shrink-0" />
+                                  <span className="flex-1 leading-relaxed">
+                                    {renderInlineMarkdown(trimmedLine.replace(/^[-*]\s*/, ''))}
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            // Regular paragraph
+                            return (
+                              <p key={lineIdx} className={`text-sm leading-relaxed ${textMuted}`}>
+                                {renderInlineMarkdown(trimmedLine)}
+                              </p>
+                            );
+                          })}
                         </div>
                       );
-                    }
-                    // Callout action box
-                    if (part.startsWith(':::callout-action')) {
-                      const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
-                      const lines = inner.split('\n').filter(l => l.trim());
-                      const title = lines[0];
-                      const items = lines.slice(1);
-                      return (
-                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                              <Zap size={16} className="text-white" />
-                            </div>
-                            <h4 className="font-bold text-sm text-blue-500">{title}</h4>
-                          </div>
-                          <ul className="space-y-2 ml-1">
-                            {items.map((item, i) => (
-                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                                {item.replace(/^[-\d.]\s*/, '')}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      );
-                    }
-                    // Regular content - enhanced markdown rendering
-                    return (
-                      <div key={idx} className="space-y-4">
-                        {part.split('\n').map((line, lineIdx) => {
-                          const trimmedLine = line.trim();
-                          if (!trimmedLine) return null;
+                    });
+                  })()}
+                </article>
+              </div>
 
-                          // H2 heading
-                          if (trimmedLine.startsWith('## ')) {
-                            return (
-                              <h2 key={lineIdx} className={`text-lg font-bold mt-6 mb-3 pb-2 border-b ${isDark ? 'text-white border-slate-700' : 'text-slate-900 border-slate-200'}`}>
-                                {renderInlineMarkdown(trimmedLine.replace('## ', ''))}
-                              </h2>
-                            );
-                          }
-
-                          // H3 heading
-                          if (trimmedLine.startsWith('### ')) {
-                            return (
-                              <h3 key={lineIdx} className={`text-base font-bold mt-4 mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                                {renderInlineMarkdown(trimmedLine.replace('### ', ''))}
-                              </h3>
-                            );
-                          }
-
-                          // Numbered list item
-                          if (/^\d+\.\s/.test(trimmedLine)) {
-                            return (
-                              <div key={lineIdx} className={`flex items-start gap-3 text-sm ${textMuted}`}>
-                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#21DBA4] text-white text-xs font-bold shrink-0">
-                                  {trimmedLine.match(/^(\d+)\./)?.[1]}
-                                </span>
-                                <span className="flex-1 leading-relaxed">
-                                  {renderInlineMarkdown(trimmedLine.replace(/^\d+\.\s*/, ''))}
-                                </span>
-                              </div>
-                            );
-                          }
-
-                          // Bullet list item
-                          if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
-                            return (
-                              <div key={lineIdx} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-2 shrink-0" />
-                                <span className="flex-1 leading-relaxed">
-                                  {renderInlineMarkdown(trimmedLine.replace(/^[-*]\s*/, ''))}
-                                </span>
-                              </div>
-                            );
-                          }
-
-                          // Regular paragraph
-                          return (
-                            <p key={lineIdx} className={`text-sm leading-relaxed ${textMuted}`}>
-                              {renderInlineMarkdown(trimmedLine)}
-                            </p>
-                          );
-                        })}
-                      </div>
-                    );
-                  });
-                })()}
-              </article>
+              {/* Footer */}
+              <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+                <button
+                  onClick={() => navigator.clipboard.writeText(generatedReport.content)}
+                  className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                >
+                  {language === 'ko' ? '복사' : 'Copy'}
+                </button>
+                <button
+                  onClick={() => setShowReport(false)}
+                  className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                >
+                  {language === 'ko' ? '닫기' : 'Close'}
+                </button>
+              </div>
             </div>
-
-            {/* Footer */}
-            <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-              <button
-                onClick={() => navigator.clipboard.writeText(generatedReport.content)}
-                className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-              >
-                {language === 'ko' ? '복사' : 'Copy'}
-              </button>
-              <button
-                onClick={() => setShowReport(false)}
-                className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
-              >
-                {language === 'ko' ? '닫기' : 'Close'}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.getElementById('modal-root') || document.body
-      )}
+          </div>,
+          document.getElementById('modal-root') || document.body
+        )
+      }
 
       {/* AI Article Modal */}
-      {showArticle && generatedArticle && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
-        >
+      {
+        showArticle && generatedArticle && createPortal(
           <div
-            className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
-            style={{ maxHeight: '80dvh' }}
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
           >
-            {/* Header */}
-            <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-[#21DBA4] flex items-center justify-center">
-                  <Sparkles className="text-white" size={18} />
+            <div
+              className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
+              style={{ maxHeight: '80dvh' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-[#21DBA4] flex items-center justify-center">
+                    <Sparkles className="text-white" size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedArticle.title}</h2>
+                    <p className={`text-xs ${textMuted}`}>
+                      {language === 'ko' ? `AI 아티클 • ${generatedArticle.wordCount}자` : `AI Article • ${generatedArticle.wordCount} chars`}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedArticle.title}</h2>
-                  <p className={`text-xs ${textMuted}`}>
-                    {language === 'ko' ? `AI 아티클 • ${generatedArticle.wordCount}자` : `AI Article • ${generatedArticle.wordCount} chars`}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowArticle(false)}
-                className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-5">
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {generatedArticle.topics.map((topic, idx) => (
-                  <span
-                    key={idx}
-                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-[#21DBA4]' : 'bg-[#21DBA4]/10 text-[#21DBA4]'}`}
-                  >
-                    #{topic}
-                  </span>
-                ))}
+                <button
+                  onClick={() => setShowArticle(false)}
+                  className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+                >
+                  <X size={18} />
+                </button>
               </div>
 
-              <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
-                {(() => {
-                  const content = generatedArticle.content;
-                  const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-5">
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {generatedArticle.topics.map((topic, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-[#21DBA4]' : 'bg-[#21DBA4]/10 text-[#21DBA4]'}`}
+                    >
+                      #{topic}
+                    </span>
+                  ))}
+                </div>
 
-                  return parts.map((part, idx) => {
-                    // Callout insight box
-                    if (part.startsWith(':::callout-insight')) {
-                      const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
-                      const lines = inner.split('\n').filter(l => l.trim());
-                      const title = lines[0];
-                      const items = lines.slice(1);
-                      return (
-                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
-                              <Lightbulb size={16} className="text-white" />
-                            </div>
-                            <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
-                          </div>
-                          <ul className="space-y-2 ml-1">
-                            {items.map((item, i) => (
-                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
-                                {item.replace(/^[-\d.]\s*/, '')}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      );
-                    }
-                    // Callout action box
-                    if (part.startsWith(':::callout-action')) {
-                      const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
-                      const lines = inner.split('\n').filter(l => l.trim());
-                      const title = lines[0];
-                      const items = lines.slice(1);
-                      return (
-                        <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                              <Zap size={16} className="text-white" />
-                            </div>
-                            <h4 className="font-bold text-sm text-blue-500">{title}</h4>
-                          </div>
-                          <ul className="space-y-2 ml-1">
-                            {items.map((item, i) => (
-                              <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                                {item.replace(/^[-\d.]\s*/, '')}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      );
-                    }
-                    // Regular content - enhanced
-                    return part.split('\n').map((line, lineIdx) => {
-                      const cleanLine = stripMarkdown(line);
+                <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
+                  {(() => {
+                    const content = generatedArticle.content;
+                    const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
 
-                      // H2 - Major section header
-                      if (line.startsWith('## ')) {
+                    return parts.map((part, idx) => {
+                      // Callout insight box
+                      if (part.startsWith(':::callout-insight')) {
+                        const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
+                        const lines = inner.split('\n').filter(l => l.trim());
+                        const title = lines[0];
+                        const items = lines.slice(1);
                         return (
-                          <div key={`${idx}-${lineIdx}`} className="mt-8 mb-4 first:mt-0">
-                            <h2 className={`text-lg font-black pb-2 border-b-2 text-[#21DBA4] ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                              {stripMarkdown(line.replace('## ', ''))}
-                            </h2>
+                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
+                                <Lightbulb size={16} className="text-white" />
+                              </div>
+                              <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
+                            </div>
+                            <ul className="space-y-2 ml-1">
+                              {items.map((item, i) => (
+                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
+                                  {item.replace(/^[-\d.]\s*/, '')}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         );
                       }
-                      // H3 - Sub section header
-                      if (line.startsWith('### ')) {
+                      // Callout action box
+                      if (part.startsWith(':::callout-action')) {
+                        const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
+                        const lines = inner.split('\n').filter(l => l.trim());
+                        const title = lines[0];
+                        const items = lines.slice(1);
                         return (
-                          <h3 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-bold flex items-center gap-2 ${textPrimary}`}>
-                            <span className="w-1 h-5 rounded-full bg-[#21DBA4]" />
-                            {stripMarkdown(line.replace('### ', ''))}
-                          </h3>
-                        );
-                      }
-                      // Bullet list
-                      if (line.startsWith('- ')) {
-                        return (
-                          <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
-                            <span className="w-2 h-2 rounded-full bg-[#21DBA4]/60 mt-1.5 shrink-0" />
-                            <span className="text-sm leading-relaxed">{stripMarkdown(line.replace('- ', ''))}</span>
+                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                                <Zap size={16} className="text-white" />
+                              </div>
+                              <h4 className="font-bold text-sm text-blue-500">{title}</h4>
+                            </div>
+                            <ul className="space-y-2 ml-1">
+                              {items.map((item, i) => (
+                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                                  {item.replace(/^[-\d.]\s*/, '')}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         );
                       }
-                      // Emphasis line (italic)
-                      if (line.startsWith('*') && line.endsWith('*')) {
-                        return (
-                          <p key={`${idx}-${lineIdx}`} className={`mt-4 text-sm italic py-3 px-4 rounded-xl ${isDark ? 'bg-slate-800/50 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
-                            {line.replace(/\*/g, '')}
-                          </p>
-                        );
-                      }
-                      // Horizontal rule
-                      if (line.startsWith('---')) {
-                        return <hr key={`${idx}-${lineIdx}`} className={`my-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
-                      }
-                      // Regular paragraph
-                      if (cleanLine.trim()) {
-                        return (
-                          <p key={`${idx}-${lineIdx}`} className={`mb-3 text-sm leading-relaxed ${textMuted}`}>
-                            {cleanLine}
-                          </p>
-                        );
-                      }
-                      return null;
+                      // Regular content - enhanced
+                      return part.split('\n').map((line, lineIdx) => {
+                        const cleanLine = stripMarkdown(line);
+
+                        // H2 - Major section header
+                        if (line.startsWith('## ')) {
+                          return (
+                            <div key={`${idx}-${lineIdx}`} className="mt-8 mb-4 first:mt-0">
+                              <h2 className={`text-lg font-black pb-2 border-b-2 text-[#21DBA4] ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                                {stripMarkdown(line.replace('## ', ''))}
+                              </h2>
+                            </div>
+                          );
+                        }
+                        // H3 - Sub section header
+                        if (line.startsWith('### ')) {
+                          return (
+                            <h3 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-bold flex items-center gap-2 ${textPrimary}`}>
+                              <span className="w-1 h-5 rounded-full bg-[#21DBA4]" />
+                              {stripMarkdown(line.replace('### ', ''))}
+                            </h3>
+                          );
+                        }
+                        // Bullet list
+                        if (line.startsWith('- ')) {
+                          return (
+                            <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
+                              <span className="w-2 h-2 rounded-full bg-[#21DBA4]/60 mt-1.5 shrink-0" />
+                              <span className="text-sm leading-relaxed">{stripMarkdown(line.replace('- ', ''))}</span>
+                            </div>
+                          );
+                        }
+                        // Emphasis line (italic)
+                        if (line.startsWith('*') && line.endsWith('*')) {
+                          return (
+                            <p key={`${idx}-${lineIdx}`} className={`mt-4 text-sm italic py-3 px-4 rounded-xl ${isDark ? 'bg-slate-800/50 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
+                              {line.replace(/\*/g, '')}
+                            </p>
+                          );
+                        }
+                        // Horizontal rule
+                        if (line.startsWith('---')) {
+                          return <hr key={`${idx}-${lineIdx}`} className={`my-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
+                        }
+                        // Regular paragraph
+                        if (cleanLine.trim()) {
+                          return (
+                            <p key={`${idx}-${lineIdx}`} className={`mb-3 text-sm leading-relaxed ${textMuted}`}>
+                              {cleanLine}
+                            </p>
+                          );
+                        }
+                        return null;
+                      });
                     });
-                  });
-                })()}
-              </article>
-            </div>
+                  })()}
+                </article>
+              </div>
 
-            {/* Footer */}
-            <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-              <button
-                onClick={() => navigator.clipboard.writeText(generatedArticle.content)}
-                className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-              >
-                {language === 'ko' ? '복사' : 'Copy'}
-              </button>
-              <button
-                onClick={() => setShowArticle(false)}
-                className="px-3 py-1.5 rounded-lg font-semibold text-sm bg-[#21DBA4] text-white hover:bg-[#1bc290] transition-colors"
-              >
-                {language === 'ko' ? '닫기' : 'Close'}
-              </button>
+              {/* Footer */}
+              <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+                <button
+                  onClick={() => navigator.clipboard.writeText(generatedArticle.content)}
+                  className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                >
+                  {language === 'ko' ? '복사' : 'Copy'}
+                </button>
+                <button
+                  onClick={() => setShowArticle(false)}
+                  className="px-3 py-1.5 rounded-lg font-semibold text-sm bg-[#21DBA4] text-white hover:bg-[#1bc290] transition-colors"
+                >
+                  {language === 'ko' ? '닫기' : 'Close'}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.getElementById('modal-root') || document.body
-      )}
+          </div>,
+          document.getElementById('modal-root') || document.body
+        )
+      }
 
       {/* Delete Confirmation Modal */}
-      {pendingDeleteItem && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => setPendingDeleteItem(null)}
-        >
+      {
+        pendingDeleteItem && createPortal(
           <div
-            className={`w-full max-w-sm rounded-2xl border shadow-2xl p-5 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}
-            style={{ maxHeight: '80dvh' }}
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setPendingDeleteItem(null)}
           >
-            <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>
-              {language === 'ko' ? '삭제하시겠습니까?' : 'Delete this item?'}
-            </h3>
-            <p className={`text-sm mb-4 ${textMuted}`}>
-              {language === 'ko'
-                ? `"${pendingDeleteItem.title}"을(를) 삭제합니다. 이 작업은 취소할 수 없습니다.`
-                : `"${pendingDeleteItem.title}" will be deleted. This action cannot be undone.`}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPendingDeleteItem(null)}
-                className={`flex-1 py-2 rounded-xl font-bold text-sm transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-              >
-                {language === 'ko' ? '취소' : 'Cancel'}
-              </button>
-              <button
-                onClick={() => {
-                  if (pendingDeleteItem.type === 'report') {
-                    const updated = reportHistory.filter(r => r.id !== pendingDeleteItem.id);
-                    setReportHistory(updated);
-                    localStorage.setItem('ai_reports_history', JSON.stringify(updated));
-                    saveHistoryToFirestore('reports', updated);
-                  } else {
-                    const updated = articleHistory.filter(a => a.id !== pendingDeleteItem.id);
-                    setArticleHistory(updated);
-                    localStorage.setItem('ai_articles_history', JSON.stringify(updated));
-                    saveHistoryToFirestore('articles', updated);
-                  }
-                  setPendingDeleteItem(null);
-                }}
-                className="flex-1 py-2 rounded-xl font-bold text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
-              >
-                {language === 'ko' ? '삭제' : 'Delete'}
-              </button>
+            <div
+              className={`w-full max-w-sm rounded-2xl border shadow-2xl p-5 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}
+              style={{ maxHeight: '80dvh' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>
+                {language === 'ko' ? '삭제하시겠습니까?' : 'Delete this item?'}
+              </h3>
+              <p className={`text-sm mb-4 ${textMuted}`}>
+                {language === 'ko'
+                  ? `"${pendingDeleteItem.title}"을(를) 삭제합니다. 이 작업은 취소할 수 없습니다.`
+                  : `"${pendingDeleteItem.title}" will be deleted. This action cannot be undone.`}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPendingDeleteItem(null)}
+                  className={`flex-1 py-2 rounded-xl font-bold text-sm transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+                >
+                  {language === 'ko' ? '취소' : 'Cancel'}
+                </button>
+                <button
+                  onClick={() => {
+                    if (pendingDeleteItem.type === 'report') {
+                      const updated = reportHistory.filter(r => r.id !== pendingDeleteItem.id);
+                      setReportHistory(updated);
+                      localStorage.setItem('ai_reports_history', JSON.stringify(updated));
+                      saveHistoryToFirestore('reports', updated);
+                    } else {
+                      const updated = articleHistory.filter(a => a.id !== pendingDeleteItem.id);
+                      setArticleHistory(updated);
+                      localStorage.setItem('ai_articles_history', JSON.stringify(updated));
+                      saveHistoryToFirestore('articles', updated);
+                    }
+                    setPendingDeleteItem(null);
+                  }}
+                  className="flex-1 py-2 rounded-xl font-bold text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
+                >
+                  {language === 'ko' ? '삭제' : 'Delete'}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.getElementById('modal-root') || document.body
-      )}
-    </div>
+          </div>,
+          document.getElementById('modal-root') || document.body
+        )
+      }
+    </div >
   );
 };
 
