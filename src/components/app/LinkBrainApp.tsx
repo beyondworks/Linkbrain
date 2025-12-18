@@ -1308,7 +1308,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8">
+            <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8 no-scrollbar">
 
                {/* Main Nav */}
                <div className="space-y-1">
