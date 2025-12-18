@@ -950,14 +950,14 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
     <div className="space-y-8">
       {/* Period Toggle + Generation Buttons */}
       {/* Period Toggle + Generation Buttons */}
-      <div className="mt-4 md:mt-0 flex flex-row items-center justify-between gap-4">
+      <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Left Side: Period Toggle + Custom Date Picker + Loading */}
-        <div className="flex items-center gap-2 h-[40px]">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
           {/* Period Toggle */}
-          <div className={`flex inline-flex rounded-xl p-1 w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+          <div className={`flex rounded-xl p-1 w-full md:w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
             <button
               onClick={() => setPeriod('weekly')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'weekly'
+              className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'weekly'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -967,7 +967,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </button>
             <button
               onClick={() => setPeriod('monthly')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'monthly'
+              className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'monthly'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -977,7 +977,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             </button>
             <button
               onClick={() => setPeriod('custom')}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
+              className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
                 ? 'bg-[#21DBA4] text-white shadow-md'
                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
@@ -989,7 +989,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
 
           {/* Custom Date Range Picker */}
           {period === 'custom' && (
-            <div className={`flex items-center justify-center gap-2 px-2 py-1.5 rounded-xl shrink-0 ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+            <div className={`flex items-center justify-center gap-2 px-2 py-1.5 rounded-xl w-full md:w-auto shrink-0 ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
               <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
                 <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                 <input
@@ -997,7 +997,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
                   max={customEndDate}
-                  className={`w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                  className={`w-full md:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
                 />
               </div>
               <span className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>~</span>
@@ -1009,7 +1009,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                   onChange={(e) => setCustomEndDate(e.target.value)}
                   min={customStartDate}
                   max={new Date().toISOString().split('T')[0]}
-                  className={`w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                  className={`w-full md:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
                 />
               </div>
             </div>
@@ -1024,7 +1024,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
         </div>
 
         {/* Right Side: Generation Buttons (Compact, Inline) */}
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           {/* Insights Report Button */}
           <div
             className="relative"
@@ -1034,7 +1034,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateReport}
               disabled={generatingReport || (isAIConfigured && filteredData.length < 3)}
-              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-bold text-sm transition-all shadow-sm whitespace-nowrap
+              className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-bold text-sm transition-all shadow-sm whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${isDark
                   ? 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
@@ -1071,7 +1071,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
             <button
               onClick={!isAIConfigured ? onOpenSettings : generateArticle}
               disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
-              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-bold text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
+              className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-bold text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
                 ${!isAIConfigured && !generatingArticle ? 'opacity-50 cursor-pointer' : ''}
                 ${generatingArticle
                   ? 'bg-[#21DBA4] text-white cursor-wait'
