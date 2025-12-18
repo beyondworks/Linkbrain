@@ -139,39 +139,107 @@ export const callGemini = async (apiKey: string, model: string, prompt: string):
 };
 
 // Generate AI insights report
-export const generateAIReport = async (clips: any[], language: 'ko' | 'en'): Promise<AIResponse> => {
+export const generateAIReport = async (
+    clips: any[],
+    relatedClips: any[],
+    startDate: string,
+    endDate: string,
+    language: 'ko' | 'en'
+): Promise<AIResponse> => {
     const config = getAIConfig();
     if (!config) {
         return { success: false, error: 'AI not configured' };
     }
 
-    const clipSummaries = clips.slice(0, 10).map((clip, i) =>
-        `${i + 1}. ${clip.title || clip.url}\n   Keywords: ${(clip.tags || clip.keywords || []).join(', ')}\n   Summary: ${clip.summary || clip.description || ''}`
+    const clipSummaries = clips.map((clip, i) =>
+        `[${i + 1}] Title: ${clip.title || clip.url}\n    Date: ${new Date(clip.createdAt?.seconds ? clip.createdAt.seconds * 1000 : clip.createdAt).toISOString().split('T')[0]}\n    Keywords: ${(clip.tags || clip.keywords || []).join(', ')}\n    Summary: ${clip.summary || clip.description || ''}`
+    ).join('\n\n');
+
+    const relatedSummaries = relatedClips.map((clip, i) =>
+        `[R-${i + 1}] Title: ${clip.title || clip.url}\n    Date: ${new Date(clip.createdAt?.seconds ? clip.createdAt.seconds * 1000 : clip.createdAt).toISOString().split('T')[0]}\n    Keywords: ${(clip.tags || clip.keywords || []).join(', ')}\n    Summary: ${clip.summary || clip.description || ''}`
     ).join('\n\n');
 
     const prompt = language === 'ko'
-        ? `다음은 사용자가 저장한 콘텐츠 목록입니다. 이 콘텐츠들을 분석하여 인사이트 리포트를 작성해주세요.
+        ? `
+[인사이트 리포트 생성 요청]
 
-콘텐츠 목록:
+다음은 사용자가 선택한 기간(${startDate} ~ ${endDate}) 동안 저장한 클립 목록입니다.
+또한, 이 기간의 클립과 주제적으로 연관된 과거 클립들도 함께 제공됩니다.
+
+[선택 기간 클립 (${clips.length}개)]
 ${clipSummaries}
 
-다음 형식으로 작성해주세요:
-1. **주요 관심 분야**: 사용자가 주로 관심있어 하는 주제들
-2. **핵심 인사이트**: 콘텐츠에서 발견된 중요한 패턴이나 트렌드
-3. **추천**: 사용자에게 도움이 될 수 있는 제안
+[과거 연관 클립 (${relatedClips.length}개) - 맥락 참고용]
+${relatedSummaries}
 
-간결하고 유익하게 작성해주세요.`
-        : `Here are the contents saved by the user. Please analyze them and create an insights report.
+📌 분석 지침:
+1. 선택 기간 내 클립들을 개별적으로 요약하지 마세요.
+2. 반복 등장하는 키워드, 문제의식, 관점 변화를 중심으로 '하나의 큰 흐름'을 먼저 도출하세요.
+3. 그 흐름이 과거 클립의 어떤 맥락에서 출발했는지 연결하세요.
+4. 사용자의 관심사가 과거엔 무엇이었고, 어떻게 확장/변형되었으며, 현재 어떤 단계에 도달했는지 '관심사의 진화' 관점에서 설명하세요.
 
-Content list:
+📌 출력 형식 (Markdown):
+## 핵심 인사이트 요약
+(3~5줄로 요약)
+
+## 관심사 흐름 타임라인
+- **과거**: (과거 클립 기반 배경)
+- **전환점**: (변화의 계기가 된 콘텐츠나 시점)
+- **현재**: (최근 집중하고 있는 주제)
+
+## 최근 변화의 특징
+(최근 기간의 두드러진 특징 서술)
+
+## 주목하고 있는 핵심 주제
+1. **주제 1**: 설명
+2. **주제 2**: 설명
+3. **주제 3**: 설명
+
+## 다음 단계 제안
+(데이터 기반으로 추론된 다음 관심사 제안)
+
+⚠️ 주의:
+- 데이터에 없는 내용은 절대 생성하지 마세요.
+- 일반적인 트렌드 설명을 하지 말고, 오직 제공된 클립 간의 관계만 분석하세요.
+`
+        : `
+[Generate Insights Report]
+
+Here is the list of clips saved by the user during the selected period (${startDate} ~ ${endDate}).
+Also provided are past clips that are thematically related to this period.
+
+[Selected Period Clips]
 ${clipSummaries}
 
-Please write in the following format:
-1. **Main Interests**: Topics the user is mainly interested in
-2. **Key Insights**: Important patterns or trends found in the content
-3. **Recommendations**: Suggestions that could help the user
+[Related Past Clips (Context)]
+${relatedSummaries}
 
-Please write concisely and informatively.`;
+📌 Analysis Guidelines:
+1. Do not summarize clips individually.
+2. Identify a "major flow" focusing on recurring keywords, issues, and perspective shifts.
+3. Connect this flow to the context of past clips.
+4. Explain the "Evolution of Interests": what they were initially, how they expanded/changed, and where they are now.
+
+📌 Output Format (Markdown):
+## Key Insights Summary
+(3-5 lines)
+
+## Interest Timeline
+- **Past**: (Background from past clips)
+- **Turning Point**: (Content or moment that triggered change)
+- **Present**: (Currently focused topics)
+
+## Characteristics of Recent Changes
+(Description of notable changes in the recent period)
+
+## Core Topics in Focus
+1. **Topic 1**: Description
+2. **Topic 2**: Description
+3. **Topic 3**: Description
+
+## Suggested Next Steps
+(Data-driven suggestions for future interests)
+`;
 
     if (config.provider === 'openai') {
         return await callOpenAI(config.apiKey, config.model, prompt);
@@ -181,39 +249,98 @@ Please write concisely and informatively.`;
 };
 
 // Generate AI article
-export const generateAIArticle = async (clips: any[], language: 'ko' | 'en'): Promise<AIResponse> => {
+export const generateAIArticle = async (
+    clips: any[],
+    relatedClips: any[],
+    insightSummary: string,
+    language: 'ko' | 'en'
+): Promise<AIResponse> => {
     const config = getAIConfig();
     if (!config) {
         return { success: false, error: 'AI not configured' };
     }
 
-    const clipSummaries = clips.slice(0, 8).map((clip, i) =>
-        `${i + 1}. ${clip.title || clip.url}\n   ${clip.summary || clip.description || ''}`
+    const clipSummaries = clips.map((clip, i) =>
+        `[Current-${i + 1}] ${clip.title || clip.url}\n   Summary: ${clip.summary || clip.description || ''}`
     ).join('\n\n');
 
-    const topics = [...new Set(clips.flatMap(c => c.tags || c.keywords || []))].slice(0, 5);
+    const relatedSummaries = relatedClips.map((clip, i) =>
+        `[Past-${i + 1}] ${clip.title || clip.url}\n   Summary: ${clip.summary || clip.description || ''}`
+    ).join('\n\n');
 
     const prompt = language === 'ko'
-        ? `다음 콘텐츠들을 바탕으로 "${topics[0] || '기술'}"에 대한 오리지널 아티클을 작성해주세요.
+        ? `
+[오리지널 아티클 작성 요청]
 
-참고 콘텐츠:
+다음은 한 사용자가 일정 기간 동안 저장한 콘텐츠와, 그 이전부터 축적해온 관련 콘텐츠를 기반으로 도출된 인사이트입니다.
+
+[인사이트 요약]
+${insightSummary}
+
+[선택 기간 클립 (최근)]
 ${clipSummaries}
 
-다음 조건으로 작성해주세요:
-- 500-800자 분량
-- 인사이트가 담긴 분석적 글
-- 마크다운 형식 사용 (## 헤더, **강조** 등)
-- 결론에 실천적 조언 포함`
-        : `Based on the following content, please write an original article about "${topics[0] || 'technology'}".
+[과거 연관 클립 (배경/맥락)]
+${relatedSummaries}
 
-Reference content:
+📌 아티클 작성 지침:
+1. 단일 게시물 소개 형태로 작성하지 마세요.
+2. 하나의 주제를 중심으로 '생각의 축적 과정'이 드러나야 합니다.
+3. 과거 콘텐츠는 배경과 맥락 설명에 활용하세요.
+4. 시간이 흐르며 관점이 어떻게 변화했는지를 명확히 보여주세요.
+5. 독자는 "이 주제에 대해 깊이 고민해온 사람의 기록"을 읽는 느낌을 받아야 합니다.
+
+📌 문체 및 구조 (Markdown):
+# (흥미로운 제목)
+
+## 서론: 최근의 맥락
+(왜 이 주제가 지금 중요해졌는지)
+
+## 1. 생각의 출발점
+(과거 관심사 및 배경)
+
+## 2. 관점의 변화와 확장
+(최근 콘텐츠를 통해 알게 된 새로운 사실이나 시각)
+
+## 3. 현재의 문제의식
+(사용자가 지금 가장 집중하고 있는 포인트)
+
+## 결론: 질문과 전망
+(정답보다는 다음으로 이어질 좋은 질문 제시)
+
+⚠️ 금지 사항:
+- 사실을 일반화하거나 마케팅 문구처럼 쓰지 마세요.
+- 제공되지 않은 정보로 논리를 무리하게 확장하지 마세요.
+`
+        : `
+[Generate Original Article]
+
+Based on the content saved by a user over a period and related past content, write an original article.
+
+[Insight Summary]
+${insightSummary}
+
+[Selected Period Clips]
 ${clipSummaries}
 
-Please write with these conditions:
-- 400-600 words
-- Analytical writing with insights
-- Use markdown format (## headers, **bold**, etc.)
-- Include actionable advice in conclusion`;
+[Related Past Clips]
+${relatedSummaries}
+
+📌 Writing Guidelines:
+1. Do NOT write as a list of links.
+2. Show the "accumulation of thought" around a central theme.
+3. Use past content for background and context.
+4. Clearly show how perspectives have changed over time.
+5. Create a feeling of reading "records of someone who has thought deeply about this topic".
+
+📌 Structure (Markdown):
+# (Title)
+## Introduction: Recent Context
+## 1. Origin of Thought
+## 2. Shift in Perspective
+## 3. Current Focus
+## Conclusion: Questions for the Future
+`;
 
     if (config.provider === 'openai') {
         return await callOpenAI(config.apiKey, config.model, prompt);
