@@ -83,6 +83,8 @@ import { LinkBrainLogo } from './LinkBrainLogo';
 import { AnalysisIndicator, AnalysisItem, AnalysisStatus, AnalysisLogItem } from './AnalysisIndicator';
 import { useSubscription } from '../../hooks/useSubscription';
 import { useAdmin } from '../../hooks/useAdmin';
+import { useAnnouncements, usePopups } from '../../hooks/useAnnouncements';
+import { AnnouncementPopup } from './Modals/AnnouncementPopup';
 
 // --- Mock Data ---
 const INITIAL_CATEGORIES: Category[] = [
@@ -483,46 +485,36 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
    const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
 
-   // Notification State (Test Data)
+   // Notification State - Firestore connected
    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
    const notificationRef = useRef<HTMLDivElement>(null);
-   const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(new Set(['3'])); // id '3' is pre-read
 
-   const appNotifications = useMemo(() => [
-      {
-         id: '1',
-         type: 'update' as const,
-         title: language === 'ko' ? '🎉 v1.2 업데이트 안내' : '🎉 v1.2 Update Released',
-         message: language === 'ko' ? '새로운 AI 분석 기능이 추가되었습니다.' : 'New AI analysis features have been added.',
-         date: '2024-12-18',
-         isRead: readNotificationIds.has('1'),
-      },
-      {
-         id: '2',
-         type: 'notice' as const,
-         title: language === 'ko' ? '📢 시스템 점검 안내' : '📢 System Maintenance Notice',
-         message: language === 'ko' ? '12/20 02:00-04:00 서버 점검 예정입니다.' : 'Server maintenance scheduled for 12/20 02:00-04:00.',
-         date: '2024-12-17',
-         isRead: readNotificationIds.has('2'),
-      },
-      {
-         id: '3',
-         type: 'tip' as const,
-         title: language === 'ko' ? '💡 새로운 기능 팁' : '💡 New Feature Tip',
-         message: language === 'ko' ? 'AI 채팅으로 저장된 링크에 대해 질문해보세요!' : 'Try asking questions about your saved links with AI Chat!',
-         date: '2024-12-16',
-         isRead: readNotificationIds.has('3'),
-      },
-   ], [language, readNotificationIds]);
+   // Announcements from Firestore
+   const {
+      announcements: appNotifications,
+      unreadCount,
+      markAsRead,
+      markAllAsRead
+   } = useAnnouncements(language);
 
-   const unreadCount = appNotifications.filter(n => !n.isRead).length;
+   // Popups from Firestore
+   const { popups: activePopups, dismissPopup, dismissPopupForever } = usePopups();
+   const [currentPopupIndex, setCurrentPopupIndex] = useState(0);
+   const currentPopup = activePopups[currentPopupIndex];
 
-   const markAllAsRead = () => {
-      setReadNotificationIds(new Set(appNotifications.map(n => n.id)));
+   // Handle popup dismiss
+   const handlePopupDismiss = (id: string) => {
+      dismissPopup(id);
+      if (currentPopupIndex < activePopups.length - 1) {
+         setCurrentPopupIndex(prev => prev + 1);
+      }
    };
 
-   const markAsRead = (id: string) => {
-      setReadNotificationIds(prev => new Set([...prev, id]));
+   const handlePopupDismissForever = (id: string) => {
+      dismissPopupForever(id);
+      if (currentPopupIndex < activePopups.length - 1) {
+         setCurrentPopupIndex(prev => prev + 1);
+      }
    };
 
    // Delete Confirmation State
@@ -1788,7 +1780,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                          {notification.message}
                                                       </div>
                                                       <div className={`text-[10px] mt-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                         {notification.date}
+                                                         {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : ''}
                                                       </div>
                                                    </div>
                                                    {!notification.isRead && (
@@ -2569,6 +2561,17 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                />
             )}
          </AnimatePresence>
+
+         {/* Announcement Popup from Admin */}
+         {currentPopup && (
+            <AnnouncementPopup
+               popup={currentPopup}
+               theme={theme}
+               language={language}
+               onDismiss={() => handlePopupDismiss(currentPopup.id)}
+               onDismissForever={() => handlePopupDismissForever(currentPopup.id)}
+            />
+         )}
 
          {/* Floating Selection Bar */}
          <AnimatePresence>
