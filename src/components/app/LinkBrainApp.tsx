@@ -481,6 +481,48 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
    const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
 
+   // Notification State (Test Data)
+   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+   const notificationRef = useRef<HTMLDivElement>(null);
+   const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(new Set(['3'])); // id '3' is pre-read
+
+   const appNotifications = useMemo(() => [
+      {
+         id: '1',
+         type: 'update' as const,
+         title: language === 'ko' ? '🎉 v1.2 업데이트 안내' : '🎉 v1.2 Update Released',
+         message: language === 'ko' ? '새로운 AI 분석 기능이 추가되었습니다.' : 'New AI analysis features have been added.',
+         date: '2024-12-18',
+         isRead: readNotificationIds.has('1'),
+      },
+      {
+         id: '2',
+         type: 'notice' as const,
+         title: language === 'ko' ? '📢 시스템 점검 안내' : '📢 System Maintenance Notice',
+         message: language === 'ko' ? '12/20 02:00-04:00 서버 점검 예정입니다.' : 'Server maintenance scheduled for 12/20 02:00-04:00.',
+         date: '2024-12-17',
+         isRead: readNotificationIds.has('2'),
+      },
+      {
+         id: '3',
+         type: 'tip' as const,
+         title: language === 'ko' ? '💡 새로운 기능 팁' : '💡 New Feature Tip',
+         message: language === 'ko' ? 'AI 채팅으로 저장된 링크에 대해 질문해보세요!' : 'Try asking questions about your saved links with AI Chat!',
+         date: '2024-12-16',
+         isRead: readNotificationIds.has('3'),
+      },
+   ], [language, readNotificationIds]);
+
+   const unreadCount = appNotifications.filter(n => !n.isRead).length;
+
+   const markAllAsRead = () => {
+      setReadNotificationIds(new Set(appNotifications.map(n => n.id)));
+   };
+
+   const markAsRead = (id: string) => {
+      setReadNotificationIds(prev => new Set([...prev, id]));
+   };
+
    // Delete Confirmation State
    const [deleteConfirmation, setDeleteConfirmation] = useState<{
       isOpen: boolean;
@@ -1677,6 +1719,88 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                            <Plus size={18} />
                            <span className="hidden md:inline text-[14px]">{t('addLink')}</span>
                         </button>
+
+                        {/* Desktop Notification Button */}
+                        <div className="relative hidden md:block" ref={notificationRef}>
+                           <button
+                              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                              className={`relative p-2.5 rounded-full transition-all ${isNotificationOpen
+                                 ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
+                                 : theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                           >
+                              <Bell size={20} />
+                              {unreadCount > 0 && (
+                                 <span
+                                    className="absolute min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+                                    style={{ top: '2px', left: '2px' }}
+                                 >
+                                    {unreadCount}
+                                 </span>
+                              )}
+                           </button>
+
+                           {/* Notification Dropdown */}
+                           {isNotificationOpen && (
+                              <>
+                                 <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => setIsNotificationOpen(false)}
+                                 />
+                                 <div className={`absolute right-0 top-full mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                    {/* Header */}
+                                    <div className={`flex items-center justify-between px-4 py-3 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
+                                       <span className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                          {language === 'ko' ? '알림' : 'Notifications'}
+                                       </span>
+                                       {unreadCount > 0 && (
+                                          <button
+                                             onClick={markAllAsRead}
+                                             className="text-xs text-[#21DBA4] hover:text-[#1bc290] font-medium"
+                                          >
+                                             {language === 'ko' ? '모두 읽음' : 'Mark all read'}
+                                          </button>
+                                       )}
+                                    </div>
+                                    {/* Notification List */}
+                                    <div className="max-h-80 overflow-y-auto">
+                                       {appNotifications.length === 0 ? (
+                                          <div className={`py-8 text-center text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                             {language === 'ko' ? '알림이 없습니다' : 'No notifications'}
+                                          </div>
+                                       ) : (
+                                          appNotifications.map(notification => (
+                                             <div
+                                                key={notification.id}
+                                                onClick={() => markAsRead(notification.id)}
+                                                className={`px-4 py-3 cursor-pointer transition-colors ${!notification.isRead
+                                                   ? theme === 'dark' ? 'bg-slate-700/50' : 'bg-[#21DBA4]/5'
+                                                   : ''
+                                                   } ${theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
+                                             >
+                                                <div className="flex items-start gap-3">
+                                                   <div className="flex-1 min-w-0">
+                                                      <div className={`text-sm font-medium mb-0.5 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                                         {notification.title}
+                                                      </div>
+                                                      <div className={`text-xs line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                         {notification.message}
+                                                      </div>
+                                                      <div className={`text-[10px] mt-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                         {notification.date}
+                                                      </div>
+                                                   </div>
+                                                   {!notification.isRead && (
+                                                      <span className="w-2 h-2 rounded-full bg-[#21DBA4] shrink-0 mt-1.5" />
+                                                   )}
+                                                </div>
+                                             </div>
+                                          ))
+                                       )}
+                                    </div>
+                                 </div>
+                              </>
+                           )}
+                        </div>
                      </div>
                   </div>
                </header>
@@ -1748,29 +1872,109 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                         {/* Mobile Sticky Header Section */}
                         {activeTab !== 'insights' && !selectedLink && (
                            <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-4 pb-3 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
-                              {/* Title + Count */}
-                              <div className="mb-3">
-                                 <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                                    {(() => {
-                                       const getTimeGreeting = () => {
-                                          const hour = new Date().getHours();
-                                          if (hour >= 5 && hour < 12) return t('goodMorning');
-                                          if (hour >= 12 && hour < 18) return t('goodAfternoon');
-                                          return t('goodEvening');
-                                       };
-                                       const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
-                                       const title = activeTab === 'home' ? `${getTimeGreeting()}, ${userName} 👋` :
-                                          activeTab === 'later' ? t('readLater') :
-                                             activeTab === 'favorites' ? t('favorites') :
-                                                activeTab === 'archive' ? t('archive') :
-                                                   categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
-                                       return title;
-                                    })()}
-                                 </h1>
-                                 <p className={`text-sm ${textMuted}`}>
-                                    {`${filteredLinks.length}${t('linksFound')}`}
-                                    {activeTab === 'home' && ` ${t('aiSummary')}`}
-                                 </p>
+                              {/* Title + Count + Mobile Notification */}
+                              <div className="mb-3 flex items-start justify-between">
+                                 <div className="flex-1 min-w-0">
+                                    <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                       {(() => {
+                                          const getTimeGreeting = () => {
+                                             const hour = new Date().getHours();
+                                             if (hour >= 5 && hour < 12) return t('goodMorning');
+                                             if (hour >= 12 && hour < 18) return t('goodAfternoon');
+                                             return t('goodEvening');
+                                          };
+                                          const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+                                          const title = activeTab === 'home' ? `${getTimeGreeting()}, ${userName} 👋` :
+                                             activeTab === 'later' ? t('readLater') :
+                                                activeTab === 'favorites' ? t('favorites') :
+                                                   activeTab === 'archive' ? t('archive') :
+                                                      categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
+                                          return title;
+                                       })()}
+                                    </h1>
+                                    <p className={`text-sm ${textMuted}`}>
+                                       {`${filteredLinks.length}${t('linksFound')}`}
+                                       {activeTab === 'home' && ` ${t('aiSummary')}`}
+                                    </p>
+                                 </div>
+                                 {/* Mobile Notification Button */}
+                                 <div className="relative">
+                                    <button
+                                       onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                                       className={`relative p-2 rounded-full transition-all ${isNotificationOpen
+                                          ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
+                                          : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                       <Bell size={22} />
+                                       {unreadCount > 0 && (
+                                          <span
+                                             className="absolute w-5 h-5 aspect-square shrink-0 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                                             style={{ top: '0px', left: '0px' }}
+                                          >
+                                             {unreadCount}
+                                          </span>
+                                       )}
+                                    </button>
+
+                                    {/* Mobile Notification Dropdown */}
+                                    {isNotificationOpen && (
+                                       <>
+                                          <div
+                                             className="fixed inset-0 z-40"
+                                             onClick={() => setIsNotificationOpen(false)}
+                                          />
+                                          <div className={`absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border z-50 overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                             {/* Header */}
+                                             <div className={`flex items-center justify-between px-4 py-3 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
+                                                <span className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                                   {language === 'ko' ? '알림' : 'Notifications'}
+                                                </span>
+                                                {unreadCount > 0 && (
+                                                   <button
+                                                      onClick={markAllAsRead}
+                                                      className="text-[10px] text-[#21DBA4] hover:text-[#1bc290] font-medium"
+                                                   >
+                                                      {language === 'ko' ? '모두 읽음' : 'Mark all read'}
+                                                   </button>
+                                                )}
+                                             </div>
+                                             {/* Notification List */}
+                                             <div className="max-h-60 overflow-y-auto">
+                                                {appNotifications.length === 0 ? (
+                                                   <div className={`py-6 text-center text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                      {language === 'ko' ? '알림이 없습니다' : 'No notifications'}
+                                                   </div>
+                                                ) : (
+                                                   appNotifications.map(notification => (
+                                                      <div
+                                                         key={notification.id}
+                                                         onClick={() => markAsRead(notification.id)}
+                                                         className={`px-4 py-2.5 cursor-pointer transition-colors ${!notification.isRead
+                                                            ? theme === 'dark' ? 'bg-slate-700/50' : 'bg-[#21DBA4]/5'
+                                                            : ''
+                                                            } ${theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
+                                                      >
+                                                         <div className="flex items-start gap-2">
+                                                            <div className="flex-1 min-w-0">
+                                                               <div className={`text-xs font-medium mb-0.5 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                                                  {notification.title}
+                                                               </div>
+                                                               <div className={`text-[10px] line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                                  {notification.message}
+                                                               </div>
+                                                            </div>
+                                                            {!notification.isRead && (
+                                                               <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] shrink-0 mt-1" />
+                                                            )}
+                                                         </div>
+                                                      </div>
+                                                   ))
+                                                )}
+                                             </div>
+                                          </div>
+                                       </>
+                                    )}
+                                 </div>
                               </div>
                               {/* Filter + Toggle Row */}
                               <div className="flex items-center justify-between relative mb-3" ref={filterRef}>
