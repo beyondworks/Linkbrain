@@ -950,7 +950,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
     <div className="space-y-8">
       {/* Period Toggle + Generation Buttons */}
       {/* Period Toggle + Generation Buttons */}
-      <div className="mt-4 md:mt-0 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+      <div className="mt-4 md:mt-0 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         {/* Left Side: Period Toggle + Custom Date Picker + Loading */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:h-[40px] w-full sm:w-auto">
           {/* Period Toggle */}
@@ -989,8 +989,8 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
 
           {/* Custom Date Range Picker */}
           {period === 'custom' && (
-            <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-2xl w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
+            <div className={`flex items-center justify-center gap-2 px-2 py-1.5 rounded-xl w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
                 <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                 <input
                   type="date"
@@ -1001,7 +1001,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                 />
               </div>
               <span className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>~</span>
-              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
+              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
                 <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                 <input
                   type="date"
