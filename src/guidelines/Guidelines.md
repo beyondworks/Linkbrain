@@ -1,61 +1,18 @@
-**Add your own guidelines here**
-<!--
+# Linkbrain UI — AI Guidelines (요약본)
 
-System Guidelines
+> Source of truth: `Linkbrain UI/AGENTS.md`
 
-Use this file to provide the AI with rules and guidelines you want it to follow.
-This template outlines a few examples of things you can add. You can add your own sections and format it to suit your needs
+## Must
+- 디자인 시스템 일관성(그리드/타이포/색/여백)을 깨지 않는다.
+- 비동기 UX는 `loading / empty / error / success` 상태를 반드시 제공한다.
+- 접근성 기본(시맨틱/키보드/포커스/레이블/alt)을 충족한다.
+- 기존 UI는 `src/components/ui/*`(shadcn/Radix) 우선 재사용한다.
+- 대형 파일에 신규 기능을 누적하지 않고 빠르게 분리한다.
+- `.env*`의 비밀정보를 노출/로그하지 않으며, 비밀키가 필요한 로직은 `api/*`로 보낸다.
+- 모달/오버레이는 Portal(Radix/shadcn) 우선, z-index는 stacking context/overflow 원인부터 해결한다.
+- 스크린샷이 제공되면 실제 렌더링 결과를 기준으로 부모/조상까지 포함해 원인을 추적한다.
+- 요청 수행 후 관련 영역을 한 번 더 스캔해(i18n/스타일/다크모드 등) 의도 누락을 막는다.
 
-TIP: More context isn't always better. It can confuse the LLM. Try and add the most important rules you need
-
-# General guidelines
-
-Any general rules you want the AI to follow.
-For example:
-
-* Only use absolute positioning when necessary. Opt for responsive and well structured layouts that use flexbox and grid by default
-* Refactor code as you go to keep code clean
-* Keep file sizes small and put helper functions and components in their own files.
-
---------------
-
-# Design system guidelines
-Rules for how the AI should make generations look like your company's design system
-
-Additionally, if you select a design system to use in the prompt box, you can reference
-your design system's components, tokens, variables and components.
-For example:
-
-* Use a base font-size of 14px
-* Date formats should always be in the format “Jun 10”
-* The bottom toolbar should only ever have a maximum of 4 items
-* Never use the floating action button with the bottom toolbar
-* Chips should always come in sets of 3 or more
-* Don't use a dropdown if there are 2 or fewer options
-
-You can also create sub sections and add more specific details
-For example:
-
-
-## Button
-The Button component is a fundamental interactive element in our design system, designed to trigger actions or navigate
-users through the application. It provides visual feedback and clear affordances to enhance user experience.
-
-### Usage
-Buttons should be used for important actions that users need to take, such as form submissions, confirming choices,
-or initiating processes. They communicate interactivity and should have clear, action-oriented labels.
-
-### Variants
-* Primary Button
-  * Purpose : Used for the main action in a section or page
-  * Visual Style : Bold, filled with the primary brand color
-  * Usage : One primary button per section to guide users toward the most important action
-* Secondary Button
-  * Purpose : Used for alternative or supporting actions
-  * Visual Style : Outlined with the primary color, transparent background
-  * Usage : Can appear alongside a primary button for less important actions
-* Tertiary Button
-  * Purpose : Used for the least important actions
-  * Visual Style : Text-only with no border, using primary color
-  * Usage : For actions that should be available but not emphasized
--->
+## Prefer
+- 클래스 머지는 `cn()` 사용.
+- 사용자 문자열은 `language === 'ko' ? ... : ...` 패턴 또는 `src/constants/*Translations.ts`로 관리.

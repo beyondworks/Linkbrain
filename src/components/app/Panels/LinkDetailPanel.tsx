@@ -548,7 +548,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                     }
                                 }
                             }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isPrivate
+                            className={`flex items-center gap-1.5 rounded-full text-xs font-bold transition-all border ${isMobile ? 'p-2' : 'px-3 py-1.5'} ${isPrivate
                                 ? theme === 'dark'
                                     ? 'bg-slate-800 border-slate-700 text-slate-300'
                                     : 'bg-slate-100 border-slate-200 text-slate-600'
@@ -567,7 +567,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                     <path d="M7 11V7a5 5 0 019.9-1" />
                                 </svg>
                             )}
-                            {isPrivate ? 'Hidden' : 'Shared'}
+                            {!isMobile && (isPrivate ? 'Hidden' : 'Shared')}
                         </button>
                     </div>
                     <div className="flex items-center gap-2">
