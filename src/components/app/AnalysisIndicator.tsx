@@ -27,8 +27,8 @@ interface AnalysisIndicatorProps {
 
 const statusConfig = {
     idle: {
-        color: 'bg-slate-300',
-        textColor: 'text-slate-400',
+        color: 'bg-slate-400',
+        textColor: 'text-slate-500',
         icon: Sparkles,
         labelEn: 'Ready',
         labelKo: '대기 중'
