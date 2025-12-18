@@ -65,10 +65,22 @@ const qualityLabels: Record<string, { en: string; ko: string }> = {
 // 마크다운 문법 제거 헬퍼
 const stripMarkdown = (text: string): string => {
   return text
-    .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold** -> bold
-    .replace(/\*([^*]+)\*/g, '$1')       // *italic* -> italic
-    .replace(/__([^_]+)__/g, '$1')       // __bold__ -> bold
-    .replace(/_([^_]+)_/g, '$1');        // _italic_ -> italic
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1');
+};
+
+// 인라인 마크다운 렌더링 (Bold, Italic 지원)
+const renderInlineMarkdown = (text: string) => {
+  // Split by bold (**text**)
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
 };
 
 // 콘텐츠 갭 탐지용 주제 (영어/한국어)
@@ -999,7 +1011,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               className={`w-full min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
                 ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
                 ${generatingArticle
-                  ? 'bg-slate-600 text-white'
+                  ? 'bg-[#21DBA4]/80 text-white cursor-wait'
                   : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'
                 }`}
             >
@@ -1432,75 +1444,6 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                     // Regular content - enhanced
                     const lines = part.split('\n');
                     let currentSection: React.ReactNode[] = [];
-                    let inList = false;
-
-                    return lines.map((line, lineIdx) => {
-                      const cleanLine = stripMarkdown(line);
-
-                      // H2 - Major section header
-                      if (line.startsWith('## ')) {
-                        return (
-                          <div key={`${idx}-${lineIdx}`} className="mt-8 mb-4 first:mt-0">
-                            <h2 className={`text-lg font-black pb-2 border-b-2 ${isDark ? 'text-white border-slate-700' : 'text-slate-900 border-slate-200'}`}>
-                              {stripMarkdown(line.replace('## ', ''))}
-                            </h2>
-                          </div>
-                        );
-                      }
-                      // H3 - Sub section header
-                      if (line.startsWith('### ')) {
-                        return (
-                          <h3 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-bold flex items-center gap-2 ${textPrimary}`}>
-                            <span className="w-1 h-5 rounded-full bg-[#21DBA4]" />
-                            {stripMarkdown(line.replace('### ', ''))}
-                          </h3>
-                        );
-                      }
-                      // Bullet list
-                      if (line.startsWith('- ')) {
-                        return (
-                          <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
-                            <span className="w-2 h-2 rounded-full bg-[#21DBA4]/60 mt-1.5 shrink-0" />
-                            <span className="text-sm leading-relaxed">{stripMarkdown(line.replace('- ', ''))}</span>
-                          </div>
-                        );
-                      }
-                      // Numbered list
-                      if (line.match(/^\d\./)) {
-                        const num = line.match(/^(\d)/)?.[1];
-                        return (
-                          <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
-                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-                              {num}
-                            </span>
-                            <span className="text-sm leading-relaxed">{stripMarkdown(line.replace(/^\d\./, ''))}</span>
-                          </div>
-                        );
-                      }
-                      // Bold emphasis (** or __)
-                      if (line.match(/^\*\*.*\*\*$/) || line.match(/^__.*__$/)) {
-                        return (
-                          <div key={`${idx}-${lineIdx}`} className={`my-4 p-4 rounded-xl ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
-                            <p className={`text-sm font-semibold ${textPrimary}`}>
-                              {stripMarkdown(line)}
-                            </p>
-                          </div>
-                        );
-                      }
-                      // Horizontal rule
-                      if (line.startsWith('---')) {
-                        return <hr key={`${idx}-${lineIdx}`} className={`my-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
-                      }
-                      // Regular paragraph
-                      if (cleanLine.trim()) {
-                        return (
-                          <p key={`${idx}-${lineIdx}`} className={`mb-3 text-sm leading-relaxed ${textMuted}`}>
-                            {cleanLine}
-                          </p>
-                        );
-                      }
-                      return null;
-                    });
                   });
                 })()}
               </article>
