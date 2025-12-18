@@ -2184,7 +2184,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        className="fixed inset-0 z-10 bg-transparent"
                                        onClick={() => setIsFilterOpen(false)}
                                     />
-                                    <div className={`absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[80vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
+                                    <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[80vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
                                        <div className="px-4 py-2">
                                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
                                           <div className="mt-2 space-y-1">
