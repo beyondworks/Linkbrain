@@ -952,7 +952,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       {/* Period Toggle + Generation Buttons */}
       <div className="mt-4 md:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Period Toggle + Custom Date Picker in same row on desktop */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:h-[40px]">
           {/* Period Toggle */}
           <div className={`flex sm:inline-flex rounded-xl p-1 w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
             <button
