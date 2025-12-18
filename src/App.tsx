@@ -39,21 +39,22 @@ import { SubscriptionProvider } from './context/SubscriptionContext';
 import { InstallInstructionModal } from './components/common/InstallInstructionModal';
 import { LegalModals } from './components/public/LegalModals';
 import { landingTranslations, LandingLanguage } from './constants/landingTranslations';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 
 // Brand Color Constants
 const PRIMARY_COLOR = "#21DBA4";
 
-type ViewType = 'landing' | 'features' | 'how-it-works' | 'pricing' | 'app';
+type ViewType = 'landing' | 'features' | 'how-it-works' | 'pricing' | 'app' | 'admin';
 
 const App = () => {
   // Initialize from localStorage or URL hash
   const [currentView, setCurrentView] = useState<ViewType>(() => {
     const hash = window.location.hash.replace('#', '');
-    if (['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(hash)) {
+    if (['landing', 'features', 'how-it-works', 'pricing', 'app', 'admin'].includes(hash)) {
       return hash as ViewType;
     }
     const saved = localStorage.getItem('linkbrain_view');
-    if (saved && ['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(saved)) {
+    if (saved && ['landing', 'features', 'how-it-works', 'pricing', 'app', 'admin'].includes(saved)) {
       return saved as ViewType;
     }
     return 'landing';
@@ -123,7 +124,7 @@ const App = () => {
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
       const view = e.state?.view || window.location.hash.replace('#', '') || 'landing';
-      if (['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(view)) {
+      if (['landing', 'features', 'how-it-works', 'pricing', 'app', 'admin'].includes(view)) {
         setCurrentView(view as ViewType);
       }
     };
@@ -210,7 +211,7 @@ const App = () => {
 
   const handleNavigate = (view: string) => {
     // If view matches one of our defined views, switch to it.
-    if (['landing', 'features', 'how-it-works', 'pricing', 'app'].includes(view)) {
+    if (['landing', 'features', 'how-it-works', 'pricing', 'app', 'admin'].includes(view)) {
       window.history.pushState({ view }, '', `#${view}`);
       setCurrentView(view as ViewType);
       window.scrollTo(0, 0);
@@ -249,6 +250,42 @@ const App = () => {
     }
   };
 
+  // Admin view - requires authentication
+  if (currentView === 'admin') {
+    if (authLoading) {
+      return (
+        <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
+          <Loader2 className={`w-10 h-10 animate-spin text-[#21DBA4]`} />
+          <p className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Loading...</p>
+        </div>
+      );
+    }
+
+    if (!user) {
+      return (
+        <>
+          <LoginPage
+            onLogin={() => { }}
+            language={language}
+            setLanguage={handleSetLanguage}
+          />
+          <Toaster />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <AdminDashboard
+          theme={theme}
+          language={language}
+          onBack={() => handleNavigate('app')}
+        />
+        <Toaster />
+      </>
+    );
+  }
+
   if (currentView === 'app') {
     // Show loading state while checking authentication
     if (authLoading) {
@@ -278,6 +315,7 @@ const App = () => {
           <LinkBrainApp
             onBack={() => setCurrentView('landing')}
             onLogout={handleLogout}
+            onAdmin={() => handleNavigate('admin')}
             language={language}
             setLanguage={handleSetLanguage}
             theme={theme}
