@@ -1,14 +1,14 @@
 import React from 'react';
-import {
-  Brain,
-  Hash,
-  Search,
-  Smartphone,
-  Shield,
-  Zap,
-  Globe,
-  Layers,
-  Command
+import { 
+  Brain, 
+  Hash, 
+  Search, 
+  Smartphone, 
+  Shield, 
+  Zap, 
+  Globe, 
+  Layers, 
+  Command 
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -55,7 +55,7 @@ const TRANSLATIONS = {
   }
 };
 
-export const LinkBrainFeatures = ({ theme, language = 'en', onEnterApp }: { theme: 'light' | 'dark', language?: 'en' | 'ko', onEnterApp?: () => void }) => {
+export const LinkBrainFeatures = ({ theme, language = 'en' }: { theme: 'light' | 'dark', language?: 'en' | 'ko' }) => {
   const isDark = theme === 'dark';
   const t = TRANSLATIONS[language];
 
@@ -93,74 +93,84 @@ export const LinkBrainFeatures = ({ theme, language = 'en', onEnterApp }: { them
   ];
 
   return (
-    <div className={`w-full min-h-full p-4 md:p-8 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+    <div className={`w-full min-h-full px-6 py-12 md:p-12 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
       <div className="max-w-7xl mx-auto">
-
+        
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-xs font-bold mb-4">
-            <Zap size={14} fill="currentColor" /> {t.features}
-          </div>
-          <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight break-keep">
+        <div className="text-center max-w-3xl mx-auto mb-24 md:mb-48">
+          <motion.div
+             initial={{ opacity: 0, y: 20 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+             className="inline-block mb-4"
+          >
+             <span className="px-3 py-1 rounded-full border border-[#21DBA4]/30 bg-[#21DBA4]/10 text-[#21DBA4] text-[11px] font-bold uppercase tracking-widest">
+                Features
+             </span>
+          </motion.div>
+          <motion.h1 
+             initial={{ opacity: 0, y: 20 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+             transition={{ delay: 0.1 }}
+             className="text-4xl md:text-5xl lg:text-6xl font-black mb-4 md:mb-6 tracking-tight break-keep leading-tight"
+          >
             {language === 'en' ? (
-              <>
-                {t.title} <span className="text-[#21DBA4]">{t.titleSuffix}</span>
-              </>
+                <>
+                {t.title} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#21DBA4] to-blue-500">{t.titleSuffix}</span>
+                </>
             ) : (
-              <>
-                <span className="text-[#21DBA4]">{t.titleSuffix}</span>
-              </>
+                <>
+                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#21DBA4] to-blue-500">{t.titleSuffix}</span>
+                </>
             )}
-          </h1>
-          <p className={`text-base md:text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'} break-keep`}>
-            {t.description}
-          </p>
+          </motion.h1>
+          <motion.p 
+             initial={{ opacity: 0, y: 20 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+             transition={{ delay: 0.2 }}
+             className={`text-base md:text-xl max-w-2xl mx-auto break-keep leading-relaxed font-medium px-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
+          >
+            Linkbrain은 단순한 북마크 관리자가 아닙니다.<br className="hidden md:block"/>
+            더 빨리 배우고 더 많이 기억할 수 있도록 돕는 지능형 작업 공간입니다.
+          </motion.p>
         </div>
 
         {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-20">
-          {features.map((feature, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              viewport={{ once: true }}
-              className={`p-6 md:p-8 rounded-3xl border transition-all hover:-translate-y-2 hover:shadow-xl group ${isDark ? 'bg-slate-900 border-slate-800 hover:border-[#21DBA4]/30' : 'bg-white border-slate-100 hover:border-[#21DBA4]/30 hover:shadow-slate-200/50'
-                }`}
-            >
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#21DBA4]/10 flex items-center justify-center text-[#21DBA4] mb-5 md:mb-6 group-hover:scale-110 transition-transform duration-300">
-                {feature.icon}
-              </div>
-              <h3 className={`text-lg md:text-xl font-bold mb-2 md:mb-3 ${isDark ? 'text-white' : 'text-slate-900'} break-keep`}>
-                {feature.title}
-              </h3>
-              <p className={`text-sm md:text-base leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'} break-keep`}>
-                {feature.description}
-              </p>
-            </motion.div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-16 md:gap-y-32 max-w-5xl mx-auto pb-20 md:pb-32 px-4 md:px-0">
+           {features.map((feature, idx) => (
+             <motion.div 
+               key={idx}
+               initial={{ opacity: 0, y: 20 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               transition={{ delay: idx * 0.1 }}
+               viewport={{ once: true }}
+               className="group flex flex-col items-center text-center md:items-start md:text-left"
+             >
+                <div className="text-[#21DBA4] mb-4 group-hover:scale-110 transition-transform duration-300 origin-center md:origin-left">
+                   {React.isValidElement(feature.icon) ? React.cloneElement(feature.icon as React.ReactElement, { size: 28, strokeWidth: 1.5 }) : feature.icon}
+                </div>
+                <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'} break-keep`}>
+                   {feature.title}
+                </h3>
+                <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'} break-keep`}>
+                   {feature.description}
+                </p>
+             </motion.div>
+           ))}
         </div>
 
         {/* CTA Section */}
-        <div className={`rounded-3xl p-12 text-center relative overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-slate-900'}`}>
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-6 text-[30px]">{t.ctaTitle}</h2>
-            <button
-              onClick={onEnterApp}
-              className="px-8 py-2 bg-[#21DBA4] hover:bg-[#1ec493] text-white rounded-full font-bold text-lg transition-all shadow-lg shadow-[#21DBA4]/30 hover:shadow-[#21DBA4]/50 hover:scale-105 text-[14px]"
-            >
-              {t.ctaButton}
-            </button>
-          </div>
-
-          {/* Background Decoration */}
-          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <Brain size={400} className="absolute -right-20 -bottom-20 text-white" />
-            <Command size={300} className="absolute -left-20 -top-20 text-white" />
-          </div>
+        <div className={`max-w-5xl mx-auto rounded-3xl py-12 px-6 text-center relative overflow-hidden ${isDark ? 'bg-gradient-to-b from-transparent to-slate-900/50 border border-slate-800' : 'bg-slate-50 border border-slate-100'}`}>
+           <div className="relative z-10 max-w-2xl mx-auto">
+              <h2 className={`text-2xl md:text-3xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.ctaTitle}</h2>
+              <button className="px-8 py-3 bg-[#21DBA4] hover:bg-[#1ec493] text-white rounded-full font-bold text-sm transition-all hover:scale-105">
+                 {t.ctaButton}
+              </button>
+           </div>
         </div>
-
+        
         <div className="h-20"></div>
       </div>
     </div>
