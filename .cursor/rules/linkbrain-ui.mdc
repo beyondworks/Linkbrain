@@ -1,0 +1,21 @@
+---
+description: Linkbrain UI rules (design-system + UX-first + production-quality)
+globs:
+  - "src/**/*.{ts,tsx,css}"
+  - "api/**/*.ts"
+alwaysApply: true
+---
+
+You are working on **Linkbrain UI** (Vite + React + TS, Tailwind utilities, shadcn/Radix, Firebase).
+
+Follow these rules:
+- Design system consistency is mandatory: reuse spacing/typography/color patterns; avoid ad-hoc px values and random colors.
+- UX must include `loading / empty / error / success` states for any async work; don’t ship “blank while loading”.
+- Accessibility is required: semantic elements, keyboard navigation, focus management in modals, labels for inputs, meaningful `alt`.
+- Prefer existing components in `src/components/ui/*` and shared components in `src/components/shared/*`.
+- Don’t bloat existing large files (e.g. `src/App.tsx`); split by feature/components early.
+- Don’t leak secrets from `.env*` and don’t put server credentials in client code; use `api/*` for secret work.
+- Prefer `cn()` for class merging (`src/components/ui/utils.ts`).
+- For modals/overlays: prefer Radix/shadcn (Portal). Avoid z-index “band-aids”; investigate stacking contexts (`transform`, `overflow`) first.
+- If the user provides a screenshot of a UI issue, use it to locate root cause (parents/stacking/overflow) and propose a minimal, robust fix.
+- After implementing a user request (e.g. i18n), do a quick “intent sweep” to find adjacent missing spots and fix or report them.
