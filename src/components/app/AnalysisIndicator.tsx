@@ -136,7 +136,7 @@ export const AnalysisIndicator: React.FC<AnalysisIndicatorProps> = ({ items, log
                 onClick={() => setShowLogs(!showLogs)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all
+                className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all whitespace-nowrap
                     ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-slate-200 shadow-sm hover:bg-slate-50'}`}
             >
                 {/* Status Dot */}
