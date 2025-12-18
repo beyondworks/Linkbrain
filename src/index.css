@@ -5548,3 +5548,28 @@ html, body {
 .force-repaint {
     transform: translateZ(0);
 }
+
+/* Date picker calendar popup styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* Date picker wrapper styling for rounded calendar popup */
+.date-picker-wrapper {
+    position: relative;
+}
+
+/* Style the native date picker popup (limited browser support but applies where possible) */
+::-webkit-datetime-edit {
+    padding: 0;
+}
+
+::-webkit-datetime-edit-fields-wrapper {
+    background: transparent;
+}

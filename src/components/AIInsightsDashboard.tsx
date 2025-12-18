@@ -228,11 +228,15 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   }, []);
 
   // 연관 클립 찾기 (Client-side Contextual Search)
-  const findRelatedClips = (targetClips: any[], allClips: any[], limit = 5) => {
-    // 1. 타겟 클립들의 주요 키워드 추출
+  // Enhanced: 카테고리 매칭, 날짜순 정렬 (오래된 것 우선으로 맥락 제공)
+  const findRelatedClips = (targetClips: any[], allClips: any[], limit = 10) => {
+    // 1. 타겟 클립들의 주요 키워드 및 카테고리 추출
     const keywords = new Set<string>();
+    const targetCategories = new Set<string>();
     targetClips.forEach(clip => {
       (clip.tags || clip.keywords || []).forEach((k: string) => keywords.add(k.toLowerCase()));
+      if (clip.category) targetCategories.add(clip.category.toLowerCase());
+      if (clip.categoryId) targetCategories.add(clip.categoryId.toLowerCase());
     });
     const targetIds = new Set(targetClips.map(c => c.id));
 
@@ -248,16 +252,32 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
           if (keywords.has(k)) score += 2;
         });
 
+        // 카테고리 매칭 점수 (NEW)
+        const clipCategory = (clip.category || clip.categoryId || '').toLowerCase();
+        if (clipCategory && targetCategories.has(clipCategory)) {
+          score += 3; // 카테고리 일치는 높은 점수
+        }
+
         // 제목/요약 매칭 (간단한 포함 여부)
         const content = ((clip.title || '') + ' ' + (clip.summary || '')).toLowerCase();
         Array.from(keywords).forEach(k => {
           if (content.includes(k)) score += 1;
         });
 
-        return { clip, score };
+        // 날짜 정보 추출 (정렬용)
+        const timestamp = clip.createdAt?.seconds
+          ? clip.createdAt.seconds * 1000
+          : clip.createdAt?.toDate?.()?.getTime?.() || clip.timestamp || 0;
+
+        return { clip, score, timestamp };
       })
       .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => {
+        // 1차: 점수 높은 순
+        if (b.score !== a.score) return b.score - a.score;
+        // 2차: 날짜 오래된 순 (맥락 배경용)
+        return a.timestamp - b.timestamp;
+      });
 
     return scoredClips.slice(0, limit).map(item => item.clip);
   };
@@ -286,9 +306,10 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     setGeneratingReport(true);
 
     try {
+      // 선택 기간 클립: 최대 15개 (AI 분석 우선순위용)
       const topClips = filteredData
         .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
-        .slice(0, 10);
+        .slice(0, 15);
 
       const topicsSet = new Set<string>();
       topClips.forEach(clip => {
@@ -307,8 +328,8 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
       const startDate = period === 'custom' ? customStartDate : new Date(Date.now() - (period === 'weekly' ? 7 : 30) * 86400000).toISOString().split('T')[0];
       const endDate = period === 'custom' ? customEndDate : new Date().toISOString().split('T')[0];
 
-      // 연관 클립 찾기 (Knowledge Map)
-      const relatedClips = findRelatedClips(topClips, allActiveLinks, 5);
+      // 연관 클립 찾기 (Knowledge Map) - 과거 맥락용 최대 10개
+      const relatedClips = findRelatedClips(topClips, allActiveLinks, 10);
 
       // 실제 AI API 호출 시도
       let reportContent = '';
@@ -378,9 +399,10 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     setGeneratingArticle(true);
 
     try {
+      // 선택 기간 클립: 최대 12개 (아티클 작성용)
       const topClips = filteredData
         .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
-        .slice(0, 8);
+        .slice(0, 12);
 
       const topicsSet = new Set<string>();
       topClips.forEach(clip => {
@@ -396,8 +418,8 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
           ? (language === 'ko' ? '이번 달' : 'this month')
           : (language === 'ko' ? `${customStartDate} ~ ${customEndDate}` : `${customStartDate} ~ ${customEndDate}`);
 
-      // 연관 클립 찾기
-      const relatedClips = findRelatedClips(topClips, allActiveLinks, 5);
+      // 연관 클립 찾기 - 과거 맥락용 최대 8개
+      const relatedClips = findRelatedClips(topClips, allActiveLinks, 8);
 
       // 실제 AI API 호출 시도
       let articleContent = '';
@@ -929,28 +951,69 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       {/* Period Toggle + Generation Buttons */}
       {/* Period Toggle + Generation Buttons */}
       <div className="mt-4 md:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Period Toggle */}
-        <div className={`flex sm:inline-flex rounded-xl p-1 w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-          <button
-            onClick={() => setPeriod('weekly')}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
-              ? 'bg-[#21DBA4] text-white shadow-md'
-              : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-              }`}
-          >
-            <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
-            {language === 'ko' ? '주간' : 'Weekly'}
-          </button>
-          <button
-            onClick={() => setPeriod('monthly')}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
-              ? 'bg-[#21DBA4] text-white shadow-md'
-              : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-              }`}
-          >
-            <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
-            {language === 'ko' ? '월간' : 'Monthly'}
-          </button>
+        {/* Period Toggle + Custom Date Picker in same row on desktop */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {/* Period Toggle */}
+          <div className={`flex sm:inline-flex rounded-xl p-1 w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+            <button
+              onClick={() => setPeriod('weekly')}
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'weekly'
+                ? 'bg-[#21DBA4] text-white shadow-md'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+            >
+              <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
+              {language === 'ko' ? '주간' : 'Weekly'}
+            </button>
+            <button
+              onClick={() => setPeriod('monthly')}
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${period === 'monthly'
+                ? 'bg-[#21DBA4] text-white shadow-md'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+            >
+              <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
+              {language === 'ko' ? '월간' : 'Monthly'}
+            </button>
+            <button
+              onClick={() => setPeriod('custom')}
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
+                ? 'bg-[#21DBA4] text-white shadow-md'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+            >
+              <Calendar size={12} className="sm:w-[14px] sm:h-[14px] shrink-0" />
+              {language === 'ko' ? '기간 선택' : 'Custom'}
+            </button>
+          </div>
+
+          {/* Custom Date Range Picker - inline on desktop, full width on mobile */}
+          {period === 'custom' && (
+            <div className={`flex items-center justify-center gap-2 px-3 py-2 rounded-2xl w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
+                <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  max={customEndDate}
+                  className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                />
+              </div>
+              <span className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>~</span>
+              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
+                <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  min={customStartDate}
+                  max={new Date().toISOString().split('T')[0]}
+                  className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {loading && (
@@ -1009,10 +1072,12 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
               onClick={!isAIConfigured ? onOpenSettings : generateArticle}
               disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
               className={`w-full min-w-[90px] sm:min-w-[100px] flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap
-                ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
+                ${!isAIConfigured && !generatingArticle ? 'opacity-50 cursor-pointer' : ''}
                 ${generatingArticle
-                  ? 'bg-[#21DBA4]/80 text-white cursor-wait'
-                  : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'
+                  ? 'bg-[#21DBA4] text-white cursor-wait'
+                  : isAIConfigured && filteredData.length < 3
+                    ? 'bg-[#21DBA4]/50 text-white/80 cursor-not-allowed'
+                    : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'
                 }`}
             >
               {generatingArticle ? (
@@ -1441,9 +1506,66 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                         </div>
                       );
                     }
-                    // Regular content - enhanced
-                    const lines = part.split('\n');
-                    let currentSection: React.ReactNode[] = [];
+                    // Regular content - enhanced markdown rendering
+                    return (
+                      <div key={idx} className="space-y-4">
+                        {part.split('\n').map((line, lineIdx) => {
+                          const trimmedLine = line.trim();
+                          if (!trimmedLine) return null;
+
+                          // H2 heading
+                          if (trimmedLine.startsWith('## ')) {
+                            return (
+                              <h2 key={lineIdx} className={`text-lg font-bold mt-6 mb-3 pb-2 border-b ${isDark ? 'text-white border-slate-700' : 'text-slate-900 border-slate-200'}`}>
+                                {renderInlineMarkdown(trimmedLine.replace('## ', ''))}
+                              </h2>
+                            );
+                          }
+
+                          // H3 heading
+                          if (trimmedLine.startsWith('### ')) {
+                            return (
+                              <h3 key={lineIdx} className={`text-base font-bold mt-4 mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                {renderInlineMarkdown(trimmedLine.replace('### ', ''))}
+                              </h3>
+                            );
+                          }
+
+                          // Numbered list item
+                          if (/^\d+\.\s/.test(trimmedLine)) {
+                            return (
+                              <div key={lineIdx} className={`flex items-start gap-3 text-sm ${textMuted}`}>
+                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#21DBA4] text-white text-xs font-bold shrink-0">
+                                  {trimmedLine.match(/^(\d+)\./)?.[1]}
+                                </span>
+                                <span className="flex-1 leading-relaxed">
+                                  {renderInlineMarkdown(trimmedLine.replace(/^\d+\.\s*/, ''))}
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          // Bullet list item
+                          if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+                            return (
+                              <div key={lineIdx} className={`flex items-start gap-2 text-sm ${textMuted}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-2 shrink-0" />
+                                <span className="flex-1 leading-relaxed">
+                                  {renderInlineMarkdown(trimmedLine.replace(/^[-*]\s*/, ''))}
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          // Regular paragraph
+                          return (
+                            <p key={lineIdx} className={`text-sm leading-relaxed ${textMuted}`}>
+                              {renderInlineMarkdown(trimmedLine)}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    );
                   });
                 })()}
               </article>

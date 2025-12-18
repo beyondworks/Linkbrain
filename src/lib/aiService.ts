@@ -178,9 +178,16 @@ ${relatedSummaries}
 3. 그 흐름이 과거 클립의 어떤 맥락에서 출발했는지 연결하세요.
 4. 사용자의 관심사가 과거엔 무엇이었고, 어떻게 확장/변형되었으며, 현재 어떤 단계에 도달했는지 '관심사의 진화' 관점에서 설명하세요.
 
+[지식 네트워크 관점]
+이 클립들을 하나의 '지식 네트워크'로 간주하세요.
+각 클립은 노드(node)이며, 공통 키워드, 문제의식, 인용, 주제 확장은 엣지(edge)입니다.
+- 가장 중심이 되는 노드(주제)는 무엇인가?
+- 주변부에서 점점 중심으로 이동한 주제는 무엇인가?
+- 최근에 새롭게 등장한 노드는 무엇이며, 기존 어떤 노드와 연결되는가?
+
 📌 출력 형식 (Markdown):
 ## 핵심 인사이트 요약
-(3~5줄로 요약)
+(3~5줄로 핵심만 요약)
 
 ## 관심사 흐름 타임라인
 - **과거**: (과거 클립 기반 배경)
@@ -196,11 +203,15 @@ ${relatedSummaries}
 3. **주제 3**: 설명
 
 ## 다음 단계 제안
-(데이터 기반으로 추론된 다음 관심사 제안)
+(데이터 기반으로 추론된 다음 관심사 제안 - 추측 금지)
 
 ⚠️ 주의:
 - 데이터에 없는 내용은 절대 생성하지 마세요.
 - 일반적인 트렌드 설명을 하지 말고, 오직 제공된 클립 간의 관계만 분석하세요.
+
+[시스템 안전장치]
+선택 기간이 길 경우, 최근 클립을 우선적으로 분석하되 과거 클립은 '연결 맥락 설명'에만 사용하세요.
+모든 클립을 동일 비중으로 처리하지 마세요.
 `
         : `
 [Generate Insights Report]
@@ -208,21 +219,28 @@ ${relatedSummaries}
 Here is the list of clips saved by the user during the selected period (${startDate} ~ ${endDate}).
 Also provided are past clips that are thematically related to this period.
 
-[Selected Period Clips]
+[Selected Period Clips (${clips.length})]
 ${clipSummaries}
 
-[Related Past Clips (Context)]
+[Related Past Clips (${relatedClips.length}) - For Context]
 ${relatedSummaries}
 
 📌 Analysis Guidelines:
-1. Do not summarize clips individually.
+1. Do NOT summarize clips individually.
 2. Identify a "major flow" focusing on recurring keywords, issues, and perspective shifts.
-3. Connect this flow to the context of past clips.
+3. Connect this flow to the context from past clips.
 4. Explain the "Evolution of Interests": what they were initially, how they expanded/changed, and where they are now.
+
+[Knowledge Network Perspective]
+Treat these clips as a 'knowledge network'.
+Each clip is a node, and common keywords, issues, citations, topic expansions are edges.
+- What is the most central node (topic)?
+- Which topics moved from the periphery to the center?
+- What new nodes appeared recently, and which existing nodes do they connect to?
 
 📌 Output Format (Markdown):
 ## Key Insights Summary
-(3-5 lines)
+(3-5 lines of core summary)
 
 ## Interest Timeline
 - **Past**: (Background from past clips)
@@ -238,7 +256,15 @@ ${relatedSummaries}
 3. **Topic 3**: Description
 
 ## Suggested Next Steps
-(Data-driven suggestions for future interests)
+(Data-driven suggestions for future interests - no speculation)
+
+⚠️ Warning:
+- Do NOT generate content not present in the data.
+- Do NOT describe general trends, only analyze relationships between provided clips.
+
+[System Safeguard]
+If the period is long, prioritize recent clips for analysis and use past clips only for contextual connection.
+Do not treat all clips with equal weight.
 `;
 
     if (config.provider === 'openai') {
@@ -261,11 +287,11 @@ export const generateAIArticle = async (
     }
 
     const clipSummaries = clips.map((clip, i) =>
-        `[Current-${i + 1}] ${clip.title || clip.url}\n   Summary: ${clip.summary || clip.description || ''}`
+        `[Current-${i + 1}] ${clip.title || clip.url}\n   Date: ${new Date(clip.createdAt?.seconds ? clip.createdAt.seconds * 1000 : clip.createdAt).toISOString().split('T')[0]}\n   Keywords: ${(clip.tags || clip.keywords || []).join(', ')}\n   Summary: ${clip.summary || clip.description || ''}`
     ).join('\n\n');
 
     const relatedSummaries = relatedClips.map((clip, i) =>
-        `[Past-${i + 1}] ${clip.title || clip.url}\n   Summary: ${clip.summary || clip.description || ''}`
+        `[Past-${i + 1}] ${clip.title || clip.url}\n   Date: ${new Date(clip.createdAt?.seconds ? clip.createdAt.seconds * 1000 : clip.createdAt).toISOString().split('T')[0]}\n   Keywords: ${(clip.tags || clip.keywords || []).join(', ')}\n   Summary: ${clip.summary || clip.description || ''}`
     ).join('\n\n');
 
     const prompt = language === 'ko'
@@ -277,10 +303,10 @@ export const generateAIArticle = async (
 [인사이트 요약]
 ${insightSummary}
 
-[선택 기간 클립 (최근)]
+[선택 기간 클립 - 최근 (${clips.length}개)]
 ${clipSummaries}
 
-[과거 연관 클립 (배경/맥락)]
+[과거 연관 클립 - 배경/맥락 (${relatedClips.length}개)]
 ${relatedSummaries}
 
 📌 아티클 작성 지침:
@@ -297,7 +323,7 @@ ${relatedSummaries}
 (왜 이 주제가 지금 중요해졌는지)
 
 ## 1. 생각의 출발점
-(과거 관심사 및 배경)
+(과거 관심사 및 배경 - 과거 클립 참조)
 
 ## 2. 관점의 변화와 확장
 (최근 콘텐츠를 통해 알게 된 새로운 사실이나 시각)
@@ -306,11 +332,13 @@ ${relatedSummaries}
 (사용자가 지금 가장 집중하고 있는 포인트)
 
 ## 결론: 질문과 전망
-(정답보다는 다음으로 이어질 좋은 질문 제시)
+(정답 제시 금지 - 다음으로 이어질 좋은 질문 제시)
 
 ⚠️ 금지 사항:
-- 사실을 일반화하거나 마케팅 문구처럼 쓰지 마세요.
-- 제공되지 않은 정보로 논리를 무리하게 확장하지 마세요.
+- 사실을 일반화하지 마세요.
+- 제공되지 않은 정보로 논리를 확장하지 마세요.
+- 마케팅 문구처럼 쓰지 마세요.
+- 반드시 제공된 클립 데이터만 활용하세요.
 `
         : `
 [Generate Original Article]
@@ -320,26 +348,42 @@ Based on the content saved by a user over a period and related past content, wri
 [Insight Summary]
 ${insightSummary}
 
-[Selected Period Clips]
+[Selected Period Clips - Recent (${clips.length})]
 ${clipSummaries}
 
-[Related Past Clips]
+[Related Past Clips - Background/Context (${relatedClips.length})]
 ${relatedSummaries}
 
 📌 Writing Guidelines:
-1. Do NOT write as a list of links.
+1. Do NOT write as a list of individual links.
 2. Show the "accumulation of thought" around a central theme.
 3. Use past content for background and context.
 4. Clearly show how perspectives have changed over time.
 5. Create a feeling of reading "records of someone who has thought deeply about this topic".
 
 📌 Structure (Markdown):
-# (Title)
+# (Compelling Title)
+
 ## Introduction: Recent Context
+(Why this topic has become important now)
+
 ## 1. Origin of Thought
+(Past interests and background - reference past clips)
+
 ## 2. Shift in Perspective
+(New facts or viewpoints discovered through recent content)
+
 ## 3. Current Focus
+(The point the user is most focused on now)
+
 ## Conclusion: Questions for the Future
+(Do NOT provide answers - present good questions for the next step)
+
+⚠️ Prohibited:
+- Do NOT generalize facts.
+- Do NOT extend logic with information not provided.
+- Do NOT write like marketing copy.
+- Use ONLY the provided clip data.
 `;
 
     if (config.provider === 'openai') {
