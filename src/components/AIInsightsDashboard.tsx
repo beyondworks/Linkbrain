@@ -952,7 +952,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
       {/* Period Toggle + Generation Buttons */}
       <div className="mt-4 md:mt-0 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         {/* Left Side: Period Toggle + Custom Date Picker + Loading */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:h-[40px] w-full sm:w-auto">
+        <div className="flex items-center gap-2 h-[40px]">
           {/* Period Toggle */}
           <div className={`flex inline-flex rounded-xl p-1 w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
             <button
@@ -989,7 +989,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
 
           {/* Custom Date Range Picker */}
           {period === 'custom' && (
-            <div className={`flex items-center justify-center gap-2 px-2 py-1.5 rounded-xl w-full sm:w-auto ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+            <div className={`flex items-center justify-center gap-2 px-2 py-1.5 rounded-xl shrink-0 ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
               <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
                 <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                 <input
@@ -997,7 +997,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
                   max={customEndDate}
-                  className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                  className={`w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
                 />
               </div>
               <span className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>~</span>
@@ -1009,7 +1009,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
                   onChange={(e) => setCustomEndDate(e.target.value)}
                   min={customStartDate}
                   max={new Date().toISOString().split('T')[0]}
-                  className={`w-full sm:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
+                  className={`w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
                 />
               </div>
             </div>
