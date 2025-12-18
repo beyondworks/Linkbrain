@@ -26,7 +26,8 @@ import {
     Eye,
     EyeOff,
     Keyboard,
-    Key
+    Key,
+    ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LinkBrainLogo } from '../LinkBrainLogo';
@@ -49,6 +50,8 @@ interface SettingsModalProps {
         setNotifications: (notif: any) => void;
     };
     onLogout: () => void;
+    onAdmin?: () => void;
+    isAdmin?: boolean;
     t: (key: string) => string;
     user?: { uid?: string; displayName: string | null; email: string | null; photoURL: string | null } | null;
     initialTab?: string;
@@ -167,7 +170,7 @@ const InviteCodesSection = ({ theme, t }: { theme: string; t: (key: string) => s
     );
 };
 
-export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, user, initialTab }: SettingsModalProps) => {
+export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmin, isAdmin, t, user, initialTab }: SettingsModalProps) => {
     const [activeTab, setActiveTab] = useState(initialTab || 'general');
     const { theme, language, showThumbnails, notifications } = settings;
     const { setTheme, setLanguage, setShowThumbnails, setNotifications } = setSettings;
@@ -224,7 +227,15 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, t, use
                             </button>
                         ))}
                     </nav>
-                    <div className={`p-4 border-t mt-auto ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+                    <div className={`p-4 border-t mt-auto space-y-2 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+                        {isAdmin && onAdmin && (
+                            <button
+                                onClick={() => { onClose(); onAdmin(); }}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${theme === 'dark' ? 'text-[#21DBA4] hover:bg-[#21DBA4]/10' : 'text-[#21DBA4] hover:bg-[#E0FBF4]'}`}
+                            >
+                                <ShieldCheck size={18} /> {t('language') === '언어' ? '관리자 대시보드' : 'Admin Dashboard'}
+                            </button>
+                        )}
                         <button onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:bg-opacity-10 transition-colors">
                             <LogOut size={18} /> {t('signOut')}
                         </button>

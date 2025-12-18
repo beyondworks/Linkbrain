@@ -82,6 +82,7 @@ import { Logo } from '../Logo';
 import { LinkBrainLogo } from './LinkBrainLogo';
 import { AnalysisIndicator, AnalysisItem, AnalysisStatus, AnalysisLogItem } from './AnalysisIndicator';
 import { useSubscription } from '../../hooks/useSubscription';
+import { useAdmin } from '../../hooks/useAdmin';
 
 // --- Mock Data ---
 const INITIAL_CATEGORIES: Category[] = [
@@ -210,7 +211,7 @@ const INITIAL_LINKS: LinkItem[] = [
    }
 ];
 
-export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, themePreference, setTheme, preferences, updatePreference, initialTab = 'home' }: { onBack?: () => void, onLogout?: () => void, language: 'en' | 'ko', setLanguage: (lang: 'en' | 'ko') => void, theme: 'light' | 'dark', themePreference: 'light' | 'dark' | 'system', setTheme: (t: 'light' | 'dark' | 'system') => void, preferences: UserPreferences, updatePreference: (key: keyof UserPreferences, value: any) => void, initialTab?: string }) => {
+export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage, theme, themePreference, setTheme, preferences, updatePreference, initialTab = 'home' }: { onBack?: () => void, onLogout?: () => void, onAdmin?: () => void, language: 'en' | 'ko', setLanguage: (lang: 'en' | 'ko') => void, theme: 'light' | 'dark', themePreference: 'light' | 'dark' | 'system', setTheme: (t: 'light' | 'dark' | 'system') => void, preferences: UserPreferences, updatePreference: (key: keyof UserPreferences, value: any) => void, initialTab?: string }) => {
    // --- Firebase Data Hook ---
    const {
       clips: firebaseClips,
@@ -301,6 +302,7 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
    const [categories, setCategories] = useState<Category[]>([]);
    const [collections, setCollections] = useState<Collection[]>([]);
 
+   const { isAdmin } = useAdmin();
    const { isReadOnly, remainingDays, status, canCreate, canEdit, tier } = useSubscription();
    const [showSubscriptionBanner, setShowSubscriptionBanner] = useState(true);
 
@@ -2560,6 +2562,8 @@ export const LinkBrainApp = ({ onBack, onLogout, language, setLanguage, theme, t
                   settings={{ theme, themePreference, language, showThumbnails, notifications }}
                   setSettings={{ setTheme, setLanguage, setShowThumbnails: handleSetShowThumbnails, setNotifications: handleSetNotifications }}
                   onLogout={onLogout || (() => { })}
+                  onAdmin={onAdmin}
+                  isAdmin={isAdmin}
                   t={t}
                   user={user}
                />
