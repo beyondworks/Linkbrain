@@ -950,7 +950,7 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
     <div className="space-y-8">
       {/* Period Toggle + Generation Buttons */}
       {/* Period Toggle + Generation Buttons */}
-      <div className="mt-4 md:mt-0 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Left Side: Period Toggle + Custom Date Picker + Loading */}
         <div className="flex items-center gap-2 h-[40px]">
           {/* Period Toggle */}
