@@ -87,7 +87,13 @@ import { toast } from 'sonner';
 export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'ko', onOpenSettings }: AIInsightsDashboardProps) => {
   const isDark = theme === 'dark';
   const { canUseAI } = useSubscription(); // Use hook
-  const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
+  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'custom'>('weekly');
+  const [customStartDate, setCustomStartDate] = useState<string>(
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [customEndDate, setCustomEndDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
   const [loading, setLoading] = useState(false);
   const [firestoreClips, setFirestoreClips] = useState<any[]>([]);
 
@@ -209,6 +215,41 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
     fetchClips();
   }, []);
 
+  // 연관 클립 찾기 (Client-side Contextual Search)
+  const findRelatedClips = (targetClips: any[], allClips: any[], limit = 5) => {
+    // 1. 타겟 클립들의 주요 키워드 추출
+    const keywords = new Set<string>();
+    targetClips.forEach(clip => {
+      (clip.tags || clip.keywords || []).forEach((k: string) => keywords.add(k.toLowerCase()));
+    });
+    const targetIds = new Set(targetClips.map(c => c.id));
+
+    // 2. 전체 클립 중 타겟 클립 제외하고 점수 계산
+    const scoredClips = allClips
+      .filter(clip => !targetIds.has(clip.id)) // 타겟 클립 제외
+      .map(clip => {
+        let score = 0;
+        const clipKeywords = (clip.tags || clip.keywords || []).map((k: string) => k.toLowerCase());
+
+        // 키워드 매칭 점수
+        clipKeywords.forEach((k: string) => {
+          if (keywords.has(k)) score += 2;
+        });
+
+        // 제목/요약 매칭 (간단한 포함 여부)
+        const content = ((clip.title || '') + ' ' + (clip.summary || '')).toLowerCase();
+        Array.from(keywords).forEach(k => {
+          if (content.includes(k)) score += 1;
+        });
+
+        return { clip, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    return scoredClips.slice(0, limit).map(item => item.clip);
+  };
+
   // 인사이트 리포트 생성 함수 (실제 AI API 사용)
   const generateReport = async () => {
     const user = auth.currentUser;
@@ -247,13 +288,23 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
 
       const periodText = period === 'weekly'
         ? (language === 'ko' ? '이번 주' : 'this week')
-        : (language === 'ko' ? '이번 달' : 'this month');
+        : period === 'monthly'
+          ? (language === 'ko' ? '이번 달' : 'this month')
+          : (language === 'ko' ? `${customStartDate} ~ ${customEndDate}` : `${customStartDate} ~ ${customEndDate}`);
+
+      const startDate = period === 'custom' ? customStartDate : new Date(Date.now() - (period === 'weekly' ? 7 : 30) * 86400000).toISOString().split('T')[0];
+      const endDate = period === 'custom' ? customEndDate : new Date().toISOString().split('T')[0];
+
+      // 연관 클립 찾기 (Knowledge Map)
+      const relatedClips = findRelatedClips(topClips, allActiveLinks, 5);
 
       // 실제 AI API 호출 시도
       let reportContent = '';
       try {
         const { generateAIReport } = await import('../lib/aiService');
-        const result = await generateAIReport(topClips, language);
+        // Updated interface call
+        const result = await generateAIReport(topClips, relatedClips, startDate, endDate, language);
+
         if (result.success && result.content) {
           reportContent = result.content;
         } else {
@@ -329,19 +380,36 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
 
       const periodText = period === 'weekly'
         ? (language === 'ko' ? '이번 주' : 'this week')
-        : (language === 'ko' ? '이번 달' : 'this month');
+        : period === 'monthly'
+          ? (language === 'ko' ? '이번 달' : 'this month')
+          : (language === 'ko' ? `${customStartDate} ~ ${customEndDate}` : `${customStartDate} ~ ${customEndDate}`);
+
+      // 연관 클립 찾기
+      const relatedClips = findRelatedClips(topClips, allActiveLinks, 5);
 
       // 실제 AI API 호출 시도
       let articleContent = '';
       let articleTitle = '';
+
       try {
+        // 인사이트 리포트 내용이 있으면 요약해서 전달, 없으면 간단히 생성
+        const insightContext = generatedReport ? generatedReport.content : `Topics: ${topTopics.join(', ')}`;
+
         const { generateAIArticle } = await import('../lib/aiService');
-        const result = await generateAIArticle(topClips, language);
+        // Updated interface call
+        const result = await generateAIArticle(topClips, relatedClips, insightContext, language);
+
         if (result.success && result.content) {
           articleContent = result.content;
-          articleTitle = language === 'ko'
-            ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
-            : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`;
+          // 첫 줄을 제목으로 파싱 시도 (# Title)
+          const titleMatch = articleContent.match(/^#\s+(.+)$/m);
+          if (titleMatch) {
+            articleTitle = titleMatch[1];
+          } else {
+            articleTitle = language === 'ko'
+              ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
+              : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`;
+          }
         } else {
           throw new Error(result.error || 'AI generation failed');
         }
@@ -524,11 +592,22 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
 
 *This article was created by AI, synthesizing ${clips.length} pieces of content collected ${period}.*`;
   };
-  // 기간에 따른 데이터 필터링
+  // 기간에 따른 데이터 필터링 (Custom 지원)
   const filteredData = useMemo(() => {
-    const now = Date.now();
-    const periodDays = period === 'weekly' ? 7 : 30;
-    const periodStart = now - periodDays * 24 * 60 * 60 * 1000;
+    let periodStart = 0;
+    let periodEnd = Date.now();
+
+    if (period === 'custom') {
+      periodStart = new Date(customStartDate).getTime();
+      // End date는 해당일의 끝(23:59:59)까지 포함
+      const endD = new Date(customEndDate);
+      endD.setHours(23, 59, 59, 999);
+      periodEnd = endD.getTime();
+    } else {
+      const now = Date.now();
+      const periodDays = period === 'weekly' ? 7 : 30;
+      periodStart = now - periodDays * 24 * 60 * 60 * 1000;
+    }
 
     // Firestore 데이터가 있으면 우선 사용, 없으면 props의 links 사용
     const sourceData = firestoreClips.length > 0 ? firestoreClips : links;
@@ -539,9 +618,15 @@ The ${mainTopic} field is expected to evolve even faster. Continuous learning an
         : item.createdAt?.toDate?.()?.getTime?.()
         || item.timestamp
         || 0;
-      return timestamp >= periodStart && !item.isArchived;
+
+      // Custom일 때는 범위 체크, 일반 기간일 때는 시작일 이후 체크
+      if (period === 'custom') {
+        return timestamp >= periodStart && timestamp <= periodEnd && !item.isArchived;
+      } else {
+        return timestamp >= periodStart && !item.isArchived;
+      }
     });
-  }, [firestoreClips, links, period]);
+  }, [firestoreClips, links, period, customStartDate, customEndDate]);
 
   // 전체 링크 (archived 제외)
   const allActiveLinks = useMemo(() => {
