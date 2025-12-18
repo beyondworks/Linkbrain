@@ -30,13 +30,14 @@ export const ScatteredLinkAnimation = () => {
     let animationFrameId: number;
     let mouse = { x: -1000, y: -1000 };
 
-    // Colors similar to the brand color #21DBA4 but with variations
+    // Colors optimized for Dark Theme (Glowing/Neon feel)
     const colors = [
-      'rgba(33, 219, 164, 0.4)',  // Primary Brand
-      'rgba(33, 219, 164, 0.2)',  // Light Brand
-      'rgba(45, 212, 191, 0.3)',  // Teal
-      'rgba(56, 189, 248, 0.2)',  // Light Blue
-      'rgba(148, 163, 184, 0.1)', // Slate
+      'rgba(33, 219, 164, 0.6)',  // Primary Brand (Brighter)
+      'rgba(33, 219, 164, 0.3)',  // Light Brand
+      'rgba(45, 212, 191, 0.4)',  // Teal
+      'rgba(56, 189, 248, 0.3)',  // Light Blue
+      'rgba(148, 163, 184, 0.2)', // Slate (Lighter)
+      'rgba(255, 255, 255, 0.1)', // White hints
     ];
 
     const resizeCanvas = () => {
@@ -57,13 +58,13 @@ export const ScatteredLinkAnimation = () => {
           y,
           originalX: x,
           originalY: y,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 6 + 2,
+          vx: (Math.random() - 0.5) * 0.4, // Slower, smoother movement
+          vy: (Math.random() - 0.5) * 0.4,
+          size: Math.random() * 4 + 1, // Slightly smaller for elegance
           color: colors[Math.floor(Math.random() * colors.length)],
           shape: Math.random() > 0.6 ? 'circle' : Math.random() > 0.3 ? 'square' : 'triangle',
           angle: Math.random() * Math.PI * 2,
-          spinSpeed: (Math.random() - 0.5) * 0.02
+          spinSpeed: (Math.random() - 0.5) * 0.01
         });
       }
     };
@@ -73,6 +74,10 @@ export const ScatteredLinkAnimation = () => {
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.angle);
+      
+      // Add Glow
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = p.color;
       ctx.fillStyle = p.color;
 
       ctx.beginPath();
@@ -98,8 +103,9 @@ export const ScatteredLinkAnimation = () => {
 
       if (distance < 120) {
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(33, 219, 164, ${0.15 * (1 - distance / 120)})`;
-        ctx.lineWidth = 1;
+        // Lighter, more subtle lines for dark mode
+        ctx.strokeStyle = `rgba(33, 219, 164, ${0.1 * (1 - distance / 120)})`;
+        ctx.lineWidth = 0.5;
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
@@ -113,10 +119,11 @@ export const ScatteredLinkAnimation = () => {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         // Connect if close to mouse
-        if (distance < 250) {
+        if (distance < 300) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(33, 219, 164, ${0.4 * (1 - distance / 250)})`;
-            ctx.lineWidth = 1.5;
+            // Stronger glow near mouse
+            ctx.strokeStyle = `rgba(33, 219, 164, ${0.3 * (1 - distance / 300)})`;
+            ctx.lineWidth = 1;
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(mouse.x, mouse.y);
             ctx.stroke();
@@ -140,23 +147,21 @@ export const ScatteredLinkAnimation = () => {
         const dx = mouse.x - p.originalX;
         const dy = mouse.y - p.originalY;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const forceDirectionX = dx / distance;
-        const forceDirectionY = dy / distance;
         
         // Attraction radius and strength
-        const maxDistance = 300;
+        const maxDistance = 400; // Increased range
         let force = 0;
         
         if (distance < maxDistance) {
-            // The closer the mouse, the stronger the pull towards it
-            // However, we stop pulling at a certain minimum distance to keep them scattered slightly
+            // Smooth easing
             force = (maxDistance - distance) / maxDistance; 
+            force = force * force; // Quadratic easing for smoother feel
         }
 
         // Apply force to position (Elastic gathering)
-        const elasticity = 0.08; // How fast they move towards target
-        const targetX = p.originalX + (force * dx * 0.8);
-        const targetY = p.originalY + (force * dy * 0.8);
+        const elasticity = 0.05; // Slightly smoother
+        const targetX = p.originalX + (force * dx * 0.5); // 0.5 strength (don't pull all the way)
+        const targetY = p.originalY + (force * dy * 0.5);
 
         p.x += (targetX - p.x) * elasticity;
         p.y += (targetY - p.y) * elasticity;
@@ -184,13 +189,25 @@ export const ScatteredLinkAnimation = () => {
       mouse.y = e.clientY - rect.top;
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+        if (e.touches.length > 0) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            mouse.x = touch.clientX - rect.left;
+            mouse.y = touch.clientY - rect.top;
+        }
+    };
+
     const handleMouseLeave = () => {
         mouse.x = -1000;
         mouse.y = -1000;
     }
 
     window.addEventListener('resize', resizeCanvas);
-    container.addEventListener('mousemove', handleMouseMove);
+    // Listen on window for smoother mouse tracking across the whole page
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleMouseLeave);
     container.addEventListener('mouseleave', handleMouseLeave);
     
     resizeCanvas();
@@ -198,7 +215,9 @@ export const ScatteredLinkAnimation = () => {
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      container.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleMouseLeave);
       container.removeEventListener('mouseleave', handleMouseLeave);
       cancelAnimationFrame(animationFrameId);
     };
@@ -207,8 +226,8 @@ export const ScatteredLinkAnimation = () => {
   return (
     <div ref={containerRef} className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       <canvas ref={canvasRef} className="block w-full h-full" />
-      {/* Soft overlay to blend nicely with content */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/80 pointer-events-none"></div>
+      {/* Dark gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120]/0 via-[#0B1120]/20 to-[#0B1120]/80 pointer-events-none"></div>
     </div>
   );
 };

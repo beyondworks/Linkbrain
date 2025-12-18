@@ -1,44 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { 
+  Archive, 
+  Network, 
+  History,
   FolderOpen, 
   FileText, 
   Database, 
-  Sparkles, 
+  Layout,
   Zap,
   Shield,
-  Layout,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Logo } from '../Logo';
 
 const features = [
   {
     id: 0,
-    title: "카테고리 자동 분류",
-    subtitle: "Category Auto-classification",
-    desc: "매번 폴더를 만들 필요 없습니다. AI가 내용을 분석해 최적의 카테고리로 자동 정리합니다.",
-    icon: <FolderOpen size={20} />
+    title: "보존 Preserve",
+    subtitle: "생각을 잊지 않게",
+    desc: "링크는 사라져도 생각은 사라지면 안 됩니다. 원본 콘텐츠를 영구 보존하여 플랫폼이 변해도 당신의 데이터는 안전하게 남습니다.",
+    icon: <Archive size={20} />,
+    sceneComponent: "StorageScene"
   },
   {
     id: 1,
-    title: "내용 요약",
-    subtitle: "Content Summary",
-    desc: "바쁜 당신을 위해 핵심 내용만 3줄로 요약해 드립니다. 영상은 타임라인별 중요 포인트까지.",
-    icon: <FileText size={20} />
+    title: "연결 Connect",
+    subtitle: "생각은 혼자 있지 않습니다",
+    desc: "AI가 당신의 생각들 사이의 보이지 않는 연결고리를 찾아냅니다. 자동 카테고리 분류와 연관 콘텐츠 추천으로 새로운 인사이트를 발견하세요.",
+    icon: <Network size={20} />,
+    sceneComponent: "ClassificationScene"
   },
   {
     id: 2,
-    title: "영구 저장",
-    subtitle: "Permanent Storage",
-    desc: "원본 링크가 사라져도 걱정 마세요. LinkBrain 아카이브에 안전하게 영구 저장됩니다.",
-    icon: <Database size={20} />
+    title: "재발견 Rediscover",
+    subtitle: "과거의 나와 대화하기",
+    desc: "6개월 전의 당신이 지금의 당신에게 보내는 메시지. 잊고 있던 관심사를 다시 수면 위로 끌어올려 새로운 영감을 줍니다.",
+    icon: <History size={20} />,
+    sceneComponent: "SummaryScene"
   }
 ];
 
-import { Logo } from '../Logo';
-
-export const FeatureSlider = () => {
+export const CoreValues = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -49,8 +54,17 @@ export const FeatureSlider = () => {
   }, []);
 
   return (
-    <div className="w-full max-w-5xl mx-auto md:px-0">
-      <div className="relative bg-[#1E293B] rounded-2xl md:rounded-[2rem] border border-slate-700 shadow-2xl overflow-hidden backdrop-blur-sm">
+    <section className="w-full max-w-5xl mx-auto md:px-0 py-20">
+      <div className="mb-16 text-center px-6">
+        <h2 className="md:text-4xl font-black text-white mb-6 leading-tight font-[Pretendard] font-normal text-[26px]">
+          매일 만나는 수십 개의 링크 중<br/>
+          <span className="text-slate-400 text-[26px]">마음을 움직인 것들,</span><br/>
+          <span className="block h-6 md:h-8"></span>
+          <span className="text-[#21DBA4] text-[36px] font-bold px-[0px] py-[20px]">그것이 바로 당신의 '생각'입니다.</span>
+        </h2>
+      </div>
+
+      <div className="relative bg-[#1E293B] rounded-2xl md:rounded-[2rem] border border-slate-700 shadow-2xl overflow-hidden backdrop-blur-sm mx-4 md:mx-0">
         
         {/* Browser Header */}
         <div className="h-10 md:h-12 border-b border-slate-700 flex items-center justify-between px-3 md:px-5 bg-[#0F172A]/50 backdrop-blur sticky top-0 z-20">
@@ -61,45 +75,45 @@ export const FeatureSlider = () => {
           </div>
           <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-medium text-slate-400 bg-slate-800 border border-slate-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full">
             <Logo className="w-2 h-2 md:w-3 md:h-3 rounded-[2px]" />
-            linkbrain.ai/features
+            linkbrain.ai/core-values
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex flex-col md:flex-row min-h-[500px] md:min-h-[400px] h-auto">
+        <div className="flex flex-col md:flex-row min-h-[500px] md:min-h-[450px] h-auto">
           
           {/* Left: Navigation & Info */}
-          <div className="w-full md:w-2/5 p-5 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-700 bg-[#1E293B] relative z-10 order-2 md:order-1 flex-1">
+          <div className="w-full md:w-2/5 p-6 md:p-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-700 bg-[#1E293B] relative z-10 order-2 md:order-1 flex-1">
              <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[9px] md:text-[10px] font-bold uppercase tracking-wider mb-4 md:mb-6 border border-slate-700">
-                   {features[currentSlide].subtitle}
-                </div>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentSlide}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
                     transition={{ duration: 0.3 }}
-                    className="min-h-[120px] md:min-h-0"
+                    className="mb-8"
                   >
-                    <h3 className="text-xl md:text-2xl font-black text-white mb-2 md:mb-4 leading-tight">
-                      {features[currentSlide].title}
-                    </h3>
-                    <p className="text-sm text-slate-400 leading-relaxed">
-                      {features[currentSlide].desc}
-                    </p>
+                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-6 border border-[#21DBA4]/20">
+                        {features[currentSlide].subtitle}
+                     </div>
+                     <h3 className="text-2xl md:text-3xl font-black text-white mb-4 md:mb-6 leading-tight">
+                        {features[currentSlide].title.split(' ')[0]} <span className="text-slate-500 text-lg md:text-xl font-medium">{features[currentSlide].title.split(' ')[1]}</span>
+                     </h3>
+                     <p className="text-sm md:text-base text-slate-400 leading-relaxed">
+                        {features[currentSlide].desc}
+                     </p>
                   </motion.div>
                 </AnimatePresence>
              </div>
 
              {/* Slide Indicators */}
-             <div className="flex gap-2 mt-6 md:mt-0">
+             <div className="flex gap-3 mt-6 md:mt-0">
                {features.map((feature, idx) => (
                  <button 
                     key={feature.id}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'w-8 bg-[#21DBA4]' : 'w-2 bg-slate-700 hover:bg-slate-600'}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'w-12 bg-[#21DBA4]' : 'w-2 bg-slate-700 hover:bg-slate-600'}`}
                     aria-label={`Go to slide ${idx + 1}`}
                  />
                ))}
@@ -107,28 +121,36 @@ export const FeatureSlider = () => {
           </div>
 
           {/* Right: Visualization */}
-          <div className="w-full md:w-3/5 bg-[#0F172A]/50 relative overflow-hidden flex items-center justify-center p-4 md:p-8 order-1 md:order-2 h-[280px] md:h-auto border-b border-slate-700 md:border-b-0">
+          <div className="w-full md:w-3/5 bg-[#0F172A]/50 relative overflow-hidden flex items-center justify-center p-4 md:p-8 order-1 md:order-2 h-[300px] md:h-auto border-b border-slate-700 md:border-b-0">
              <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(#fff 1px, transparent 1px)`, backgroundSize: '20px 20px' }}></div>
              
              {/* Scale container for mobile responsiveness */}
              <div className="relative w-full h-full max-w-sm mx-auto flex items-center justify-center transform scale-[0.65] xs:scale-75 sm:scale-90 md:scale-100 origin-center">
                 <AnimatePresence mode="wait">
-                  {currentSlide === 0 && <ClassificationScene key="scene0" />}
-                  {currentSlide === 1 && <SummaryScene key="scene1" />}
-                  {currentSlide === 2 && <StorageScene key="scene2" />}
+                  {features[currentSlide].sceneComponent === 'ClassificationScene' && <ClassificationScene key="scene1" />}
+                  {features[currentSlide].sceneComponent === 'SummaryScene' && <SummaryScene key="scene2" />}
+                  {features[currentSlide].sceneComponent === 'StorageScene' && <StorageScene key="scene0" />}
                 </AnimatePresence>
              </div>
           </div>
 
         </div>
       </div>
-    </div>
+
+      <div className="mt-16 text-center px-6">
+        <p className="text-slate-500 max-w-2xl mx-auto text-[22px]">
+          Linkbrain은 그 생각들을 잃어버리지 않도록 영구적으로 보존하고,<br className="hidden md:block"/>
+          필요한 순간에 다시 떠올리게 합니다.
+        </p>
+      </div>
+    </section>
   );
 };
 
 // ----------------------------------------------------------------------
-// 1. Classification Scene
+// Scenes (Reused from previous FeatureSlider but can be tweaked)
 // ----------------------------------------------------------------------
+
 const ClassificationScene = () => {
   const DURATION = 4;
   
@@ -197,9 +219,6 @@ const ClassificationScene = () => {
   )
 }
 
-// ----------------------------------------------------------------------
-// 2. Summary Scene
-// ----------------------------------------------------------------------
 const SummaryScene = () => {
   const DURATION = 4;
 
@@ -242,7 +261,7 @@ const SummaryScene = () => {
          </div>
       </motion.div>
 
-      {/* 2. Extracted Summary Cards */}
+      {/* 2. Extracted Summary Cards -> Rediscover Cards */}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
         {[1, 2, 3].map((i) => {
            const startT = 0.7 + (i * 0.04); 
@@ -265,7 +284,7 @@ const SummaryScene = () => {
                 className="w-60 bg-[#0F172A] border border-blue-500/30 rounded-lg p-3 flex items-start gap-3 shadow-lg z-10"
             >
                 <div className="mt-0.5 w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
-                    <Zap size={10} fill="currentColor" />
+                    <Search size={10} fill="currentColor" />
                 </div>
                 <div className="flex-1">
                     <div className="h-1.5 w-full bg-slate-700 rounded-full mb-1.5"></div>
@@ -279,9 +298,6 @@ const SummaryScene = () => {
   )
 }
 
-// ----------------------------------------------------------------------
-// 3. Storage Scene
-// ----------------------------------------------------------------------
 const StorageScene = () => {
   const DURATION = 4;
 
@@ -311,7 +327,7 @@ const StorageScene = () => {
                    color: ['#64748b', '#64748b', '#ef4444', '#64748b', '#64748b'] 
                 }}
                 transition={{ duration: DURATION, times: [0, 0.2, 0.3, 0.7, 1], repeat: Infinity }}
-                className="ml-3 h-4 flex-1 rounded text-[8px] flex items-center px-2 font-mono"
+                className="ml-3 h-4 flex-1 rounded text-[8px] flex items-center px-2"
              >
                 404 - Page Not Found
              </motion.div>
@@ -347,10 +363,10 @@ const StorageScene = () => {
              <motion.div 
                 animate={{ opacity: [0, 0, 0, 1, 1, 0, 0] }}
                 transition={{ duration: DURATION, times: [0, 0.5, 0.6, 0.7, 0.9, 0.95, 1], repeat: Infinity }}
-                className="absolute inset-0 bg-[#8B5CF6]/10 backdrop-blur-sm flex flex-col items-center justify-center z-10"
+                className="absolute inset-0 bg-[#21DBA4]/10 backdrop-blur-sm flex flex-col items-center justify-center z-10"
              >
-                <Shield size={40} className="text-[#8B5CF6] mb-2 animate-bounce" />
-                <div className="bg-[#8B5CF6] text-white px-3 py-1.5 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1.5">
+                <Shield size={40} className="text-[#21DBA4] mb-2 animate-bounce" />
+                <div className="bg-[#21DBA4] text-black px-3 py-1.5 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1.5">
                    <RefreshCw size={12} /> Restored
                 </div>
              </motion.div>
