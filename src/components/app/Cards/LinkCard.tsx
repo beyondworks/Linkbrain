@@ -91,6 +91,22 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
                             <ExternalLink size={16} />
                         </button>
                     </div>
+
+                    {/* Badges: Favorite & Chat History */}
+                    <div className="absolute top-3 right-3 flex gap-1.5 z-[5]">
+                        {data.isFavorite && (
+                            <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
+                                <Star size={12} fill="white" className="text-white" />
+                            </div>
+                        )}
+                        {data.chatHistory && data.chatHistory.length > 0 && (
+                            <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shadow-sm">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                </svg>
+                            </div>
+                        )}
+                    </div>
                 </div>
             ) : (
                 /* Checkbox for non-thumbnail mode */

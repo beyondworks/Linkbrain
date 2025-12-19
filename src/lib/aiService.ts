@@ -407,7 +407,23 @@ ${relatedSummaries}
     }
 };
 
-// AI Chat
+// AI Chat - Context-aware with related clips
+export interface AskAIContext {
+    currentClip: {
+        title: string;
+        url: string;
+        summary?: string;
+        tags?: string[];
+        notes?: string;
+    };
+    relatedClips?: Array<{
+        title: string;
+        summary?: string;
+        tags?: string[];
+    }>;
+    userInterests?: string[];
+}
+
 export const sendAIChat = async (message: string, context: string, language: 'ko' | 'en'): Promise<AIResponse> => {
     const config = getAIConfig();
     if (!config) {
@@ -431,6 +447,83 @@ ${context}
 User question: ${message}
 
 Please provide a concise and helpful answer.`;
+
+    if (config.provider === 'openai') {
+        return await callOpenAI(config.apiKey, config.model, prompt);
+    } else {
+        return await callGemini(config.apiKey, config.model, prompt);
+    }
+};
+
+// Enhanced AI Chat with full context (3-tier: Retrieval → Reasoning → Output)
+export const sendAskAI = async (
+    message: string,
+    contextData: AskAIContext,
+    language: 'ko' | 'en'
+): Promise<AIResponse> => {
+    const config = getAIConfig();
+    if (!config) {
+        return { success: false, error: 'AI not configured' };
+    }
+
+    // Build context from current clip
+    const currentClipContext = [
+        `[현재 클립]`,
+        `제목: ${contextData.currentClip.title}`,
+        `URL: ${contextData.currentClip.url}`,
+        contextData.currentClip.summary ? `요약: ${contextData.currentClip.summary}` : '',
+        contextData.currentClip.tags?.length ? `태그: ${contextData.currentClip.tags.join(', ')}` : '',
+        contextData.currentClip.notes ? `사용자 메모: ${contextData.currentClip.notes}` : '',
+    ].filter(Boolean).join('\n');
+
+    // Build context from related clips
+    let relatedContext = '';
+    if (contextData.relatedClips && contextData.relatedClips.length > 0) {
+        relatedContext = '\n\n[관련 클립 (' + contextData.relatedClips.length + '개)]\n' +
+            contextData.relatedClips.map((clip, i) =>
+                `${i + 1}. ${clip.title}${clip.summary ? ` - ${clip.summary.slice(0, 100)}...` : ''}${clip.tags?.length ? ` (${clip.tags.slice(0, 3).join(', ')})` : ''}`
+            ).join('\n');
+    }
+
+    // User interests context
+    let interestsContext = '';
+    if (contextData.userInterests && contextData.userInterests.length > 0) {
+        interestsContext = '\n\n[사용자 관심사]: ' + contextData.userInterests.join(', ');
+    }
+
+    const fullContext = currentClipContext + relatedContext + interestsContext;
+
+    const prompt = language === 'ko'
+        ? `당신은 Linkbrain의 지식 어시스턴트입니다.
+사용자가 저장한 콘텐츠를 기반으로 질문에 답변합니다.
+
+[제공된 맥락]
+${fullContext}
+
+[사용자 질문]
+${message}
+
+[답변 지침]
+1. 제공된 맥락에 있는 정보만 사용하세요.
+2. 맥락에 없는 정보는 추측하지 마세요.
+3. 관련 클립들 간의 연결점이 있다면 언급해주세요.
+4. 답변은 명확하고 실용적으로 작성하세요.
+5. 필요시 다음 단계나 후속 질문을 제안해주세요.`
+        : `You are Linkbrain's knowledge assistant.
+Answer questions based on the user's saved content.
+
+[Provided Context]
+${fullContext}
+
+[User Question]
+${message}
+
+[Response Guidelines]
+1. Use ONLY information from the provided context.
+2. Do NOT speculate on information not in the context.
+3. If there are connections between related clips, mention them.
+4. Write clear and practical answers.
+5. Suggest next steps or follow-up questions if appropriate.`;
 
     if (config.provider === 'openai') {
         return await callOpenAI(config.apiKey, config.model, prompt);

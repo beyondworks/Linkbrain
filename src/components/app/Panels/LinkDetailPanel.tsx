@@ -38,6 +38,7 @@ import { getSourceInfo, GlobeIcon } from '../Cards';
 import { Category, Collection } from '../types';
 import { useSubscription } from '../../../hooks/useSubscription';
 import { usePublicClips } from '../../../hooks/usePublicClips';
+import { AskAIModal } from '../AskAI';
 
 // Custom ArrowUpCircle Icon
 const ArrowUpCircle = ({ size, className }: any) => (
@@ -52,6 +53,7 @@ interface LinkDetailPanelProps {
     link: any;
     categories: Category[];
     collections: Collection[];
+    allClips?: any[]; // 관련 클립 수집용
     onClose: () => void;
     onToggleFavorite: () => void;
     onToggleReadLater: () => void;
@@ -66,7 +68,7 @@ interface LinkDetailPanelProps {
     language?: 'en' | 'ko';
 }
 
-export const LinkDetailPanel = ({ link, categories, collections, onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onUpdateClip, onToggleCollection, onClearCollections, theme, t, language = 'ko' }: LinkDetailPanelProps) => {
+export const LinkDetailPanel = ({ link, categories, collections, allClips = [], onClose, onToggleFavorite, onToggleReadLater, onArchive, onDelete, onUpdateCategory, onUpdateClip, onToggleCollection, onClearCollections, theme, t, language = 'ko' }: LinkDetailPanelProps) => {
     const source = getSourceInfo(link.url);
     const [currentIdx, setCurrentIdx] = useState(0);
     const { publishClip, removeFromPublic } = usePublicClips();
@@ -162,8 +164,12 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     const [chatLoading, setChatLoading] = useState(false);
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; timestamp?: number }>>([]);
     const [chatExpanded, setChatExpanded] = useState(false);
+    const [chatMaximized, setChatMaximized] = useState(false); // 채팅창 크기 조절
     const chatMessagesRef = useRef<HTMLDivElement>(null);
     const chatInputRef = useRef<HTMLInputElement>(null);
+
+    // AskAI Modal state
+    const [isAskAIModalOpen, setIsAskAIModalOpen] = useState(false);
 
     // Auto-scroll to bottom when messages change or chat expands
     useEffect(() => {
@@ -195,6 +201,44 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
     // Send chat message to AI with clip context
     const { canUseAI } = useSubscription();
 
+    // Find related clips based on tags and category
+    const getRelatedClips = () => {
+        if (!allClips || allClips.length === 0) return [];
+
+        const currentTags = link.tags || [];
+        const currentCategoryId = link.categoryId;
+
+        // Score clips by relevance
+        const scoredClips = allClips
+            .filter(clip => clip.id !== link.id) // Exclude current clip
+            .map(clip => {
+                let score = 0;
+                const clipTags = clip.tags || [];
+
+                // Tag overlap scoring
+                const tagOverlap = currentTags.filter((tag: string) => clipTags.includes(tag)).length;
+                score += tagOverlap * 3;
+
+                // Same category scoring
+                if (clip.categoryId === currentCategoryId) {
+                    score += 2;
+                }
+
+                // Same collection scoring
+                const currentCollections = link.collectionIds || [];
+                const clipCollections = clip.collectionIds || [];
+                const collectionOverlap = currentCollections.filter((id: string) => clipCollections.includes(id)).length;
+                score += collectionOverlap * 2;
+
+                return { ...clip, relevanceScore: score };
+            })
+            .filter(clip => clip.relevanceScore > 0)
+            .sort((a, b) => b.relevanceScore - a.relevanceScore)
+            .slice(0, 5); // Top 5 related clips
+
+        return scoredClips;
+    };
+
     const sendChatMessage = async () => {
         if (!canUseAI) {
             toast.error(localStorage.getItem('language') === 'en'
@@ -218,18 +262,31 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         setChatExpanded(true);
 
         try {
-            const clipContext = [
-                `Title: ${link.title || 'Untitled'}`,
-                `URL: ${link.url}`,
-                link.summary ? `Summary: ${link.summary}` : '',
-                link.description ? `Description: ${link.description}` : '',
-                link.tags?.length ? `Tags: ${link.tags.join(', ')}` : '',
-                link.notes ? `Notes: ${link.notes}` : '',
-            ].filter(Boolean).join('\n');
+            // Get related clips for enhanced context
+            const relatedClips = getRelatedClips();
 
-            const { sendAIChat } = await import('../../../lib/aiService');
-            const language = localStorage.getItem('language') === 'en' ? 'en' : 'ko';
-            const result = await sendAIChat(userMessage, clipContext, language);
+            // Build context for sendAskAI
+            const contextData = {
+                currentClip: {
+                    title: link.title || 'Untitled',
+                    url: link.url,
+                    summary: link.summary,
+                    tags: link.tags,
+                    notes: link.notes
+                },
+                relatedClips: relatedClips.map(clip => ({
+                    title: clip.title,
+                    summary: clip.summary,
+                    tags: clip.tags
+                })),
+                userInterests: [...new Set([
+                    ...(link.tags || []),
+                    matchedCategory?.name
+                ].filter(Boolean))] as string[]
+            };
+
+            const { sendAskAI } = await import('../../../lib/aiService');
+            const result = await sendAskAI(userMessage, contextData, language);
 
             if (result.success && result.content) {
                 const aiMsg = { role: 'ai' as const, content: result.content!, timestamp: Date.now() };
@@ -242,7 +299,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                 if (onUpdateClip && link.id) {
                     console.log('[Chat] Saving to Firestore:', fullHistory.length, 'messages');
                     await onUpdateClip(link.id, { chatHistory: fullHistory });
-                    console.log('[Chat] ✅ Saved successfully');
+                    console.log('[Chat] Saved successfully');
                 } else {
                     console.warn('[Chat] Cannot save - onUpdateClip:', !!onUpdateClip, 'link.id:', link.id);
                 }
@@ -257,6 +314,52 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
         } finally {
             setChatLoading(false);
             setTimeout(() => chatInputRef.current?.focus(), 100);
+        }
+    };
+
+    // AskAI Modal handler
+    const handleAskAISendMessage = async (message: string, contextDays: number): Promise<string> => {
+        const { sendAskAI } = await import('../../../lib/aiService');
+
+        // Get related clips within the specified days
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - contextDays);
+
+        const relatedClipsFiltered = allClips
+            .filter(clip => clip.id !== link.id)
+            .filter(clip => {
+                const clipDate = clip.createdAt ? new Date(clip.createdAt) : new Date(0);
+                return clipDate >= cutoffDate;
+            })
+            .filter(clip => {
+                const clipTags = clip.tags || [];
+                const currentTags = link.tags || [];
+                return currentTags.some((tag: string) => clipTags.includes(tag)) || clip.categoryId === link.categoryId;
+            })
+            .slice(0, 10);
+
+        const contextData = {
+            currentClip: {
+                title: link.title || 'Untitled',
+                url: link.url,
+                summary: link.summary,
+                tags: link.tags,
+                notes: link.notes
+            },
+            relatedClips: relatedClipsFiltered.map(clip => ({
+                title: clip.title,
+                summary: clip.summary,
+                tags: clip.tags
+            })),
+            userInterests: [...new Set([...(link.tags || []), matchedCategory?.name].filter(Boolean))] as string[]
+        };
+
+        const result = await sendAskAI(message, contextData, language);
+
+        if (result.success && result.content) {
+            return result.content;
+        } else {
+            throw new Error(result.error || 'Failed to get response');
         }
     };
 
@@ -743,11 +846,63 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                     <div className="h-32 md:h-20"></div>
                 </div>
 
-                {/* AI Chat Section */}
+                {/* AI Chat Section - Context-aware */}
                 {(() => {
                     const isAIConfigured = (localStorage.getItem('ai_api_key') || '').length > 10;
+                    const relatedClipsForDisplay = allClips
+                        .filter(clip => clip.id !== link.id)
+                        .filter(clip => {
+                            const clipTags = clip.tags || [];
+                            const currentTags = link.tags || [];
+                            return currentTags.some((tag: string) => clipTags.includes(tag)) ||
+                                clip.categoryId === link.categoryId;
+                        })
+                        .slice(0, 5);
+                    const clipContext = {
+                        currentClip: link.title || 'Untitled',
+                        tags: (link.tags || []).slice(0, 3),
+                        category: matchedCategory?.name || 'General',
+                        hasNotes: !!link.notes,
+                        hasSummary: !!link.summary,
+                        relatedCount: relatedClipsForDisplay.length
+                    };
                     return (
-                        <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl max-h-[40vh] overflow-hidden flex flex-col ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+                        <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl overflow-hidden flex flex-col transition-all duration-300 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`} style={{ maxHeight: chatMaximized ? 'calc(100% - 64px)' : '50vh' }}>
+                            {/* Context Display - Always visible */}
+                            <div className={`shrink-0 px-5 py-3 border-t ${theme === 'dark' ? 'border-slate-800 bg-slate-900/95' : 'border-slate-100 bg-white/95'}`}>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <Sparkles size={14} className="text-[#21DBA4]" />
+                                    <span className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        {language === 'ko' ? '이 질문은 아래 콘텐츠를 기반으로 답변돼요' : 'AI will answer based on:'}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                                        {clipContext.currentClip.slice(0, 25)}{clipContext.currentClip.length > 25 ? '...' : ''}
+                                    </span>
+                                    {clipContext.hasSummary && (
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : 'bg-[#E0FBF4] text-[#21DBA4]'}`}>
+                                            AI 요약
+                                        </span>
+                                    )}
+                                    {clipContext.tags.length > 0 && (
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                                            {clipContext.tags.join(', ')}
+                                        </span>
+                                    )}
+                                    {clipContext.hasNotes && (
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+                                            {language === 'ko' ? '내 메모' : 'My Notes'}
+                                        </span>
+                                    )}
+                                    {clipContext.relatedCount > 0 && (
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                                            {language === 'ko' ? `관련 클립 ${clipContext.relatedCount}개` : `${clipContext.relatedCount} related`}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Toggle Header - show when messages exist */}
                             {chatMessages.length > 0 && (
                                 <div className={`shrink-0 flex items-center justify-between px-4 py-2 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
@@ -756,38 +911,113 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                         className={`flex-1 flex items-center gap-2 text-xs font-medium transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-slate-300' : 'text-slate-500 hover:text-slate-700'}`}
                                     >
                                         <Lightbulb size={12} className="text-[#21DBA4]" />
-                                        {localStorage.getItem('language') === 'en' ? `${chatMessages.length} messages` : `대화 ${chatMessages.length}개`}
+                                        {language === 'en' ? `${chatMessages.length} messages` : `대화 ${chatMessages.length}개`}
                                         <ChevronDown size={14} className={`transition-transform ${chatExpanded ? 'rotate-180' : ''}`} />
                                     </button>
-                                    <button
-                                        onClick={clearChatHistory}
-                                        className={`p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-500 hover:text-red-400' : 'hover:bg-slate-100 text-slate-400 hover:text-red-500'}`}
-                                        title={localStorage.getItem('language') === 'en' ? 'Clear chat' : '대화 삭제'}
-                                    >
-                                        <Trash2 size={12} />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {/* Maximize/Minimize button */}
+                                        <button
+                                            onClick={() => { setChatMaximized(!chatMaximized); setChatExpanded(true); }}
+                                            className={`p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-500 hover:text-slate-300' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'}`}
+                                            title={chatMaximized ? (language === 'ko' ? '축소' : 'Minimize') : (language === 'ko' ? '확대' : 'Maximize')}
+                                        >
+                                            {chatMaximized ? (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" /><line x1="14" y1="10" x2="21" y2="3" /><line x1="3" y1="21" x2="10" y2="14" />
+                                                </svg>
+                                            ) : (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
+                                                </svg>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={clearChatHistory}
+                                            className={`p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-500 hover:text-red-400' : 'hover:bg-slate-100 text-slate-400 hover:text-red-500'}`}
+                                            title={language === 'en' ? 'Clear chat' : '대화 삭제'}
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
                                 </div>
                             )}
-                            {/* Chat Messages - collapsible with fixed max height */}
+
+                            {/* Chat Messages - collapsible with dynamic max height */}
                             {chatMessages.length > 0 && chatExpanded && (
                                 <div
                                     ref={chatMessagesRef}
-                                    className={`overflow-y-auto p-4 border-t space-y-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}
-                                    style={{ maxHeight: 'calc(40vh - 120px)' }}
+                                    className={`flex-1 overflow-y-auto no-scrollbar p-4 border-t space-y-4 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}
+                                    style={{ maxHeight: chatMaximized ? 'calc(100vh - 250px)' : 'calc(50vh - 180px)' }}
                                 >
                                     {chatMessages.map((msg, idx) => (
-                                        <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                            {msg.role === 'ai' && (
-                                                <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shrink-0">
-                                                    <Lightbulb size={12} className="text-white" />
+                                        <div key={idx}>
+                                            <div className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                {msg.role === 'ai' && (
+                                                    <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shrink-0 mt-1">
+                                                        <Lightbulb size={12} className="text-white" />
+                                                    </div>
+                                                )}
+                                                <div className={`max-w-[85%] px-4 py-3 rounded-xl text-sm ${msg.role === 'user'
+                                                    ? 'bg-[#21DBA4] text-white'
+                                                    : theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-700'
+                                                    }`}>
+                                                    {msg.role === 'ai' ? (
+                                                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                                                            {msg.content.split('\n').map((line: string, lineIdx: number) => {
+                                                                // Handle headers (##, ###)
+                                                                if (line.startsWith('### ')) {
+                                                                    return <h4 key={lineIdx} className={`font-bold text-sm mt-3 mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{line.replace('### ', '')}</h4>;
+                                                                }
+                                                                if (line.startsWith('## ')) {
+                                                                    return <h3 key={lineIdx} className={`font-bold text-base mt-3 mb-1 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>{line.replace('## ', '')}</h3>;
+                                                                }
+                                                                // Handle bullet points
+                                                                if (line.startsWith('- ') || line.startsWith('* ')) {
+                                                                    return <div key={lineIdx} className="flex gap-2 ml-2 my-0.5"><span className="text-[#21DBA4]">•</span><span>{line.slice(2)}</span></div>;
+                                                                }
+                                                                // Handle numbered lists
+                                                                if (/^\d+\.\s/.test(line)) {
+                                                                    const num = line.match(/^(\d+)\./)?.[1];
+                                                                    return <div key={lineIdx} className="flex gap-2 ml-2 my-0.5"><span className="text-[#21DBA4] font-bold">{num}.</span><span>{line.replace(/^\d+\.\s/, '')}</span></div>;
+                                                                }
+                                                                // Handle bold text (**text**)
+                                                                if (line.includes('**')) {
+                                                                    const parts = line.split(/\*\*(.*?)\*\*/g);
+                                                                    return (
+                                                                        <p key={lineIdx} className="my-1">
+                                                                            {parts.map((part, i) => i % 2 === 1 ? <strong key={i} className="font-bold">{part}</strong> : part)}
+                                                                        </p>
+                                                                    );
+                                                                }
+                                                                // Empty line = paragraph break
+                                                                if (!line.trim()) return <div key={lineIdx} className="h-2" />;
+                                                                // Regular text
+                                                                return <p key={lineIdx} className="my-1">{line}</p>;
+                                                            })}
+                                                        </div>
+                                                    ) : msg.content}
+                                                </div>
+                                            </div>
+                                            {/* Action Buttons after AI response */}
+                                            {msg.role === 'ai' && idx === chatMessages.length - 1 && !chatLoading && (
+                                                <div className={`mt-4 mb-4 ml-8 flex flex-wrap items-center gap-3`}>
+                                                    <span className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                        {language === 'ko' ? '이걸로 뭘 더 해볼까요?' : 'What would you like to do?'}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => { navigator.clipboard.writeText(msg.content); toast.success(language === 'ko' ? '복사됨' : 'Copied'); }}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${theme === 'dark' ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
+                                                    >
+                                                        {language === 'ko' ? '복사' : 'Copy'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setMyNotes((prev: string) => prev ? `${prev}\n\n---\n${msg.content}` : msg.content); toast.success(language === 'ko' ? '메모에 추가됨' : 'Added to notes'); }}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${theme === 'dark' ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
+                                                    >
+                                                        {language === 'ko' ? '메모에 추가' : 'Add to Notes'}
+                                                    </button>
                                                 </div>
                                             )}
-                                            <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${msg.role === 'user'
-                                                ? 'bg-[#21DBA4] text-white'
-                                                : theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-700'
-                                                }`}>
-                                                {msg.content}
-                                            </div>
                                         </div>
                                     ))}
                                     {chatLoading && (
@@ -796,12 +1026,13 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                                 <Lightbulb size={12} className="text-white" />
                                             </div>
                                             <div className={`px-3 py-2 rounded-xl text-sm ${theme === 'dark' ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                                                {localStorage.getItem('language') === 'en' ? 'Thinking...' : '생각 중...'}
+                                                {language === 'en' ? 'Thinking...' : '생각 중...'}
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             )}
+
                             {/* Input Area */}
                             <div className={`shrink-0 p-4 border-t flex items-center gap-2 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 ${isAIConfigured ? 'bg-[#21DBA4]' : 'bg-slate-400'}`}>
@@ -814,7 +1045,7 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                     onChange={(e) => setChatInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && sendChatMessage()}
                                     disabled={!isAIConfigured || chatLoading}
-                                    placeholder={isAIConfigured ? (t('askAI') || 'Ask AI about this content...') : (t('aiSetupRequired') || 'Set up your API key in Settings')}
+                                    placeholder={isAIConfigured ? (language === 'ko' ? '이 콘텐츠에 대해 질문하세요...' : 'Ask about this content...') : (t('aiSetupRequired') || 'Set up your API key in Settings')}
                                     className={`flex-1 rounded-full h-10 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${!isAIConfigured ? 'cursor-not-allowed opacity-60' : ''} ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700 placeholder:text-slate-500' : 'bg-slate-100 focus:bg-white placeholder:text-slate-400'}`}
                                 />
                                 <button
@@ -824,10 +1055,37 @@ export const LinkDetailPanel = ({ link, categories, collections, onClose, onTogg
                                 >
                                     <ArrowUpCircle size={24} />
                                 </button>
+                                {/* Open AskAI Modal button */}
+                                <button
+                                    onClick={() => setIsAskAIModalOpen(true)}
+                                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4] hover:bg-slate-700' : 'bg-slate-100 text-[#21DBA4] hover:bg-slate-200'}`}
+                                    title={language === 'ko' ? 'AskAI 확장' : 'Expand AskAI'}
+                                >
+                                    <Sparkles size={16} />
+                                </button>
                             </div>
                         </div>
                     );
                 })()}
+
+                {/* AskAI Modal */}
+                <AskAIModal
+                    isOpen={isAskAIModalOpen}
+                    onClose={() => setIsAskAIModalOpen(false)}
+                    clip={{
+                        id: link.id,
+                        title: link.title || 'Untitled',
+                        url: link.url,
+                        summary: link.summary,
+                        tags: link.tags,
+                        notes: link.notes,
+                        categoryId: link.categoryId
+                    }}
+                    relatedClips={allClips.filter(c => c.id !== link.id).slice(0, 10)}
+                    theme={theme}
+                    language={language}
+                    onSendMessage={handleAskAISendMessage}
+                />
             </motion.div>
         </div>,
         document.body
