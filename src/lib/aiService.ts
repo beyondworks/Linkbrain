@@ -29,9 +29,17 @@ export const getAIConfig = (): AIConfig | null => {
     // Migrate invalid model names to valid ones
     let finalModel = model || getDefaultModel(provider);
 
-    // List of valid models
-    const validOpenAIModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
-    const validGeminiModels = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.0-flash-exp'];
+    // List of valid models - 실제 API에서 작동하는 모델명
+    const validOpenAIModels = [
+        'gpt-5.2-pro', 'gpt-5.2-chat-latest', 'gpt-5.2',  // GPT-5 시리즈
+        'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4',  // GPT-4 시리즈
+        'gpt-3.5-turbo'  // 레거시
+    ];
+    const validGeminiModels = [
+        'gemini-2.5-pro-preview-05-06', 'gemini-2.5-flash-preview-05-20',  // Gemini 2.5
+        'gemini-2.0-flash', 'gemini-2.0-flash-exp',  // Gemini 2.0
+        'gemini-1.5-pro', 'gemini-1.5-flash'  // Gemini 1.5
+    ];
 
     if (provider === 'openai' && !validOpenAIModels.includes(finalModel)) {
         console.warn('[AI Config] Invalid OpenAI model:', finalModel, '- resetting to gpt-4o');
@@ -53,7 +61,7 @@ export const getAIConfig = (): AIConfig | null => {
 };
 
 const getDefaultModel = (provider: 'openai' | 'gemini'): string => {
-    return provider === 'openai' ? 'gpt-4o' : 'gemini-2.0-flash';
+    return provider === 'openai' ? 'gpt-4o' : 'gemini-2.5-flash';
 };
 
 // Validate API key by making a test request
@@ -75,6 +83,12 @@ export const callOpenAI = async (apiKey: string, model: string, prompt: string):
         // Use model directly - SettingsModal now uses real OpenAI model names
         const actualModel = model || 'gpt-4o';
 
+        // GPT-5.2 및 최신 모델은 max_completion_tokens 사용
+        const isNewModel = actualModel.startsWith('gpt-5') || actualModel.startsWith('o1') || actualModel.startsWith('o3') || actualModel.startsWith('o4');
+        const tokenParams = isNewModel
+            ? { max_completion_tokens: 2000 }
+            : { max_tokens: 2000 };
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -84,7 +98,7 @@ export const callOpenAI = async (apiKey: string, model: string, prompt: string):
             body: JSON.stringify({
                 model: actualModel,
                 messages: [{ role: 'user', content: prompt }],
-                max_tokens: 2000,
+                ...tokenParams,
                 temperature: 0.7
             })
         });

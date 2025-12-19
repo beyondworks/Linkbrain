@@ -1019,16 +1019,28 @@ const IntegrationCard = ({ name, icon, description, connected, comingSoon, t, th
 // AI Settings Component - Using REAL OpenAI API model names
 const AI_MODELS = {
     openai: [
-        { id: 'gpt-4o', name: 'GPT-4o (Recommended)' },
-        { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Fast & Cheap)' },
+        // GPT-5 시리즈 (정확한 API 모델명)
+        { id: 'gpt-5.2-pro', name: 'GPT-5.2 Pro (최상위 지능)' },
+        { id: 'gpt-5.2-chat-latest', name: 'GPT-5.2 Chat Latest (최신)' },
+        { id: 'gpt-5.2', name: 'GPT-5.2 (기본)' },
+        // GPT-4 시리즈
+        { id: 'gpt-4o', name: 'GPT-4o (멀티모달 통합)' },
+        { id: 'gpt-4o-mini', name: 'GPT-4o Mini (범용)' },
         { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
         { id: 'gpt-4', name: 'GPT-4' },
-        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo (Fastest)' },
+        // 레거시
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo (빠름)' },
     ],
     gemini: [
-        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Recommended)' },
-        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Fast)' },
-        { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Experimental)' },
+        // Gemini 2.5 시리즈
+        { id: 'gemini-2.5-pro-preview-05-06', name: 'Gemini 2.5 Pro Preview' },
+        { id: 'gemini-2.5-flash-preview-05-20', name: 'Gemini 2.5 Flash Preview' },
+        // Gemini 2.0 시리즈
+        { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
+        { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash Exp' },
+        // Gemini 1.5 시리즈
+        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (안정적)' },
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (빠름)' },
     ]
 };
 
