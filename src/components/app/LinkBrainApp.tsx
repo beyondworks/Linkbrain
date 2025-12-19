@@ -736,6 +736,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          result = result.filter(l => l.isFavorite && !l.isArchived);
       } else if (activeTab === 'archive') {
          result = result.filter(l => l.isArchived);
+      } else if (activeTab === 'askAI') {
+         result = result.filter(l => l.chatHistory && l.chatHistory.length > 0 && !l.isArchived);
       } else if (activeTab === 'home') {
          result = result.filter(l => !l.isArchived);
       } else {
@@ -1363,6 +1365,15 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                      onClick={() => setActiveTab('archive')}
                      theme={theme}
                   />
+                  <NavItem
+                     icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>}
+                     label="AskAI"
+                     count={links.filter(l => l.chatHistory && l.chatHistory.length > 0 && !l.isArchived).length}
+                     active={activeTab === 'askAI'}
+                     onClick={() => setActiveTab('askAI')}
+                     theme={theme}
+                     iconClassName="text-[#21DBA4]"
+                  />
                   <NavItem icon={<Sparkles size={18} />} label={t('aiInsights')} active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} theme={theme} iconClassName="text-[#21DBA4]" />
                </div>
 
@@ -1932,7 +1943,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              activeTab === 'later' ? t('readLater') :
                                                 activeTab === 'favorites' ? t('favorites') :
                                                    activeTab === 'archive' ? t('archive') :
-                                                      categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
+                                                      activeTab === 'askAI' ? 'AskAI' :
+                                                         categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
                                           return title;
                                        })()}
                                     </h1>
@@ -2174,7 +2186,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           activeTab === 'favorites' ? t('favorites') :
                                              activeTab === 'archive' ? t('archive') :
                                                 activeTab === 'insights' ? t('aiInsights') :
-                                                   categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
+                                                   activeTab === 'askAI' ? 'AskAI' :
+                                                      categories.find((c: Category) => c.id === activeTab)?.name || collections.find((c: Collection) => c.id === activeTab)?.name || 'Folder';
 
                                     if (title && title.includes('[Beta]')) {
                                        return (
@@ -2391,6 +2404,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              {link.isFavorite && (
                                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
                                                    <Star size={12} fill="white" className="text-white" />
+                                                </div>
+                                             )}
+                                             {/* Chat History Badge - Show if chatHistory exists */}
+                                             {link.chatHistory && link.chatHistory.length > 0 && (
+                                                <div className={`absolute ${link.isFavorite ? 'top-2 right-10' : 'top-2 right-2'} w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shadow-sm`}>
+                                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                                   </svg>
                                                 </div>
                                              )}
                                           </div>
