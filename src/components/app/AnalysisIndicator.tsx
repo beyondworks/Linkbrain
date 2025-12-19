@@ -140,7 +140,7 @@ export const AnalysisIndicator: React.FC<AnalysisIndicatorProps> = ({ items, log
                     ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-slate-200 shadow-sm hover:bg-slate-50'}`}
             >
                 {/* Status Dot */}
-                <div className="relative">
+                <div className="relative flex items-center justify-center">
                     {primaryStatus === 'analyzing' ? (
                         <>
                             <motion.div
@@ -149,18 +149,18 @@ export const AnalysisIndicator: React.FC<AnalysisIndicatorProps> = ({ items, log
                                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
                             />
                             <motion.div
-                                className={`w-2.5 h-2.5 rounded-full ${config.color}`}
+                                className={`w-2 h-2 rounded-full ${config.color}`}
                                 animate={{ opacity: [1, 0.5, 1] }}
                                 transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
                             />
                         </>
                     ) : (
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${config.color}`} />
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${isDark ? 'bg-slate-500' : 'border-2 border-slate-400'}`} />
                     )}
                 </div>
 
-                {/* Label - always show when analyzing */}
-                <span className={`${primaryStatus === 'analyzing' ? 'inline text-xs font-semibold' : 'hidden md:inline'} ${config.textColor}`}>
+                {/* Label - always show on desktop, show when analyzing on mobile */}
+                <span className={`text-xs font-medium ${primaryStatus === 'analyzing' ? 'inline' : 'hidden md:inline'} ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     {language === 'ko'
                         ? (primaryStatus === 'analyzing' ? '분석중' : config.labelKo)
                         : (primaryStatus === 'analyzing' ? 'Analyzing...' : config.labelEn)}
