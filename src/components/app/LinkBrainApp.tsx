@@ -875,8 +875,33 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-   // Analysis Queue State
-   const [analysisQueue, setAnalysisQueue] = useState<AnalysisItem[]>([]);
+   // Analysis Queue State - persisted to localStorage
+   const [analysisQueue, setAnalysisQueue] = useState<AnalysisItem[]>(() => {
+      try {
+         const saved = localStorage.getItem('analysis_queue');
+         if (saved) {
+            const parsed = JSON.parse(saved);
+            // Filter out items older than 5 minutes (likely stale)
+            const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+            return parsed.filter((item: AnalysisItem) =>
+               item.timestamp && item.timestamp > fiveMinutesAgo &&
+               (item.status === 'analyzing' || item.status === 'pending')
+            );
+         }
+      } catch (e) {
+         console.error('Failed to load analysis queue:', e);
+      }
+      return [];
+   });
+
+   // Persist analysis queue to localStorage
+   useEffect(() => {
+      if (analysisQueue.length > 0) {
+         localStorage.setItem('analysis_queue', JSON.stringify(analysisQueue));
+      } else {
+         localStorage.removeItem('analysis_queue');
+      }
+   }, [analysisQueue]);
 
    const updateAnalysisItem = (id: string, status: AnalysisStatus) => {
       setAnalysisQueue(prev => prev.map(item =>
@@ -915,8 +940,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       // Generate unique ID for this analysis
       const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Clear previous items and add new one as analyzing directly
-      setAnalysisQueue([{ id: analysisId, url, status: 'analyzing' as AnalysisStatus }]);
+      // Clear previous items and add new one as analyzing directly with timestamp
+      setAnalysisQueue([{ id: analysisId, url, status: 'analyzing' as AnalysisStatus, timestamp: Date.now() }]);
 
       // Trigger Animation immediately
       setShowFlyAnimation(true);
@@ -1618,30 +1643,32 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         </span>
                      </div>
 
-                     {/* Search Bar - Desktop */}
-                     <div className="hidden md:flex relative group flex-1 max-w-md mr-auto">
-                        <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#21DBA4] transition-colors pl-4">
-                           <Search size={18} />
-                        </div>
-                        <input
-                           type="text"
-                           value={searchQuery}
-                           onChange={(e) => setSearchQuery(e.target.value)}
-                           placeholder={t('searchPlaceholder')}
-                           className={`w-full h-11 rounded-2xl pl-11 pr-4 text-sm font-medium focus:outline-none transition-all placeholder:text-slate-400 ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700' : 'bg-slate-100/50 hover:bg-slate-100 focus:bg-white focus:shadow-sm focus:ring-1 focus:ring-[#21DBA4]/20 text-slate-900'}`}
-                        />
-                        {searchQuery && (
-                           <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-12 flex items-center text-slate-400 hover:text-slate-600">
-                              <X size={14} />
-                           </button>
-                        )}
-                        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                           <div className={`flex items-center gap-1 px-1.5 py-1 rounded-md ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-white/50 border border-slate-200/50'}`}>
-                              <span className="text-[10px] text-slate-400 font-bold">⌘</span>
-                              <span className="text-[10px] text-slate-400 font-bold">K</span>
+                     {/* Search Bar - Desktop - Hide on insights/discovery */}
+                     {activeTab !== 'insights' && activeTab !== 'discovery' && (
+                        <div className="hidden md:flex relative group flex-1 max-w-md mr-auto">
+                           <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#21DBA4] transition-colors pl-4">
+                              <Search size={18} />
+                           </div>
+                           <input
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              placeholder={t('searchPlaceholder')}
+                              className={`w-full h-11 rounded-2xl pl-11 pr-4 text-sm font-medium focus:outline-none transition-all placeholder:text-slate-400 ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700' : 'bg-slate-100/50 hover:bg-slate-100 focus:bg-white focus:shadow-sm focus:ring-1 focus:ring-[#21DBA4]/20 text-slate-900'}`}
+                           />
+                           {searchQuery && (
+                              <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-12 flex items-center text-slate-400 hover:text-slate-600">
+                                 <X size={14} />
+                              </button>
+                           )}
+                           <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                              <div className={`flex items-center gap-1 px-1.5 py-1 rounded-md ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-white/50 border border-slate-200/50'}`}>
+                                 <span className="text-[10px] text-slate-400 font-bold">⌘</span>
+                                 <span className="text-[10px] text-slate-400 font-bold">K</span>
+                              </div>
                            </div>
                         </div>
-                     </div>
+                     )}
 
                      {/* Mobile Search Toggle Overlay */}
                      {mobileSearchOpen && (
@@ -1680,29 +1707,33 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            </button>
                         )}
 
-                        <button className="md:hidden p-2 text-slate-500" onClick={() => setMobileSearchOpen(!mobileSearchOpen)}>
-                           <Search size={20} />
-                        </button>
+                        {activeTab !== 'insights' && activeTab !== 'discovery' && (
+                           <button className="md:hidden p-2 text-slate-500" onClick={() => setMobileSearchOpen(!mobileSearchOpen)}>
+                              <Search size={20} />
+                           </button>
+                        )}
 
                         {/* Analysis Status Indicator - positioned before divider */}
                         <AnalysisIndicator items={analysisQueue} logs={analysisLogs} theme={theme} language={language} />
 
                         <div className={`h-6 w-px hidden md:block ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
 
-                        <div className={`flex items-center gap-1 rounded-lg p-0.5 hidden md:flex ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                           <button
-                              onClick={() => setViewMode('grid')}
-                              className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600'}`}
-                           >
-                              <Grid size={16} />
-                           </button>
-                           <button
-                              onClick={() => setViewMode('list')}
-                              className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600'}`}
-                           >
-                              <List size={16} />
-                           </button>
-                        </div>
+                        {activeTab !== 'insights' && activeTab !== 'discovery' && (
+                           <div className={`flex items-center gap-1 rounded-lg p-0.5 hidden md:flex ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                              <button
+                                 onClick={() => setViewMode('grid')}
+                                 className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600'}`}
+                              >
+                                 <Grid size={16} />
+                              </button>
+                              <button
+                                 onClick={() => setViewMode('list')}
+                                 className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600'}`}
+                              >
+                                 <List size={16} />
+                              </button>
+                           </div>
+                        )}
 
                         <button
                            onClick={() => setIsSelectionMode(!isSelectionMode)}
@@ -2024,92 +2055,95 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              setIsFilterOpen(false);
                                           }}
                                        />
-                                       <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute left-0 top-full mt-1 w-full rounded-xl shadow-xl border py-2 z-30 overflow-hidden max-h-[60vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
-                                          <div className="px-4 py-2">
-                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
-                                             <div className="mt-2 space-y-1">
-                                                {[
-                                                   { id: 'date-desc', label: t('recentlyAdded') },
-                                                   { id: 'date-asc', label: t('oldestFirst') }
-                                                ].map((opt) => (
-                                                   <button
-                                                      key={opt.id}
-                                                      onClick={() => setSortBy(opt.id as any)}
-                                                      className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
-                                                   >
-                                                      {opt.label}
-                                                      {sortBy === opt.id && <Check size={14} />}
-                                                   </button>
-                                                ))}
-                                             </div>
-                                          </div>
-
-                                          <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-
-                                          {/* Date Range Filter */}
-                                          <div className="px-4 py-2">
-                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
-                                             <div className="mt-2 flex flex-wrap gap-1.5">
-                                                {[
-                                                   { id: 'all', label: '전체' },
-                                                   { id: 'today', label: '오늘' },
-                                                   { id: 'week', label: '이번 주' },
-                                                   { id: 'month', label: '이번 달' }
-                                                ].map((opt) => (
-                                                   <button
-                                                      key={opt.id}
-                                                      onClick={() => setFilterDateRange(opt.id as any)}
-                                                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
-                                                   >
-                                                      {opt.label}
-                                                   </button>
-                                                ))}
-                                             </div>
-                                          </div>
-
-                                          {availableCategories.length > 0 && (
-                                             <>
-                                                <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                                <div className="px-4 py-2">
-                                                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
-                                                   <div className="mt-2 space-y-1">
-                                                      {availableCategories.map(cat => (
-                                                         <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
-                                                            <div
-                                                               onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
-                                                               className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                            >
-                                                               {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
-                                                            </div>
-                                                            <span className={`text-sm ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
-                                                         </label>
-                                                      ))}
-                                                   </div>
+                                       <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute left-0 top-full mt-1 w-4/5 rounded-xl shadow-xl border z-30 overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
+                                          {/* Scrollable Content */}
+                                          <div className="max-h-[50vh] overflow-y-auto overscroll-contain">
+                                             <div className="px-3 py-1.5">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
+                                                <div className="mt-1 space-y-0.5">
+                                                   {[
+                                                      { id: 'date-desc', label: t('recentlyAdded') },
+                                                      { id: 'date-asc', label: t('oldestFirst') }
+                                                   ].map((opt) => (
+                                                      <button
+                                                         key={opt.id}
+                                                         onClick={() => setSortBy(opt.id as any)}
+                                                         className={`w-full text-left flex items-center justify-between text-xs py-1 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
+                                                      >
+                                                         {opt.label}
+                                                         {sortBy === opt.id && <Check size={12} />}
+                                                      </button>
+                                                   ))}
                                                 </div>
-                                             </>
-                                          )}
+                                             </div>
 
-                                          {availableSources.length > 0 && (
-                                             <>
-                                                <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                                <div className="px-4 py-2">
-                                                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
-                                                   <div className="mt-2 space-y-1">
-                                                      {availableSources.map(src => (
-                                                         <label key={src} className="flex items-center gap-2 cursor-pointer group">
-                                                            <div
-                                                               onClick={() => toggleFilter(setFilterSources, filterSources, src)}
-                                                               className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                            >
-                                                               {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
-                                                            </div>
-                                                            <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
-                                                         </label>
-                                                      ))}
-                                                   </div>
+                                             <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+
+                                             {/* Date Range Filter */}
+                                             <div className="px-3 py-1.5">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">기간</span>
+                                                <div className="mt-1 flex flex-wrap gap-1">
+                                                   {[
+                                                      { id: 'all', label: '전체' },
+                                                      { id: 'today', label: '오늘' },
+                                                      { id: 'week', label: '이번 주' },
+                                                      { id: 'month', label: '이번 달' }
+                                                   ].map((opt) => (
+                                                      <button
+                                                         key={opt.id}
+                                                         onClick={() => setFilterDateRange(opt.id as any)}
+                                                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                                      >
+                                                         {opt.label}
+                                                      </button>
+                                                   ))}
                                                 </div>
-                                             </>
-                                          )}
+                                             </div>
+
+                                             {availableCategories.length > 0 && (
+                                                <>
+                                                   <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                                   <div className="px-3 py-1.5">
+                                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
+                                                      <div className="mt-1 space-y-1">
+                                                         {availableCategories.map(cat => (
+                                                            <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer group">
+                                                               <div
+                                                                  onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                               >
+                                                                  {filterCategories.includes(cat.id) && <Check size={8} strokeWidth={4} />}
+                                                               </div>
+                                                               <span className={`text-xs truncate ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
+                                                            </label>
+                                                         ))}
+                                                      </div>
+                                                   </div>
+                                                </>
+                                             )}
+
+                                             {availableSources.length > 0 && (
+                                                <>
+                                                   <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                                   <div className="px-3 py-1.5">
+                                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Source</span>
+                                                      <div className="mt-1 space-y-1">
+                                                         {availableSources.map(src => (
+                                                            <label key={src} className="flex items-center gap-1.5 cursor-pointer group">
+                                                               <div
+                                                                  onClick={() => toggleFilter(setFilterSources, filterSources, src)}
+                                                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                               >
+                                                                  {filterSources.includes(src) && <Check size={8} strokeWidth={4} />}
+                                                               </div>
+                                                               <span className={`text-xs truncate ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
+                                                            </label>
+                                                         ))}
+                                                      </div>
+                                                   </div>
+                                                </>
+                                             )}
+                                          </div>
                                        </div>
                                     </>
                                  )}
@@ -2161,159 +2195,161 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               </p>
                            </div>
 
-                           {/* Sort & Advanced Filter Dropdown */}
-                           <div className="relative hidden md:block" ref={filterRef}>
-                              <div
-                                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                 className={`hidden md:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
-                                    ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4] dark:bg-[#21DBA4]/20'
-                                    : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-[#21DBA4]/50' : 'bg-white border-slate-200 text-slate-500 hover:border-[#21DBA4]/50'
-                                    }`}
-                              >
-                                 <Filter size={14} />
-                                 {t('filterSort')}
-                                 {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0) && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></span>
-                                 )}
-                                 <ChevronDown size={14} />
-                              </div>
+                           {/* Sort & Advanced Filter Dropdown - Hide on insights/discovery */}
+                           {activeTab !== 'insights' && activeTab !== 'discovery' && (
+                              <div className="relative hidden md:block" ref={filterRef}>
+                                 <div
+                                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                    className={`hidden md:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
+                                       ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4] dark:bg-[#21DBA4]/20'
+                                       : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-[#21DBA4]/50' : 'bg-white border-slate-200 text-slate-500 hover:border-[#21DBA4]/50'
+                                       }`}
+                                 >
+                                    <Filter size={14} />
+                                    {t('filterSort')}
+                                    {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0) && (
+                                       <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4]"></span>
+                                    )}
+                                    <ChevronDown size={14} />
+                                 </div>
 
-                              {isFilterOpen && (
-                                 <>
-                                    <div
-                                       className="fixed inset-0 z-10 bg-transparent"
-                                       onClick={() => setIsFilterOpen(false)}
-                                    />
-                                    <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[80vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
-                                       <div className="px-4 py-2">
-                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
-                                          <div className="mt-2 space-y-1">
-                                             {[
-                                                { id: 'date-desc', label: t('recentlyAdded') },
-                                                { id: 'date-asc', label: t('oldestFirst') }
-                                             ].map((opt) => (
-                                                <button
-                                                   key={opt.id}
-                                                   onClick={() => setSortBy(opt.id as any)}
-                                                   className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
-                                                >
-                                                   {opt.label}
-                                                   {sortBy === opt.id && <Check size={14} />}
-                                                </button>
-                                             ))}
-                                          </div>
-                                       </div>
-
-                                       <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-
-                                       {/* Date Range Filter */}
-                                       <div className="px-4 py-2">
-                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
-                                          <div className="mt-2 flex flex-wrap gap-1.5">
-                                             {[
-                                                { id: 'all', label: '전체' },
-                                                { id: 'today', label: '오늘' },
-                                                { id: 'week', label: '이번 주' },
-                                                { id: 'month', label: '이번 달' }
-                                             ].map((opt) => (
-                                                <button
-                                                   key={opt.id}
-                                                   onClick={() => setFilterDateRange(opt.id as any)}
-                                                   className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
-                                                >
-                                                   {opt.label}
-                                                </button>
-                                             ))}
-                                          </div>
-                                       </div>
-
-                                       <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-
-                                       {availableCategories.length > 0 && (
+                                 {isFilterOpen && (
+                                    <>
+                                       <div
+                                          className="fixed inset-0 z-10 bg-transparent"
+                                          onClick={() => setIsFilterOpen(false)}
+                                       />
+                                       <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[80vh] overflow-y-auto no-scrollbar ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
                                           <div className="px-4 py-2">
-                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
+                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
                                              <div className="mt-2 space-y-1">
-                                                {availableCategories.map(cat => (
-                                                   <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
-                                                      <div
-                                                         onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
-                                                         className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                      >
-                                                         {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
-                                                      </div>
-                                                      <span className={`text-sm ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
-                                                   </label>
+                                                {[
+                                                   { id: 'date-desc', label: t('recentlyAdded') },
+                                                   { id: 'date-asc', label: t('oldestFirst') }
+                                                ].map((opt) => (
+                                                   <button
+                                                      key={opt.id}
+                                                      onClick={() => setSortBy(opt.id as any)}
+                                                      className={`w-full text-left flex items-center justify-between text-sm py-1.5 ${sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}
+                                                   >
+                                                      {opt.label}
+                                                      {sortBy === opt.id && <Check size={14} />}
+                                                   </button>
                                                 ))}
                                              </div>
                                           </div>
-                                       )}
 
-                                       {availableSources.length > 0 && (
-                                          <>
-                                             <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                          <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+
+                                          {/* Date Range Filter */}
+                                          <div className="px-4 py-2">
+                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">기간</span>
+                                             <div className="mt-2 flex flex-wrap gap-1.5">
+                                                {[
+                                                   { id: 'all', label: '전체' },
+                                                   { id: 'today', label: '오늘' },
+                                                   { id: 'week', label: '이번 주' },
+                                                   { id: 'month', label: '이번 달' }
+                                                ].map((opt) => (
+                                                   <button
+                                                      key={opt.id}
+                                                      onClick={() => setFilterDateRange(opt.id as any)}
+                                                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                                   >
+                                                      {opt.label}
+                                                   </button>
+                                                ))}
+                                             </div>
+                                          </div>
+
+                                          <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+
+                                          {availableCategories.length > 0 && (
                                              <div className="px-4 py-2">
-                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
                                                 <div className="mt-2 space-y-1">
-                                                   {availableSources.map(src => (
-                                                      <label key={src} className="flex items-center gap-2 cursor-pointer group">
+                                                   {availableCategories.map(cat => (
+                                                      <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
                                                          <div
-                                                            onClick={() => toggleFilter(setFilterSources, filterSources, src)}
-                                                            className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                            onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                                            className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
                                                          >
-                                                            {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
+                                                            {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
                                                          </div>
-                                                         <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
+                                                         <span className={`text-sm ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
                                                       </label>
                                                    ))}
                                                 </div>
                                              </div>
-                                          </>
-                                       )}
+                                          )}
 
-                                       {availableTags.length > 0 && (
-                                          <>
-                                             <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                             <div className="px-4 py-2">
-                                                <div className="flex items-center justify-between mb-2">
-                                                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('tags')}</span>
-                                                   {availableTags.length > 8 && (
-                                                      <button
-                                                         onClick={() => setShowAllTags(!showAllTags)}
-                                                         className="text-[10px] font-bold text-[#21DBA4] hover:text-[#1BC491]"
-                                                      >
-                                                         {showAllTags ? '접기' : `더보기 (+${availableTags.length - 8})`}
-                                                      </button>
-                                                   )}
+                                          {availableSources.length > 0 && (
+                                             <>
+                                                <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                                <div className="px-4 py-2">
+                                                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
+                                                   <div className="mt-2 space-y-1">
+                                                      {availableSources.map(src => (
+                                                         <label key={src} className="flex items-center gap-2 cursor-pointer group">
+                                                            <div
+                                                               onClick={() => toggleFilter(setFilterSources, filterSources, src)}
+                                                               className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                            >
+                                                               {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
+                                                            </div>
+                                                            <span className={`text-sm ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
+                                                         </label>
+                                                      ))}
+                                                   </div>
                                                 </div>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                   {(showAllTags ? availableTags : availableTags.slice(0, 8)).map((tag: string) => (
-                                                      <button
-                                                         key={tag}
-                                                         onClick={() => toggleFilter(setFilterTags, filterTags, tag)}
-                                                         className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${filterTags.includes(tag) ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
-                                                      >
-                                                         #{tag}
-                                                      </button>
-                                                   ))}
+                                             </>
+                                          )}
+
+                                          {availableTags.length > 0 && (
+                                             <>
+                                                <div className={`h-px my-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                                <div className="px-4 py-2">
+                                                   <div className="flex items-center justify-between mb-2">
+                                                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('tags')}</span>
+                                                      {availableTags.length > 8 && (
+                                                         <button
+                                                            onClick={() => setShowAllTags(!showAllTags)}
+                                                            className="text-[10px] font-bold text-[#21DBA4] hover:text-[#1BC491]"
+                                                         >
+                                                            {showAllTags ? '접기' : `더보기 (+${availableTags.length - 8})`}
+                                                         </button>
+                                                      )}
+                                                   </div>
+                                                   <div className="flex flex-wrap gap-1.5">
+                                                      {(showAllTags ? availableTags : availableTags.slice(0, 8)).map((tag: string) => (
+                                                         <button
+                                                            key={tag}
+                                                            onClick={() => toggleFilter(setFilterTags, filterTags, tag)}
+                                                            className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${filterTags.includes(tag) ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
+                                                         >
+                                                            #{tag}
+                                                         </button>
+                                                      ))}
+                                                   </div>
                                                 </div>
+                                             </>
+                                          )}
+
+                                          {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0 || filterDateRange !== 'all') && (
+                                             <div className={`p-2 border-t mt-1 ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
+                                                <button
+                                                   onClick={() => { setFilterCategories([]); setFilterSources([]); setFilterTags([]); setFilterDateRange('all'); }}
+                                                   className="w-full text-center text-xs font-bold text-red-500 hover:text-red-600 py-1"
+                                                >
+                                                   {t('resetFilters')}
+                                                </button>
                                              </div>
-                                          </>
-                                       )}
-
-                                       {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0 || filterDateRange !== 'all') && (
-                                          <div className={`p-2 border-t mt-1 ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
-                                             <button
-                                                onClick={() => { setFilterCategories([]); setFilterSources([]); setFilterTags([]); setFilterDateRange('all'); }}
-                                                className="w-full text-center text-xs font-bold text-red-500 hover:text-red-600 py-1"
-                                             >
-                                                {t('resetFilters')}
-                                             </button>
-                                          </div>
-                                       )}
-                                    </div>
-                                 </>
-                              )}
-                           </div>
+                                          )}
+                                       </div>
+                                    </>
+                                 )}
+                              </div>
+                           )}
                         </div>
 
                         {/* Grid / List View */}
@@ -2337,8 +2373,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        <div
                                           key={link.id}
                                           onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
-                                          className={`rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'
-                                             } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : 'border border-slate-100 shadow-sm'}`}
+                                          className={`rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
+                                             } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : ''}`}
                                        >
                                           {/* 16:9 Image */}
                                           <div className="relative aspect-video overflow-hidden">

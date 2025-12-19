@@ -139,28 +139,44 @@ export const AnalysisIndicator: React.FC<AnalysisIndicatorProps> = ({ items, log
                 className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all whitespace-nowrap
                     ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-slate-200 shadow-sm hover:bg-slate-50'}`}
             >
-                {/* Status Dot */}
+                {/* Status Dot - Color varies by status */}
                 <div className="relative flex items-center justify-center">
                     {primaryStatus === 'analyzing' ? (
+                        // 분석 중: 민트색 깜빡임 애니메이션
                         <>
                             <motion.div
-                                className={`absolute inset-0 rounded-full ${config.color} opacity-40`}
-                                animate={{ scale: [1, 1.8, 1], opacity: [0.4, 0, 0.4] }}
-                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                                className="absolute inset-0 rounded-full bg-[#21DBA4] opacity-40"
+                                animate={{ scale: [1, 2, 1], opacity: [0.4, 0, 0.4] }}
+                                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
                             />
                             <motion.div
-                                className={`w-2 h-2 rounded-full ${config.color}`}
-                                animate={{ opacity: [1, 0.5, 1] }}
-                                transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                                className="w-2 h-2 rounded-full bg-[#21DBA4]"
+                                animate={{ opacity: [1, 0.4, 1] }}
+                                transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
                             />
                         </>
+                    ) : primaryStatus === 'complete' ? (
+                        // 분석 완료: 파란색
+                        <div className="w-2 h-2 rounded-full shrink-0 bg-blue-500" />
+                    ) : primaryStatus === 'error' ? (
+                        // 오류: 빨간색
+                        <div className="w-2 h-2 rounded-full shrink-0 bg-red-500" />
+                    ) : primaryStatus === 'pending' ? (
+                        // 대기열: 노란색
+                        <div className="w-2 h-2 rounded-full shrink-0 bg-amber-400" />
                     ) : (
+                        // 대기 중 (idle): 회색
                         <div className={`w-2 h-2 rounded-full shrink-0 ${isDark ? 'bg-slate-500' : 'border-2 border-slate-400'}`} />
                     )}
                 </div>
 
-                {/* Label - always show on desktop, show when analyzing on mobile */}
-                <span className={`text-xs font-medium ${primaryStatus === 'analyzing' ? 'inline' : 'hidden md:inline'} ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                {/* Label - Color changes based on status */}
+                <span className={`text-xs font-medium ${primaryStatus === 'analyzing' ? 'inline' : 'hidden md:inline'} ${primaryStatus === 'analyzing' ? 'text-[#21DBA4]' :
+                        primaryStatus === 'complete' ? 'text-blue-500' :
+                            primaryStatus === 'error' ? 'text-red-500' :
+                                primaryStatus === 'pending' ? 'text-amber-500' :
+                                    isDark ? 'text-slate-400' : 'text-slate-500'
+                    }`}>
                     {language === 'ko'
                         ? (primaryStatus === 'analyzing' ? '분석중' : config.labelKo)
                         : (primaryStatus === 'analyzing' ? 'Analyzing...' : config.labelEn)}
