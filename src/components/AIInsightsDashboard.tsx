@@ -1,9 +1,31 @@
-import { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
-import { Brain, TrendingUp, Clock, BookOpen, Tag, Globe, Zap, Target, Network, Calendar, Loader2, FileText, Sparkles, X, Lightbulb } from 'lucide-react';
-import { auth, db } from '../lib/firebase';
-import { collection, query, where, orderBy, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { useState, useMemo } from 'react';
+import {
+  Clock,
+  Zap,
+  TrendingUp,
+  ShieldCheck,
+  Calendar,
+  Search,
+  Filter,
+  RefreshCw,
+  PenTool,
+  Layout,
+  FileBarChart,
+  FileText,
+  Sparkles,
+  CheckCircle2,
+  CheckSquare,
+  Square,
+  MessageSquare,
+  History,
+  ChevronRight,
+  Loader2,
+  Eye,
+  ChevronDown,
+  X
+} from 'lucide-react';
+import { useSubscription } from '../hooks/useSubscription';
+import { toast } from 'sonner';
 
 type AIInsightsDashboardProps = {
   links: any[];
@@ -14,1871 +36,707 @@ type AIInsightsDashboardProps = {
   onOpenSettings?: () => void;
 };
 
-// URL에서 도메인 추출
-const extractDomain = (url: string): string => {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname.replace('www.', '');
-  } catch {
-    // URL이 프로토콜 없이 시작하는 경우
-    const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/\?]+)/);
-    return match ? match[1] : url.split('/')[0] || 'unknown';
-  }
+// Helper: Parse Firestore Timestamp
+const parseDate = (createdAt: any): Date | null => {
+  if (!createdAt) return null;
+  if (createdAt.seconds) return new Date(createdAt.seconds * 1000);
+  if (createdAt.toDate) return createdAt.toDate();
+  const d = new Date(createdAt);
+  return isNaN(d.getTime()) ? null : d;
 };
-
-// 플랫폼 이름 표시
-const getPlatformName = (domain: string): string => {
-  const platforms: Record<string, string> = {
-    'youtube.com': 'YouTube',
-    'youtu.be': 'YouTube',
-    'instagram.com': 'Instagram',
-    'threads.net': 'Threads',
-    'twitter.com': 'Twitter',
-    'x.com': 'Twitter',
-    'linkedin.com': 'LinkedIn',
-    'github.com': 'GitHub',
-    'medium.com': 'Medium',
-    'notion.so': 'Notion',
-    'figma.com': 'Figma',
-  };
-  return platforms[domain] || domain;
-};
-
-// 주제 카테고리 매핑 (영어/한국어)
-const topicPatterns: Record<string, { en: string; ko: string; keywords: string[] }> = {
-  'Design': { en: 'Design', ko: '디자인', keywords: ['design', 'ui', 'ux', 'figma', 'sketch', '디자인', 'css', 'style'] },
-  'AI/ML': { en: 'AI/ML', ko: 'AI/ML', keywords: ['ai', 'ml', 'machine learning', 'gpt', 'llm', 'gemini', '인공지능', 'artificial intelligence', 'deep learning'] },
-  'Dev': { en: 'Dev', ko: '개발', keywords: ['dev', 'code', 'programming', 'react', 'next', 'javascript', 'typescript', 'python', '개발', 'api', 'backend', 'frontend'] },
-  'Business': { en: 'Business', ko: '비즈니스', keywords: ['business', 'marketing', 'startup', 'strategy', '비즈니스', '마케팅', 'growth', 'product'] },
-  'Trends': { en: 'Trends', ko: '트렌드', keywords: ['trend', 'future', '트렌드', '미래', 'tech', 'innovation', '혁신'] },
-};
-
-// 품질 분석 라벨 (영어/한국어)
-const qualityLabels: Record<string, { en: string; ko: string }> = {
-  'excellent': { en: 'Excellent (90+)', ko: '매우 좋음 (90+)' },
-  'great': { en: 'Great (80-89)', ko: '좋음 (80-89)' },
-  'good': { en: 'Good (70-79)', ko: '보통 (70-79)' },
-  'fair': { en: 'Fair (60-69)', ko: '낮음 (60-69)' },
-  'low': { en: 'Low (<60)', ko: '매우 낮음 (<60)' },
-};
-
-// 마크다운 문법 제거 헬퍼
-const stripMarkdown = (text: string): string => {
-  return text
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    .replace(/_([^_]+)_/g, '$1');
-};
-
-// 인라인 마크다운 렌더링 (Bold, Italic 지원)
-const renderInlineMarkdown = (text: string) => {
-  // Split by bold (**text**)
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
-    }
-    return part;
-  });
-};
-
-// 콘텐츠 갭 탐지용 주제 (영어/한국어)
-const contentGapTopics = [
-  { id: 'mobile', labelEn: 'Mobile Development', labelKo: '모바일 개발', keywords: ['mobile', 'ios', 'android', 'swift', 'kotlin', 'flutter'] },
-  { id: 'data', labelEn: 'Data Visualization', labelKo: '데이터 시각화', keywords: ['data', 'visualization', 'chart', 'd3', 'analytics'] },
-  { id: 'product', labelEn: 'Product Strategy', labelKo: '제품 전략', keywords: ['product', 'strategy', 'roadmap', 'planning'] },
-  { id: 'team', labelEn: 'Team Management', labelKo: '팀 매니지먼트', keywords: ['team', 'management', 'leadership', 'hiring'] },
-  { id: 'security', labelEn: 'Security', labelKo: '보안', keywords: ['security', 'auth', 'encryption', 'privacy'] },
-  { id: 'performance', labelEn: 'Performance', labelKo: '성능 최적화', keywords: ['performance', 'optimization', 'speed', 'cache'] },
-];
-
-import { useSubscription } from '../hooks/useSubscription';
-import { toast } from 'sonner';
 
 export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'ko', onOpenSettings }: AIInsightsDashboardProps) => {
   const isDark = theme === 'dark';
-  const { canUseAI } = useSubscription(); // Use hook
-  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'custom'>('weekly');
-  const [customStartDate, setCustomStartDate] = useState<string>(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  );
-  const [customEndDate, setCustomEndDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
-  const [loading, setLoading] = useState(false);
-  const [firestoreClips, setFirestoreClips] = useState<any[]>([]);
-
-  // Insights Report states (현재 요약 기능)
+  const { canUseAI } = useSubscription();
+  const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
+  const [selectedClips, setSelectedClips] = useState<string[]>([]);
+  const [selectedContentType, setSelectedContentType] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [generatingReport, setGeneratingReport] = useState(false);
-  const [generatedReport, setGeneratedReport] = useState<{
-    title: string;
-    content: string;
-    topics: string[];
-    wordCount: number;
-    generatedAt: string;
-  } | null>(null);
-  const [showReport, setShowReport] = useState(false);
-
-  // AI Article states (새로운 오리지널 콘텐츠 생성)
   const [generatingArticle, setGeneratingArticle] = useState(false);
-  const [generatedArticle, setGeneratedArticle] = useState<{
-    title: string;
-    content: string;
-    topics: string[];
-    wordCount: number;
-    generatedAt: string;
-  } | null>(null);
-  const [showArticle, setShowArticle] = useState(false);
 
-  // History storage for reports and articles
-  const [reportHistory, setReportHistory] = useState<Array<{
-    id: string;
-    title: string;
-    content: string;
-    topics: string[];
-    wordCount: number;
-    generatedAt: string;
-  }>>([]);
-  const [articleHistory, setArticleHistory] = useState<Array<{
-    id: string;
-    title: string;
-    content: string;
-    topics: string[];
-    wordCount: number;
-    generatedAt: string;
-  }>>([]);
-  const [showHistoryList, setShowHistoryList] = useState<'report' | 'article' | null>(null);
-  const [showAllHistory, setShowAllHistory] = useState(false);
-  const [pendingDeleteItem, setPendingDeleteItem] = useState<{ id: string; type: 'report' | 'article'; title: string } | null>(null);
-
-  // Helper to save history to Firestore
-  const saveHistoryToFirestore = async (type: 'reports' | 'articles', history: any[]) => {
-    const user = auth.currentUser;
-    if (user) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'ai_history', type), { items: history }, { merge: true });
-      } catch (e) { console.error("Failed to save history to Firestore", e); }
-    }
-  };
-
-  // Load history from localStorage AND Firestore
-  useEffect(() => {
-    // 1. Load from LocalStorage (Instant)
-    const savedReports = localStorage.getItem('ai_reports_history');
-    const savedArticles = localStorage.getItem('ai_articles_history');
-    if (savedReports) setReportHistory(JSON.parse(savedReports));
-    if (savedArticles) setArticleHistory(JSON.parse(savedArticles));
-
-    // 2. Sync from Firestore (Async)
-    const loadFirestoreHistory = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-      try {
-        const reportDoc = await getDoc(doc(db, 'users', user.uid, 'ai_history', 'reports'));
-        if (reportDoc.exists()) {
-          const data = reportDoc.data().items || [];
-          // Merge or overwrite? Overwrite is safer for sync, assuming Firestore is truth
-          setReportHistory(data);
-          localStorage.setItem('ai_reports_history', JSON.stringify(data));
-        }
-        const articleDoc = await getDoc(doc(db, 'users', user.uid, 'ai_history', 'articles'));
-        if (articleDoc.exists()) {
-          const data = articleDoc.data().items || [];
-          setArticleHistory(data);
-          localStorage.setItem('ai_articles_history', JSON.stringify(data));
-        }
-      } catch (e) { console.error("Error loading AI history from Firestore", e); }
-    };
-    loadFirestoreHistory();
-  }, []);
-
-  // Check if user has configured AI API key
-  const isAIConfigured = typeof window !== 'undefined' && (localStorage.getItem('ai_api_key') || '').length > 10;
-  const [showApiTooltip, setShowApiTooltip] = useState<'report' | 'article' | null>(null);
-
-  // Firestore에서 클립 데이터 가져오기
-  useEffect(() => {
-    const fetchClips = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      setLoading(true);
-      try {
-        const clipsRef = collection(db, 'clips');
-        const q = query(
-          clipsRef,
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        const clips = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setFirestoreClips(clips);
-      } catch (err) {
-        console.error('[AIInsights] Firestore fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClips();
-  }, []);
-
-  // 연관 클립 찾기 (Client-side Contextual Search)
-  // Enhanced: 카테고리 매칭, 날짜순 정렬 (오래된 것 우선으로 맥락 제공)
-  const findRelatedClips = (targetClips: any[], allClips: any[], limit = 10) => {
-    // 1. 타겟 클립들의 주요 키워드 및 카테고리 추출
-    const keywords = new Set<string>();
-    const targetCategories = new Set<string>();
-    targetClips.forEach(clip => {
-      (clip.tags || clip.keywords || []).forEach((k: string) => keywords.add(k.toLowerCase()));
-      if (clip.category) targetCategories.add(clip.category.toLowerCase());
-      if (clip.categoryId) targetCategories.add(clip.categoryId.toLowerCase());
-    });
-    const targetIds = new Set(targetClips.map(c => c.id));
-
-    // 2. 전체 클립 중 타겟 클립 제외하고 점수 계산
-    const scoredClips = allClips
-      .filter(clip => !targetIds.has(clip.id)) // 타겟 클립 제외
-      .map(clip => {
-        let score = 0;
-        const clipKeywords = (clip.tags || clip.keywords || []).map((k: string) => k.toLowerCase());
-
-        // 키워드 매칭 점수
-        clipKeywords.forEach((k: string) => {
-          if (keywords.has(k)) score += 2;
-        });
-
-        // 카테고리 매칭 점수 (NEW)
-        const clipCategory = (clip.category || clip.categoryId || '').toLowerCase();
-        if (clipCategory && targetCategories.has(clipCategory)) {
-          score += 3; // 카테고리 일치는 높은 점수
-        }
-
-        // 제목/요약 매칭 (간단한 포함 여부)
-        const content = ((clip.title || '') + ' ' + (clip.summary || '')).toLowerCase();
-        Array.from(keywords).forEach(k => {
-          if (content.includes(k)) score += 1;
-        });
-
-        // 날짜 정보 추출 (정렬용)
-        const timestamp = clip.createdAt?.seconds
-          ? clip.createdAt.seconds * 1000
-          : clip.createdAt?.toDate?.()?.getTime?.() || clip.timestamp || 0;
-
-        return { clip, score, timestamp };
-      })
-      .filter(item => item.score > 0)
-      .sort((a, b) => {
-        // 1차: 점수 높은 순
-        if (b.score !== a.score) return b.score - a.score;
-        // 2차: 날짜 오래된 순 (맥락 배경용)
-        return a.timestamp - b.timestamp;
-      });
-
-    return scoredClips.slice(0, limit).map(item => item.clip);
-  };
-
-  // 인사이트 리포트 생성 함수 (실제 AI API 사용)
-  const generateReport = async () => {
-    const user = auth.currentUser;
-    if (!user || filteredData.length < 3) return;
-
-    if (!canUseAI) {
-      toast.error(language === 'ko'
-        ? 'AI 기능은 무료 체험 기간 또는 프로 플랜에서만 사용할 수 있습니다.'
-        : 'AI features are only available during Free Trial or Pro Plan.');
-      return;
-    }
-
-    // API 미설정 시 설정 열기
-    if (!isAIConfigured) {
-      onOpenSettings?.();
-      return;
-    }
-
-    // ...
-
-
-    setGeneratingReport(true);
-
-    try {
-      // 선택 기간 클립: 최대 15개 (AI 분석 우선순위용)
-      const topClips = filteredData
-        .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
-        .slice(0, 15);
-
-      const topicsSet = new Set<string>();
-      topClips.forEach(clip => {
-        (clip.tags || clip.keywords || []).forEach((t: string) => {
-          topicsSet.add(t);
-        });
-      });
-      const topTopics = Array.from(topicsSet).slice(0, 5);
-
-      const periodText = period === 'weekly'
-        ? (language === 'ko' ? '이번 주' : 'this week')
-        : period === 'monthly'
-          ? (language === 'ko' ? '이번 달' : 'this month')
-          : (language === 'ko' ? `${customStartDate} ~ ${customEndDate}` : `${customStartDate} ~ ${customEndDate}`);
-
-      const startDate = period === 'custom' ? customStartDate : new Date(Date.now() - (period === 'weekly' ? 7 : 30) * 86400000).toISOString().split('T')[0];
-      const endDate = period === 'custom' ? customEndDate : new Date().toISOString().split('T')[0];
-
-      // 연관 클립 찾기 (Knowledge Map) - 과거 맥락용 최대 10개
-      const relatedClips = findRelatedClips(topClips, allActiveLinks, 10);
-
-      // 실제 AI API 호출 시도
-      let reportContent = '';
-      try {
-        const { generateAIReport } = await import('../lib/aiService');
-        // Updated interface call
-        const result = await generateAIReport(topClips, relatedClips, startDate, endDate, language);
-
-        if (result.success && result.content) {
-          reportContent = result.content;
-        } else {
-          throw new Error(result.error || 'AI generation failed');
-        }
-      } catch (aiError) {
-        console.warn('[AIInsights] AI API failed, using local generation:', aiError);
-        // Fallback to local template
-        reportContent = language === 'ko'
-          ? generateKoreanReport(topClips, topTopics, periodText)
-          : generateEnglishReport(topClips, topTopics, periodText);
-      }
-
-      const newReport = {
-        id: Date.now().toString(),
-        title: language === 'ko'
-          ? `${periodText} 인사이트 리포트`
-          : `${periodText} Insights Report`,
-        content: reportContent,
-        topics: topTopics,
-        wordCount: reportContent.length,
-        generatedAt: new Date().toISOString()
-      };
-
-      setGeneratedReport(newReport);
-      setShowReport(true);
-
-      // Save to history
-      const updatedHistory = [newReport, ...reportHistory].slice(0, 20); // Keep last 20
-      setReportHistory(updatedHistory);
-      localStorage.setItem('ai_reports_history', JSON.stringify(updatedHistory));
-      saveHistoryToFirestore('reports', updatedHistory);
-
-    } catch (error) {
-      console.error('[AIInsights] Report generation error:', error);
-    } finally {
-      setGeneratingReport(false);
-    }
-  };
-
-  // AI 아티클 생성 함수 (실제 AI API 사용)
-  const generateArticle = async () => {
-    const user = auth.currentUser;
-    if (!user || filteredData.length < 3) return;
-
-    if (!canUseAI) {
-      toast.error(language === 'ko'
-        ? 'AI 기능은 무료 체험 기간 또는 프로 플랜에서만 사용할 수 있습니다.'
-        : 'AI features are only available during Free Trial or Pro Plan.');
-      return;
-    }
-
-    // API 미설정 시 설정 열기
-    if (!isAIConfigured) {
-      onOpenSettings?.();
-      return;
-    }
-
-    setGeneratingArticle(true);
-
-    try {
-      // 선택 기간 클립: 최대 12개 (아티클 작성용)
-      const topClips = filteredData
-        .sort((a, b) => (b.aiScore || 0) - (a.aiScore || 0))
-        .slice(0, 12);
-
-      const topicsSet = new Set<string>();
-      topClips.forEach(clip => {
-        (clip.tags || clip.keywords || []).forEach((t: string) => {
-          topicsSet.add(t);
-        });
-      });
-      const topTopics = Array.from(topicsSet).slice(0, 4);
-
-      const periodText = period === 'weekly'
-        ? (language === 'ko' ? '이번 주' : 'this week')
-        : period === 'monthly'
-          ? (language === 'ko' ? '이번 달' : 'this month')
-          : (language === 'ko' ? `${customStartDate} ~ ${customEndDate}` : `${customStartDate} ~ ${customEndDate}`);
-
-      // 연관 클립 찾기 - 과거 맥락용 최대 8개
-      const relatedClips = findRelatedClips(topClips, allActiveLinks, 8);
-
-      // 실제 AI API 호출 시도
-      let articleContent = '';
-      let articleTitle = '';
-
-      try {
-        // 인사이트 리포트 내용이 있으면 요약해서 전달, 없으면 간단히 생성
-        const insightContext = generatedReport ? generatedReport.content : `Topics: ${topTopics.join(', ')}`;
-
-        const { generateAIArticle } = await import('../lib/aiService');
-        // Updated interface call
-        const result = await generateAIArticle(topClips, relatedClips, insightContext, language);
-
-        if (result.success && result.content) {
-          articleContent = result.content;
-          // 첫 줄을 제목으로 파싱 시도 (# Title)
-          const titleMatch = articleContent.match(/^#\s+(.+)$/m);
-          if (titleMatch) {
-            articleTitle = titleMatch[1];
-          } else {
-            articleTitle = language === 'ko'
-              ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
-              : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`;
-          }
-        } else {
-          throw new Error(result.error || 'AI generation failed');
-        }
-      } catch (aiError) {
-        console.warn('[AIInsights] AI API failed, using local generation:', aiError);
-        // Fallback to local template
-        articleContent = language === 'ko'
-          ? generateKoreanOriginalArticle(topClips, topTopics, periodText)
-          : generateEnglishOriginalArticle(topClips, topTopics, periodText);
-        articleTitle = language === 'ko'
-          ? `${topTopics[0] || 'AI'}의 미래: ${periodText} 발견한 인사이트`
-          : `The Future of ${topTopics[0] || 'AI'}: Insights from ${periodText}`;
-      }
-
-      const newArticle = {
-        id: Date.now().toString(),
-        title: articleTitle,
-        content: articleContent,
-        topics: topTopics,
-        wordCount: articleContent.length,
-        generatedAt: new Date().toISOString()
-      };
-
-      setGeneratedArticle(newArticle);
-      setShowArticle(true);
-
-      // Save to history
-      const updatedHistory = [newArticle, ...articleHistory].slice(0, 20); // Keep last 20
-      setArticleHistory(updatedHistory);
-      localStorage.setItem('ai_articles_history', JSON.stringify(updatedHistory));
-      saveHistoryToFirestore('articles', updatedHistory);
-
-    } catch (error) {
-      console.error('[AIInsights] Article generation error:', error);
-    } finally {
-      setGeneratingArticle(false);
-    }
-  };
-
-  // 한국어 인사이트 리포트
-  const generateKoreanReport = (clips: any[], topics: string[], period: string) => {
-    const intro = `## 트렌드 분석
-
-${period} 동안 총 ${clips.length}개의 콘텐츠를 저장했습니다. 주요 관심 분야는 ${topics.slice(0, 3).join(', ')} 등입니다.`;
-
-    const insights = clips.slice(0, 5).map((clip, idx) => {
-      const title = clip.title || '제목 없음';
-      const summary = clip.summary?.slice(0, 200) || '';
-      return `### ${idx + 1}. ${title}
-
-${summary}${summary.length >= 200 ? '...' : ''}`;
-    }).join('\n\n');
-
-    const conclusion = `:::callout-insight
-핵심 인사이트
-
-- ${topics[0] || '주요 주제'} 관련 콘텐츠가 가장 많이 저장되었습니다
-- 총 ${clips.length}개의 클립에서 ${topics.length}개의 주요 주제가 발견되었습니다
-:::
-
-:::callout-action
-다음 액션
-
-1. 저장된 콘텐츠 중 아직 읽지 않은 것들을 확인해보세요
-2. 관심 주제에 대해 더 깊이 탐구해보세요
-:::`;
-
-    return `${intro}\n\n${insights}\n\n${conclusion}`;
-  };
-
-  // 영어 인사이트 리포트
-  const generateEnglishReport = (clips: any[], topics: string[], period: string) => {
-    const intro = `## Trend Analysis
-
-This ${period}, you saved ${clips.length} pieces of content. Your main interests include ${topics.slice(0, 3).join(', ')}.`;
-
-    const insights = clips.slice(0, 5).map((clip, idx) => {
-      const title = clip.title || 'Untitled';
-      const summary = clip.summary?.slice(0, 200) || '';
-      return `### ${idx + 1}. ${title}
-
-${summary}${summary.length >= 200 ? '...' : ''}`;
-    }).join('\n\n');
-
-    const conclusion = `:::callout-insight
-Key Insights
-
-- ${topics[0] || 'Main Topic'} related content was saved most frequently
-- ${topics.length} major topics were discovered across ${clips.length} clips
-:::
-
-:::callout-action
-Next Actions
-
-1. Review saved content you haven't read yet
-2. Dive deeper into your interest topics
-:::`;
-
-    return `${intro}\n\n${insights}\n\n${conclusion}`;
-  };
-
-  // 한국어 오리지널 아티클 생성
-  const generateKoreanOriginalArticle = (clips: any[], topics: string[], period: string) => {
-    const mainTopic = topics[0] || 'AI';
-
-    return `${period} 동안 수집한 다양한 콘텐츠를 바탕으로, ${mainTopic}과 관련된 흥미로운 트렌드를 발견할 수 있었습니다.
-
-## 핵심 발견
-
-### 1. ${mainTopic}의 급속한 발전
-
-최근 ${mainTopic} 분야는 눈에 띄는 변화를 겪고 있습니다. ${clips[0]?.title || '최신 기술'} 관련 콘텐츠에서 볼 수 있듯이, 이 분야는 매일 새로운 혁신이 일어나고 있습니다.
-
-${clips[0]?.summary?.slice(0, 300) || '기술의 발전은 우리 일상에 큰 영향을 미치고 있습니다.'}
-
-### 2. ${topics[1] || '기술'} 트렌드 분석
-
-${clips[1]?.title || '관련 주제'}와 같은 콘텐츠들은 현재 업계에서 주목받는 방향을 보여줍니다. ${clips[1]?.summary?.slice(0, 200) || '다양한 기업들이 이 분야에 투자를 확대하고 있습니다.'}
-
-### 3. 실용적 적용 사례
-
-${clips[2]?.title || '실제 사례'}를 통해 이론이 실제로 어떻게 적용되는지 확인할 수 있습니다. ${clips[2]?.summary?.slice(0, 200) || '이러한 사례들은 앞으로의 방향을 제시합니다.'}
-
-:::callout-insight
-시사점
-
-- ${topics[0] || '주요 분야'}는 계속해서 성장세를 유지할 것으로 보입니다
-- ${topics[1] || '관련 기술'}과의 융합이 새로운 기회를 창출하고 있습니다
-- 사용자 경험 중심의 접근이 더욱 중요해지고 있습니다
-:::
-
-:::callout-action
-앞으로의 전망
-
-앞으로 ${mainTopic} 분야는 더욱 빠르게 진화할 것으로 예상됩니다. 지속적인 학습과 트렌드 파악이 중요한 시점입니다.
-:::
-
----
-
-*이 아티클은 ${period} 수집된 ${clips.length}개의 콘텐츠를 기반으로 AI가 재구성하여 작성했습니다.*`;
-  };
-
-  // 영어 오리지널 아티클 생성
-  const generateEnglishOriginalArticle = (clips: any[], topics: string[], period: string) => {
-    const mainTopic = topics[0] || 'AI';
-
-    return `Based on the diverse content collected ${period}, we've discovered fascinating trends related to ${mainTopic}.
-
-## Key Discoveries
-
-### 1. The Rapid Evolution of ${mainTopic}
-
-The ${mainTopic} field is undergoing remarkable changes. As seen in content about ${clips[0]?.title || 'recent technologies'}, innovations are happening daily in this space.
-
-${clips[0]?.summary?.slice(0, 300) || 'Technology advances are significantly impacting our daily lives.'}
-
-### 2. ${topics[1] || 'Technology'} Trend Analysis
-
-Content like ${clips[1]?.title || 'related topics'} shows the direction the industry is heading. ${clips[1]?.summary?.slice(0, 200) || 'Various companies are expanding investments in this field.'}
-
-### 3. Practical Applications
-
-Through ${clips[2]?.title || 'real cases'}, we can see how theory is applied in practice. ${clips[2]?.summary?.slice(0, 200) || 'These cases point to future directions.'}
-
-:::callout-insight
-Key Takeaways
-
-- ${topics[0] || 'Main field'} is expected to maintain its growth trajectory
-- Integration with ${topics[1] || 'related technologies'} is creating new opportunities
-- User experience-centric approaches are becoming increasingly important
-:::
-
-:::callout-action
-Future Outlook
-
-The ${mainTopic} field is expected to evolve even faster. Continuous learning and trend awareness are crucial at this point.
-:::
-
----
-
-*This article was created by AI, synthesizing ${clips.length} pieces of content collected ${period}.*`;
-  };
-  // 기간에 따른 데이터 필터링 (Custom 지원)
-  const filteredData = useMemo(() => {
-    let periodStart = 0;
-    let periodEnd = Date.now();
-
-    if (period === 'custom') {
-      periodStart = new Date(customStartDate).getTime();
-      // End date는 해당일의 끝(23:59:59)까지 포함
-      const endD = new Date(customEndDate);
-      endD.setHours(23, 59, 59, 999);
-      periodEnd = endD.getTime();
-    } else {
-      const now = Date.now();
-      const periodDays = period === 'weekly' ? 7 : 30;
-      periodStart = now - periodDays * 24 * 60 * 60 * 1000;
-    }
-
-    // Firestore 데이터가 있으면 우선 사용, 없으면 props의 links 사용
-    const sourceData = firestoreClips.length > 0 ? firestoreClips : links;
-
-    return sourceData.filter(item => {
-      const timestamp = item.createdAt?.seconds
-        ? item.createdAt.seconds * 1000
-        : item.createdAt?.toDate?.()?.getTime?.()
-        || item.timestamp
-        || 0;
-
-      // Custom일 때는 범위 체크, 일반 기간일 때는 시작일 이후 체크
-      if (period === 'custom') {
-        return timestamp >= periodStart && timestamp <= periodEnd && !item.isArchived;
-      } else {
-        return timestamp >= periodStart && !item.isArchived;
-      }
-    });
-  }, [firestoreClips, links, period, customStartDate, customEndDate]);
-
-  // 전체 링크 (archived 제외)
-  const allActiveLinks = useMemo(() => {
-    const sourceData = firestoreClips.length > 0 ? firestoreClips : links;
-    return sourceData.filter(item => !item.isArchived);
-  }, [firestoreClips, links]);
-
-  // Top Keywords 계산
-  const topKeywords = useMemo(() => {
-    const counts: Record<string, number> = {};
-    filteredData.forEach(item => {
-      const tags = item.tags || item.keywords || [];
-      tags.forEach((tag: string) => {
-        const key = tag.toLowerCase().trim();
-        if (key) counts[key] = (counts[key] || 0) + 1;
-      });
-    });
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
-      .map(([name, count]) => ({ name, count }));
-  }, [filteredData]);
-
-  // Main Sources 계산 (도메인 파싱 개선)
-  const mainSources = useMemo(() => {
-    const counts: Record<string, number> = {};
-    filteredData.forEach(item => {
-      if (item.url) {
-        const domain = extractDomain(item.url);
-        const displayName = getPlatformName(domain);
-        counts[displayName] = (counts[displayName] || 0) + 1;
-      }
-    });
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, value]) => ({ name, value }));
-  }, [filteredData]);
-
-  // Reading Patterns 계산 (기간에 맞게)
-  const readingPatterns = useMemo(() => {
-    const days = period === 'weekly' ? 7 : 30;
-    const patterns = [];
-
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-      const dayName = period === 'weekly'
-        ? date.toLocaleDateString(language === 'ko' ? 'ko' : 'en', { weekday: 'short' })
-        : date.toLocaleDateString(language === 'ko' ? 'ko' : 'en', { month: 'short', day: 'numeric' });
-
-      const dayStart = new Date(date).setHours(0, 0, 0, 0);
-      const dayEnd = new Date(date).setHours(23, 59, 59, 999);
-
-      const count = filteredData.filter(item => {
-        const timestamp = item.createdAt?.seconds
-          ? item.createdAt.seconds * 1000
-          : item.createdAt?.toDate?.()?.getTime?.()
-          || item.timestamp
-          || 0;
-        return timestamp >= dayStart && timestamp <= dayEnd;
-      }).length;
-
-      patterns.push({ day: dayName, links: count });
-    }
-
-    // 월간일 경우 주 단위로 그룹화
-    if (period === 'monthly') {
-      const weeklyPatterns = [];
-      for (let i = 0; i < patterns.length; i += 7) {
-        const weekData = patterns.slice(i, i + 7);
-        const weekTotal = weekData.reduce((sum, d) => sum + d.links, 0);
-        weeklyPatterns.push({
-          day: `${language === 'ko' ? '주' : 'W'}${Math.floor(i / 7) + 1}`,
-          links: weekTotal
-        });
-      }
-      return weeklyPatterns;
-    }
-
-    return patterns;
-  }, [filteredData, period, language]);
-
-  // Quality Analysis (AI Score 또는 다른 메트릭 기반)
-  const qualityData = useMemo(() => {
-    const ranges: Record<string, number> = {
-      'excellent': 0,
-      'great': 0,
-      'good': 0,
-      'fair': 0,
-      'low': 0
-    };
-
-    filteredData.forEach(item => {
-      const score = item.aiScore || item.relevanceScore || Math.floor(Math.random() * 40) + 60;
-      if (score >= 90) ranges['excellent']++;
-      else if (score >= 80) ranges['great']++;
-      else if (score >= 70) ranges['good']++;
-      else if (score >= 60) ranges['fair']++;
-      else ranges['low']++;
+  // Content Studio States
+  const [studioStartDate, setStudioStartDate] = useState<string>('');
+  const [studioEndDate, setStudioEndDate] = useState<string>('');
+  const [studioFilterTag, setStudioFilterTag] = useState<string>('');
+  const [studioClips, setStudioClips] = useState<any[]>([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [viewingClipId, setViewingClipId] = useState<string | null>(null);
+
+  // Filter active links
+  const allActiveLinks = useMemo(() => links.filter(l => !l.isArchived), [links]);
+
+  // Stats Data
+  const statsData = useMemo(() => {
+    const now = new Date();
+    const periodDays = period === 'weekly' ? 7 : 30;
+    const cutoff = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
+
+    const recentClips = allActiveLinks.filter(l => {
+      const d = parseDate(l.createdAt);
+      return d && d >= cutoff;
     });
 
-    return Object.entries(ranges).map(([key, value]) => ({
-      name: language === 'ko' ? qualityLabels[key].ko : qualityLabels[key].en,
-      value
-    }));
-  }, [filteredData, language]);
+    const totalClips = allActiveLinks.length;
+    const withSummary = allActiveLinks.filter(l => l.summary).length;
+    const savedTime = Math.round(withSummary * 3);
+    const ideasCount = allActiveLinks.filter(l => l.tags?.length > 0).length;
 
-  // Topic Connections (기본 패턴 + 동적 카테고리)
-  const topicData = useMemo(() => {
-    // 1. 기본 패턴 기반 주제 계산
-    const baseTopics = Object.entries(topicPatterns).map(([key, data]) => {
-      const count = filteredData.filter(item => {
-        const tags = (item.tags || item.keywords || []).map((t: string) => t.toLowerCase());
-        const title = (item.title || '').toLowerCase();
-        const summary = (item.summary || '').toLowerCase();
-        const combined = [...tags, title, summary].join(' ');
-        return data.keywords.some((k: string) => combined.includes(k));
-      }).length;
-      return {
-        subject: language === 'ko' ? data.ko : data.en,
-        value: count,
-        isBase: true
-      };
-    });
+    return [
+      {
+        label: language === 'ko' ? '영구 보존된 지식' : 'Saved Knowledge',
+        value: totalClips.toLocaleString(),
+        unit: language === 'ko' ? '개' : 'clips',
+        sub: language === 'ko' ? '원본 소실 걱정 없음' : 'Permanently saved',
+        icon: <ShieldCheck size={20} className="text-[#21DBA4]" />,
+        trend: `+${recentClips.length}`
+      },
+      {
+        label: language === 'ko' ? '절약한 읽기 시간' : 'Time Saved',
+        value: savedTime.toString(),
+        unit: language === 'ko' ? '시간' : 'hrs',
+        sub: language === 'ko' ? 'AI 요약 활용' : 'AI summaries',
+        icon: <Clock size={20} className="text-blue-400" />,
+        trend: `+${Math.round(recentClips.filter(l => l.summary).length)}h`
+      },
+      {
+        label: language === 'ko' ? '실행 아이디어' : 'Action Ideas',
+        value: ideasCount.toString(),
+        unit: language === 'ko' ? '개' : 'items',
+        sub: language === 'ko' ? '기획서 생성 가능' : 'Ready to create',
+        icon: <Zap size={20} className="text-orange-400" />,
+        trend: `+${recentClips.filter(l => l.tags?.length > 0).length}`
+      },
+    ];
+  }, [allActiveLinks, period, language]);
 
-    // 2. 사용자 카테고리에서 추가 주제 감지
-    const categoryCounts: Record<string, number> = {};
-    filteredData.forEach(item => {
-      if (item.category) {
-        categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
-      }
-      if (item.categoryId && categories) {
-        const cat = categories.find((c: any) => c.id === item.categoryId);
-        if (cat) {
-          categoryCounts[cat.name] = (categoryCounts[cat.name] || 0) + 1;
+  // Heatmap Data - 5 days, more blocks
+  const heatmapData = useMemo(() => {
+    const days = language === 'ko' ? ['월', '화', '수', '목', '금'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const grid: number[][] = days.map(() => Array(12).fill(0));
+
+    allActiveLinks.forEach(link => {
+      const d = parseDate(link.createdAt);
+      if (d) {
+        const dayIdx = d.getDay() - 1;
+        if (dayIdx >= 0 && dayIdx < 5) {
+          const hourBlock = Math.floor(d.getHours() / 2);
+          if (hourBlock < 12) grid[dayIdx][hourBlock]++;
         }
       }
     });
 
-    // 기본 주제에 없는 카테고리만 추가
-    const baseSubjects = baseTopics.map(t => t.subject.toLowerCase());
-    const additionalTopics = Object.entries(categoryCounts)
-      .filter(([name]) => !baseSubjects.includes(name.toLowerCase()))
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3) // 최대 3개 추가
-      .map(([name, count]) => ({
-        subject: name,
-        value: count,
-        isBase: false
-      }));
-
-    // 3. 합치기 (값이 있는 것 위주로 정렬)
-    const allTopics = [...baseTopics, ...additionalTopics]
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8); // 최대 8개
-
-    return allTopics;
-  }, [filteredData, language, categories]);
-
-  // 새로운 관심사 (최근 급증한 키워드)
-  const newInterests = useMemo(() => {
-    const recentCounts: Record<string, number> = {};
-    const olderCounts: Record<string, number> = {};
-
-    const now = Date.now();
-    const recentCutoff = now - 3 * 24 * 60 * 60 * 1000; // 최근 3일
-
-    filteredData.forEach(item => {
-      const timestamp = item.createdAt?.seconds
-        ? item.createdAt.seconds * 1000
-        : item.createdAt?.toDate?.()?.getTime?.()
-        || item.timestamp
-        || 0;
-      const tags = item.tags || item.keywords || [];
-
-      tags.forEach((tag: string) => {
-        const key = tag.toLowerCase().trim();
-        if (timestamp >= recentCutoff) {
-          recentCounts[key] = (recentCounts[key] || 0) + 1;
-        } else {
-          olderCounts[key] = (olderCounts[key] || 0) + 1;
-        }
-      });
-    });
-
-    // 최근에 새로 등장하거나 급증한 키워드
-    const emerging = Object.entries(recentCounts)
-      .filter(([key, count]) => {
-        const oldCount = olderCounts[key] || 0;
-        return count > oldCount || oldCount === 0;
-      })
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-      .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1));
-
-    return emerging.length > 0 ? emerging : topKeywords.slice(0, 4).map(k => k.name.charAt(0).toUpperCase() + k.name.slice(1));
-  }, [filteredData, topKeywords]);
-
-  // 콘텐츠 갭 (관심 있을 수 있지만 저장하지 않은 주제)
-  const contentGaps = useMemo(() => {
-    const tagSet = new Set<string>();
-    allActiveLinks.forEach(item => {
-      (item.tags || item.keywords || []).forEach((t: string) => {
-        tagSet.add(t.toLowerCase());
-      });
-    });
-
-    const allTags = Array.from(tagSet).join(' ');
-
-    // 콘텐츠가 적은 주제 찾기
-    return contentGapTopics
-      .filter(topic => {
-        const matchCount = topic.keywords.filter(k => allTags.includes(k)).length;
-        return matchCount < 2;
-      })
-      .slice(0, 4)
-      .map(topic => language === 'ko' ? topic.labelKo : topic.labelEn);
+    return days.map((day, i) => ({ day, hours: grid[i] }));
   }, [allActiveLinks, language]);
 
-  // 평균 읽기 시간 계산
-  const avgReadTime = useMemo(() => {
-    const totalMinutes = filteredData.reduce((acc, item) => {
-      if (item.readTime) {
-        const mins = parseInt(item.readTime.split(' ')[0]) || 0;
-        return acc + mins;
+  // Peak time
+  const peakTimeComment = useMemo(() => {
+    let maxVal = 0, peakHourStart = 20;
+    heatmapData.forEach(d => {
+      d.hours.forEach((v, hi) => {
+        if (v > maxVal) { maxVal = v; peakHourStart = hi * 2; }
+      });
+    });
+    return language === 'ko'
+      ? `주로 밤 ${peakHourStart}시 ~ ${peakHourStart + 2}시에 집중됩니다.`
+      : `Most active around ${peakHourStart}:00 - ${peakHourStart + 2}:00.`;
+  }, [heatmapData, language]);
+
+  // Interest Evolution
+  const interestFlow = useMemo(() => {
+    const now = new Date();
+    const periods = [
+      { period: language === 'ko' ? '4주 전' : '4w ago', start: 28, end: 21, percent: 20 },
+      { period: language === 'ko' ? '2주 전' : '2w ago', start: 14, end: 7, percent: 50 },
+      { period: language === 'ko' ? '현재' : 'Now', start: 7, end: 0, active: true, percent: 85 },
+    ];
+
+    return periods.map(p => {
+      const startD = new Date(now.getTime() - p.start * 24 * 60 * 60 * 1000);
+      const endD = new Date(now.getTime() - p.end * 24 * 60 * 60 * 1000);
+      const clips = allActiveLinks.filter(l => {
+        const d = parseDate(l.createdAt);
+        return d && d >= startD && d < endD;
+      });
+
+      const tagCounts: Record<string, number> = {};
+      clips.forEach(c => (c.tags || []).forEach((t: string) => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
+      const topTag = Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || (language === 'ko' ? 'AI 도구 탐색' : 'Exploring');
+
+      return { ...p, topic: topTag };
+    });
+  }, [allActiveLinks, language]);
+
+  // Weekly Keywords
+  const weeklyKeywords = useMemo(() => {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const tagCounts: Record<string, number> = {};
+
+    allActiveLinks.forEach(l => {
+      const d = parseDate(l.createdAt);
+      if (d && d >= weekAgo) {
+        (l.tags || []).forEach((t: string) => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
       }
-      // 추정: summary 길이 기반 (200자 = 1분)
-      const summaryLength = (item.summary || '').length;
-      return acc + Math.max(1, Math.floor(summaryLength / 200));
-    }, 0);
-    return filteredData.length > 0 ? Math.round(totalMinutes / filteredData.length) : 0;
-  }, [filteredData]);
+    });
 
-  // 트렌드 계산 (이전 기간 대비)
-  const trend = useMemo(() => {
-    const periodDays = period === 'weekly' ? 7 : 30;
-    const now = Date.now();
-    const currentStart = now - periodDays * 24 * 60 * 60 * 1000;
-    const previousStart = currentStart - periodDays * 24 * 60 * 60 * 1000;
+    const result = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([tag]) => ({ tag }));
 
-    const sourceData = firestoreClips.length > 0 ? firestoreClips : links;
-
-    const currentCount = sourceData.filter(item => {
-      const timestamp = item.createdAt?.seconds
-        ? item.createdAt.seconds * 1000
-        : item.createdAt?.toDate?.()?.getTime?.()
-        || item.timestamp
-        || 0;
-      return timestamp >= currentStart && !item.isArchived;
-    }).length;
-
-    const previousCount = sourceData.filter(item => {
-      const timestamp = item.createdAt?.seconds
-        ? item.createdAt.seconds * 1000
-        : item.createdAt?.toDate?.()?.getTime?.()
-        || item.timestamp
-        || 0;
-      return timestamp >= previousStart && timestamp < currentStart && !item.isArchived;
-    }).length;
-
-    if (previousCount === 0) return '+100%';
-    const change = Math.round(((currentCount - previousCount) / previousCount) * 100);
-    return change >= 0 ? `+${change}%` : `${change}%`;
-  }, [firestoreClips, links, period]);
-
-  const COLORS = ['#21DBA4', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-
-  const cardClass = isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100';
-  const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-  const textPrimary = isDark ? 'text-slate-100' : 'text-slate-900';
-
-  // 인사이트 요약 텍스트
-  const insightSummary = useMemo(() => {
-    const count = filteredData.length;
-    const topKeyword = topKeywords[0]?.name || '';
-
-    if (language === 'ko') {
-      if (count === 0) return '이 기간에 저장된 콘텐츠가 없습니다.';
-      return `${period === 'weekly' ? '이번 주' : '이번 달'} ${count}개의 링크를 저장했으며, ${topKeyword ? `${topKeyword.toUpperCase()} & 관련 주제에 집중했고, ` : ''}다양한 관심사를 탐색했습니다.`;
-    } else {
-      if (count === 0) return 'No content saved in this period.';
-      return `Saved ${count} links ${period === 'weekly' ? 'this week' : 'this month'}${topKeyword ? `, focused on ${topKeyword.toUpperCase()} topics` : ''}.`;
+    // Default keywords if empty
+    if (result.length === 0) {
+      return [{ tag: language === 'ko' ? '자동화' : 'Automation' }, { tag: 'Productivity' }, { tag: 'Agent' }];
     }
-  }, [filteredData, topKeywords, period, language]);
+    return result;
+  }, [allActiveLinks, language]);
+
+  // Rising Trends
+  const risingTrends = useMemo(() => {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    const recentTags: Record<string, number> = {};
+    const olderTags: Record<string, number> = {};
+
+    allActiveLinks.forEach(l => {
+      const d = parseDate(l.createdAt);
+      if (!d) return;
+      (l.tags || []).forEach((t: string) => {
+        if (d >= weekAgo) recentTags[t] = (recentTags[t] || 0) + 1;
+        else if (d >= twoWeeksAgo) olderTags[t] = (olderTags[t] || 0) + 1;
+      });
+    });
+
+    const trends: Array<{ name: string; change: string; type: 'rising' | 'falling' }> = [];
+    Object.keys(recentTags).forEach(tag => {
+      const recent = recentTags[tag];
+      const older = olderTags[tag] || 0;
+      const pct = older > 0 ? Math.round(((recent - older) / older) * 100) : 100;
+      if (pct > 20) trends.push({ name: tag, change: `+${pct}%`, type: 'rising' });
+    });
+
+    // Default if empty
+    if (trends.length === 0) {
+      return [
+        { name: 'Surfer SEO', change: '+42%', type: 'rising' as const },
+        { name: language === 'ko' ? '단순 뉴스' : 'Simple News', change: '-15%', type: 'falling' as const },
+      ];
+    }
+    return trends.slice(0, 2);
+  }, [allActiveLinks, language]);
+
+  // Available Tags for Filter
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    allActiveLinks.forEach(l => (l.tags || []).forEach((t: string) => tagSet.add(t)));
+    return Array.from(tagSet).slice(0, 10);
+  }, [allActiveLinks]);
+
+  // Studio Clips Filtered - Only show after clicking Load
+  const filteredClips = useMemo(() => {
+    // If studioClips is empty (not loaded yet), return empty array
+    if (studioClips.length === 0) return [];
+
+    let result = studioClips;
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(c =>
+        c.title?.toLowerCase().includes(q) ||
+        c.tags?.some((t: string) => t.toLowerCase().includes(q))
+      );
+    }
+
+    // Tag filter
+    if (studioFilterTag) {
+      result = result.filter(c => c.tags?.includes(studioFilterTag));
+    }
+
+    return result.slice(0, 20);
+  }, [allActiveLinks, studioClips, searchQuery, studioFilterTag]);
+
+  // Load clips by date range
+  const handleLoadClips = () => {
+    let result = allActiveLinks;
+
+    if (studioStartDate || studioEndDate) {
+      result = result.filter(clip => {
+        const d = parseDate(clip.createdAt);
+        if (!d) return false;
+
+        const clipDate = d.toISOString().split('T')[0];
+        if (studioStartDate && clipDate < studioStartDate) return false;
+        if (studioEndDate && clipDate > studioEndDate) return false;
+        return true;
+      });
+    }
+
+    setStudioClips(result);
+    setSelectedClips([]);
+  };
+
+  // Unread Clips
+  const unreadClips = useMemo(() => {
+    const clips = allActiveLinks.filter(l => !l.notes && !l.isFavorite).slice(0, 3);
+    if (clips.length === 0) {
+      return [
+        { id: '1', title: language === 'ko' ? 'AI 에이전트 UX 디자인 패턴' : 'AI Agent UX Design', source: 'Medium', time: '2h ago' },
+        { id: '2', title: language === 'ko' ? '2025년 SaaS 마케팅 전략' : '2025 SaaS Marketing', source: 'Substack', time: '5h ago' },
+        { id: '3', title: language === 'ko' ? '노코드 자동화 툴 비교' : 'No-code Tools Comparison', source: 'Youtube', time: '1d ago' },
+      ];
+    }
+    return clips;
+  }, [allActiveLinks, language]);
+
+  // History
+  const creationHistory = [
+    { id: 1, type: language === 'ko' ? '기획서' : 'Plan', title: language === 'ko' ? 'SaaS 자동화 마케팅 기획안' : 'SaaS Automation Plan', date: '2024.12.18' },
+    { id: 2, type: language === 'ko' ? '블로그' : 'Blog', title: language === 'ko' ? '노코드 툴 5가지 비교 분석' : '5 No-code Tools Analysis', date: '2024.12.15' },
+  ];
+
+  // Content Types
+  const contentTypes = [
+    { id: 'report', label: language === 'ko' ? '리포트' : 'Report', icon: <FileBarChart size={18} />, desc: language === 'ko' ? '분석 보고서' : 'Analysis' },
+    { id: 'article', label: language === 'ko' ? '아티클' : 'Article', icon: <FileText size={18} />, desc: language === 'ko' ? '인사이트 글' : 'Insight' },
+    { id: 'planning', label: language === 'ko' ? '기획서' : 'Planning', icon: <Layout size={18} />, desc: language === 'ko' ? '실행 계획안' : 'Plan' },
+    { id: 'trend', label: language === 'ko' ? '트렌드' : 'Trend', icon: <TrendingUp size={18} />, desc: language === 'ko' ? '요약 정리' : 'Summary' },
+  ];
+
+  const toggleClipSelection = (id: string) => {
+    setSelectedClips(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
+
+  const handleGenerate = async () => {
+    if (!selectedContentType || selectedClips.length === 0) return;
+    setGeneratingReport(true);
+    toast.success(language === 'ko' ? '생성 시작...' : 'Generating...');
+    setTimeout(() => setGeneratingReport(false), 2000);
+  };
+
+  // Theme colors
+  const bg = isDark ? 'bg-[#0F1115]' : 'bg-slate-50';
+  const cardBg = isDark ? 'bg-[#161B22]' : 'bg-white';
+  const cardBorder = isDark ? 'border-gray-800' : 'border-slate-200';
+  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
+  const textSecondary = isDark ? 'text-gray-400' : 'text-slate-500';
+  const textMuted = isDark ? 'text-gray-500' : 'text-slate-400';
+  const inputBg = isDark ? 'bg-gray-800' : 'bg-slate-100';
+  const hoverBg = isDark ? 'hover:bg-gray-800' : 'hover:bg-slate-50';
+
 
   return (
-    <div className="space-y-8">
-      {/* Period Toggle + Generation Buttons */}
-      {/* Period Toggle + Generation Buttons */}
-      <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Left Side: Period Toggle + Custom Date Picker + Loading */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
-          {/* Period Toggle */}
-          <div className={`flex rounded-xl p-1 w-full md:w-fit ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-            <button
-              onClick={() => setPeriod('weekly')}
-              className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'weekly'
-                ? 'bg-[#21DBA4] text-white shadow-md'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
-              {language === 'ko' ? '주간' : 'Weekly'}
-            </button>
-            <button
-              onClick={() => setPeriod('monthly')}
-              className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'monthly'
-                ? 'bg-[#21DBA4] text-white shadow-md'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Calendar size={12} className="sm:w-[14px] sm:h-[14px]" />
-              {language === 'ko' ? '월간' : 'Monthly'}
-            </button>
-            <button
-              onClick={() => setPeriod('custom')}
-              className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${period === 'custom'
-                ? 'bg-[#21DBA4] text-white shadow-md'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Calendar size={12} className="sm:w-[14px] sm:h-[14px] shrink-0" />
-              {language === 'ko' ? '기간 선택' : 'Custom'}
-            </button>
-          </div>
-
-          {/* Custom Date Range Picker */}
-          {period === 'custom' && (
-            <div className={`flex items-center justify-center gap-2 px-2 py-1.5 rounded-xl w-full md:w-auto shrink-0 ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
-                <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  max={customEndDate}
-                  className={`w-full md:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
-                />
-              </div>
-              <span className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>~</span>
-              <div className={`date-picker-wrapper flex-1 sm:flex-none flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-slate-50 shadow-sm border border-slate-200'}`}>
-                <Calendar size={14} className={`shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  min={customStartDate}
-                  max={new Date().toISOString().split('T')[0]}
-                  className={`w-full md:w-[100px] text-xs font-semibold bg-transparent border-none outline-none cursor-pointer ${isDark ? 'text-white' : 'text-slate-700'}`}
-                />
-              </div>
-            </div>
-          )}
-
-          {loading && (
-            <div className="flex items-center gap-2 text-[#21DBA4] ml-2">
-              <Loader2 size={14} className="animate-spin" />
-              <span className="text-xs sm:text-sm">{language === 'ko' ? '로딩...' : 'Loading...'}</span>
-            </div>
-          )}
+    <div className={`min-h-screen ${bg} pb-20`}>
+      {/* Header Row */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className={`text-2xl md:text-3xl font-bold mb-1 ${textPrimary}`}>
+            {language === 'ko' ? '반가워요, 알렉스님' : 'Welcome back'} <span className="inline-block">👋</span>
+          </h1>
+          <p className={`text-sm ${textSecondary}`}>
+            {language === 'ko' ? '오늘의 인사이트를 발견하고, 새로운 가치를 만들어보세요.' : 'Discover insights and create new value today.'}
+          </p>
         </div>
 
-        {/* Right Side: Generation Buttons (Individual Buttons, not toggle) */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          {/* Insights Report Button */}
-          <div
-            className="relative flex-1 md:flex-none"
-            onMouseEnter={() => !isAIConfigured && setShowApiTooltip('report')}
-            onMouseLeave={() => setShowApiTooltip(null)}
-          >
+        {/* Period Filter */}
+        <div className={`flex items-center ${cardBg} border ${cardBorder} rounded-xl p-1 shadow-sm`}>
+          {[
+            { key: 'weekly', label: language === 'ko' ? '이번 주' : 'This Week' },
+            { key: 'monthly', label: language === 'ko' ? '이번 달' : 'This Month' },
+          ].map(p => (
             <button
-              onClick={!isAIConfigured ? onOpenSettings : generateReport}
-              disabled={generatingReport || (isAIConfigured && filteredData.length < 3)}
-              className={`w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap border
-                ${!isAIConfigured ? 'opacity-50 cursor-pointer' : 'disabled:opacity-50 disabled:cursor-not-allowed'}
-                ${generatingReport
-                  ? 'bg-[#21DBA4] text-white border-transparent shadow-md'
-                  : isDark
-                    ? 'text-slate-300 border-slate-700 hover:bg-slate-800'
-                    : 'text-slate-600 border-slate-200 hover:bg-slate-50'
+              key={p.key}
+              onClick={() => setPeriod(p.key as 'weekly' | 'monthly')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${period === p.key
+                ? ''
+                : `${textSecondary} ${hoverBg}`
                 }`}
             >
-              {generatingReport ? (
-                <>
-                  <Loader2 size={12} className="animate-spin shrink-0" />
-                  <span>{language === 'ko' ? '생성 중' : 'Loading'}</span>
-                </>
-              ) : (
-                <>
-                  <FileText size={14} />
-                  <span className="whitespace-nowrap">{language === 'ko' ? '리포트' : 'Report'}</span>
-                </>
-              )}
+              {p.label}
             </button>
-            {/* Tooltip for Report */}
-            {showApiTooltip === 'report' && (
-              <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap z-50 shadow-lg ${isDark ? 'bg-slate-800 text-white' : 'bg-slate-900 text-white'}`}>
-                {language === 'ko' ? '⚙️ 설정에서 API 키를 먼저 입력하세요' : '⚙️ Set up API key in Settings first'}
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent ${isDark ? 'border-t-slate-800' : 'border-t-slate-900'}`} />
-              </div>
-            )}
-          </div>
-
-          {/* AI Article Button */}
-          <div
-            className="relative flex-1 md:flex-none"
-            onMouseEnter={() => !isAIConfigured && setShowApiTooltip('article')}
-            onMouseLeave={() => setShowApiTooltip(null)}
-          >
-            <button
-              onClick={!isAIConfigured ? onOpenSettings : generateArticle}
-              disabled={generatingArticle || (isAIConfigured && filteredData.length < 3)}
-              className={`w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap shadow-md
-                ${!isAIConfigured && !generatingArticle ? 'opacity-50 cursor-pointer' : ''}
-                ${generatingArticle
-                  ? 'bg-[#21DBA4] text-white cursor-wait'
-                  : isAIConfigured && filteredData.length < 3
-                    ? 'bg-[#21DBA4]/50 text-white/80 cursor-not-allowed'
-                    : 'bg-[#21DBA4] text-white hover:bg-[#1bc290]'
-                }`}
-            >
-              {generatingArticle ? (
-                <>
-                  <Loader2 size={12} className="animate-spin shrink-0" />
-                  <span>{language === 'ko' ? '생성 중' : 'Loading'}</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={14} />
-                  <span className="whitespace-nowrap">{language === 'ko' ? '아티클' : 'Article'}</span>
-                </>
-              )}
-            </button>
-            {/* Tooltip for Article */}
-            {showApiTooltip === 'article' && (
-              <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap z-50 shadow-lg ${isDark ? 'bg-slate-800 text-white' : 'bg-slate-900 text-white'}`}>
-                {language === 'ko' ? '⚙️ 설정에서 API 키를 먼저 입력하세요' : '⚙️ Set up API key in Settings first'}
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent ${isDark ? 'border-t-slate-800' : 'border-t-slate-900'}`} />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* History Section */}
-      {
-        (reportHistory.length > 0 || articleHistory.length > 0) && (() => {
-          const allItems = [...reportHistory.map(r => ({ ...r, type: 'report' as const })),
-          ...articleHistory.map(a => ({ ...a, type: 'article' as const }))]
-            .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime());
-          const displayItems = showAllHistory ? allItems : allItems.slice(0, 5);
-          const hasMore = allItems.length > 5;
-
-          const deleteHistoryItem = (id: string, type: 'report' | 'article') => {
-            if (type === 'report') {
-              const updated = reportHistory.filter(r => r.id !== id);
-              setReportHistory(updated);
-              localStorage.setItem('ai_reports_history', JSON.stringify(updated));
-              saveHistoryToFirestore('reports', updated);
-            } else {
-              const updated = articleHistory.filter(a => a.id !== id);
-              setArticleHistory(updated);
-              localStorage.setItem('ai_articles_history', JSON.stringify(updated));
-              saveHistoryToFirestore('articles', updated);
-            }
-          };
-
-          return (
-            <div className={`rounded-xl border p-4 ${cardClass}`}>
-              <h3 className={`text-sm font-bold mb-3 ${textPrimary}`}>
-                {language === 'ko' ? '생성 기록' : 'Generation History'}
-              </h3>
-              <div className="space-y-2">
-                {displayItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`flex items-center gap-2 p-2 rounded-lg transition-colors group ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
-                  >
-                    <button
-                      onClick={() => {
-                        if (item.type === 'report') {
-                          setGeneratedReport(item);
-                          setShowReport(true);
-                        } else {
-                          setGeneratedArticle(item);
-                          setShowArticle(true);
-                        }
-                      }}
-                      className="flex-1 flex items-center gap-3 text-left"
-                    >
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${item.type === 'report' ? (isDark ? 'bg-slate-700' : 'bg-slate-100') : 'bg-[#21DBA4]/10'}`}>
-                        {item.type === 'report' ? <FileText size={14} className="text-slate-400" /> : <Sparkles size={14} className="text-[#21DBA4]" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-medium truncate ${textPrimary}`}>{item.title}</p>
-                        <p className={`text-xs ${textMuted}`}>
-                          {new Date(item.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPendingDeleteItem({ id: item.id, type: item.type, title: item.title });
-                      }}
-                      className={`p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ${isDark ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                      title={language === 'ko' ? '삭제' : 'Delete'}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              {hasMore && (
-                <button
-                  onClick={() => setShowAllHistory(!showAllHistory)}
-                  className={`w-full mt-3 py-2 text-xs font-medium rounded-lg transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
-                >
-                  {showAllHistory
-                    ? (language === 'ko' ? '접기' : 'Show less')
-                    : (language === 'ko' ? `더 보기 (${allItems.length - 5}개)` : `Show more (${allItems.length - 5})`)}
-                </button>
-              )}
-            </div>
-          );
-        })()
-      }
-      <div className={`rounded-2xl border p-8 shadow-lg ${cardClass}`}>
-        <div className="flex items-start gap-4 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center shadow-lg">
-            <Brain className="text-white" size={24} />
-          </div>
-          <div className="flex-1">
-            <h2 className={`text-xl font-black mb-2 ${textPrimary}`}>
-              {period === 'weekly' ? t('weeklyInsights') : (language === 'ko' ? '월간 인사이트' : 'Monthly Insights')}
-            </h2>
-            <p className={textMuted}>{insightSummary}</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            icon={<BookOpen size={20} />}
-            label={t('totalLinks')}
-            value={allActiveLinks.length}
-            trend={trend}
-            theme={theme}
-          />
-          <StatCard
-            icon={<TrendingUp size={20} />}
-            label={period === 'weekly' ? t('thisWeek') : (language === 'ko' ? '이번 달' : 'This Month')}
-            value={filteredData.length}
-            trend={t('trend')}
-            theme={theme}
-          />
-          <StatCard
-            icon={<Clock size={20} />}
-            label={t('avgReadTime')}
-            value={`${avgReadTime} min`}
-            trend=""
-            theme={theme}
-          />
+          ))}
+          <div className={`w-[1px] h-4 ${isDark ? 'bg-gray-700' : 'bg-slate-300'} mx-1`} />
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-[#21DBA4] text-black hover:bg-[#1bc490] transition-all shadow-md shadow-[#21DBA4]/20">
+            <Calendar size={14} /> {language === 'ko' ? '기간 지정' : 'Custom'}
+          </button>
         </div>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Top Keywords */}
-        <ChartCard
-          title={t('topKeywords')}
-          icon={<Tag size={18} />}
-          theme={theme}
-        >
-          {topKeywords.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={topKeywords}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} />
-                <XAxis dataKey="name" stroke={isDark ? '#94A3B8' : '#64748B'} fontSize={12} />
-                <YAxis stroke={isDark ? '#94A3B8' : '#64748B'} fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: isDark ? '#1E293B' : '#FFF',
-                    border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`,
-                    borderRadius: '8px',
-                    fontSize: '12px'
-                  }}
-                />
-                <Bar dataKey="count" fill="#21DBA4" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className={`h-[280px] flex items-center justify-center ${textMuted}`}>
-              {language === 'ko' ? '데이터가 없습니다' : 'No data'}
-            </div>
-          )}
-        </ChartCard>
-
-        {/* Main Sources */}
-        <ChartCard
-          title={t('mainSources')}
-          icon={<Globe size={18} />}
-          theme={theme}
-        >
-          {mainSources.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={mainSources}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={90}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {mainSources.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: isDark ? '#1E293B' : '#FFF',
-                    border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`,
-                    borderRadius: '8px',
-                    fontSize: '12px'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className={`h-[280px] flex items-center justify-center ${textMuted}`}>
-              {language === 'ko' ? '데이터가 없습니다' : 'No data'}
-            </div>
-          )}
-        </ChartCard>
-
-        {/* Reading Patterns */}
-        <ChartCard
-          title={t('readingPatterns')}
-          icon={<TrendingUp size={18} />}
-          theme={theme}
-        >
-          {readingPatterns.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={readingPatterns}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} />
-                <XAxis dataKey="day" stroke={isDark ? '#94A3B8' : '#64748B'} fontSize={12} />
-                <YAxis stroke={isDark ? '#94A3B8' : '#64748B'} fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: isDark ? '#1E293B' : '#FFF',
-                    border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`,
-                    borderRadius: '8px',
-                    fontSize: '12px'
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="links"
-                  stroke="#21DBA4"
-                  strokeWidth={3}
-                  dot={{ fill: '#21DBA4', r: 5 }}
-                  activeDot={{ r: 7 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className={`h-[280px] flex items-center justify-center ${textMuted}`}>
-              {language === 'ko' ? '데이터가 없습니다' : 'No data'}
-            </div>
-          )}
-        </ChartCard>
-
-        {/* Quality Analysis */}
-        <ChartCard
-          title={t('qualityAnalysis')}
-          icon={<Zap size={18} />}
-          theme={theme}
-        >
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={qualityData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} />
-              <XAxis type="number" stroke={isDark ? '#94A3B8' : '#64748B'} fontSize={12} />
-              <YAxis dataKey="name" type="category" stroke={isDark ? '#94A3B8' : '#64748B'} fontSize={11} width={100} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: isDark ? '#1E293B' : '#FFF',
-                  border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`,
-                  borderRadius: '8px',
-                  fontSize: '12px'
-                }}
-              />
-              <Bar dataKey="value" fill="#3B82F6" radius={[0, 8, 8, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-      </div>
-
-      {/* Topic Connections */}
-      <ChartCard
-        title={t('topicConnections')}
-        icon={<Network size={18} />}
-        theme={theme}
-      >
-        <ResponsiveContainer width="100%" height={350}>
-          <RadarChart data={topicData}>
-            <PolarGrid stroke={isDark ? '#334155' : '#E2E8F0'} />
-            <PolarAngleAxis dataKey="subject" stroke={isDark ? '#94A3B8' : '#64748B'} />
-            <Radar
-              name="Topics"
-              dataKey="value"
-              stroke="#21DBA4"
-              fill="#21DBA4"
-              fillOpacity={0.6}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: isDark ? '#1E293B' : '#FFF',
-                border: `1px solid ${isDark ? '#334155' : '#E2E8F0'}`,
-                borderRadius: '8px',
-                fontSize: '12px'
-              }}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
-      {/* Content Gaps / New Interests */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <InsightCard
-          title={t('newInterests')}
-          icon={<Target size={18} />}
-          theme={theme}
-          items={newInterests.length > 0 ? newInterests : [language === 'ko' ? '아직 충분한 데이터가 없습니다' : 'Not enough data yet']}
-        />
-        <InsightCard
-          title={t('contentGaps')}
-          icon={<BookOpen size={18} />}
-          theme={theme}
-          items={contentGaps.length > 0 ? contentGaps : [language === 'ko' ? '잘 균형 잡힌 관심사입니다!' : 'Well balanced interests!']}
-          isGap
-        />
-      </div>
-
-      {/* Insights Report Modal */}
-      {
-        showReport && generatedReport && createPortal(
+      {/* Stats Row - 3 Cards Side by Side */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {statsData.map((stat, idx) => (
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={(e) => e.target === e.currentTarget && setShowReport(false)}
+            key={idx}
+            className={`${cardBg} border ${cardBorder} rounded-3xl p-5 flex items-center justify-between group hover:border-gray-600 transition-colors`}
           >
-            <div
-              className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
-              style={{ maxHeight: '80dvh' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
-                    <FileText className="text-[#21DBA4]" size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedReport.title}</h2>
-                    <p className={`text-xs ${textMuted}`}>
-                      {language === 'ko' ? `${generatedReport.wordCount}자` : `${generatedReport.wordCount} chars`} •
-                      {new Date(generatedReport.generatedAt).toLocaleDateString(language === 'ko' ? 'ko' : 'en')}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowReport(false)}
-                  className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-                >
-                  <X size={18} />
-                </button>
+            {/* Left: Icon + Label/Value */}
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-2xl ${inputBg} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                {stat.icon}
               </div>
-
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-5">
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {generatedReport.topics.map((topic, idx) => (
-                    <span
-                      key={idx}
-                      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
-                    >
-                      #{topic}
-                    </span>
-                  ))}
+              <div>
+                <div className={`text-xs ${textMuted} font-bold mb-0.5`}>{stat.label}</div>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-2xl font-bold tracking-tight ${textPrimary}`}>{stat.value}</span>
+                  <span className={`text-sm ${textSecondary}`}>{stat.unit}</span>
                 </div>
-
-                <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
-                  {(() => {
-                    const content = generatedReport.content;
-                    const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
-
-                    return parts.map((part, idx) => {
-                      // Callout insight box
-                      if (part.startsWith(':::callout-insight')) {
-                        const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
-                        const lines = inner.split('\n').filter(l => l.trim());
-                        const title = lines[0];
-                        const items = lines.slice(1);
-                        return (
-                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
-                                <Lightbulb size={16} className="text-white" />
-                              </div>
-                              <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
-                            </div>
-                            <ul className="space-y-2 ml-1">
-                              {items.map((item, i) => (
-                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
-                                  {item.replace(/^[-\d.]\s*/, '')}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        );
-                      }
-                      // Callout action box
-                      if (part.startsWith(':::callout-action')) {
-                        const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
-                        const lines = inner.split('\n').filter(l => l.trim());
-                        const title = lines[0];
-                        const items = lines.slice(1);
-                        return (
-                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                                <Zap size={16} className="text-white" />
-                              </div>
-                              <h4 className="font-bold text-sm text-blue-500">{title}</h4>
-                            </div>
-                            <ul className="space-y-2 ml-1">
-                              {items.map((item, i) => (
-                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                                  {item.replace(/^[-\d.]\s*/, '')}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        );
-                      }
-                      // Regular content - enhanced markdown rendering
-                      return (
-                        <div key={idx} className="space-y-4">
-                          {part.split('\n').map((line, lineIdx) => {
-                            const trimmedLine = line.trim();
-                            if (!trimmedLine) return null;
-
-                            // H2 heading
-                            if (trimmedLine.startsWith('## ')) {
-                              return (
-                                <h2 key={lineIdx} className={`text-lg font-bold mt-6 mb-3 pb-2 border-b ${isDark ? 'text-white border-slate-700' : 'text-slate-900 border-slate-200'}`}>
-                                  {renderInlineMarkdown(trimmedLine.replace('## ', ''))}
-                                </h2>
-                              );
-                            }
-
-                            // H3 heading
-                            if (trimmedLine.startsWith('### ')) {
-                              return (
-                                <h3 key={lineIdx} className={`text-base font-bold mt-4 mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                                  {renderInlineMarkdown(trimmedLine.replace('### ', ''))}
-                                </h3>
-                              );
-                            }
-
-                            // Numbered list item
-                            if (/^\d+\.\s/.test(trimmedLine)) {
-                              return (
-                                <div key={lineIdx} className={`flex items-start gap-3 text-sm ${textMuted}`}>
-                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#21DBA4] text-white text-xs font-bold shrink-0">
-                                    {trimmedLine.match(/^(\d+)\./)?.[1]}
-                                  </span>
-                                  <span className="flex-1 leading-relaxed">
-                                    {renderInlineMarkdown(trimmedLine.replace(/^\d+\.\s*/, ''))}
-                                  </span>
-                                </div>
-                              );
-                            }
-
-                            // Bullet list item
-                            if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
-                              return (
-                                <div key={lineIdx} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-2 shrink-0" />
-                                  <span className="flex-1 leading-relaxed">
-                                    {renderInlineMarkdown(trimmedLine.replace(/^[-*]\s*/, ''))}
-                                  </span>
-                                </div>
-                              );
-                            }
-
-                            // Regular paragraph
-                            return (
-                              <p key={lineIdx} className={`text-sm leading-relaxed ${textMuted}`}>
-                                {renderInlineMarkdown(trimmedLine)}
-                              </p>
-                            );
-                          })}
-                        </div>
-                      );
-                    });
-                  })()}
-                </article>
-              </div>
-
-              {/* Footer */}
-              <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-                <button
-                  onClick={() => navigator.clipboard.writeText(generatedReport.content)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-                >
-                  {language === 'ko' ? '복사' : 'Copy'}
-                </button>
-                <button
-                  onClick={() => setShowReport(false)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
-                >
-                  {language === 'ko' ? '닫기' : 'Close'}
-                </button>
               </div>
             </div>
-          </div>,
-          document.getElementById('modal-root') || document.body
-        )
-      }
-
-      {/* AI Article Modal */}
-      {
-        showArticle && generatedArticle && createPortal(
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={(e) => e.target === e.currentTarget && setShowArticle(false)}
-          >
-            <div
-              className={`w-full max-w-2xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden ${cardClass}`}
-              style={{ maxHeight: '80dvh' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-[#21DBA4] flex items-center justify-center">
-                    <Sparkles className="text-white" size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className={`text-base font-black truncate ${textPrimary}`}>{generatedArticle.title}</h2>
-                    <p className={`text-xs ${textMuted}`}>
-                      {language === 'ko' ? `AI 아티클 • ${generatedArticle.wordCount}자` : `AI Article • ${generatedArticle.wordCount} chars`}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowArticle(false)}
-                  className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-5">
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {generatedArticle.topics.map((topic, idx) => (
-                    <span
-                      key={idx}
-                      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-[#21DBA4]' : 'bg-[#21DBA4]/10 text-[#21DBA4]'}`}
-                    >
-                      #{topic}
-                    </span>
-                  ))}
-                </div>
-
-                <article className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
-                  {(() => {
-                    const content = generatedArticle.content;
-                    const parts = content.split(/(:::callout-insight[\s\S]*?:::|:::callout-action[\s\S]*?:::)/g);
-
-                    return parts.map((part, idx) => {
-                      // Callout insight box
-                      if (part.startsWith(':::callout-insight')) {
-                        const inner = part.replace(':::callout-insight', '').replace(':::', '').trim();
-                        const lines = inner.split('\n').filter(l => l.trim());
-                        const title = lines[0];
-                        const items = lines.slice(1);
-                        return (
-                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-[#21DBA4]/15 to-[#21DBA4]/5 border-[#21DBA4]/30' : 'bg-gradient-to-br from-[#21DBA4]/10 to-[#21DBA4]/5 border-[#21DBA4]/20'}`}>
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="w-8 h-8 rounded-lg bg-[#21DBA4] flex items-center justify-center">
-                                <Lightbulb size={16} className="text-white" />
-                              </div>
-                              <h4 className="font-bold text-sm text-[#21DBA4]">{title}</h4>
-                            </div>
-                            <ul className="space-y-2 ml-1">
-                              {items.map((item, i) => (
-                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] mt-1.5 shrink-0" />
-                                  {item.replace(/^[-\d.]\s*/, '')}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        );
-                      }
-                      // Callout action box
-                      if (part.startsWith(':::callout-action')) {
-                        const inner = part.replace(':::callout-action', '').replace(':::', '').trim();
-                        const lines = inner.split('\n').filter(l => l.trim());
-                        const title = lines[0];
-                        const items = lines.slice(1);
-                        return (
-                          <div key={idx} className={`my-6 p-5 rounded-2xl border ${isDark ? 'bg-gradient-to-br from-blue-500/15 to-blue-500/5 border-blue-500/30' : 'bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20'}`}>
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
-                                <Zap size={16} className="text-white" />
-                              </div>
-                              <h4 className="font-bold text-sm text-blue-500">{title}</h4>
-                            </div>
-                            <ul className="space-y-2 ml-1">
-                              {items.map((item, i) => (
-                                <li key={i} className={`flex items-start gap-2 text-sm ${textMuted}`}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                                  {item.replace(/^[-\d.]\s*/, '')}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        );
-                      }
-                      // Regular content - enhanced
-                      return part.split('\n').map((line, lineIdx) => {
-                        const cleanLine = stripMarkdown(line);
-
-                        // H2 - Major section header
-                        if (line.startsWith('## ')) {
-                          return (
-                            <div key={`${idx}-${lineIdx}`} className="mt-8 mb-4 first:mt-0">
-                              <h2 className={`text-lg font-black pb-2 border-b-2 text-[#21DBA4] ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                                {stripMarkdown(line.replace('## ', ''))}
-                              </h2>
-                            </div>
-                          );
-                        }
-                        // H3 - Sub section header
-                        if (line.startsWith('### ')) {
-                          return (
-                            <h3 key={`${idx}-${lineIdx}`} className={`mt-5 mb-2 text-base font-bold flex items-center gap-2 ${textPrimary}`}>
-                              <span className="w-1 h-5 rounded-full bg-[#21DBA4]" />
-                              {stripMarkdown(line.replace('### ', ''))}
-                            </h3>
-                          );
-                        }
-                        // Bullet list
-                        if (line.startsWith('- ')) {
-                          return (
-                            <div key={`${idx}-${lineIdx}`} className={`flex items-start gap-3 py-1.5 ${textMuted}`}>
-                              <span className="w-2 h-2 rounded-full bg-[#21DBA4]/60 mt-1.5 shrink-0" />
-                              <span className="text-sm leading-relaxed">{stripMarkdown(line.replace('- ', ''))}</span>
-                            </div>
-                          );
-                        }
-                        // Emphasis line (italic)
-                        if (line.startsWith('*') && line.endsWith('*')) {
-                          return (
-                            <p key={`${idx}-${lineIdx}`} className={`mt-4 text-sm italic py-3 px-4 rounded-xl ${isDark ? 'bg-slate-800/50 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
-                              {line.replace(/\*/g, '')}
-                            </p>
-                          );
-                        }
-                        // Horizontal rule
-                        if (line.startsWith('---')) {
-                          return <hr key={`${idx}-${lineIdx}`} className={`my-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} />;
-                        }
-                        // Regular paragraph
-                        if (cleanLine.trim()) {
-                          return (
-                            <p key={`${idx}-${lineIdx}`} className={`mb-3 text-sm leading-relaxed ${textMuted}`}>
-                              {cleanLine}
-                            </p>
-                          );
-                        }
-                        return null;
-                      });
-                    });
-                  })()}
-                </article>
-              </div>
-
-              {/* Footer */}
-              <div className={`flex-shrink-0 px-5 py-3 border-t flex justify-end gap-2 ${isDark ? 'border-slate-700 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-                <button
-                  onClick={() => navigator.clipboard.writeText(generatedArticle.content)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-                >
-                  {language === 'ko' ? '복사' : 'Copy'}
-                </button>
-                <button
-                  onClick={() => setShowArticle(false)}
-                  className="px-3 py-1.5 rounded-lg font-semibold text-sm bg-[#21DBA4] text-white hover:bg-[#1bc290] transition-colors"
-                >
-                  {language === 'ko' ? '닫기' : 'Close'}
-                </button>
-              </div>
+            {/* Right: Trend + Sub */}
+            <div className="flex flex-col items-end">
+              <span className="text-xs font-bold text-[#21DBA4] bg-[#21DBA4]/10 px-2 py-0.5 rounded-full mb-1">{stat.trend}</span>
+              <span className={`text-[10px] ${textMuted}`}>{stat.sub}</span>
             </div>
-          </div>,
-          document.getElementById('modal-root') || document.body
-        )
-      }
-
-      {/* Delete Confirmation Modal */}
-      {
-        pendingDeleteItem && createPortal(
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => setPendingDeleteItem(null)}
-          >
-            <div
-              className={`w-full max-w-sm rounded-2xl border shadow-2xl p-5 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}
-              style={{ maxHeight: '80dvh' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>
-                {language === 'ko' ? '삭제하시겠습니까?' : 'Delete this item?'}
-              </h3>
-              <p className={`text-sm mb-4 ${textMuted}`}>
-                {language === 'ko'
-                  ? `"${pendingDeleteItem.title}"을(를) 삭제합니다. 이 작업은 취소할 수 없습니다.`
-                  : `"${pendingDeleteItem.title}" will be deleted. This action cannot be undone.`}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPendingDeleteItem(null)}
-                  className={`flex-1 py-2 rounded-xl font-bold text-sm transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
-                >
-                  {language === 'ko' ? '취소' : 'Cancel'}
-                </button>
-                <button
-                  onClick={() => {
-                    if (pendingDeleteItem.type === 'report') {
-                      const updated = reportHistory.filter(r => r.id !== pendingDeleteItem.id);
-                      setReportHistory(updated);
-                      localStorage.setItem('ai_reports_history', JSON.stringify(updated));
-                      saveHistoryToFirestore('reports', updated);
-                    } else {
-                      const updated = articleHistory.filter(a => a.id !== pendingDeleteItem.id);
-                      setArticleHistory(updated);
-                      localStorage.setItem('ai_articles_history', JSON.stringify(updated));
-                      saveHistoryToFirestore('articles', updated);
-                    }
-                    setPendingDeleteItem(null);
-                  }}
-                  className="flex-1 py-2 rounded-xl font-bold text-sm bg-red-500 text-white hover:bg-red-600 transition-colors"
-                >
-                  {language === 'ko' ? '삭제' : 'Delete'}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.getElementById('modal-root') || document.body
-        )
-      }
-    </div >
-  );
-};
-
-// Helper Components
-const StatCard = ({ icon, label, value, trend, theme }: any) => {
-  const isDark = theme === 'dark';
-  return (
-    <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-      <div className="flex items-center gap-2 mb-2 text-slate-400">
-        {icon}
-        <span className="text-xs font-bold uppercase tracking-wide">{label}</span>
-      </div>
-      <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{value}</div>
-      {trend && <div className="text-xs text-[#21DBA4] font-bold mt-1">{trend}</div>}
-    </div>
-  );
-};
-
-const ChartCard = ({ title, icon, children, theme }: any) => {
-  const isDark = theme === 'dark';
-  return (
-    <div className={`rounded-2xl border p-6 shadow-sm ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="text-[#21DBA4]">{icon}</div>
-        <h3 className={`font-black ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{title}</h3>
-      </div>
-      {children}
-    </div>
-  );
-};
-
-const InsightCard = ({ title, icon, items, isGap, theme }: any) => {
-  const isDark = theme === 'dark';
-  return (
-    <div className={`rounded-2xl border p-6 shadow-sm ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className={isGap ? 'text-orange-500' : 'text-[#21DBA4]'}>{icon}</div>
-        <h3 className={`font-black ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{title}</h3>
-      </div>
-      <ul className="space-y-2">
-        {items.map((item: string, idx: number) => (
-          <li key={idx} className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${isGap ? 'bg-orange-500' : 'bg-[#21DBA4]'}`}></div>
-            {item}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
+
+      {/* Row 2: Bento Grid - 3 Cards Horizontal */}
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-6">
+
+        {/* Heatmap Card - 4/12 ≈ 33% */}
+        <div className={`flex-1 md:flex-[4] ${cardBg} border ${cardBorder} rounded-3xl p-5`}>
+          <div className="flex items-center gap-2 mb-5">
+            <Clock className="w-4 h-4 text-[#21DBA4]" />
+            <h3 className={`text-sm font-bold ${textPrimary}`}>
+              {language === 'ko' ? '수집 패턴' : 'Collection Pattern'}
+            </h3>
+          </div>
+          <div className={`${isDark ? 'bg-gray-900/50' : 'bg-slate-50'} rounded-2xl p-4`}>
+            <div className="space-y-2">
+              {heatmapData.map((d, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className={`text-[10px] w-4 ${textMuted} font-medium`}>{d.day}</span>
+                  <div className="flex-1 grid grid-cols-12 gap-0.5">
+                    {d.hours.map((val, idx) => (
+                      <div
+                        key={idx}
+                        className="aspect-square rounded-sm"
+                        style={{
+                          backgroundColor: val === 0
+                            ? (isDark ? '#1F2937' : '#e2e8f0')
+                            : '#21DBA4',
+                          opacity: val === 0 ? 1 : 0.3 + (val * 0.2)
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className={`mt-4 text-xs ${textSecondary} text-center`}>
+            {language === 'ko' ? '주로 ' : 'Most active '}
+            <span className="text-[#21DBA4] font-bold">{language === 'ko' ? '밤 9시 ~ 11시' : '9PM - 11PM'}</span>
+            {language === 'ko' ? '에 집중됩니다.' : '.'}
+          </p>
+        </div>
+
+        {/* Interest Evolution Card - 5/12 ≈ 42% */}
+        <div className={`flex-1 md:flex-[5] ${cardBg} border ${cardBorder} rounded-3xl p-5 relative overflow-hidden`}>
+          <div className="flex items-center gap-2 mb-5">
+            <TrendingUp className="w-4 h-4 text-[#21DBA4]" />
+            <h3 className={`text-sm font-bold ${textPrimary}`}>
+              {language === 'ko' ? '관심사 변화' : 'Interest Evolution'}
+            </h3>
+          </div>
+          <div className="relative">
+            {/* Vertical Line */}
+            <div className={`absolute left-2 top-3 bottom-3 w-0.5 ${isDark ? 'bg-gray-800' : 'bg-slate-200'}`} />
+            <div className="space-y-3">
+              {interestFlow.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3 relative">
+                  {/* Dot */}
+                  <div className={`w-4 h-4 rounded-full z-10 shrink-0 ${item.active
+                    ? 'bg-[#21DBA4] ring-4 ring-[#21DBA4]/20'
+                    : isDark ? 'bg-gray-700' : 'bg-slate-300'
+                    }`} />
+                  {/* Content */}
+                  <div className={`flex-1 p-3 rounded-xl border ${item.active
+                    ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30'
+                    : isDark ? 'bg-gray-800/30 border-gray-800' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                    <span className={`text-[9px] ${textMuted} block mb-0.5`}>{item.period}</span>
+                    <span className={`text-sm font-bold ${item.active ? 'text-[#21DBA4]' : isDark ? 'text-gray-300' : 'text-slate-700'}`}>{item.topic}</span>
+                  </div>
+                  {/* Percent */}
+                  <span className={`text-xs font-bold ${isDark ? 'text-gray-600' : 'text-slate-400'} shrink-0`}>{item.percent}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Decorative blur */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#21DBA4] blur-[100px] opacity-10 pointer-events-none" />
+        </div>
+
+        {/* Keywords & Trends Card - 3/12 = 25% */}
+        <div className={`flex-1 md:flex-[3] ${cardBg} border ${cardBorder} rounded-3xl p-5 flex flex-col`}>
+          {/* Keywords Section */}
+          <div className="mb-4">
+            <h3 className={`text-[10px] font-bold ${textMuted} mb-3 uppercase tracking-widest`}>Weekly Keywords</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {weeklyKeywords.map((k, i) => (
+                <span key={i} className={`px-2.5 py-1 rounded-full ${inputBg} border ${cardBorder} hover:border-[#21DBA4] ${isDark ? 'text-gray-300' : 'text-slate-600'} text-[11px] font-bold cursor-pointer transition-colors`}>
+                  #{k.tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className={`w-full h-px ${isDark ? 'bg-gray-800' : 'bg-slate-200'} my-2`} />
+
+          {/* Trends Section */}
+          <div className="flex-1 space-y-2 mt-2">
+            {risingTrends.map((t, i) => (
+              <div key={i} className="flex justify-between items-center">
+                <span className={`text-xs font-bold ${t.type === 'rising' ? (isDark ? 'text-gray-200' : 'text-slate-700') : `${textMuted} line-through`}`}>{t.name}</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.type === 'rising'
+                  ? 'text-orange-400 bg-orange-500/10'
+                  : 'text-blue-400 bg-blue-500/10'
+                  }`}>
+                  {t.change}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid Layout for Remaining Sections */}
+      <div className="grid grid-cols-12 gap-4 md:gap-6">
+
+        {/* Row 3: Content Studio (Full Width) */}
+        <div className={`col-span-12 bg-gradient-to-b ${isDark ? 'from-[#1E232B] to-[#161B22]' : 'from-slate-100 to-white'} border ${isDark ? 'border-gray-700' : 'border-slate-200'} rounded-3xl p-1 relative overflow-hidden group`}>
+          <div className={`absolute top-0 right-0 w-[500px] h-[500px] bg-[#21DBA4] blur-[180px] opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-700`} />
+
+          <div className={`${isDark ? 'bg-[#0F1115]/50' : 'bg-white/50'} backdrop-blur-sm rounded-[20px] p-6 md:p-8`}>
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Left: Search & Select - Takes 7/10 of space */}
+              <div className="flex-1 md:flex-[7] flex flex-col min-w-0">
+                <div className="mb-6">
+                  <h3 className={`text-xl font-bold ${textPrimary} flex items-center gap-2 mb-2`}>
+                    <PenTool className="w-5 h-5 text-[#21DBA4]" />
+                    {language === 'ko' ? '콘텐츠 생성 스튜디오' : 'Content Studio'}
+                  </h3>
+                  <p className={`text-sm ${textSecondary}`}>
+                    {language === 'ko' ? '저장된 클립들을 조합하여 새로운 문서를 작성합니다.' : 'Combine clips to create new content.'}
+                  </p>
+                </div>
+
+                {/* Toolbar */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted}`} />
+                    <input
+                      type="text"
+                      placeholder={language === 'ko' ? '키워드로 클립 검색...' : 'Search clips...'}
+                      className={`w-full ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-100 border-slate-200'} border rounded-xl pl-9 pr-4 py-2.5 text-sm ${textPrimary} focus:outline-none focus:border-[#21DBA4] ${isDark ? 'focus:bg-gray-800' : 'focus:bg-white'}`}
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Filter Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                      className={`px-4 py-2.5 ${inputBg} ${hoverBg} border ${cardBorder} rounded-xl text-sm font-bold ${isDark ? 'text-gray-300' : 'text-slate-600'} flex items-center gap-2`}
+                    >
+                      <Filter size={16} />
+                      {studioFilterTag || (language === 'ko' ? '필터' : 'Filter')}
+                      <ChevronDown size={14} />
+                    </button>
+                    {showFilterDropdown && (
+                      <div className={`absolute top-full mt-1 left-0 z-50 min-w-[160px] ${cardBg} border ${cardBorder} rounded-xl shadow-lg overflow-hidden`}>
+                        <button
+                          onClick={() => { setStudioFilterTag(''); setShowFilterDropdown(false); }}
+                          className={`w-full px-4 py-2 text-left text-sm ${textSecondary} ${hoverBg}`}
+                        >
+                          {language === 'ko' ? '전체' : 'All'}
+                        </button>
+                        {availableTags.map(tag => (
+                          <button
+                            key={tag}
+                            onClick={() => { setStudioFilterTag(tag); setShowFilterDropdown(false); }}
+                            className={`w-full px-4 py-2 text-left text-sm ${studioFilterTag === tag ? 'text-[#21DBA4] bg-[#21DBA4]/10' : textSecondary} ${hoverBg}`}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleLoadClips}
+                    className="px-5 py-2.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-[#21DBA4]/10"
+                  >
+                    <RefreshCw size={16} /> {language === 'ko' ? '조회' : 'Load'}
+                  </button>
+                </div>
+
+                {/* Clip List */}
+                <div className={`flex-1 ${isDark ? 'bg-gray-900/50 border-gray-800' : 'bg-slate-50 border-slate-200'} border rounded-2xl overflow-hidden max-h-[320px]`}>
+                  <div className={`p-3 border-b ${cardBorder} flex justify-between items-center ${isDark ? 'bg-gray-900' : 'bg-slate-100'}`}>
+                    <span className={`text-xs font-bold ${textMuted} pl-2`}>{language === 'ko' ? `검색 결과 ${filteredClips.length}건` : `${filteredClips.length} results`}</span>
+                    <button onClick={() => setSelectedClips(filteredClips.map(c => c.id))} className="text-xs font-bold text-[#21DBA4] hover:underline pr-2">
+                      {language === 'ko' ? '전체 선택' : 'Select All'}
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto p-2 space-y-2 max-h-[260px]">
+                    {filteredClips.length === 0 ? (
+                      <div className={`text-center py-8 ${textMuted}`}>
+                        <Search size={24} className="mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">{language === 'ko' ? '조회 버튼을 눌러 클립을 불러오세요' : 'Click Load to fetch clips'}</p>
+                      </div>
+                    ) : (
+                      filteredClips.map((clip) => (
+                        <div
+                          key={clip.id}
+                          className={`group/item flex items-start gap-3 p-3 rounded-xl border transition-all ${selectedClips.includes(clip.id)
+                            ? 'bg-[#21DBA4]/10 border-[#21DBA4] shadow-[inset_0_0_10px_rgba(33,219,164,0.05)]'
+                            : `${isDark ? 'bg-gray-800/20 border-gray-800 hover:bg-gray-800' : 'bg-white border-slate-200 hover:bg-slate-50'}`
+                            }`}
+                        >
+                          {/* Checkbox */}
+                          <div
+                            onClick={() => toggleClipSelection(clip.id)}
+                            className={`mt-0.5 cursor-pointer transition-colors ${selectedClips.includes(clip.id) ? 'text-[#21DBA4]' : `${isDark ? 'text-gray-600 group-hover/item:text-gray-500' : 'text-slate-400'}`}`}
+                          >
+                            {selectedClips.includes(clip.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0" onClick={() => toggleClipSelection(clip.id)}>
+                            <div className="flex items-center gap-2 mb-1">
+                              {clip.tags?.[0] && (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${inputBg} ${textMuted} border ${cardBorder}`}>{clip.tags[0]}</span>
+                              )}
+                              <span className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-slate-400'}`}>
+                                {parseDate(clip.createdAt)?.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
+                              </span>
+                            </div>
+                            <h4 className={`text-sm font-bold leading-snug truncate cursor-pointer ${selectedClips.includes(clip.id) ? textPrimary : `${isDark ? 'text-gray-400 group-hover/item:text-gray-200' : 'text-slate-600 group-hover/item:text-slate-800'}`}`}>
+                              {clip.title || 'Untitled'}
+                            </h4>
+                          </div>
+
+                          {/* View Button */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setViewingClipId(clip.id); }}
+                            className={`p-1.5 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity ${isDark ? 'hover:bg-gray-700 text-gray-500' : 'hover:bg-slate-200 text-slate-400'}`}
+                            title={language === 'ko' ? '클립 보기' : 'View Clip'}
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Output Type Selection - Compact 4-column grid below clip list */}
+                <div className="mt-4">
+                  <h4 className={`text-xs font-bold ${textMuted} mb-3 uppercase tracking-wider`}>
+                    {language === 'ko' ? '출력 형태 선택' : 'Output Type'}
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {contentTypes.map((type) => (
+                      <div
+                        key={type.id}
+                        onClick={() => setSelectedContentType(selectedContentType === type.id ? null : type.id)}
+                        className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center gap-2 ${selectedContentType === type.id
+                          ? 'bg-[#21DBA4] text-black border-[#21DBA4] shadow-md shadow-[#21DBA4]/20'
+                          : `${isDark ? 'bg-gray-800/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'}`
+                          }`}
+                      >
+                        <div className={`p-1.5 rounded-lg ${selectedContentType === type.id ? 'bg-black/10' : isDark ? 'bg-gray-900' : 'bg-slate-200'}`}>
+                          {type.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-bold truncate">{type.label}</div>
+                        </div>
+                        {selectedContentType === type.id && <CheckCircle2 size={14} />}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Generate Button */}
+                  <button
+                    onClick={handleGenerate}
+                    disabled={!selectedContentType || selectedClips.length === 0 || generatingReport}
+                    className={`mt-3 w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${selectedContentType && selectedClips.length > 0
+                      ? 'bg-[#21DBA4] text-black hover:bg-[#1bc490] shadow-lg shadow-[#21DBA4]/20'
+                      : `${inputBg} ${textMuted} cursor-not-allowed`
+                      }`}
+                  >
+                    {generatingReport ? (
+                      <><Loader2 size={16} className="animate-spin" /> {language === 'ko' ? '생성 중...' : 'Generating...'}</>
+                    ) : (
+                      <><Sparkles size={16} fill={selectedContentType && selectedClips.length > 0 ? "black" : "none"} />
+                        {selectedContentType ? `${contentTypes.find(t => t.id === selectedContentType)?.label} ${language === 'ko' ? '생성하기' : 'Generate'}` : (language === 'ko' ? '옵션을 선택하세요' : 'Select option')}</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: Unread & History */}
+        <div className={`col-span-12 md:col-span-6 ${cardBg} border ${cardBorder} rounded-3xl p-6`}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className={`text-base font-bold ${textPrimary} flex items-center gap-2`}>
+              <MessageSquare className="w-4 h-4 text-gray-400" /> {language === 'ko' ? '읽지 않은 클립' : 'Unread Clips'}
+            </h3>
+            <button className="text-[10px] font-bold text-[#21DBA4] hover:underline flex items-center gap-1 bg-[#21DBA4]/10 px-2 py-1 rounded-full">
+              <Sparkles size={10} /> {language === 'ko' ? 'AI 요약 보기' : 'AI Summary'}
+            </button>
+          </div>
+          <div className="space-y-2">
+            {unreadClips.map((clip: any) => (
+              <div key={clip.id} className={`p-3 ${isDark ? 'bg-gray-800/30 border-gray-800 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'} border rounded-xl transition-colors group cursor-pointer flex items-center justify-between`}>
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] shrink-0" />
+                  <div className="truncate">
+                    <div className={`text-sm font-medium ${isDark ? 'text-gray-300 group-hover:text-white' : 'text-slate-700 group-hover:text-slate-900'} truncate`}>{clip.title}</div>
+                    <div className={`text-[10px] ${textMuted}`}>{clip.source || 'Web'} • {clip.time || '2h ago'}</div>
+                  </div>
+                </div>
+                <ChevronRight size={14} className={`${isDark ? 'text-gray-600 group-hover:text-gray-400' : 'text-slate-400 group-hover:text-slate-600'}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={`col-span-12 md:col-span-6 ${cardBg} border ${cardBorder} rounded-3xl p-6`}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className={`text-base font-bold ${textPrimary} flex items-center gap-2`}>
+              <History className="w-4 h-4 text-gray-400" /> {language === 'ko' ? '생성 기록' : 'History'}
+            </h3>
+            <button className={`text-xs ${textMuted} hover:${textPrimary} transition-colors`}>{language === 'ko' ? '전체보기' : 'View All'}</button>
+          </div>
+          <div className="space-y-2">
+            {creationHistory.map(item => (
+              <div key={item.id} className={`p-3 ${isDark ? 'bg-gray-800/30 border-gray-800 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'} border rounded-xl transition-colors flex items-center justify-between`}>
+                <div className="flex items-center gap-3">
+                  <span className={`text-[10px] font-bold ${isDark ? 'bg-gray-700 text-gray-300 border-gray-600' : 'bg-slate-200 text-slate-600 border-slate-300'} px-1.5 py-0.5 rounded border`}>{item.type}</span>
+                  <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>{item.title}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] ${textMuted}`}>{item.date}</span>
+                  <CheckCircle2 size={14} className="text-[#21DBA4]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };

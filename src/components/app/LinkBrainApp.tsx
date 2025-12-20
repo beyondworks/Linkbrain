@@ -1886,7 +1886,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            </div>
                            <div className={`flex items-center gap-3 pl-4 border-l ml-auto ${status === 'expired' || theme === 'dark' ? 'border-white/10' : 'border-slate-900/10'}`}>
                               <button
-                                 onClick={() => window.location.href = '/#pricing'}
+                                 onClick={() => window.location.href = 'https://linkbrain.lemonsqueezy.com/checkout/buy/d7c88378-7cda-49f6-95b2-e63d01b01312'}
                                  className={`whitespace-nowrap font-bold transition-colors text-xs md:text-sm ${status === 'expired' || theme === 'dark' ? 'hover:text-[#21DBA4]' : 'text-[#059669] hover:text-[#047857]'}`}
                               >
                                  {language === 'ko' ? '업그레이드' : 'Upgrade'}

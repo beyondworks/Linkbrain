@@ -423,31 +423,10 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
     // Check if there are unsaved changes
     const hasChanges = firstNameInput !== initialFirstName || lastNameInput !== initialLastName;
 
-    // Open Stripe Customer Portal
+    // Open Lemon Squeezy Customer Portal
     const handleBillingPortal = async () => {
-        if (!user?.uid) {
-            toast.error('로그인이 필요합니다.');
-            return;
-        }
-        setIsLoadingPortal(true);
-        try {
-            const response = await fetch('/api/payment/stripe-portal', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: user.uid,
-                    returnUrl: window.location.href,
-                }),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to open billing portal');
-            if (data.url) window.location.href = data.url;
-        } catch (error: any) {
-            console.error('Billing portal error:', error);
-            toast.error(error.message || '결제 포털을 열 수 없습니다.');
-        } finally {
-            setIsLoadingPortal(false);
-        }
+        // Lemon Squeezy customer portal - opens in new tab
+        window.open('https://app.lemonsqueezy.com/my-orders', '_blank');
     };
 
     // Navigate to pricing page for upgrade
