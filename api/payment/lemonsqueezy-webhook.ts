@@ -4,13 +4,21 @@
  * Handles subscription lifecycle events from Lemon Squeezy
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as crypto from 'crypto';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initFirebaseAdmin } from './_lib/firebase-admin';
 
-// Initialize Firebase Admin
-initFirebaseAdmin();
+// Initialize Firebase Admin (singleton)
+if (getApps().length === 0) {
+    initializeApp({
+        credential: cert({
+            projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+        })
+    });
+}
+
 const db = getFirestore();
 
 // Webhook secret from environment
@@ -131,7 +139,7 @@ function mapStatus(lsStatus: string, cancelled: boolean): 'active' | 'cancelled'
     }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
     // Only allow POST
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
