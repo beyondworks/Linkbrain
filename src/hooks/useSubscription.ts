@@ -19,6 +19,13 @@ export interface SubscriptionState {
     loading: boolean;
     isMaster: boolean;
     referralCount?: number;
+    // Lemon Squeezy specific
+    lemonSqueezy?: {
+        subscriptionId: string | null;
+        customerId: number | null;
+        renewsAt: string | null;
+        endsAt: string | null;
+    };
 }
 
 export type UseSubscriptionReturn = SubscriptionState;
