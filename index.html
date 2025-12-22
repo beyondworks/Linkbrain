@@ -40,6 +40,26 @@
     body.dark {
       background-color: #0f172a;
     }
+
+    /* PWA Install Prompt - Desktop: right-bottom, Mobile: center */
+    #pwa-install-prompt {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 99999;
+      width: auto;
+      max-width: 320px;
+    }
+
+    @media (max-width: 768px) {
+      #pwa-install-prompt {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 40px);
+      }
+    }
   </style>
 </head>
 
@@ -48,15 +68,19 @@
   <div id="modal-root" style="position: relative; z-index: 999999;"></div>
   <script type="module" src="/src/main.tsx"></script>
 
-  <!-- PWA 설치 프롬프트 (React 앱에서 관리) -->
-  <div id="pwa-install-prompt" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99999;">
-    <div style="background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-left: 4px solid #21DBA4; max-width: 300px;">
+  <!-- PWA 설치 프롬프트 -->
+  <div id="pwa-install-prompt">
+    <div
+      style="background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-left: 4px solid #21DBA4;">
       <div style="margin-bottom: 12px;">
         <strong style="color: #1f2937;">LinkBrain을 앱으로 설치하세요!</strong>
-        <p style="margin: 4px 0 0 0; font-size: 13px; color: #666;">홈 화면에서 바로 접근하고 오프라인에서도 사용 가능합니다.</p>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #666; line-height: 1.5;">홈 화면에서 바로 접근하고<br>오프라인에서도 사용
+          가능합니다.</p>
       </div>
-      <button id="pwa-install-button" style="width: 100%; padding: 10px; background: #21DBA4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">📱 설치하기</button>
-      <button id="pwa-dismiss-button" style="width: 100%; padding: 8px; background: transparent; color: #999; border: none; border-radius: 4px; cursor: pointer; margin-top: 6px; font-size: 12px;">나중에</button>
+      <button id="pwa-install-button"
+        style="width: 100%; padding: 10px; background: #21DBA4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">설치하기</button>
+      <button id="pwa-dismiss-button"
+        style="width: 100%; padding: 8px; background: transparent; color: #999; border: none; border-radius: 4px; cursor: pointer; margin-top: 6px; font-size: 12px;">나중에</button>
     </div>
   </div>
 
@@ -72,7 +96,7 @@
     }
 
     // PWA 설치 프롬프트 로직
-    (function() {
+    (function () {
       let deferredPrompt = null;
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -86,7 +110,7 @@
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        
+
         // 2초 후 프롬프트 표시
         setTimeout(() => {
           const container = document.getElementById('pwa-install-prompt');
