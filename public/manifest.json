@@ -1,80 +1,26 @@
 {
-  "name": "LinkBrain - AI Link Saver & Second Brain",
+  "name": "LinkBrain",
   "short_name": "LinkBrain",
-  "description": "Your second brain for links and insights. Save, organize, and discover links with AI-powered summaries.",
-  "start_url": "/",
-  "scope": "/",
+  "description": "Your second brain for links and insights",
+  "theme_color": "#00d9a3",
+  "background_color": "#fffcfc",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "theme_color": "#21DBA4",
-  "background_color": "#ffffff",
-  "categories": ["productivity", "utilities"],
-  "screenshots": [
-    {
-      "src": "/screenshot-540x720.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/screenshot-1280x720.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ],
   "icons": [
     {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-maskable-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-maskable-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Add Link",
-      "short_name": "Add",
-      "description": "Quickly add a new link to LinkBrain",
-      "url": "/?action=add",
-      "icons": [
-        {
-          "src": "/shortcut-add-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "My Links",
-      "short_name": "Links",
-      "description": "View all your saved links",
-      "url": "/?section=links",
-      "icons": [
-        {
-          "src": "/shortcut-links-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    }
-  ],
+  "start_url": "/",
+  "scope": "/",
   "share_target": {
     "action": "/share-target",
     "method": "GET",
@@ -84,5 +30,6 @@
       "text": "text",
       "url": "url"
     }
-  }
+  },
+  "id": "com.linkbrain.app"
 }
