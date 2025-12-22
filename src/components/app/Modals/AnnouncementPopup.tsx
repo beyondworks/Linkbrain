@@ -90,7 +90,7 @@ export function AnnouncementPopup({
                             </h3>
                         )}
 
-                        <p className={`text-sm mb-5 leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
+                        <p className={`text-sm mb-5 leading-relaxed whitespace-pre-line ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
                             }`}>
                             {popup.content}
                         </p>
@@ -114,8 +114,8 @@ export function AnnouncementPopup({
                             <button
                                 onClick={onClose}
                                 className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${theme === 'dark'
-                                        ? 'bg-slate-800 text-white hover:bg-slate-700'
-                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                    ? 'bg-slate-800 text-white hover:bg-slate-700'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                     }`}
                             >
                                 {t.close}

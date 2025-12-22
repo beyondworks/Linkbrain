@@ -530,11 +530,11 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
                 {/* Toolbar */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   <div className="relative flex-1 min-w-[200px]">
-                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted}`} />
+                    <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted}`} />
                     <input
                       type="text"
                       placeholder={language === 'ko' ? '키워드로 클립 검색...' : 'Search clips...'}
-                      className={`w-full ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-100 border-slate-200'} border rounded-xl pl-9 pr-4 py-2.5 text-sm ${textPrimary} focus:outline-none focus:border-[#21DBA4] ${isDark ? 'focus:bg-gray-800' : 'focus:bg-white'}`}
+                      className={`w-full ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-100 border-slate-200'} border rounded-xl pl-10 pr-4 py-2.5 text-sm ${textPrimary} placeholder:${textMuted} focus:outline-none focus:border-[#21DBA4] ${isDark ? 'focus:bg-gray-800' : 'focus:bg-white'}`}
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                     />
@@ -569,6 +569,28 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
                         ))}
                       </div>
                     )}
+                  </div>
+
+                  {/* Period Selection */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setPeriod('weekly')}
+                      className={`px-3 py-2.5 rounded-l-xl text-xs font-bold border transition-all ${period === 'weekly'
+                          ? 'bg-[#21DBA4] text-black border-[#21DBA4]'
+                          : `${inputBg} ${isDark ? 'border-gray-700 text-gray-400' : 'border-slate-200 text-slate-500'} ${hoverBg}`
+                        }`}
+                    >
+                      {language === 'ko' ? '주간' : 'Week'}
+                    </button>
+                    <button
+                      onClick={() => setPeriod('monthly')}
+                      className={`px-3 py-2.5 rounded-r-xl text-xs font-bold border-y border-r transition-all ${period === 'monthly'
+                          ? 'bg-[#21DBA4] text-black border-[#21DBA4]'
+                          : `${inputBg} ${isDark ? 'border-gray-700 text-gray-400' : 'border-slate-200 text-slate-500'} ${hoverBg}`
+                        }`}
+                    >
+                      {language === 'ko' ? '월간' : 'Month'}
+                    </button>
                   </div>
 
                   <button
@@ -644,12 +666,12 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
                   <h4 className={`text-xs font-bold ${textMuted} mb-3 uppercase tracking-wider`}>
                     {language === 'ko' ? '출력 형태 선택' : 'Output Type'}
                   </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="flex flex-col gap-2">
                     {contentTypes.map((type) => (
                       <div
                         key={type.id}
                         onClick={() => setSelectedContentType(selectedContentType === type.id ? null : type.id)}
-                        className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center gap-2 ${selectedContentType === type.id
+                        className={`px-3 py-2 rounded-xl border cursor-pointer transition-all flex items-center gap-2 ${selectedContentType === type.id
                           ? 'bg-[#21DBA4] text-black border-[#21DBA4] shadow-md shadow-[#21DBA4]/20'
                           : `${isDark ? 'bg-gray-800/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'}`
                           }`}
