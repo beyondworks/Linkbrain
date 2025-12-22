@@ -530,11 +530,11 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
                 {/* Toolbar */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   <div className="relative flex-1 min-w-[200px]">
-                    <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted}`} />
+                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted}`} />
                     <input
                       type="text"
                       placeholder={language === 'ko' ? '키워드로 클립 검색...' : 'Search clips...'}
-                      className={`w-full ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-100 border-slate-200'} border rounded-xl pl-10 pr-4 py-2.5 text-sm ${textPrimary} placeholder:${textMuted} focus:outline-none focus:border-[#21DBA4] ${isDark ? 'focus:bg-gray-800' : 'focus:bg-white'}`}
+                      className={`w-full ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-100 border-slate-200'} border rounded-xl pl-11 pr-4 py-2.5 text-sm ${textPrimary} placeholder:text-slate-400 focus:outline-none focus:border-[#21DBA4] ${isDark ? 'focus:bg-gray-800 placeholder:text-gray-500' : 'focus:bg-white'}`}
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                     />
@@ -571,26 +571,21 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
                     )}
                   </div>
 
-                  {/* Period Selection */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setPeriod('weekly')}
-                      className={`px-3 py-2.5 rounded-l-xl text-xs font-bold border transition-all ${period === 'weekly'
-                          ? 'bg-[#21DBA4] text-black border-[#21DBA4]'
-                          : `${inputBg} ${isDark ? 'border-gray-700 text-gray-400' : 'border-slate-200 text-slate-500'} ${hoverBg}`
-                        }`}
-                    >
-                      {language === 'ko' ? '주간' : 'Week'}
-                    </button>
-                    <button
-                      onClick={() => setPeriod('monthly')}
-                      className={`px-3 py-2.5 rounded-r-xl text-xs font-bold border-y border-r transition-all ${period === 'monthly'
-                          ? 'bg-[#21DBA4] text-black border-[#21DBA4]'
-                          : `${inputBg} ${isDark ? 'border-gray-700 text-gray-400' : 'border-slate-200 text-slate-500'} ${hoverBg}`
-                        }`}
-                    >
-                      {language === 'ko' ? '월간' : 'Month'}
-                    </button>
+                  {/* Period Selection - Date Range */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={studioStartDate}
+                      onChange={e => setStudioStartDate(e.target.value)}
+                      className={`px-3 py-2 ${inputBg} ${isDark ? 'border-gray-700 text-gray-300' : 'border-slate-200 text-slate-600'} border rounded-xl text-xs font-medium focus:outline-none focus:border-[#21DBA4]`}
+                    />
+                    <span className={`text-xs ${textMuted}`}>~</span>
+                    <input
+                      type="date"
+                      value={studioEndDate}
+                      onChange={e => setStudioEndDate(e.target.value)}
+                      className={`px-3 py-2 ${inputBg} ${isDark ? 'border-gray-700 text-gray-300' : 'border-slate-200 text-slate-600'} border rounded-xl text-xs font-medium focus:outline-none focus:border-[#21DBA4]`}
+                    />
                   </div>
 
                   <button
@@ -666,99 +661,97 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
                   <h4 className={`text-xs font-bold ${textMuted} mb-3 uppercase tracking-wider`}>
                     {language === 'ko' ? '출력 형태 선택' : 'Output Type'}
                   </h4>
-                  <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     {contentTypes.map((type) => (
                       <div
                         key={type.id}
                         onClick={() => setSelectedContentType(selectedContentType === type.id ? null : type.id)}
-                        className={`px-3 py-2 rounded-xl border cursor-pointer transition-all flex items-center gap-2 ${selectedContentType === type.id
+                        className={`px-2 py-2.5 rounded-xl border cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 text-center ${selectedContentType === type.id
                           ? 'bg-[#21DBA4] text-black border-[#21DBA4] shadow-md shadow-[#21DBA4]/20'
                           : `${isDark ? 'bg-gray-800/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'}`
                           }`}
                       >
-                        <div className={`p-1.5 rounded-lg ${selectedContentType === type.id ? 'bg-black/10' : isDark ? 'bg-gray-900' : 'bg-slate-200'}`}>
+                        <div className={`p-1 rounded-lg ${selectedContentType === type.id ? 'bg-black/10' : isDark ? 'bg-gray-900' : 'bg-slate-200'}`}>
                           {type.icon}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold truncate">{type.label}</div>
-                        </div>
-                        {selectedContentType === type.id && <CheckCircle2 size={14} />}
+                        <div className="text-[10px] font-bold truncate w-full">{type.label}</div>
                       </div>
                     ))}
                   </div>
-
-                  {/* Generate Button */}
-                  <button
-                    onClick={handleGenerate}
-                    disabled={!selectedContentType || selectedClips.length === 0 || generatingReport}
-                    className={`mt-3 w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${selectedContentType && selectedClips.length > 0
-                      ? 'bg-[#21DBA4] text-black hover:bg-[#1bc490] shadow-lg shadow-[#21DBA4]/20'
-                      : `${inputBg} ${textMuted} cursor-not-allowed`
-                      }`}
-                  >
-                    {generatingReport ? (
-                      <><Loader2 size={16} className="animate-spin" /> {language === 'ko' ? '생성 중...' : 'Generating...'}</>
-                    ) : (
-                      <><Sparkles size={16} fill={selectedContentType && selectedClips.length > 0 ? "black" : "none"} />
-                        {selectedContentType ? `${contentTypes.find(t => t.id === selectedContentType)?.label} ${language === 'ko' ? '생성하기' : 'Generate'}` : (language === 'ko' ? '옵션을 선택하세요' : 'Select option')}</>
-                    )}
-                  </button>
                 </div>
+
+                {/* Generate Button */}
+                <button
+                  onClick={handleGenerate}
+                  disabled={!selectedContentType || selectedClips.length === 0 || generatingReport}
+                  className={`mt-3 w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${selectedContentType && selectedClips.length > 0
+                    ? 'bg-[#21DBA4] text-black hover:bg-[#1bc490] shadow-lg shadow-[#21DBA4]/20'
+                    : `${inputBg} ${textMuted} cursor-not-allowed`
+                    }`}
+                >
+                  {generatingReport ? (
+                    <><Loader2 size={16} className="animate-spin" /> {language === 'ko' ? '생성 중...' : 'Generating...'}</>
+                  ) : (
+                    <><Sparkles size={16} fill={selectedContentType && selectedClips.length > 0 ? "black" : "none"} />
+                      {selectedContentType ? `${contentTypes.find(t => t.id === selectedContentType)?.label} ${language === 'ko' ? '생성하기' : 'Generate'}` : (language === 'ko' ? '옵션을 선택하세요' : 'Select option')}</>
+                  )}
+                </button>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Row 4: Unread & History */}
-        <div className={`col-span-12 md:col-span-6 ${cardBg} border ${cardBorder} rounded-3xl p-6`}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className={`text-base font-bold ${textPrimary} flex items-center gap-2`}>
-              <MessageSquare className="w-4 h-4 text-gray-400" /> {language === 'ko' ? '읽지 않은 클립' : 'Unread Clips'}
-            </h3>
-            <button className="text-[10px] font-bold text-[#21DBA4] hover:underline flex items-center gap-1 bg-[#21DBA4]/10 px-2 py-1 rounded-full">
-              <Sparkles size={10} /> {language === 'ko' ? 'AI 요약 보기' : 'AI Summary'}
-            </button>
-          </div>
-          <div className="space-y-2">
-            {unreadClips.map((clip: any) => (
-              <div key={clip.id} className={`p-3 ${isDark ? 'bg-gray-800/30 border-gray-800 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'} border rounded-xl transition-colors group cursor-pointer flex items-center justify-between`}>
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] shrink-0" />
-                  <div className="truncate">
-                    <div className={`text-sm font-medium ${isDark ? 'text-gray-300 group-hover:text-white' : 'text-slate-700 group-hover:text-slate-900'} truncate`}>{clip.title}</div>
-                    <div className={`text-[10px] ${textMuted}`}>{clip.source || 'Web'} • {clip.time || '2h ago'}</div>
-                  </div>
-                </div>
-                <ChevronRight size={14} className={`${isDark ? 'text-gray-600 group-hover:text-gray-400' : 'text-slate-400 group-hover:text-slate-600'}`} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={`col-span-12 md:col-span-6 ${cardBg} border ${cardBorder} rounded-3xl p-6`}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className={`text-base font-bold ${textPrimary} flex items-center gap-2`}>
-              <History className="w-4 h-4 text-gray-400" /> {language === 'ko' ? '생성 기록' : 'History'}
-            </h3>
-            <button className={`text-xs ${textMuted} hover:${textPrimary} transition-colors`}>{language === 'ko' ? '전체보기' : 'View All'}</button>
-          </div>
-          <div className="space-y-2">
-            {creationHistory.map(item => (
-              <div key={item.id} className={`p-3 ${isDark ? 'bg-gray-800/30 border-gray-800 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'} border rounded-xl transition-colors flex items-center justify-between`}>
-                <div className="flex items-center gap-3">
-                  <span className={`text-[10px] font-bold ${isDark ? 'bg-gray-700 text-gray-300 border-gray-600' : 'bg-slate-200 text-slate-600 border-slate-300'} px-1.5 py-0.5 rounded border`}>{item.type}</span>
-                  <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>{item.title}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] ${textMuted}`}>{item.date}</span>
-                  <CheckCircle2 size={14} className="text-[#21DBA4]" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
       </div>
+
+      {/* Row 4: Unread & History */}
+      <div className={`col-span-12 md:col-span-6 ${cardBg} border ${cardBorder} rounded-3xl p-6`}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className={`text-base font-bold ${textPrimary} flex items-center gap-2`}>
+            <MessageSquare className="w-4 h-4 text-gray-400" /> {language === 'ko' ? '읽지 않은 클립' : 'Unread Clips'}
+          </h3>
+          <button className="text-[10px] font-bold text-[#21DBA4] hover:underline flex items-center gap-1 bg-[#21DBA4]/10 px-2 py-1 rounded-full">
+            <Sparkles size={10} /> {language === 'ko' ? 'AI 요약 보기' : 'AI Summary'}
+          </button>
+        </div>
+        <div className="space-y-2">
+          {unreadClips.map((clip: any) => (
+            <div key={clip.id} className={`p-3 ${isDark ? 'bg-gray-800/30 border-gray-800 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'} border rounded-xl transition-colors group cursor-pointer flex items-center justify-between`}>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#21DBA4] shrink-0" />
+                <div className="truncate">
+                  <div className={`text-sm font-medium ${isDark ? 'text-gray-300 group-hover:text-white' : 'text-slate-700 group-hover:text-slate-900'} truncate`}>{clip.title}</div>
+                  <div className={`text-[10px] ${textMuted}`}>{clip.source || 'Web'} • {clip.time || '2h ago'}</div>
+                </div>
+              </div>
+              <ChevronRight size={14} className={`${isDark ? 'text-gray-600 group-hover:text-gray-400' : 'text-slate-400 group-hover:text-slate-600'}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={`col-span-12 md:col-span-6 ${cardBg} border ${cardBorder} rounded-3xl p-6`}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className={`text-base font-bold ${textPrimary} flex items-center gap-2`}>
+            <History className="w-4 h-4 text-gray-400" /> {language === 'ko' ? '생성 기록' : 'History'}
+          </h3>
+          <button className={`text-xs ${textMuted} hover:${textPrimary} transition-colors`}>{language === 'ko' ? '전체보기' : 'View All'}</button>
+        </div>
+        <div className="space-y-2">
+          {creationHistory.map(item => (
+            <div key={item.id} className={`p-3 ${isDark ? 'bg-gray-800/30 border-gray-800 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'} border rounded-xl transition-colors flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <span className={`text-[10px] font-bold ${isDark ? 'bg-gray-700 text-gray-300 border-gray-600' : 'bg-slate-200 text-slate-600 border-slate-300'} px-1.5 py-0.5 rounded border`}>{item.type}</span>
+                <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>{item.title}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] ${textMuted}`}>{item.date}</span>
+                <CheckCircle2 size={14} className="text-[#21DBA4]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
     </div>
   );
 };
