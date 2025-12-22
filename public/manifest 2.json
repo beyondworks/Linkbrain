@@ -1,5 +1,5 @@
 {
-  "name": "LinkBrain - AI Link Saver &amp; Second Brain",
+  "name": "LinkBrain - AI Link Saver & Second Brain",
   "short_name": "LinkBrain",
   "description": "Your second brain for links and insights. Save, organize, and discover links with AI-powered summaries.",
   "start_url": "/",
@@ -8,10 +8,7 @@
   "orientation": "portrait-primary",
   "theme_color": "#21DBA4",
   "background_color": "#ffffff",
-  "categories": [
-    "productivity",
-    "utilities"
-  ],
+  "categories": ["productivity", "utilities"],
   "screenshots": [
     {
       "src": "/screenshot-540x720.png",
@@ -87,8 +84,5 @@
       "text": "text",
       "url": "url"
     }
-  },
-  "id": "com.linkbrain.app",
-  "dir": "ltr",
-  "lang": "en"
+  }
 }
