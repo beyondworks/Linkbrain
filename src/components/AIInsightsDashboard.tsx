@@ -47,7 +47,7 @@ const parseDate = (createdAt: any): Date | null => {
 
 export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'ko', onOpenSettings }: AIInsightsDashboardProps) => {
   const isDark = theme === 'dark';
-  const { canUseAI } = useSubscription();
+  const { canUseAI, isMaster } = useSubscription();
   const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
   const [selectedClips, setSelectedClips] = useState<string[]>([]);
   const [selectedContentType, setSelectedContentType] = useState<string | null>(null);
@@ -327,6 +327,30 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   const inputBg = isDark ? 'bg-gray-800' : 'bg-slate-100';
   const hoverBg = isDark ? 'hover:bg-gray-800' : 'hover:bg-slate-50';
 
+  // Master account check
+  if (!isMaster) {
+    return (
+      <div className={`min-h-screen ${bg} flex items-center justify-center`}>
+        <div className={`text-center p-8 ${cardBg} border ${cardBorder} rounded-2xl shadow-lg max-w-md mx-4`}>
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-[#21DBA4]/10 flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-[#21DBA4]" />
+          </div>
+          <h2 className={`text-xl font-bold mb-3 ${textPrimary}`}>
+            {language === 'ko' ? '준비중입니다' : 'Coming Soon'}
+          </h2>
+          <p className={`text-sm ${textSecondary} mb-6`}>
+            {language === 'ko'
+              ? 'AI 인사이트 기능은 현재 개발 중입니다. 곧 만나복겠습니다!'
+              : 'AI Insights feature is currently under development. Stay tuned!'}
+          </p>
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-slate-100 text-slate-500'} text-sm`}>
+            <Clock className="w-4 h-4" />
+            {language === 'ko' ? '빠른 시일 내에 출시 예정' : 'Launching Soon'}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${bg} pb-20`}>
@@ -751,7 +775,6 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
         </div>
       </div>
 
-    </div>
     </div>
   );
 };
