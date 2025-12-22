@@ -265,17 +265,14 @@ export function normalizeThreads(raw: string): string {
         .map(cleanLine)
         .filter(l => !isNoiseLine(l));
 
-    // Step 10: Korean filter
-    const bodyKorean = bodyLines.filter(hasHangul);
-    const commentsKorean = commentLines.filter(hasHangul);
-
-    const finalBodyLines = bodyKorean.length > 0 ? bodyKorean : bodyLines;
-    const finalCommentLines = commentsKorean.length > 0 ? commentsKorean : commentLines;
+    // REMOVED: Korean-only filter was too aggressive
+    // Now we keep ALL meaningful content (Korean, English, mixed)
+    // Only filter based on content quality (noise detection), not language
 
     // Step 11: Deduplicate body lines again
     const seenBody = new Set<string>();
     const dedupedBody: string[] = [];
-    for (const line of finalBodyLines) {
+    for (const line of bodyLines) {
         const key = line.replace(/\s+/g, ' ').trim().toLowerCase();
         if (seenBody.has(key)) continue;
         seenBody.add(key);
@@ -285,11 +282,11 @@ export function normalizeThreads(raw: string): string {
     const finalBody = dedupedBody.join('\n\n');
 
     // Step 12: Build final output
-    if (finalCommentLines.length === 0) {
+    if (commentLines.length === 0) {
         return finalBody;
     }
 
-    const commentsWithMarkers = finalCommentLines.join('\n\n[[[COMMENT_SPLIT]]]\n\n');
+    const commentsWithMarkers = commentLines.join('\n\n[[[COMMENT_SPLIT]]]\n\n');
 
     return [
         finalBody,

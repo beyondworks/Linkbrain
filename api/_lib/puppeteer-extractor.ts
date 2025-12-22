@@ -48,7 +48,8 @@ export const extractWithPuppeteer = async (url: string): Promise<{
         const finalUrl = page.url();
         console.log('[Puppeteer] Final URL:', finalUrl);
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait longer for dynamic content (especially Threads)
+        await new Promise(resolve => setTimeout(resolve, 4000));
 
         const data: PuppeteerResult = await page.evaluate((finalUrl) => {
             const url = finalUrl.toLowerCase();
@@ -119,41 +120,78 @@ export const extractWithPuppeteer = async (url: string): Promise<{
                 }
 
                 // ===== Extract main post content (author's own post only) =====
-                // Find the main article/post section
+                // Find the main article/post section - IMPROVED with more selectors
                 const mainArticle = document.querySelector('[role="main"] article') ||
                     document.querySelector('article[data-testid]') ||
-                    document.querySelector('article');
+                    document.querySelector('main article') ||
+                    document.querySelector('article') ||
+                    document.querySelector('[role="main"]') ||
+                    document.querySelector('main');
 
                 let postText = '';
                 if (mainArticle) {
-                    // Get all text from the main post (first article in main)
-                    const textElements = Array.from(mainArticle.querySelectorAll('div[dir="auto"], p, span'));
-                    const contentLines: string[] = [];
+                    // Strategy 1: Try specific Threads content selectors
+                    // Threads often uses nested divs with dir="auto" for content
+                    const contentDivs = Array.from(mainArticle.querySelectorAll('div[dir="auto"]'));
+                    const substantialDivs = contentDivs.filter(div => {
+                        const text = div.textContent?.trim() || '';
+                        return text.length > 20 && !text.match(/^(like|reply|share|repost|view)/i);
+                    });
 
-                    for (const el of textElements) {
-                        const text = el.textContent?.trim() || '';
-
-                        // Skip if too short or is UI element
-                        if (text.length < 3) continue;
-                        if (text.match(/^(like|reply|share|repost|view|follow|•|likes?|replies|reposts?|verified|ago|스레드|조회|회|댓글)$/i)) continue;
-                        if (text.match(/^\d+\s*(likes?|replies?|reposts?|views?)/i)) continue;
-                        if (text.match(/^(ago|week|day|month|year|hour|minute|second)s?$/i)) continue;
-                        if (text.startsWith('http')) continue;
-                        if (text.includes('조회') && text.includes('회') && text.length < 20) continue;
-
-                        // Add substantial text
-                        if (text.length > 10) {
-                            contentLines.push(text);
-                        }
+                    if (substantialDivs.length > 0) {
+                        // Get text from the first few substantial divs (main post content)
+                        postText = substantialDivs.slice(0, 5)
+                            .map(div => div.textContent?.trim())
+                            .filter(t => t && t.length > 0)
+                            .join('\n\n');
                     }
 
-                    postText = contentLines.join('\n');
+                    // Strategy 2: If Strategy 1 didn't work, use more general selectors
+                    if (!postText || postText.length < 20) {
+                        const textElements = Array.from(mainArticle.querySelectorAll('div[dir="auto"], p, span[dir="auto"]'));
+                        const contentLines: string[] = [];
+
+                        for (const el of textElements) {
+                            const text = el.textContent?.trim() || '';
+
+                            // Skip if too short or is UI element
+                            if (text.length < 3) continue;
+                            if (text.match(/^(like|reply|share|repost|view|follow|•|likes?|replies|reposts?|verified|ago|스레드|조회|회|댓글)$/i)) continue;
+                            if (text.match(/^\d+\s*(likes?|replies?|reposts?|views?)/i)) continue;
+                            if (text.match(/^(ago|week|day|month|year|hour|minute|second)s?$/i)) continue;
+                            if (text.startsWith('http')) continue;
+                            if (text.includes('조회') && text.includes('회') && text.length < 20) continue;
+
+                            // Add substantial text
+                            if (text.length > 10 && !contentLines.includes(text)) {
+                                contentLines.push(text);
+                            }
+                        }
+
+                        if (contentLines.length > 0) {
+                            postText = contentLines.join('\n');
+                        }
+                    }
                 }
 
-                // Fallback to article innerText
+                // Strategy 3: Fallback to innerText if still no content
                 if (!postText && mainArticle) {
-                    postText = mainArticle.innerText?.substring(0, 5000) || '';
+                    const raw = mainArticle.innerText?.trim() || '';
+                    if (raw.length > 0) {
+                        // Clean up the raw text
+                        const lines = raw.split('\n')
+                            .map(line => line.trim())
+                            .filter(line => {
+                                if (line.length < 5) return false;
+                                if (line.match(/^(like|reply|share|repost|view|follow)$/i)) return false;
+                                if (line.match(/^\d+\s*(likes?|replies?|reposts?|views?)/i)) return false;
+                                return true;
+                            });
+                        postText = lines.join('\n').substring(0, 5000);
+                    }
                 }
+
+                console.log('[Threads] Extracted text length:', postText.length);
 
                 // ===== Extract images and videos from post content =====
                 const imageSet = new Set<string>();
