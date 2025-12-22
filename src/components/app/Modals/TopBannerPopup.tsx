@@ -57,7 +57,7 @@ export function TopBannerPopup({
                             </span>
                             {/* Desktop: show content inline */}
                             {popup.content && (
-                                <span className="text-sm text-[#333333]/80 truncate hidden sm:inline">
+                                <span className="text-sm text-[#333333]/80 truncate hidden sm:inline whitespace-pre-line">
                                     {popup.content}
                                 </span>
                             )}
@@ -110,7 +110,7 @@ export function TopBannerPopup({
                         >
                             <div className="px-4 pb-3 pt-4 border-t border-[#333333]/10 rounded-b-xl">
                                 {/* Content */}
-                                <p className="text-sm text-[#333333]/90 mb-3 leading-relaxed">
+                                <p className="text-sm text-[#333333]/90 mb-3 leading-relaxed whitespace-pre-line">
                                     {popup.content}
                                 </p>
 
