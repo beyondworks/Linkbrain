@@ -4,16 +4,22 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="/logo.png" />
-  <link rel="apple-touch-icon" href="/logo.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#F8FAFC" id="theme-color-meta" />
+  <meta name="theme-color" content="#21DBA4" />
   <title>LinkBrain - AI Link Saver & Second Brain</title>
   <meta name="description"
     content="흩어진 링크들을 모아 두 번째 뇌를 만드세요. LinkBrain(링크브레인)은 AI 기반 링크 저장, 스레드 저장, 자동 요약 서비스를 제공합니다." />
   <meta name="keywords"
     content="LinkBrain, 링크브레인, 링크저장, 스레드 저장, AI 링크 관리, Second Brain, 지식 관리, Link Saver, Thread Saver" />
   <meta property="og:site_name" content="LinkBrain" />
+
+  <!-- PWA 메타 태그 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LinkBrain">
+  <link rel="apple-touch-icon" href="/icon-192x192.png">
+
   <script>
     (function () {
       try {
@@ -21,10 +27,8 @@
         var bgColor = theme === 'dark' ? '#0f172a' : '#F8FAFC';
         document.documentElement.style.backgroundColor = bgColor;
         document.body && (document.body.style.backgroundColor = bgColor);
-        var meta = document.getElementById('theme-color-meta');
-        if (meta) meta.setAttribute('content', bgColor);
       } catch (e) { }
-    });
+    })();
   </script>
   <style>
     html,
@@ -43,6 +47,91 @@
   <div id="root"></div>
   <div id="modal-root" style="position: relative; z-index: 999999;"></div>
   <script type="module" src="/src/main.tsx"></script>
+
+  <!-- PWA 설치 프롬프트 (React 앱에서 관리) -->
+  <div id="pwa-install-prompt" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99999;">
+    <div style="background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-left: 4px solid #21DBA4; max-width: 300px;">
+      <div style="margin-bottom: 12px;">
+        <strong style="color: #1f2937;">LinkBrain을 앱으로 설치하세요!</strong>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #666;">홈 화면에서 바로 접근하고 오프라인에서도 사용 가능합니다.</p>
+      </div>
+      <button id="pwa-install-button" style="width: 100%; padding: 10px; background: #21DBA4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">📱 설치하기</button>
+      <button id="pwa-dismiss-button" style="width: 100%; padding: 8px; background: transparent; color: #999; border: none; border-radius: 4px; cursor: pointer; margin-top: 6px; font-size: 12px;">나중에</button>
+    </div>
+  </div>
+
+  <!-- Service Worker 등록 & PWA 설치 로직 -->
+  <script>
+    // Service Worker 등록
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+          .catch(err => console.log('[PWA] Service Worker registration failed:', err));
+      });
+    }
+
+    // PWA 설치 프롬프트 로직
+    (function() {
+      let deferredPrompt = null;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const dismissedKey = 'pwa-install-dismissed';
+
+      // 이미 설치된 경우 또는 이미 거절한 경우 표시 안함
+      if (isStandalone || localStorage.getItem(dismissedKey)) {
+        return;
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // 2초 후 프롬프트 표시
+        setTimeout(() => {
+          const container = document.getElementById('pwa-install-prompt');
+          if (container) container.style.display = 'block';
+        }, 2000);
+      });
+
+      window.addEventListener('appinstalled', () => {
+        const container = document.getElementById('pwa-install-prompt');
+        if (container) container.style.display = 'none';
+        console.log('[PWA] LinkBrain 앱이 설치되었습니다!');
+      });
+
+      // 설치 버튼 클릭
+      document.addEventListener('DOMContentLoaded', () => {
+        const installBtn = document.getElementById('pwa-install-button');
+        const dismissBtn = document.getElementById('pwa-dismiss-button');
+        const container = document.getElementById('pwa-install-prompt');
+
+        if (installBtn) {
+          installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+              if (isIOS) {
+                alert('Safari에서 공유 버튼(↑)을 누르고 "홈 화면에 추가"를 선택하세요.');
+              }
+              return;
+            }
+
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('[PWA] 설치 결과:', outcome);
+            deferredPrompt = null;
+            if (container) container.style.display = 'none';
+          });
+        }
+
+        if (dismissBtn) {
+          dismissBtn.addEventListener('click', () => {
+            if (container) container.style.display = 'none';
+            localStorage.setItem(dismissedKey, 'true');
+          });
+        }
+      });
+    })();
+  </script>
 </body>
 
 </html>
