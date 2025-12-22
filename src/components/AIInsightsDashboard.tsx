@@ -330,8 +330,8 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
   // Master account check
   if (!isMaster) {
     return (
-      <div className={`min-h-screen ${bg} flex items-center justify-center`}>
-        <div className={`text-center p-8 ${cardBg} border ${cardBorder} rounded-2xl shadow-lg max-w-md mx-4`}>
+      <div className={`${bg}`}>
+        <div className={`text-center p-8 ${cardBg} border ${cardBorder} rounded-2xl shadow-lg max-w-md mx-auto mt-20`}>
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-[#21DBA4]/10 flex items-center justify-center">
             <Sparkles className="w-8 h-8 text-[#21DBA4]" />
           </div>
@@ -340,7 +340,7 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
           </h2>
           <p className={`text-sm ${textSecondary} mb-6`}>
             {language === 'ko'
-              ? 'AI 인사이트 기능은 현재 개발 중입니다. 곧 만나복겠습니다!'
+              ? 'AI 인사이트 기능은 현재 개발 중입니다. 곧 만나뵙겠습니다!'
               : 'AI Insights feature is currently under development. Stay tuned!'}
           </p>
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-slate-100 text-slate-500'} text-sm`}>
