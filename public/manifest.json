@@ -34,6 +34,25 @@
     "edge_side_panel": {
         "preferred_width": 400
     },
+    "scope_extensions": [
+        {
+            "origin": "https://www.linkbrain.cloud"
+        },
+        {
+            "origin": "https://linkbrain.cloud"
+        }
+    ],
+    "note_taking": {
+        "new_note_url": "/?action=add"
+    },
+    "widgets": [
+        {
+            "name": "Recent Links",
+            "description": "View your recently saved links",
+            "tag": "recent-links",
+            "ms_ac_template": "widgets/recent-links.json"
+        }
+    ],
     "file_handlers": [
         {
             "action": "/",
