@@ -733,7 +733,7 @@ export const AIInsightsDashboard = ({ links, categories, theme, t, language = 'k
           <h3 className={`text-base font-bold ${textPrimary} flex items-center gap-2`}>
             <History className="w-4 h-4 text-gray-400" /> {language === 'ko' ? '생성 기록' : 'History'}
           </h3>
-          <button className={`text-xs ${textMuted} hover:${textPrimary} transition-colors`}>{language === 'ko' ? '전체보기' : 'View All'}</button>
+          <button className={`text-xs ${textMuted} ${isDark ? 'hover:text-white' : 'hover:text-slate-900'} transition-colors`}>{language === 'ko' ? '전체보기' : 'View All'}</button>
         </div>
         <div className="space-y-2">
           {creationHistory.map(item => (
