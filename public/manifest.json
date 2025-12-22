@@ -6,6 +6,10 @@
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
+    "display_override": [
+        "standalone",
+        "window-controls-overlay"
+    ],
     "orientation": "portrait-primary",
     "dir": "ltr",
     "lang": "en",
@@ -21,6 +25,36 @@
             "platform": "play",
             "url": "https://play.google.com/store/apps/details?id=com.linkbrain.app",
             "id": "com.linkbrain.app"
+        }
+    ],
+    "handle_links": "preferred",
+    "launch_handler": {
+        "client_mode": "focus-existing"
+    },
+    "edge_side_panel": {
+        "preferred_width": 400
+    },
+    "file_handlers": [
+        {
+            "action": "/",
+            "accept": {
+                "text/plain": [
+                    ".txt"
+                ],
+                "text/html": [
+                    ".html",
+                    ".htm"
+                ],
+                "application/json": [
+                    ".json"
+                ]
+            }
+        }
+    ],
+    "protocol_handlers": [
+        {
+            "protocol": "web+linkbrain",
+            "url": "/?url=%s"
         }
     ],
     "icons": [
@@ -61,6 +95,34 @@
             "sizes": "1280x720",
             "type": "image/png",
             "form_factor": "wide"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Add Link",
+            "short_name": "Add",
+            "description": "Quickly add a new link to LinkBrain",
+            "url": "/?action=add",
+            "icons": [
+                {
+                    "src": "/shortcut-add-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "My Links",
+            "short_name": "Links",
+            "description": "View all your saved links",
+            "url": "/?section=links",
+            "icons": [
+                {
+                    "src": "/shortcut-links-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
         }
     ],
     "share_target": {
