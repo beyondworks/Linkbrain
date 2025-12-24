@@ -2,8 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // clips 컬렉션 - 본인 데이터만 접근 가능
-    // clips 컬렉션 - 읽기는 공개 (SEO/공유), 쓰기는 본인만
+    // ========================================
+    // 관리자 헬퍼 함수
+    // ========================================
+    function isAdmin() {
+      return request.auth != null 
+        && request.auth.token.email == 'beyondworks.br@gmail.com';
+    }
+
+    // ========================================
+    // 사용자 데이터 컬렉션
+    // ========================================
+
+    // clips 컬렉션 - 읽기는 공개 (SEO/공유 링크), 쓰기는 본인만, 관리자는 읽기 가능
     match /clips/{clipId} {
       allow read: if true;
       allow create: if request.auth != null
@@ -32,10 +43,12 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
-    // users 설정 (중첩 구조) - 본인 설정만 접근 가능
+    // users 컬렉션 - 본인 설정 접근 + 관리자는 읽기/쓰기 가능
     match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == userId;
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
     }
 
     // insights 컬렉션 - 본인 데이터만 접근 가능
@@ -56,6 +69,54 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null
         && resource.data.userId == request.auth.uid;
+    }
+
+    // ========================================
+    // 공개 / 커뮤니티 컬렉션
+    // ========================================
+
+    // publicClips 컬렉션 - 읽기는 공개, 생성은 인증 사용자, 수정/삭제는 본인만
+    match /publicClips/{clipId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      
+      // comments 서브컬렉션
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // ========================================
+    // 관리자 / 시스템 컬렉션
+    // ========================================
+
+    // config 컬렉션 - 관리자만 읽기/쓰기 가능
+    match /config/{configId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // announcements 컬렉션 - 읽기는 공개, 쓰기는 관리자만
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // popups 컬렉션 - 읽기는 인증 사용자, 쓰기는 관리자만
+    match /popups/{popupId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // inquiries 컬렉션 - 문의 생성은 누구나, 읽기/수정은 관리자만
+    match /inquiries/{inquiryId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
   }
 }

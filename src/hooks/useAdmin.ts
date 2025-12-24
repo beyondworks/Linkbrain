@@ -12,7 +12,8 @@ import {
     doc,
     onSnapshot,
     getCountFromServer,
-    Timestamp
+    Timestamp,
+    limit
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 
@@ -46,13 +47,52 @@ export interface Popup {
     imageUrl?: string;
     linkUrl?: string;
     isActive: boolean;
-    displayType: 'modal' | 'banner'; // 모달 팝업 또는 상단 배너
+    displayType: 'modal' | 'banner';
     startDate?: string;
     endDate?: string;
     createdAt?: string;
 }
 
+// Extended Analytics Types
+export interface DailyStats {
+    date: string;
+    users: number;
+    clips: number;
+    newUsers: number;
+}
+
+export interface UserInfo {
+    id: string;
+    email: string;
+    displayName?: string;
+    photoURL?: string;
+    createdAt: string;
+    lastLoginAt?: string;
+    clipCount: number;
+    subscriptionStatus: 'trial' | 'active' | 'expired' | 'free';
+    subscriptionTier?: 'free' | 'pro';
+    trialStartDate?: string;
+    platforms: { youtube: number; instagram: number; threads: number; web: number };
+}
+
+export interface CategoryStats {
+    name: string;
+    count: number;
+    percentage: number;
+}
+
+export interface KeywordStats {
+    keyword: string;
+    count: number;
+}
+
+export interface HourlyActivity {
+    hour: number;
+    count: number;
+}
+
 export interface AnalyticsData {
+    // Basic stats
     totalUsers: number;
     totalClips: number;
     subscriptionStats: {
@@ -66,7 +106,31 @@ export interface AnalyticsData {
         threads: number;
         web: number;
     };
-    recentClipsCount: number; // Last 7 days
+    recentClipsCount: number;
+
+    // Extended stats
+    dailyStats?: DailyStats[];
+    newUsersToday?: number;
+    newUsersThisWeek?: number;
+    newUsersThisMonth?: number;
+    dau?: number;
+    wau?: number;
+    mau?: number;
+    avgClipsPerUser?: number;
+}
+
+export interface CategoryAnalytics {
+    topCategories: CategoryStats[];
+    topKeywords: KeywordStats[];
+    totalCategories: number;
+    avgCategoriesPerUser: number;
+}
+
+export interface DetailedAnalytics {
+    hourlyActivity: HourlyActivity[];
+    weekdayActivity: { day: string; count: number }[];
+    platformTrends: { date: string; youtube: number; instagram: number; threads: number; web: number }[];
+    retentionData: { week: string; retention: number }[];
 }
 
 export interface AdminState {
@@ -76,6 +140,10 @@ export interface AdminState {
     inquiries: Inquiry[];
     popups: Popup[];
     analytics: AnalyticsData | null;
+    users: UserInfo[];
+    categoryAnalytics: CategoryAnalytics | null;
+    detailedAnalytics: DetailedAnalytics | null;
+    usersLoading: boolean;
 }
 
 // Admin emails stored in Firestore config collection for dynamic management
@@ -90,7 +158,11 @@ export const useAdmin = () => {
         announcements: [],
         inquiries: [],
         popups: [],
-        analytics: null
+        analytics: null,
+        users: [],
+        categoryAnalytics: null,
+        detailedAnalytics: null,
+        usersLoading: false
     });
 
     // Auth state listener
@@ -101,7 +173,7 @@ export const useAdmin = () => {
         return () => unsubscribe();
     }, []);
 
-    // Fetch admin emails from Firestore config (for dynamic admin management)
+    // Fetch admin emails from Firestore config
     useEffect(() => {
         const configRef = doc(db, 'config', 'adminSettings');
         const unsubscribe = onSnapshot(configRef, (snapshot) => {
@@ -123,7 +195,6 @@ export const useAdmin = () => {
             setState(prev => ({ ...prev, isAdmin: false, loading: false }));
             return;
         }
-
         const isAdmin = adminEmails.includes(user.email || '');
         setState(prev => ({ ...prev, isAdmin, loading: false }));
     }, [user, adminEmails]);
@@ -251,17 +322,14 @@ export const useAdmin = () => {
         await fetchPopups();
     }, [fetchPopups]);
 
-    // Fetch analytics
+    // Fetch enhanced analytics
     const fetchAnalytics = useCallback(async () => {
         try {
-            // Get user count
             const usersSnapshot = await getCountFromServer(collection(db, 'users'));
             const totalUsers = usersSnapshot.data().count;
 
-            // Get clips count by querying all users' clips
-            // Note: This is a simplified approach - in production, consider aggregation
             const clipsSnapshot = await getDocs(collection(db, 'clips'));
-            const clipsData = clipsSnapshot.docs.map(d => d.data());
+            const clipsData = clipsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as any[];
 
             const platformStats = {
                 youtube: clipsData.filter(c => c.platform === 'youtube').length,
@@ -270,11 +338,25 @@ export const useAdmin = () => {
                 web: clipsData.filter(c => c.platform === 'web').length
             };
 
-            // Get subscription stats
-            const subscriptionStats = { trial: 0, active: 0, expired: 0 };
+            // Get subscription stats and user activity
             const usersDataSnapshot = await getDocs(collection(db, 'users'));
+            const subscriptionStats = { trial: 0, active: 0, expired: 0 };
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            let newUsersToday = 0;
+            let newUsersThisWeek = 0;
+            let newUsersThisMonth = 0;
+            const activeUsersToday = new Set<string>();
+            const activeUsersWeek = new Set<string>();
+            const activeUsersMonth = new Set<string>();
+
             usersDataSnapshot.docs.forEach(doc => {
                 const data = doc.data();
+
+                // Subscription stats
                 if (data.subscriptionStatus === 'active' || data.subscriptionTier === 'pro') {
                     subscriptionStats.active++;
                 } else if (data.trialStartDate) {
@@ -286,15 +368,58 @@ export const useAdmin = () => {
                         subscriptionStats.expired++;
                     }
                 }
+
+                // New users
+                if (data.createdAt) {
+                    const userCreated = new Date(data.createdAt);
+                    if (userCreated >= today) newUsersToday++;
+                    if (userCreated >= weekAgo) newUsersThisWeek++;
+                    if (userCreated >= monthAgo) newUsersThisMonth++;
+                }
+
+                // Active users (based on lastLoginAt)
+                if (data.lastLoginAt) {
+                    const lastLogin = new Date(data.lastLoginAt);
+                    if (lastLogin >= today) activeUsersToday.add(doc.id);
+                    if (lastLogin >= weekAgo) activeUsersWeek.add(doc.id);
+                    if (lastLogin >= monthAgo) activeUsersMonth.add(doc.id);
+                }
             });
 
             // Recent clips (last 7 days)
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
             const recentClipsCount = clipsData.filter(c => {
                 if (!c.createdAt) return false;
                 return new Date(c.createdAt) >= sevenDaysAgo;
             }).length;
+
+            // Daily stats for last 30 days
+            const dailyStats: DailyStats[] = [];
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+                const dateStr = date.toISOString().split('T')[0];
+                const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
+                const dayClips = clipsData.filter(c => {
+                    if (!c.createdAt) return false;
+                    const created = new Date(c.createdAt);
+                    return created >= date && created < nextDate;
+                }).length;
+
+                const dayNewUsers = usersDataSnapshot.docs.filter(d => {
+                    const data = d.data();
+                    if (!data.createdAt) return false;
+                    const created = new Date(data.createdAt);
+                    return created >= date && created < nextDate;
+                }).length;
+
+                dailyStats.push({
+                    date: dateStr,
+                    users: totalUsers,
+                    clips: dayClips,
+                    newUsers: dayNewUsers
+                });
+            }
 
             setState(prev => ({
                 ...prev,
@@ -303,11 +428,238 @@ export const useAdmin = () => {
                     totalClips: clipsData.length,
                     subscriptionStats,
                     platformStats,
-                    recentClipsCount
+                    recentClipsCount,
+                    dailyStats,
+                    newUsersToday,
+                    newUsersThisWeek,
+                    newUsersThisMonth,
+                    dau: activeUsersToday.size,
+                    wau: activeUsersWeek.size,
+                    mau: activeUsersMonth.size,
+                    avgClipsPerUser: totalUsers > 0 ? Math.round((clipsData.length / totalUsers) * 10) / 10 : 0
                 }
             }));
         } catch (error) {
             console.error('[useAdmin] Failed to fetch analytics:', error);
+        }
+    }, []);
+
+    // Fetch user list with details
+    const fetchUserList = useCallback(async () => {
+        setState(prev => ({ ...prev, usersLoading: true }));
+        try {
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            const clipsSnapshot = await getDocs(collection(db, 'clips'));
+            const clipsData = clipsSnapshot.docs.map(d => d.data());
+
+            const users: UserInfo[] = usersSnapshot.docs.map(doc => {
+                const data = doc.data();
+                const userClips = clipsData.filter(c => c.userId === doc.id);
+
+                // Determine subscription status
+                let subscriptionStatus: 'trial' | 'active' | 'expired' | 'free' = 'free';
+                if (data.subscriptionStatus === 'active' || data.subscriptionTier === 'pro') {
+                    subscriptionStatus = 'active';
+                } else if (data.trialStartDate) {
+                    const trialStart = new Date(data.trialStartDate);
+                    const daysSinceStart = Math.ceil((Date.now() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
+                    subscriptionStatus = daysSinceStart <= 15 ? 'trial' : 'expired';
+                }
+
+                return {
+                    id: doc.id,
+                    email: data.email || 'Unknown',
+                    displayName: data.displayName || data.name,
+                    photoURL: data.photoURL,
+                    createdAt: data.createdAt || '',
+                    lastLoginAt: data.lastLoginAt,
+                    clipCount: userClips.length,
+                    subscriptionStatus,
+                    subscriptionTier: data.subscriptionTier || 'free',
+                    trialStartDate: data.trialStartDate,
+                    platforms: {
+                        youtube: userClips.filter(c => c.platform === 'youtube').length,
+                        instagram: userClips.filter(c => c.platform === 'instagram').length,
+                        threads: userClips.filter(c => c.platform === 'threads').length,
+                        web: userClips.filter(c => c.platform === 'web').length
+                    }
+                };
+            });
+
+            // Sort by clip count desc
+            users.sort((a, b) => b.clipCount - a.clipCount);
+
+            setState(prev => ({ ...prev, users, usersLoading: false }));
+        } catch (error) {
+            console.error('[useAdmin] Failed to fetch user list:', error);
+            setState(prev => ({ ...prev, usersLoading: false }));
+        }
+    }, []);
+
+    // Update user subscription
+    const updateUserSubscription = useCallback(async (userId: string, tier: 'free' | 'pro') => {
+        try {
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, {
+                subscriptionTier: tier,
+                subscriptionStatus: tier === 'pro' ? 'active' : 'free',
+                subscriptionUpdatedAt: new Date().toISOString(),
+                subscriptionUpdatedBy: user?.email
+            });
+            await fetchUserList();
+        } catch (error) {
+            console.error('[useAdmin] Failed to update user subscription:', error);
+            throw error;
+        }
+    }, [user, fetchUserList]);
+
+    // Fetch category analytics
+    const fetchCategoryAnalytics = useCallback(async () => {
+        try {
+            const clipsSnapshot = await getDocs(collection(db, 'clips'));
+            const clipsData = clipsSnapshot.docs.map(d => d.data());
+            const categoriesSnapshot = await getDocs(collection(db, 'categories'));
+
+            // Count clips per category
+            const categoryCount: Record<string, number> = {};
+            const keywordCount: Record<string, number> = {};
+
+            clipsData.forEach(clip => {
+                const cat = clip.category || 'Uncategorized';
+                categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+
+                if (clip.keywords && Array.isArray(clip.keywords)) {
+                    clip.keywords.forEach((kw: string) => {
+                        if (kw && kw.trim()) {
+                            keywordCount[kw.trim().toLowerCase()] = (keywordCount[kw.trim().toLowerCase()] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            const totalClips = clipsData.length;
+            const topCategories: CategoryStats[] = Object.entries(categoryCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 20)
+                .map(([name, count]) => ({
+                    name,
+                    count,
+                    percentage: totalClips > 0 ? Math.round((count / totalClips) * 100) : 0
+                }));
+
+            const topKeywords: KeywordStats[] = Object.entries(keywordCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 30)
+                .map(([keyword, count]) => ({ keyword, count }));
+
+            // Calculate avg categories per user
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            const totalUsers = usersSnapshot.docs.length;
+            const totalCategories = categoriesSnapshot.docs.length;
+
+            setState(prev => ({
+                ...prev,
+                categoryAnalytics: {
+                    topCategories,
+                    topKeywords,
+                    totalCategories,
+                    avgCategoriesPerUser: totalUsers > 0 ? Math.round((totalCategories / totalUsers) * 10) / 10 : 0
+                }
+            }));
+        } catch (error) {
+            console.error('[useAdmin] Failed to fetch category analytics:', error);
+        }
+    }, []);
+
+    // Fetch detailed analytics
+    const fetchDetailedAnalytics = useCallback(async () => {
+        try {
+            const clipsSnapshot = await getDocs(collection(db, 'clips'));
+            const clipsData = clipsSnapshot.docs.map(d => d.data());
+
+            // Hourly activity
+            const hourlyActivity: HourlyActivity[] = Array.from({ length: 24 }, (_, i) => ({ hour: i, count: 0 }));
+            clipsData.forEach(clip => {
+                if (clip.createdAt) {
+                    const hour = new Date(clip.createdAt).getHours();
+                    hourlyActivity[hour].count++;
+                }
+            });
+
+            // Weekday activity
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const weekdayCount = [0, 0, 0, 0, 0, 0, 0];
+            clipsData.forEach(clip => {
+                if (clip.createdAt) {
+                    const day = new Date(clip.createdAt).getDay();
+                    weekdayCount[day]++;
+                }
+            });
+            const weekdayActivity = dayNames.map((day, i) => ({ day, count: weekdayCount[i] }));
+
+            // Platform trends (last 30 days)
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const platformTrends: { date: string; youtube: number; instagram: number; threads: number; web: number }[] = [];
+
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+                const dateStr = date.toISOString().split('T')[0];
+                const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
+                const dayClips = clipsData.filter(c => {
+                    if (!c.createdAt) return false;
+                    const created = new Date(c.createdAt);
+                    return created >= date && created < nextDate;
+                });
+
+                platformTrends.push({
+                    date: dateStr,
+                    youtube: dayClips.filter(c => c.platform === 'youtube').length,
+                    instagram: dayClips.filter(c => c.platform === 'instagram').length,
+                    threads: dayClips.filter(c => c.platform === 'threads').length,
+                    web: dayClips.filter(c => c.platform === 'web').length
+                });
+            }
+
+            // Simple retention data (weekly)
+            const retentionData: { week: string; retention: number }[] = [];
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            const usersData = usersSnapshot.docs.map(d => d.data());
+
+            for (let w = 1; w <= 4; w++) {
+                const weekStart = new Date(today.getTime() - w * 7 * 24 * 60 * 60 * 1000);
+                const weekEnd = new Date(today.getTime() - (w - 1) * 7 * 24 * 60 * 60 * 1000);
+
+                const usersCreatedBefore = usersData.filter(u => {
+                    if (!u.createdAt) return false;
+                    return new Date(u.createdAt) < weekStart;
+                }).length;
+
+                const activeInWeek = usersData.filter(u => {
+                    if (!u.lastLoginAt || !u.createdAt) return false;
+                    const created = new Date(u.createdAt);
+                    const lastLogin = new Date(u.lastLoginAt);
+                    return created < weekStart && lastLogin >= weekStart && lastLogin < weekEnd;
+                }).length;
+
+                retentionData.push({
+                    week: `Week ${w}`,
+                    retention: usersCreatedBefore > 0 ? Math.round((activeInWeek / usersCreatedBefore) * 100) : 0
+                });
+            }
+
+            setState(prev => ({
+                ...prev,
+                detailedAnalytics: {
+                    hourlyActivity,
+                    weekdayActivity,
+                    platformTrends,
+                    retentionData
+                }
+            }));
+        } catch (error) {
+            console.error('[useAdmin] Failed to fetch detailed analytics:', error);
         }
     }, []);
 
@@ -335,6 +687,10 @@ export const useAdmin = () => {
         createPopup,
         updatePopup,
         deletePopup,
-        fetchAnalytics
+        fetchAnalytics,
+        fetchUserList,
+        updateUserSubscription,
+        fetchCategoryAnalytics,
+        fetchDetailedAnalytics
     };
 };
