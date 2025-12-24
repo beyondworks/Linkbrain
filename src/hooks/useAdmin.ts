@@ -568,6 +568,16 @@ export const useAdmin = () => {
             }));
         } catch (error) {
             console.error('[useAdmin] Failed to fetch category analytics:', error);
+            // Set empty data to prevent infinite loading
+            setState(prev => ({
+                ...prev,
+                categoryAnalytics: {
+                    topCategories: [],
+                    topKeywords: [],
+                    totalCategories: 0,
+                    avgCategoriesPerUser: 0
+                }
+            }));
         }
     }, []);
 
@@ -660,6 +670,21 @@ export const useAdmin = () => {
             }));
         } catch (error) {
             console.error('[useAdmin] Failed to fetch detailed analytics:', error);
+            // Set empty data to prevent infinite loading
+            setState(prev => ({
+                ...prev,
+                detailedAnalytics: {
+                    hourlyActivity: Array.from({ length: 24 }, (_, i) => ({ hour: i, count: 0 })),
+                    weekdayActivity: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => ({ day, count: 0 })),
+                    platformTrends: [],
+                    retentionData: [
+                        { week: 'Week 1', retention: 0 },
+                        { week: 'Week 2', retention: 0 },
+                        { week: 'Week 3', retention: 0 },
+                        { week: 'Week 4', retention: 0 }
+                    ]
+                }
+            }));
         }
     }, []);
 

@@ -33,10 +33,10 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
-    // categories 컬렉션 - 본인 데이터만 접근 가능
+    // categories 컬렉션 - 본인 데이터만 접근 가능, 관리자는 전체 읽기 가능
     match /categories/{categoryId} {
       allow read: if request.auth != null
-        && resource.data.userId == request.auth.uid;
+        && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null
