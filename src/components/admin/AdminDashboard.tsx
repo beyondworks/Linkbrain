@@ -5,6 +5,9 @@ import { AnalyticsPanel } from './AnalyticsPanel';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 import { InquiriesPanel } from './InquiriesPanel';
 import { PopupsPanel } from './PopupsPanel';
+import { UsersPanel } from './UsersPanel';
+import { CategoryAnalyticsPanel } from './CategoryAnalyticsPanel';
+import { DetailedAnalyticsPanel } from './DetailedAnalyticsPanel';
 import {
     BarChart3,
     Bell,
@@ -12,10 +15,13 @@ import {
     Megaphone,
     Loader2,
     ShieldAlert,
-    ArrowLeft
+    ArrowLeft,
+    Users,
+    Tag,
+    TrendingUp
 } from 'lucide-react';
 
-type AdminTab = 'analytics' | 'announcements' | 'inquiries' | 'popups';
+type AdminTab = 'analytics' | 'announcements' | 'inquiries' | 'popups' | 'users' | 'categories' | 'detailed';
 
 interface AdminDashboardProps {
     theme: 'light' | 'dark';
@@ -29,7 +35,10 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
 
     const t = {
         title: language === 'ko' ? '관리자 대시보드' : 'Admin Dashboard',
-        analytics: language === 'ko' ? '애널라이즈' : 'Analytics',
+        analytics: language === 'ko' ? '개요' : 'Overview',
+        users: language === 'ko' ? '유저 관리' : 'Users',
+        categories: language === 'ko' ? '카테고리' : 'Categories',
+        detailed: language === 'ko' ? '상세 분석' : 'Detailed',
         announcements: language === 'ko' ? '공지사항' : 'Announcements',
         inquiries: language === 'ko' ? '고객문의' : 'Inquiries',
         popups: language === 'ko' ? '팝업 관리' : 'Popups',
@@ -41,11 +50,14 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
         back: language === 'ko' ? '돌아가기' : 'Go Back'
     };
 
-    const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
-        { id: 'analytics', label: t.analytics, icon: <BarChart3 size={18} /> },
-        { id: 'announcements', label: t.announcements, icon: <Bell size={18} /> },
-        { id: 'inquiries', label: t.inquiries, icon: <MessageSquare size={18} /> },
-        { id: 'popups', label: t.popups, icon: <Megaphone size={18} /> }
+    const tabs: { id: AdminTab; label: string; icon: React.ReactNode; group?: string }[] = [
+        { id: 'analytics', label: t.analytics, icon: <BarChart3 size={18} />, group: 'analytics' },
+        { id: 'users', label: t.users, icon: <Users size={18} />, group: 'analytics' },
+        { id: 'categories', label: t.categories, icon: <Tag size={18} />, group: 'analytics' },
+        { id: 'detailed', label: t.detailed, icon: <TrendingUp size={18} />, group: 'analytics' },
+        { id: 'announcements', label: t.announcements, icon: <Bell size={18} />, group: 'manage' },
+        { id: 'inquiries', label: t.inquiries, icon: <MessageSquare size={18} />, group: 'manage' },
+        { id: 'popups', label: t.popups, icon: <Megaphone size={18} />, group: 'manage' }
     ];
 
     // Loading state
@@ -87,6 +99,9 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
         );
     }
 
+    const analyticsTabs = tabs.filter(t => t.group === 'analytics');
+    const manageTabs = tabs.filter(t => t.group === 'manage');
+
     return (
         <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
             {/* Header */}
@@ -116,15 +131,39 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                     {/* Sidebar Navigation */}
                     <nav className={`lg:w-56 shrink-0 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} rounded-xl p-2 lg:sticky lg:top-24 h-fit border ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
                         <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
-                            {tabs.map(tab => (
+                            {/* Analytics Section */}
+                            <div className={`hidden lg:block px-3 py-2 text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                {language === 'ko' ? '분석' : 'Analytics'}
+                            </div>
+                            {analyticsTabs.map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                                            ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
-                                            : theme === 'dark'
-                                                ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                        ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
+                                        : theme === 'dark'
+                                            ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                        }`}
+                                >
+                                    {tab.icon}
+                                    <span>{tab.label}</span>
+                                </button>
+                            ))}
+
+                            {/* Management Section */}
+                            <div className={`hidden lg:block px-3 py-2 mt-4 text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                {language === 'ko' ? '관리' : 'Management'}
+                            </div>
+                            {manageTabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
+                                        ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
+                                        : theme === 'dark'
+                                            ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                                         }`}
                                 >
                                     {tab.icon}
@@ -138,6 +177,15 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                     <main className="flex-1 min-w-0">
                         {activeTab === 'analytics' && (
                             <AnalyticsPanel theme={theme} language={language} admin={admin} />
+                        )}
+                        {activeTab === 'users' && (
+                            <UsersPanel theme={theme} language={language} admin={admin} />
+                        )}
+                        {activeTab === 'categories' && (
+                            <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />
+                        )}
+                        {activeTab === 'detailed' && (
+                            <DetailedAnalyticsPanel theme={theme} language={language} admin={admin} />
                         )}
                         {activeTab === 'announcements' && (
                             <AnnouncementsPanel theme={theme} language={language} admin={admin} />
@@ -154,3 +202,4 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
         </div>
     );
 }
+
