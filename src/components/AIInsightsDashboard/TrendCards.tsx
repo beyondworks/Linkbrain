@@ -1,4 +1,6 @@
 import React from 'react';
+import { cn } from '../ui/utils';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface TrendCardsProps {
     links: any[];
@@ -14,6 +16,14 @@ export const TrendCards: React.FC<TrendCardsProps> = ({
     onKeywordClick,
 }) => {
     const isDark = theme === 'dark';
+
+    // --- Plus X Design Tokens ---
+    const bgCard = isDark ? 'bg-[#111113]' : 'bg-white';
+    const border = isDark ? 'border-white/[0.06]' : 'border-black/[0.05]';
+    const textPrimary = isDark ? 'text-[#FAFAFA]' : 'text-[#111111]';
+    const textSecondary = isDark ? 'text-[#A1A1AA]' : 'text-[#525252]';
+    const textTertiary = isDark ? 'text-[#71717A]' : 'text-[#A3A3A3]';
+    const hoverEffect = "transition-all duration-200 hover:border-black/[0.10] dark:hover:border-white/[0.10] hover:bg-black/[0.01] dark:hover:bg-white/[0.015]";
 
     // Analyze trends from tags over time
     const trendData = React.useMemo(() => {
@@ -74,84 +84,92 @@ export const TrendCards: React.FC<TrendCardsProps> = ({
     const TrendItem = ({ tag, change, isRising }: { tag: string; change: number; isRising: boolean }) => (
         <button
             onClick={() => onKeywordClick?.(tag)}
-            className={`flex items-center justify-between p-2 rounded-lg transition-all hover:scale-[1.01] ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-50'
-                }`}
+            className={cn(
+                "flex items-center justify-between w-full p-2.5 rounded-lg group",
+                hoverEffect
+            )}
         >
-            <span className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                {tag}
-            </span>
-            <span className={`text-xs font-bold ${isRising ? 'text-[#21DBA4]' : 'text-rose-500'}`}>
-                {isRising ? '+' : ''}{change}%
-            </span>
+            <div className="flex items-center gap-2">
+                <span className={cn(
+                    "text-xs font-semibold px-1.5 py-0.5 rounded text-opacity-80",
+                    isDark ? "bg-white/5 text-white" : "bg-black/5 text-black"
+                )}>
+                    #
+                </span>
+                <span className={cn("text-sm font-medium", textSecondary, "group-hover:text-primary transition-colors")}>
+                    {tag}
+                </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+                <span className={cn("text-xs font-bold tabular-nums", isRising ? "text-emerald-500" : "text-rose-500")}>
+                    {isRising ? '+' : ''}{change}%
+                </span>
+                {isRising ? (
+                    <TrendingUp size={12} className="text-emerald-500" />
+                ) : (
+                    <TrendingDown size={12} className="text-rose-500" />
+                )}
+            </div>
         </button>
     );
 
     return (
-        <div className={`rounded-xl p-4 md:p-5 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#21DBA4]">
-                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                        <polyline points="17 6 23 6 23 12" />
-                    </svg>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Rising Trends */}
+            <div className={cn("rounded-2xl border p-6 flex flex-col h-full", bgCard, border)}>
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="p-1.5 rounded-md bg-emerald-500/10">
+                        <TrendingUp size={16} className="text-emerald-500" />
+                    </div>
+                    <h3 className={cn("font-semibold text-sm", textPrimary)}>
+                        {language === 'ko' ? '상승 트렌드' : 'Rising Trends'}
+                    </h3>
                 </div>
-                <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    {language === 'ko' ? '관심사 트렌드' : 'Interest Trends'}
-                </h3>
+
+                <div className="flex-1 space-y-1">
+                    {trendData.rising.length > 0 ? (
+                        trendData.rising.map(item => (
+                            <TrendItem key={item.tag} tag={item.tag} change={item.change} isRising={true} />
+                        ))
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+                            <Minus className={cn("mb-2 opacity-50", textSecondary)} size={16} />
+                            <p className={cn("text-xs", textSecondary)}>
+                                {language === 'ko' ? '데이터 부족' : 'Not enough data'}
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-                {/* Rising */}
-                <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <div className="w-4 h-4 rounded-full bg-[#21DBA4]/20 flex items-center justify-center">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#21DBA4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="18 15 12 9 6 15" />
-                            </svg>
-                        </div>
-                        <span className={`text-[10px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            {language === 'ko' ? '상승' : 'Rising'}
-                        </span>
+            {/* Declining Trends */}
+            <div className={cn("rounded-2xl border p-6 flex flex-col h-full", bgCard, border)}>
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="p-1.5 rounded-md bg-rose-500/10">
+                        <TrendingDown size={16} className="text-rose-500" />
                     </div>
-                    <div className="space-y-1">
-                        {trendData.rising.length > 0 ? (
-                            trendData.rising.map(item => (
-                                <TrendItem key={item.tag} tag={item.tag} change={item.change} isRising={true} />
-                            ))
-                        ) : (
-                            <p className={`text-[10px] p-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                {language === 'ko' ? '데이터 부족' : 'Not enough data'}
-                            </p>
-                        )}
-                    </div>
+                    <h3 className={cn("font-semibold text-sm", textPrimary)}>
+                        {language === 'ko' ? '하락 트렌드' : 'Declining Trends'}
+                    </h3>
                 </div>
 
-                {/* Declining */}
-                <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <div className="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="6 9 12 15 18 9" />
-                            </svg>
-                        </div>
-                        <span className={`text-[10px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            {language === 'ko' ? '감소' : 'Declining'}
-                        </span>
-                    </div>
-                    <div className="space-y-1">
-                        {trendData.declining.length > 0 ? (
-                            trendData.declining.map(item => (
-                                <TrendItem key={item.tag} tag={item.tag} change={item.change} isRising={false} />
-                            ))
-                        ) : (
-                            <p className={`text-[10px] p-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                <div className="flex-1 space-y-1">
+                    {trendData.declining.length > 0 ? (
+                        trendData.declining.map(item => (
+                            <TrendItem key={item.tag} tag={item.tag} change={item.change} isRising={false} />
+                        ))
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+                            <Minus className={cn("mb-2 opacity-50", textSecondary)} size={16} />
+                            <p className={cn("text-xs", textSecondary)}>
                                 {language === 'ko' ? '데이터 부족' : 'Not enough data'}
                             </p>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     );
 };
+

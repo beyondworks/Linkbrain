@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useEffect } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import {
-    BarChart,
+    BarChart as RechartsBarChart,
     Bar,
     XAxis,
     YAxis,
@@ -12,12 +12,14 @@ import {
     Cell
 } from 'recharts';
 import {
-    Tag,
+    Layers,
     Hash,
     RefreshCw,
+    Loader2,
     TrendingUp,
-    Loader2
+    BarChart3
 } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 interface CategoryAnalyticsPanelProps {
     theme: 'light' | 'dark';
@@ -29,59 +31,54 @@ export function CategoryAnalyticsPanel({ theme, language, admin }: CategoryAnaly
     const { categoryAnalytics, fetchCategoryAnalytics } = admin;
     const [loading, setLoading] = React.useState(true);
     const [hasLoaded, setHasLoaded] = React.useState(false);
+    const isDark = theme === 'dark';
+
+    // Theme
+    const card = isDark ? 'bg-[#161B22]' : 'bg-white';
+    const cardBorder = isDark ? 'border-gray-800' : 'border-gray-200';
+    const text = isDark ? 'text-white' : 'text-gray-900';
+    const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
+    const textSub = isDark ? 'text-gray-500' : 'text-gray-400';
+    const itemBg = isDark ? 'bg-gray-900/50' : 'bg-gray-50';
+    const itemHover = isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100';
 
     useEffect(() => {
         if (hasLoaded) return;
         const loadData = async () => {
-            try {
-                await fetchCategoryAnalytics();
-            } catch (error) {
-                console.error('Failed to load category analytics:', error);
-            } finally {
-                setLoading(false);
-                setHasLoaded(true);
-            }
+            try { await fetchCategoryAnalytics(); }
+            catch (error) { console.error('Failed to load category analytics:', error); }
+            finally { setLoading(false); setHasLoaded(true); }
         };
         loadData();
     }, [hasLoaded, fetchCategoryAnalytics]);
 
     const t = {
         title: language === 'ko' ? '카테고리 분석' : 'Category Analytics',
+        subtitle: language === 'ko' ? '카테고리 & 키워드 인사이트' : 'Category & keyword insights',
         refresh: language === 'ko' ? '새로고침' : 'Refresh',
-        topCategories: language === 'ko' ? '인기 카테고리 TOP 10' : 'Top 10 Categories',
-        topKeywords: language === 'ko' ? '인기 키워드' : 'Top Keywords',
+        topCategories: language === 'ko' ? 'TOP 카테고리' : 'Top Categories',
+        topKeywords: language === 'ko' ? '인기 키워드' : 'Popular Keywords',
         totalCategories: language === 'ko' ? '전체 카테고리' : 'Total Categories',
         avgPerUser: language === 'ko' ? '유저당 평균' : 'Avg per User',
-        loading: language === 'ko' ? '데이터 로딩 중...' : 'Loading data...',
-        noData: language === 'ko' ? '데이터가 없습니다' : 'No data available',
+        loading: language === 'ko' ? '로딩 중...' : 'Loading...',
+        noData: language === 'ko' ? '데이터 없음' : 'No data',
         clips: language === 'ko' ? '클립' : 'clips'
     };
 
-    const cardBg = theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
-    const textPrimary = theme === 'dark' ? 'text-white' : 'text-slate-900';
-    const textSecondary = theme === 'dark' ? 'text-slate-400' : 'text-slate-500';
-
-    const chartColors = [
-        '#21DBA4', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444',
-        '#10B981', '#6366F1', '#EC4899', '#14B8A6', '#F97316'
-    ];
+    const chartColors = ['#21DBA4', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#6366F1', '#EC4899', '#14B8A6', '#F97316'];
 
     const handleRefresh = async () => {
         setLoading(true);
-        try {
-            await fetchCategoryAnalytics();
-        } catch (error) {
-            console.error('Failed to refresh category analytics:', error);
-        } finally {
-            setLoading(false);
-        }
+        try { await fetchCategoryAnalytics(); }
+        catch (error) { console.error('Failed to refresh:', error); }
+        finally { setLoading(false); }
     };
 
     if (loading || !categoryAnalytics) {
         return (
-            <div className={`rounded-xl border p-12 text-center ${cardBg}`}>
-                <Loader2 className="w-8 h-8 animate-spin text-[#21DBA4] mx-auto mb-3" />
-                <p className={textSecondary}>{t.loading}</p>
+            <div className={cn("rounded-2xl border p-16 text-center", card, cardBorder)}>
+                <Loader2 className="w-8 h-8 text-violet-500 animate-spin mx-auto mb-4" />
+                <p className={textMuted}>{t.loading}</p>
             </div>
         );
     }
@@ -91,115 +88,106 @@ export function CategoryAnalyticsPanel({ theme, language, admin }: CategoryAnaly
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <h2 className={`text-xl font-bold ${textPrimary}`}>{t.title}</h2>
-                <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${theme === 'dark'
-                        ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
-                >
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <h2 className={cn("text-2xl font-bold tracking-tight mb-1", text)}>{t.title}</h2>
+                    <p className={cn("text-sm", textSub)}>{t.subtitle}</p>
+                </div>
+                <button onClick={handleRefresh} disabled={loading}
+                    className={cn("flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                        isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-black/5 text-gray-500 hover:bg-black/10")}>
                     <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                     {t.refresh}
                 </button>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4">
-                <div className={`rounded-xl border p-5 ${cardBg}`}>
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-purple-500/10' : 'bg-purple-50'} text-purple-500`}>
-                            <Tag size={20} />
+            {/* Stats Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className={cn("rounded-2xl border p-5", card, cardBorder)}>
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
+                            <Layers size={20} className="text-white" />
                         </div>
-                        <span className={`text-sm font-medium ${textSecondary}`}>{t.totalCategories}</span>
+                        <div>
+                            <p className={cn("text-sm font-medium mb-0.5", textSub)}>{t.totalCategories}</p>
+                            <p className={cn("text-3xl font-bold tracking-tight tabular-nums", text)}>
+                                {categoryAnalytics.totalCategories.toLocaleString()}
+                            </p>
+                        </div>
                     </div>
-                    <p className={`text-3xl font-bold ${textPrimary}`}>
-                        {categoryAnalytics.totalCategories.toLocaleString()}
-                    </p>
                 </div>
-                <div className={`rounded-xl border p-5 ${cardBg}`}>
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-blue-500/10' : 'bg-blue-50'} text-blue-500`}>
-                            <TrendingUp size={20} />
+                <div className={cn("rounded-2xl border p-5", card, cardBorder)}>
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0">
+                            <TrendingUp size={20} className="text-white" />
                         </div>
-                        <span className={`text-sm font-medium ${textSecondary}`}>{t.avgPerUser}</span>
+                        <div>
+                            <p className={cn("text-sm font-medium mb-0.5", textSub)}>{t.avgPerUser}</p>
+                            <p className={cn("text-3xl font-bold tracking-tight tabular-nums", text)}>
+                                {categoryAnalytics.avgCategoriesPerUser}
+                            </p>
+                        </div>
                     </div>
-                    <p className={`text-3xl font-bold ${textPrimary}`}>
-                        {categoryAnalytics.avgCategoriesPerUser}
-                    </p>
                 </div>
             </div>
 
             {/* Top Categories Chart */}
-            <div className={`rounded-xl border p-5 ${cardBg}`}>
-                <h3 className={`text-sm font-bold mb-4 ${textSecondary}`}>{t.topCategories}</h3>
+            <div className={cn("rounded-2xl border p-6", card, cardBorder)}>
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center">
+                        <BarChart3 size={18} className="text-white" />
+                    </div>
+                    <span className={cn("font-semibold", text)}>{t.topCategories}</span>
+                </div>
                 {topCategoriesData.length > 0 ? (
-                    <div className="h-80">
+                    <div className="h-72">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                                data={topCategoriesData}
-                                layout="vertical"
-                                margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
-                                <XAxis type="number" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} fontSize={12} />
-                                <YAxis
-                                    type="category"
-                                    dataKey="name"
-                                    stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
-                                    fontSize={12}
-                                    width={75}
-                                    tickFormatter={(value: string) => value.length > 10 ? value.slice(0, 10) + '...' : value}
-                                />
+                            <RechartsBarChart data={topCategoriesData} layout="vertical" margin={{ top: 0, right: 24, left: 8, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#27272a' : '#e5e7eb'} horizontal={true} vertical={false} />
+                                <XAxis type="number" stroke={isDark ? '#52525b' : '#9ca3af'} fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis type="category" dataKey="name" stroke={isDark ? '#52525b' : '#9ca3af'} fontSize={12} width={100}
+                                    tickLine={false} axisLine={false} tickFormatter={(v: string) => v.length > 14 ? v.slice(0, 14) + '…' : v} />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: theme === 'dark' ? '#1e293b' : '#fff',
-                                        border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-                                        borderRadius: '8px',
-                                        color: theme === 'dark' ? '#fff' : '#1e293b'
+                                        backgroundColor: isDark ? '#1f2937' : '#fff',
+                                        border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+                                        borderRadius: '10px', fontSize: '12px', padding: '8px 12px'
                                     }}
+                                    cursor={{ fill: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}
                                     formatter={(value: number) => [`${value} ${t.clips}`, '']}
                                 />
-                                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                                    {topCategoriesData.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                                    ))}
+                                <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={20}>
+                                    {topCategoriesData.map((_, index) => <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />)}
                                 </Bar>
-                            </BarChart>
+                            </RechartsBarChart>
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <p className={`text-center py-8 ${textSecondary}`}>{t.noData}</p>
+                    <p className={cn("text-center py-12", textSub)}>{t.noData}</p>
                 )}
             </div>
 
-            {/* Top Keywords */}
-            <div className={`rounded-xl border p-5 ${cardBg}`}>
-                <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${textSecondary}`}>
-                    <Hash size={16} />
-                    {t.topKeywords}
-                </h3>
+            {/* Keywords */}
+            <div className={cn("rounded-2xl border p-6", card, cardBorder)}>
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                        <Hash size={18} className="text-white" />
+                    </div>
+                    <span className={cn("font-semibold", text)}>{t.topKeywords}</span>
+                </div>
                 {categoryAnalytics.topKeywords.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                        {categoryAnalytics.topKeywords.map((kw, index) => (
-                            <span
-                                key={kw.keyword}
-                                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${theme === 'dark' ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'
-                                    } ${textPrimary}`}
-                                style={{
-                                    opacity: 1 - (index * 0.02),
-                                    fontSize: `${Math.max(12, 16 - index * 0.3)}px`
-                                }}
-                            >
+                        {categoryAnalytics.topKeywords.slice(0, 30).map((kw, index) => (
+                            <span key={kw.keyword}
+                                className={cn("px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-105", itemBg, itemHover, text)}
+                                style={{ opacity: Math.max(0.6, 1 - index * 0.015) }}>
                                 #{kw.keyword}
-                                <span className={`ml-1.5 text-xs ${textSecondary}`}>{kw.count}</span>
+                                <span className={cn("ml-1.5 text-xs", textSub)}>{kw.count}</span>
                             </span>
                         ))}
                     </div>
                 ) : (
-                    <p className={`text-center py-8 ${textSecondary}`}>{t.noData}</p>
+                    <p className={cn("text-center py-12", textSub)}>{t.noData}</p>
                 )}
             </div>
         </div>

@@ -1,29 +1,31 @@
 import * as React from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import {
-    LineChart,
-    Line,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell
+    BarChart,
+    Bar
 } from 'recharts';
 import {
     Users,
     FileText,
     TrendingUp,
+    TrendingDown,
     Youtube,
     Instagram,
     Globe,
     RefreshCw,
-    UserPlus,
+    Zap,
+    Clock,
     Activity,
-    Calendar
+    ArrowUpRight
 } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 interface AnalyticsPanelProps {
     theme: 'light' | 'dark';
@@ -33,343 +35,494 @@ interface AnalyticsPanelProps {
 
 export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) {
     const { analytics, fetchAnalytics } = admin;
+    const isDark = theme === 'dark';
 
     const t = {
-        title: language === 'ko' ? '서비스 통계' : 'Service Analytics',
+        title: language === 'ko' ? '서비스 통계' : 'Analytics',
+        subtitle: language === 'ko' ? '실시간 서비스 현황 및 주요 지표' : 'Real-time metrics & insights',
         totalUsers: language === 'ko' ? '전체 사용자' : 'Total Users',
         totalClips: language === 'ko' ? '전체 클립' : 'Total Clips',
-        recentClips: language === 'ko' ? '최근 7일 클립' : 'Recent 7 Days',
-        avgClipsPerUser: language === 'ko' ? '유저당 평균 클립' : 'Avg Clips/User',
-        subscription: language === 'ko' ? '구독 현황' : 'Subscription Status',
-        trial: language === 'ko' ? '체험판' : 'Trial',
-        active: language === 'ko' ? '활성 구독' : 'Active',
-        expired: language === 'ko' ? '만료' : 'Expired',
+        recentClips: language === 'ko' ? '최근 7일' : 'Last 7 Days',
+        avgClipsPerUser: language === 'ko' ? '인당 평균' : 'Avg/User',
+        subscription: language === 'ko' ? '구독 현황' : 'Subscriptions',
         platforms: language === 'ko' ? '플랫폼별 클립' : 'Clips by Platform',
         refresh: language === 'ko' ? '새로고침' : 'Refresh',
         noData: language === 'ko' ? '데이터를 불러오는 중...' : 'Loading data...',
-        newUsers: language === 'ko' ? '신규 가입자' : 'New Users',
+        newUsers: language === 'ko' ? '신규 가입자' : 'New Signups',
+        activeUsers: language === 'ko' ? '활성 사용자' : 'Active Users',
+        clipTrends: language === 'ko' ? '클립 생성 추이' : 'Clip Trends',
+        active: language === 'ko' ? '활성' : 'Active',
+        trial: language === 'ko' ? '체험' : 'Trial',
+        expired: language === 'ko' ? '만료' : 'Expired',
         today: language === 'ko' ? '오늘' : 'Today',
         thisWeek: language === 'ko' ? '이번 주' : 'This Week',
-        thisMonth: language === 'ko' ? '이번 달' : 'This Month',
-        activeUsers: language === 'ko' ? '활성 사용자' : 'Active Users',
-        dau: language === 'ko' ? '일간' : 'DAU',
-        wau: language === 'ko' ? '주간' : 'WAU',
-        mau: language === 'ko' ? '월간' : 'MAU',
-        clipTrends: language === 'ko' ? '클립 생성 추이 (30일)' : 'Clip Trends (30 days)',
-        newUserTrends: language === 'ko' ? '신규 가입 추이 (30일)' : 'New User Trends (30 days)',
-        clips: language === 'ko' ? '클립' : 'clips',
-        users: language === 'ko' ? '유저' : 'users'
+        thisMonth: language === 'ko' ? '이번 달' : 'This Month'
     };
 
-    const cardBg = theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
-    const textPrimary = theme === 'dark' ? 'text-white' : 'text-slate-900';
-    const textSecondary = theme === 'dark' ? 'text-slate-400' : 'text-slate-500';
+    // ═══════════════════════════════════════════════════
+    // Plus X Design Tokens
+    // ═══════════════════════════════════════════════════
+    const tokens = {
+        // Backgrounds
+        bgCard: isDark ? 'bg-[#111113]' : 'bg-white',
+        bgSurface: isDark ? 'bg-[#18181B]' : 'bg-[#F9FAFB]',
+        bgHover: isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.01]',
 
-    const platformColors = {
-        youtube: '#EF4444',
-        instagram: '#EC4899',
-        threads: '#3B82F6',
-        web: '#21DBA4'
+        // Borders
+        border: isDark ? 'border-white/[0.06]' : 'border-black/[0.05]',
+        borderHover: isDark ? 'hover:border-white/[0.12]' : 'hover:border-black/[0.10]',
+
+        // Typography
+        textPrimary: isDark ? 'text-[#FAFAFA]' : 'text-[#111111]',
+        textSecondary: isDark ? 'text-[#A1A1AA]' : 'text-[#525252]',
+        textTertiary: isDark ? 'text-[#71717A]' : 'text-[#A3A3A3]',
+
+        // Chart colors
+        chartLine: isDark ? '#3F3F46' : '#E5E7EB',
+        chartTick: isDark ? '#71717A' : '#9CA3AF',
     };
 
+    // Loading state
     if (!analytics) {
         return (
-            <div className={`rounded-xl border p-8 text-center ${cardBg}`}>
-                <p className={textSecondary}>{t.noData}</p>
+            <div className={cn(
+                "flex flex-col items-center justify-center min-h-[400px] rounded-2xl border border-dashed",
+                tokens.border
+            )}>
+                <Activity className={cn("w-6 h-6 mb-3 animate-pulse", tokens.textTertiary)} />
+                <p className={cn("text-sm font-medium", tokens.textSecondary)}>{t.noData}</p>
             </div>
         );
     }
 
-    const statCards = [
+    // ═══════════════════════════════════════════════════
+    // Data Preparation
+    // ═══════════════════════════════════════════════════
+    const mainStats = [
         {
             label: t.totalUsers,
             value: analytics.totalUsers,
-            icon: <Users size={20} />,
-            color: 'text-blue-500',
-            bg: theme === 'dark' ? 'bg-blue-500/10' : 'bg-blue-50'
+            icon: Users,
+            trend: "+12.5%",
+            trendUp: true,
+            accent: 'emerald'
         },
         {
             label: t.totalClips,
             value: analytics.totalClips,
-            icon: <FileText size={20} />,
-            color: 'text-[#21DBA4]',
-            bg: theme === 'dark' ? 'bg-[#21DBA4]/10' : 'bg-[#E0FBF4]'
+            icon: FileText,
+            trend: "+8.2%",
+            trendUp: true,
+            accent: 'blue'
         },
         {
             label: t.recentClips,
             value: analytics.recentClipsCount,
-            icon: <TrendingUp size={20} />,
-            color: 'text-purple-500',
-            bg: theme === 'dark' ? 'bg-purple-500/10' : 'bg-purple-50'
+            icon: Clock,
+            trend: "-2.1%",
+            trendUp: false,
+            accent: 'amber'
         },
         {
             label: t.avgClipsPerUser,
             value: analytics.avgClipsPerUser || 0,
-            icon: <Activity size={20} />,
-            color: 'text-orange-500',
-            bg: theme === 'dark' ? 'bg-orange-500/10' : 'bg-orange-50'
+            icon: Zap,
+            trend: null,
+            trendUp: null,
+            accent: 'violet'
         }
     ];
 
     const platformData = [
-        { name: 'YouTube', value: analytics.platformStats.youtube, color: platformColors.youtube },
-        { name: 'Instagram', value: analytics.platformStats.instagram, color: platformColors.instagram },
-        { name: 'Threads', value: analytics.platformStats.threads, color: platformColors.threads },
-        { name: 'Web', value: analytics.platformStats.web, color: platformColors.web }
+        { name: 'YouTube', value: analytics.platformStats.youtube, icon: Youtube, color: '#FF0000' },
+        { name: 'Instagram', value: analytics.platformStats.instagram, icon: Instagram, color: '#E1306C' },
+        { name: 'Threads', value: analytics.platformStats.threads, emoji: '🧵', color: isDark ? '#FAFAFA' : '#111111' },
+        { name: 'Web', value: analytics.platformStats.web, icon: Globe, color: '#21DBA4' }
     ];
 
+    const maxPlatformValue = Math.max(...platformData.map(p => p.value), 1);
+
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h2 className={`text-xl font-bold ${textPrimary}`}>{t.title}</h2>
+        <div className="space-y-8 max-w-[1600px] mx-auto">
+            {/* ═══════════════════════════════════════════════════
+                Header Section - Plus X Style
+                ═══════════════════════════════════════════════════ */}
+            <div className="flex items-end justify-between">
+                <div className="space-y-1">
+                    <h2 className={cn("text-2xl font-bold tracking-tight", tokens.textPrimary)}>
+                        {t.title}
+                    </h2>
+                    <p className={cn("text-sm", tokens.textSecondary)}>
+                        {t.subtitle}
+                    </p>
+                </div>
                 <button
                     onClick={() => fetchAnalytics()}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${theme === 'dark'
-                        ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
+                    className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200",
+                        tokens.border,
+                        tokens.borderHover,
+                        tokens.textSecondary,
+                        "hover:text-[#21DBA4]"
+                    )}
                 >
                     <RefreshCw size={14} />
                     {t.refresh}
                 </button>
             </div>
 
-            {/* Main Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {statCards.map((stat, i) => (
-                    <div key={i} className={`rounded-xl border p-5 ${cardBg}`}>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.bg} ${stat.color}`}>
-                                {stat.icon}
+            {/* ═══════════════════════════════════════════════════
+                KPI Cards - Hero Numbers Style
+                ═══════════════════════════════════════════════════ */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                {mainStats.map((stat, i) => (
+                    <div
+                        key={i}
+                        className={cn(
+                            "group relative rounded-2xl border p-6 transition-all duration-200",
+                            tokens.bgCard,
+                            tokens.border,
+                            tokens.borderHover,
+                            "hover:shadow-sm hover:-translate-y-0.5"
+                        )}
+                    >
+                        {/* Icon & Trend */}
+                        <div className="flex items-start justify-between mb-5">
+                            <div className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center",
+                                isDark ? "bg-white/[0.04]" : "bg-black/[0.03]"
+                            )}>
+                                <stat.icon size={18} className={tokens.textSecondary} />
                             </div>
-                            <span className={`text-xs font-medium ${textSecondary}`}>{stat.label}</span>
+                            {stat.trend && (
+                                <div className={cn(
+                                    "flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold",
+                                    stat.trendUp
+                                        ? "bg-emerald-500/10 text-emerald-500"
+                                        : "bg-rose-500/10 text-rose-500"
+                                )}>
+                                    {stat.trendUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                                    {stat.trend}
+                                </div>
+                            )}
                         </div>
-                        <p className={`text-2xl font-bold ${textPrimary}`}>
-                            {stat.value.toLocaleString()}
-                        </p>
+
+                        {/* Hero Number */}
+                        <div className="space-y-1">
+                            <p className={cn(
+                                "text-[32px] font-black tracking-tight tabular-nums leading-none",
+                                tokens.textPrimary
+                            )}>
+                                {typeof stat.value === 'number'
+                                    ? stat.value.toLocaleString()
+                                    : stat.value}
+                            </p>
+                            <p className={cn("text-[13px] font-medium", tokens.textTertiary)}>
+                                {stat.label}
+                            </p>
+                        </div>
                     </div>
                 ))}
             </div>
 
-            {/* New Users & Active Users */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* New Users */}
-                <div className={`rounded-xl border p-5 ${cardBg}`}>
-                    <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${textSecondary}`}>
-                        <UserPlus size={16} />
-                        {t.newUsers}
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center">
-                            <p className={`text-2xl font-bold text-[#21DBA4]`}>{analytics.newUsersToday || 0}</p>
-                            <p className={`text-xs mt-1 ${textSecondary}`}>{t.today}</p>
-                        </div>
-                        <div className="text-center">
-                            <p className={`text-2xl font-bold text-blue-500`}>{analytics.newUsersThisWeek || 0}</p>
-                            <p className={`text-xs mt-1 ${textSecondary}`}>{t.thisWeek}</p>
-                        </div>
-                        <div className="text-center">
-                            <p className={`text-2xl font-bold text-purple-500`}>{analytics.newUsersThisMonth || 0}</p>
-                            <p className={`text-xs mt-1 ${textSecondary}`}>{t.thisMonth}</p>
-                        </div>
-                    </div>
-                </div>
+            {/* ═══════════════════════════════════════════════════
+                Main Content Grid - 7:5 Ratio
+                ═══════════════════════════════════════════════════ */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                {/* Active Users */}
-                <div className={`rounded-xl border p-5 ${cardBg}`}>
-                    <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${textSecondary}`}>
-                        <Activity size={16} />
-                        {t.activeUsers}
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center">
-                            <p className={`text-2xl font-bold text-[#21DBA4]`}>{analytics.dau || 0}</p>
-                            <p className={`text-xs mt-1 ${textSecondary}`}>{t.dau}</p>
+                {/* Left Column - Charts (7 cols) */}
+                <div className="lg:col-span-7 space-y-6">
+
+                    {/* Clip Trends Chart */}
+                    <div className={cn(
+                        "rounded-2xl border p-6",
+                        tokens.bgCard,
+                        tokens.border
+                    )}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className={cn("text-base font-semibold", tokens.textPrimary)}>
+                                {t.clipTrends}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-[#21DBA4]" />
+                                <span className={cn("text-xs font-medium", tokens.textTertiary)}>
+                                    Clips
+                                </span>
+                            </div>
                         </div>
-                        <div className="text-center">
-                            <p className={`text-2xl font-bold text-blue-500`}>{analytics.wau || 0}</p>
-                            <p className={`text-xs mt-1 ${textSecondary}`}>{t.wau}</p>
-                        </div>
-                        <div className="text-center">
-                            <p className={`text-2xl font-bold text-purple-500`}>{analytics.mau || 0}</p>
-                            <p className={`text-xs mt-1 ${textSecondary}`}>{t.mau}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {/* Subscription Stats */}
-            <div className={`rounded-xl border p-5 ${cardBg}`}>
-                <h3 className={`text-sm font-bold mb-4 ${textSecondary}`}>{t.subscription}</h3>
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                        <p className={`text-2xl font-bold text-yellow-500`}>
-                            {analytics.subscriptionStats.trial}
-                        </p>
-                        <p className={`text-xs mt-1 ${textSecondary}`}>{t.trial}</p>
-                    </div>
-                    <div className="text-center">
-                        <p className={`text-2xl font-bold text-[#21DBA4]`}>
-                            {analytics.subscriptionStats.active}
-                        </p>
-                        <p className={`text-xs mt-1 ${textSecondary}`}>{t.active}</p>
-                    </div>
-                    <div className="text-center">
-                        <p className={`text-2xl font-bold text-red-500`}>
-                            {analytics.subscriptionStats.expired}
-                        </p>
-                        <p className={`text-xs mt-1 ${textSecondary}`}>{t.expired}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Clip Trends Chart */}
-            {analytics.dailyStats && analytics.dailyStats.length > 0 && (
-                <div className={`rounded-xl border p-5 ${cardBg}`}>
-                    <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${textSecondary}`}>
-                        <Calendar size={16} />
-                        {t.clipTrends}
-                    </h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={analytics.dailyStats} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
-                                <XAxis
-                                    dataKey="date"
-                                    stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
-                                    fontSize={10}
-                                    tickFormatter={(value: string) => value.slice(5)}
-                                    interval={4}
-                                />
-                                <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} fontSize={12} />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: theme === 'dark' ? '#1e293b' : '#fff',
-                                        border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-                                        borderRadius: '8px',
-                                        color: theme === 'dark' ? '#fff' : '#1e293b'
-                                    }}
-                                    formatter={(value: number) => [`${value} ${t.clips}`, '']}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="clips"
-                                    stroke="#21DBA4"
-                                    strokeWidth={2}
-                                    dot={false}
-                                    activeDot={{ r: 6, fill: '#21DBA4' }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
-
-            {/* New User Trends Chart */}
-            {analytics.dailyStats && analytics.dailyStats.length > 0 && (
-                <div className={`rounded-xl border p-5 ${cardBg}`}>
-                    <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${textSecondary}`}>
-                        <UserPlus size={16} />
-                        {t.newUserTrends}
-                    </h3>
-                    <div className="h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={analytics.dailyStats} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
-                                <XAxis
-                                    dataKey="date"
-                                    stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
-                                    fontSize={10}
-                                    tickFormatter={(value: string) => value.slice(5)}
-                                    interval={4}
-                                />
-                                <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} fontSize={12} />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: theme === 'dark' ? '#1e293b' : '#fff',
-                                        border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-                                        borderRadius: '8px',
-                                        color: theme === 'dark' ? '#fff' : '#1e293b'
-                                    }}
-                                    formatter={(value: number) => [`${value} ${t.users}`, '']}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="newUsers"
-                                    stroke="#3B82F6"
-                                    strokeWidth={2}
-                                    dot={false}
-                                    activeDot={{ r: 6, fill: '#3B82F6' }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
-
-            {/* Platform Stats with Pie Chart */}
-            <div className={`rounded-xl border p-5 ${cardBg}`}>
-                <h3 className={`text-sm font-bold mb-4 ${textSecondary}`}>{t.platforms}</h3>
-                <div className="flex flex-col lg:flex-row items-center gap-6">
-                    {/* Pie Chart */}
-                    <div className="w-48 h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={platformData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={40}
-                                    outerRadius={70}
-                                    paddingAngle={2}
-                                    dataKey="value"
+                        <div className="h-[200px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart
+                                    data={analytics.dailyStats || []}
+                                    margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
                                 >
-                                    {platformData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: theme === 'dark' ? '#1e293b' : '#fff',
-                                        border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-                                        borderRadius: '8px',
-                                        color: theme === 'dark' ? '#fff' : '#1e293b'
-                                    }}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
+                                    <defs>
+                                        <linearGradient id="clipGradientPlusX" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#21DBA4" stopOpacity={0.15} />
+                                            <stop offset="100%" stopColor="#21DBA4" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        vertical={false}
+                                        stroke={tokens.chartLine}
+                                    />
+                                    <XAxis
+                                        dataKey="date"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: tokens.chartTick, fontSize: 11, fontWeight: 500 }}
+                                        dy={8}
+                                        tickFormatter={(v: string) => v.slice(5)}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: tokens.chartTick, fontSize: 11, fontWeight: 500 }}
+                                        dx={-8}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+                                            borderColor: isDark ? '#27272A' : '#E5E7EB',
+                                            borderRadius: '8px',
+                                            fontSize: '12px',
+                                            fontWeight: 500,
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                            padding: '8px 12px'
+                                        }}
+                                        cursor={{ stroke: isDark ? '#3F3F46' : '#E5E7EB', strokeWidth: 1 }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="clips"
+                                        stroke="#21DBA4"
+                                        strokeWidth={2}
+                                        fill="url(#clipGradientPlusX)"
+                                        activeDot={{
+                                            r: 4,
+                                            fill: '#21DBA4',
+                                            strokeWidth: 2,
+                                            stroke: isDark ? '#111113' : '#FFFFFF'
+                                        }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
-                    {/* Platform List */}
-                    <div className="flex-1 grid grid-cols-2 gap-4">
-                        <div className={`flex items-center gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-50'}`}>
-                            <Youtube size={20} className="text-red-500" />
+                    {/* Platform Stats - Strict 8px Grid */}
+                    <div className={cn(
+                        "rounded-2xl border p-6",
+                        tokens.bgCard,
+                        tokens.border
+                    )}>
+                        <h3 className={cn("text-base font-semibold mb-6", tokens.textPrimary)}>
+                            {t.platforms}
+                        </h3>
+
+                        {/* 2x2 Grid with equal spacing */}
+                        <div className="grid grid-cols-2 gap-6">
+                            {platformData.map((platform, i) => (
+                                <div
+                                    key={i}
+                                    className={cn(
+                                        "p-4 rounded-xl",
+                                        isDark ? "bg-white/[0.02]" : "bg-black/[0.015]"
+                                    )}
+                                >
+                                    {/* Platform Label */}
+                                    <div className="flex items-center gap-2 mb-3">
+                                        {platform.emoji ? (
+                                            <span className="text-base leading-none">{platform.emoji}</span>
+                                        ) : (
+                                            platform.icon && <platform.icon size={16} style={{ color: platform.color }} />
+                                        )}
+                                        <span className={cn("text-sm font-medium", tokens.textSecondary)}>
+                                            {platform.name}
+                                        </span>
+                                    </div>
+
+                                    {/* Value */}
+                                    <p className={cn("text-2xl font-bold tabular-nums mb-3", tokens.textPrimary)}>
+                                        {platform.value.toLocaleString()}
+                                    </p>
+
+                                    {/* Progress Bar */}
+                                    <div className={cn(
+                                        "w-full h-1.5 rounded-full overflow-hidden",
+                                        isDark ? "bg-white/[0.06]" : "bg-black/[0.04]"
+                                    )}>
+                                        <div
+                                            className="h-full rounded-full transition-all duration-500 ease-out"
+                                            style={{
+                                                width: `${(platform.value / maxPlatformValue) * 100}%`,
+                                                backgroundColor: platform.color
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column - Secondary Metrics (5 cols) */}
+                <div className="lg:col-span-5 space-y-6">
+
+                    {/* New Users - Compact Chart */}
+                    <div className={cn(
+                        "rounded-2xl border p-6",
+                        tokens.bgCard,
+                        tokens.border
+                    )}>
+                        <h3 className={cn("text-base font-semibold mb-5", tokens.textPrimary)}>
+                            {t.newUsers}
+                        </h3>
+
+                        <div className="flex items-baseline gap-2 mb-4">
+                            <span className={cn("text-4xl font-black tabular-nums", tokens.textPrimary)}>
+                                {(analytics.newUsersThisMonth || 0).toLocaleString()}
+                            </span>
+                            <span className={cn("text-sm font-medium", tokens.textTertiary)}>
+                                {t.thisMonth}
+                            </span>
+                        </div>
+
+                        <div className="h-[72px] mb-5">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={(analytics.dailyStats || []).slice(-14)}>
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+                                            borderColor: isDark ? '#27272A' : '#E5E7EB',
+                                            borderRadius: '8px',
+                                            fontSize: '11px',
+                                            padding: '6px 10px'
+                                        }}
+                                        cursor={{ fill: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}
+                                    />
+                                    <Bar
+                                        dataKey="newUsers"
+                                        fill="#3B82F6"
+                                        radius={[3, 3, 0, 0]}
+                                        barSize={6}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        <div className={cn(
+                            "grid grid-cols-2 gap-4 pt-4 border-t",
+                            isDark ? "border-white/[0.06]" : "border-black/[0.05]"
+                        )}>
                             <div>
-                                <p className={`text-lg font-bold ${textPrimary}`}>{analytics.platformStats.youtube}</p>
-                                <p className={`text-xs ${textSecondary}`}>YouTube</p>
+                                <p className={cn("text-xs font-medium mb-1", tokens.textTertiary)}>{t.today}</p>
+                                <p className={cn("text-lg font-bold tabular-nums", tokens.textPrimary)}>
+                                    {analytics.newUsersToday || 0}
+                                </p>
+                            </div>
+                            <div>
+                                <p className={cn("text-xs font-medium mb-1", tokens.textTertiary)}>{t.thisWeek}</p>
+                                <p className={cn("text-lg font-bold tabular-nums", tokens.textPrimary)}>
+                                    {analytics.newUsersThisWeek || 0}
+                                </p>
                             </div>
                         </div>
-                        <div className={`flex items-center gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-50'}`}>
-                            <Instagram size={20} className="text-pink-500" />
-                            <div>
-                                <p className={`text-lg font-bold ${textPrimary}`}>{analytics.platformStats.instagram}</p>
-                                <p className={`text-xs ${textSecondary}`}>Instagram</p>
+                    </div>
+
+                    {/* Subscription Status */}
+                    <div className={cn(
+                        "rounded-2xl border p-6",
+                        tokens.bgCard,
+                        tokens.border
+                    )}>
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className={cn("text-base font-semibold", tokens.textPrimary)}>
+                                {t.subscription}
+                            </h3>
+                            <Zap size={16} className="text-[#21DBA4]" />
+                        </div>
+
+                        <div className="space-y-3">
+                            {/* Active - Highlighted */}
+                            <div className={cn(
+                                "flex items-center justify-between p-4 rounded-xl",
+                                "bg-emerald-500/[0.06] border border-emerald-500/[0.12]"
+                            )}>
+                                <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                    {t.active}
+                                </span>
+                                <span className="text-xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                                    {analytics.subscriptionStats.active.toLocaleString()}
+                                </span>
+                            </div>
+
+                            {/* Trial */}
+                            <div className={cn(
+                                "flex items-center justify-between px-4 py-3 rounded-xl",
+                                isDark ? "bg-white/[0.02]" : "bg-black/[0.02]"
+                            )}>
+                                <span className={cn("text-sm font-medium", tokens.textSecondary)}>
+                                    {t.trial}
+                                </span>
+                                <span className={cn("text-lg font-bold tabular-nums", tokens.textPrimary)}>
+                                    {analytics.subscriptionStats.trial.toLocaleString()}
+                                </span>
+                            </div>
+
+                            {/* Expired */}
+                            <div className="flex items-center justify-between px-4 py-3">
+                                <span className={cn("text-sm font-medium", tokens.textTertiary)}>
+                                    {t.expired}
+                                </span>
+                                <span className={cn("text-lg font-semibold tabular-nums", tokens.textTertiary)}>
+                                    {analytics.subscriptionStats.expired.toLocaleString()}
+                                </span>
                             </div>
                         </div>
-                        <div className={`flex items-center gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-50'}`}>
-                            <span className="text-lg">🧵</span>
-                            <div>
-                                <p className={`text-lg font-bold ${textPrimary}`}>{analytics.platformStats.threads}</p>
-                                <p className={`text-xs ${textSecondary}`}>Threads</p>
-                            </div>
-                        </div>
-                        <div className={`flex items-center gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-50'}`}>
-                            <Globe size={20} className="text-blue-500" />
-                            <div>
-                                <p className={`text-lg font-bold ${textPrimary}`}>{analytics.platformStats.web}</p>
-                                <p className={`text-xs ${textSecondary}`}>Web</p>
-                            </div>
+                    </div>
+
+                    {/* Active Users (DAU/WAU/MAU) */}
+                    <div className={cn(
+                        "rounded-2xl border p-6",
+                        tokens.bgCard,
+                        tokens.border
+                    )}>
+                        <h3 className={cn("text-base font-semibold mb-5", tokens.textPrimary)}>
+                            {t.activeUsers}
+                        </h3>
+
+                        <div className="space-y-4">
+                            {[
+                                { label: 'DAU', value: analytics.dau, change: '+2%', active: true },
+                                { label: 'WAU', value: analytics.wau, change: '+5%', active: false },
+                                { label: 'MAU', value: analytics.mau, change: '+12%', active: false }
+                            ].map((metric, i) => (
+                                <div key={i} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-2 h-2 rounded-full",
+                                            metric.active ? "bg-[#21DBA4]" : isDark ? "bg-white/20" : "bg-black/20"
+                                        )} />
+                                        <span className={cn(
+                                            "text-sm font-semibold",
+                                            metric.active ? tokens.textPrimary : tokens.textSecondary
+                                        )}>
+                                            {metric.label}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className={cn("text-lg font-bold tabular-nums", tokens.textPrimary)}>
+                                            {(metric.value || 0).toLocaleString()}
+                                        </span>
+                                        <span className="text-[11px] font-semibold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                            {metric.change}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

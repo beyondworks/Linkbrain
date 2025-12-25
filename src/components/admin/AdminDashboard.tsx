@@ -9,7 +9,7 @@ import { UsersPanel } from './UsersPanel';
 import { CategoryAnalyticsPanel } from './CategoryAnalyticsPanel';
 import { DetailedAnalyticsPanel } from './DetailedAnalyticsPanel';
 import {
-    BarChart3,
+    LayoutDashboard,
     Bell,
     MessageSquare,
     Megaphone,
@@ -17,9 +17,10 @@ import {
     ShieldAlert,
     ArrowLeft,
     Users,
-    Tag,
-    TrendingUp
+    Layers,
+    Activity
 } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 type AdminTab = 'analytics' | 'announcements' | 'inquiries' | 'popups' | 'users' | 'categories' | 'detailed';
 
@@ -29,46 +30,64 @@ interface AdminDashboardProps {
     onBack: () => void;
 }
 
+// ═══════════════════════════════════════════════════
+// Theme System (Reference Design)
+// ═══════════════════════════════════════════════════
+
+const useTheme = (isDark: boolean) => ({
+    bg: isDark ? 'bg-[#0F1115]' : 'bg-[#F9FAFB]',
+    text: isDark ? 'text-white' : 'text-gray-900',
+    textMuted: isDark ? 'text-gray-400' : 'text-gray-500',
+    textSub: isDark ? 'text-gray-500' : 'text-gray-400',
+    card: isDark ? 'bg-[#161B22]' : 'bg-white',
+    cardBorder: isDark ? 'border-gray-800' : 'border-gray-200',
+    cardHover: isDark ? 'hover:border-gray-600' : 'hover:border-gray-300',
+    itemBg: isDark ? 'bg-gray-900/50' : 'bg-gray-50',
+    itemHover: isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100',
+    border: isDark ? 'border-gray-800' : 'border-gray-200',
+    headerBg: isDark ? 'bg-[#0F1115]/90' : 'bg-[#F9FAFB]/90',
+});
+
 export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps) {
     const [activeTab, setActiveTab] = useState<AdminTab>('analytics');
     const admin = useAdmin();
+    const isDark = theme === 'dark';
+    const t$ = useTheme(isDark);
 
     const t = {
-        title: language === 'ko' ? '관리자 대시보드' : 'Admin Dashboard',
+        title: language === 'ko' ? '관리자' : 'Admin',
         analytics: language === 'ko' ? '개요' : 'Overview',
-        users: language === 'ko' ? '유저 관리' : 'Users',
+        users: language === 'ko' ? '유저' : 'Users',
         categories: language === 'ko' ? '카테고리' : 'Categories',
-        detailed: language === 'ko' ? '상세 분석' : 'Detailed',
-        announcements: language === 'ko' ? '공지사항' : 'Announcements',
-        inquiries: language === 'ko' ? '고객문의' : 'Inquiries',
-        popups: language === 'ko' ? '팝업 관리' : 'Popups',
+        detailed: language === 'ko' ? '상세' : 'Detailed',
+        announcements: language === 'ko' ? '공지' : 'Notice',
+        inquiries: language === 'ko' ? '문의' : 'Inquiries',
+        popups: language === 'ko' ? '팝업' : 'Popups',
         loading: language === 'ko' ? '로딩 중...' : 'Loading...',
-        accessDenied: language === 'ko' ? '접근 권한이 없습니다' : 'Access Denied',
-        accessDeniedDesc: language === 'ko'
-            ? '이 페이지는 관리자만 접근할 수 있습니다.'
-            : 'This page is only accessible to administrators.',
+        accessDenied: language === 'ko' ? '접근 불가' : 'Access Denied',
+        accessDeniedDesc: language === 'ko' ? '관리자 권한이 필요합니다.' : 'Administrator access required.',
         back: language === 'ko' ? '돌아가기' : 'Go Back'
     };
 
-    const tabs: { id: AdminTab; label: string; icon: React.ReactNode; group?: string }[] = [
-        { id: 'analytics', label: t.analytics, icon: <BarChart3 size={18} />, group: 'analytics' },
-        { id: 'users', label: t.users, icon: <Users size={18} />, group: 'analytics' },
-        { id: 'categories', label: t.categories, icon: <Tag size={18} />, group: 'analytics' },
-        { id: 'detailed', label: t.detailed, icon: <TrendingUp size={18} />, group: 'analytics' },
-        { id: 'announcements', label: t.announcements, icon: <Bell size={18} />, group: 'manage' },
-        { id: 'inquiries', label: t.inquiries, icon: <MessageSquare size={18} />, group: 'manage' },
-        { id: 'popups', label: t.popups, icon: <Megaphone size={18} />, group: 'manage' }
+    const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
+        { id: 'analytics', label: t.analytics, icon: <LayoutDashboard size={16} /> },
+        { id: 'users', label: t.users, icon: <Users size={16} /> },
+        { id: 'categories', label: t.categories, icon: <Layers size={16} /> },
+        { id: 'detailed', label: t.detailed, icon: <Activity size={16} /> },
+        { id: 'announcements', label: t.announcements, icon: <Bell size={16} /> },
+        { id: 'inquiries', label: t.inquiries, icon: <MessageSquare size={16} /> },
+        { id: 'popups', label: t.popups, icon: <Megaphone size={16} /> }
     ];
 
-    // Loading state
+    // Loading
     if (admin.loading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
-                <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#21DBA4]" />
-                    <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {t.loading}
-                    </p>
+            <div className={cn("min-h-screen flex items-center justify-center", t$.bg)}>
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-white" />
+                    </div>
+                    <p className={t$.textMuted}>{t.loading}</p>
                 </div>
             </div>
         );
@@ -77,20 +96,18 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
     // Access denied
     if (!admin.isAdmin) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
-                <div className="flex flex-col items-center gap-4 text-center px-6">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50'}`}>
-                        <ShieldAlert className="w-8 h-8 text-red-500" />
+            <div className={cn("min-h-screen flex items-center justify-center", t$.bg)}>
+                <div className="flex flex-col items-center gap-6 text-center px-8">
+                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-500/20 to-red-600/10 flex items-center justify-center">
+                        <ShieldAlert className="w-10 h-10 text-red-500" />
                     </div>
-                    <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                        {t.accessDenied}
-                    </h1>
-                    <p className={`text-sm max-w-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {t.accessDeniedDesc}
-                    </p>
+                    <div className="space-y-2">
+                        <h1 className={cn("text-2xl font-bold tracking-tight", t$.text)}>{t.accessDenied}</h1>
+                        <p className={cn("text-sm max-w-xs", t$.textMuted)}>{t.accessDeniedDesc}</p>
+                    </div>
                     <button
                         onClick={onBack}
-                        className="mt-4 px-6 py-2.5 bg-[#21DBA4] text-white rounded-full font-medium text-sm hover:bg-[#1bc290] transition-colors"
+                        className="px-8 py-3 bg-gradient-to-r from-[#21DBA4] to-[#1bc290] text-white rounded-2xl font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[#21DBA4]/20"
                     >
                         {t.back}
                     </button>
@@ -99,107 +116,76 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
         );
     }
 
-    const analyticsTabs = tabs.filter(t => t.group === 'analytics');
-    const manageTabs = tabs.filter(t => t.group === 'manage');
-
     return (
-        <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
+        <div className={cn("min-h-screen transition-colors duration-300", t$.bg)}>
             {/* Header */}
-            <header className={`sticky top-0 z-40 border-b ${theme === 'dark' ? 'bg-slate-900/80 border-slate-800' : 'bg-white/80 border-slate-200'} backdrop-blur-xl`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
+            <header className={cn("sticky top-0 z-50 backdrop-blur-2xl", t$.headerBg)}>
+                <div className="max-w-7xl mx-auto px-6 lg:px-10">
+                    <div className="flex items-center justify-between h-20">
+                        {/* Left: Back + Title */}
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={onBack}
-                                className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+                                className={cn(
+                                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                                    isDark ? "bg-white/5 hover:bg-white/10 text-gray-400" : "bg-black/5 hover:bg-black/10 text-gray-500"
+                                )}
                             >
-                                <ArrowLeft size={20} />
+                                <ArrowLeft size={18} />
                             </button>
-                            <h1 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                                {t.title}
-                            </h1>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center shadow-lg shadow-[#21DBA4]/20">
+                                    <LayoutDashboard size={18} className="text-white" />
+                                </div>
+                                <span className={cn("text-xl font-bold tracking-tight", t$.text)}>{t.title}</span>
+                            </div>
                         </div>
-                        <div className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+
+                        {/* Right: Email Badge */}
+                        <div className={cn(
+                            "hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium",
+                            isDark ? "bg-white/5 text-gray-400" : "bg-black/5 text-gray-500"
+                        )}>
+                            <div className="w-2 h-2 rounded-full bg-[#21DBA4]" />
                             {admin.user?.email}
                         </div>
                     </div>
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Sidebar Navigation */}
-                    <nav className={`lg:w-56 shrink-0 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} rounded-xl p-2 lg:sticky lg:top-24 h-fit border ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
-                        <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
-                            {/* Analytics Section */}
-                            <div className={`hidden lg:block px-3 py-2 text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                                {language === 'ko' ? '분석' : 'Analytics'}
-                            </div>
-                            {analyticsTabs.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                                        ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
-                                        : theme === 'dark'
-                                            ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                        }`}
-                                >
-                                    {tab.icon}
-                                    <span>{tab.label}</span>
-                                </button>
-                            ))}
-
-                            {/* Management Section */}
-                            <div className={`hidden lg:block px-3 py-2 mt-4 text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                                {language === 'ko' ? '관리' : 'Management'}
-                            </div>
-                            {manageTabs.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                                        ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
-                                        : theme === 'dark'
-                                            ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                        }`}
-                                >
-                                    {tab.icon}
-                                    <span>{tab.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </nav>
-
-                    {/* Main Content */}
-                    <main className="flex-1 min-w-0">
-                        {activeTab === 'analytics' && (
-                            <AnalyticsPanel theme={theme} language={language} admin={admin} />
-                        )}
-                        {activeTab === 'users' && (
-                            <UsersPanel theme={theme} language={language} admin={admin} />
-                        )}
-                        {activeTab === 'categories' && (
-                            <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />
-                        )}
-                        {activeTab === 'detailed' && (
-                            <DetailedAnalyticsPanel theme={theme} language={language} admin={admin} />
-                        )}
-                        {activeTab === 'announcements' && (
-                            <AnnouncementsPanel theme={theme} language={language} admin={admin} />
-                        )}
-                        {activeTab === 'inquiries' && (
-                            <InquiriesPanel theme={theme} language={language} admin={admin} />
-                        )}
-                        {activeTab === 'popups' && (
-                            <PopupsPanel theme={theme} language={language} admin={admin} />
-                        )}
-                    </main>
+            {/* Tab Navigation */}
+            <div className={cn("sticky top-20 z-40 backdrop-blur-2xl border-b", t$.headerBg, t$.border)}>
+                <div className="max-w-7xl mx-auto px-6 lg:px-10">
+                    <div className="flex gap-1.5 py-4 overflow-x-auto scrollbar-hide">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={cn(
+                                    "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shrink-0",
+                                    activeTab === tab.id
+                                        ? "bg-[#21DBA4] text-black shadow-lg shadow-[#21DBA4]/20"
+                                        : cn(t$.textMuted, t$.itemHover)
+                                )}
+                            >
+                                {tab.icon}
+                                <span>{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
+
+            {/* Main Content */}
+            <main className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
+                {activeTab === 'analytics' && <AnalyticsPanel theme={theme} language={language} admin={admin} />}
+                {activeTab === 'users' && <UsersPanel theme={theme} language={language} admin={admin} />}
+                {activeTab === 'categories' && <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />}
+                {activeTab === 'detailed' && <DetailedAnalyticsPanel theme={theme} language={language} admin={admin} />}
+                {activeTab === 'announcements' && <AnnouncementsPanel theme={theme} language={language} admin={admin} />}
+                {activeTab === 'inquiries' && <InquiriesPanel theme={theme} language={language} admin={admin} />}
+                {activeTab === 'popups' && <PopupsPanel theme={theme} language={language} admin={admin} />}
+            </main>
         </div>
     );
 }
-

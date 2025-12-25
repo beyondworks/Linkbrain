@@ -1,4 +1,6 @@
 import React from 'react';
+import { TrendingUp, FileText, PenTool, Lightbulb, Zap } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 interface ActionBarProps {
     theme: 'light' | 'dark';
@@ -13,78 +15,71 @@ export const ActionBar: React.FC<ActionBarProps> = ({
 }) => {
     const isDark = theme === 'dark';
 
+    // --- Plus X Design Tokens ---
+    const bgCard = isDark ? 'bg-[#111113]' : 'bg-white';
+    const border = isDark ? 'border-white/[0.06]' : 'border-black/[0.05]';
+    const textPrimary = isDark ? 'text-[#FAFAFA]' : 'text-[#111111]';
+    const textSecondary = isDark ? 'text-[#A1A1AA]' : 'text-[#525252]';
+    const textTertiary = isDark ? 'text-[#71717A]' : 'text-[#A3A3A3]';
+
     const actions = [
         {
             id: 'trend' as const,
-            icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                    <polyline points="17 6 23 6 23 12" />
-                </svg>
-            ),
+            icon: TrendingUp,
             label: language === 'ko' ? '트렌드 분석' : 'Trend Analysis',
+            desc: language === 'ko' ? '키워드 추이 확인' : 'View keyword trends'
         },
         {
             id: 'summary' as const,
-            icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-            ),
+            icon: FileText,
             label: language === 'ko' ? '핵심 요약' : 'Key Summary',
+            desc: language === 'ko' ? '주요 내용 정리' : 'Summarize key points'
         },
         {
             id: 'draft' as const,
-            icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 19l7-7 3 3-7 7-3-3z" />
-                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
-                    <path d="M2 2l7.586 7.586" />
-                </svg>
-            ),
+            icon: PenTool,
             label: language === 'ko' ? '기획서 초안' : 'Draft Planning',
+            desc: language === 'ko' ? '구조화된 초안' : 'Structured draft'
         },
         {
             id: 'ideas' as const,
-            icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                </svg>
-            ),
+            icon: Lightbulb,
             label: language === 'ko' ? '아이디어 제안' : 'Idea Suggestions',
+            desc: language === 'ko' ? '새로운 관점 발견' : 'Discover new angles'
         },
     ];
 
     return (
-        <div className={`rounded-xl p-4 md:p-5 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={cn("rounded-2xl border p-6", bgCard, border)}>
             {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#21DBA4]">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                    </svg>
+            <div className="flex items-center gap-3 mb-5">
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", isDark ? "bg-white/[0.04]" : "bg-black/[0.03]")}>
+                    <Zap size={16} className={textSecondary} />
                 </div>
-                <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                <h3 className={cn("text-sm font-semibold", textPrimary)}>
                     {language === 'ko' ? '클립 액션' : 'Clip Actions'}
                 </h3>
             </div>
 
             {/* Action buttons */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
                 {actions.map(action => (
                     <button
                         key={action.id}
                         onClick={() => onAction(action.id)}
-                        className={`flex items-center gap-2 p-3 rounded-lg transition-all hover:scale-[1.01] ${isDark
-                                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-                                : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
-                            }`}
+                        className={cn(
+                            "flex flex-col items-start p-3 rounded-xl border border-transparent transition-all text-left group",
+                            isDark
+                                ? "bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.08]"
+                                : "bg-black/[0.03] hover:bg-black/[0.05] hover:border-black/[0.08]"
+                        )}
                     >
-                        <span className="text-[#21DBA4]">{action.icon}</span>
-                        <span className="text-xs font-medium">{action.label}</span>
+                        <div className="flex items-center justify-between w-full mb-2">
+                            <action.icon size={16} className="text-[#21DBA4]" />
+                            <div className={cn("w-1.5 h-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-[#21DBA4]")} />
+                        </div>
+                        <span className={cn("text-[13px] font-semibold mb-0.5", textPrimary)}>{action.label}</span>
+                        <span className={cn("text-[11px]", textTertiary)}>{action.desc}</span>
                     </button>
                 ))}
             </div>

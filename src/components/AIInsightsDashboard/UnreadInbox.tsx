@@ -1,4 +1,6 @@
 import React from 'react';
+import { Inbox, ChevronDown, Eye, PlusCircle, X } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 interface UnreadInboxProps {
     links: any[];
@@ -19,6 +21,14 @@ export const UnreadInbox: React.FC<UnreadInboxProps> = ({
 }) => {
     const isDark = theme === 'dark';
 
+    // --- Plus X Design Tokens ---
+    const bgCard = isDark ? 'bg-[#111113]' : 'bg-white';
+    const border = isDark ? 'border-white/[0.06]' : 'border-black/[0.05]';
+    const textPrimary = isDark ? 'text-[#FAFAFA]' : 'text-[#111111]';
+    const textSecondary = isDark ? 'text-[#A1A1AA]' : 'text-[#525252]';
+    const textTertiary = isDark ? 'text-[#71717A]' : 'text-[#A3A3A3]';
+    const hoverEffect = "transition-all duration-200 hover:bg-black/[0.015] dark:hover:bg-white/[0.02]";
+
     // Get unread clips (clips without summary or notes viewed)
     const unreadClips = React.useMemo(() => {
         return links
@@ -33,88 +43,101 @@ export const UnreadInbox: React.FC<UnreadInboxProps> = ({
     const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
     return (
-        <div className={`rounded-xl p-4 md:p-5 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={cn("rounded-2xl border p-6 flex flex-col h-full", bgCard, border)}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#21DBA4]">
-                            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-                            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-                        </svg>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", isDark ? "bg-white/[0.04]" : "bg-black/[0.03]")}>
+                        <Inbox size={16} className={textSecondary} />
                     </div>
-                    <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                        {language === 'ko' ? '읽지 않은 클립' : 'Unread Clips'}
+                    <h3 className={cn("text-sm font-semibold", textPrimary)}>
+                        {language === 'ko' ? '읽지 않은 클립' : 'Unread Inbox'}
                     </h3>
                 </div>
                 {unreadClips.length > 0 && (
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
+                    <span className={cn(
+                        "text-[10px] px-2 py-0.5 rounded-full font-bold",
+                        isDark ? "bg-white/10 text-white" : "bg-black/10 text-black"
+                    )}>
                         {unreadClips.length}
                     </span>
                 )}
             </div>
 
             {/* Clips list */}
-            <div className="space-y-2">
+            <div className="space-y-1 flex-1">
                 {unreadClips.length > 0 ? (
                     unreadClips.map(clip => (
-                        <div key={clip.id}>
+                        <div key={clip.id} className="group">
                             <button
                                 onClick={() => setExpandedId(expandedId === clip.id ? null : clip.id)}
-                                className={`w-full text-left p-3 rounded-lg transition-colors ${expandedId === clip.id
-                                        ? 'bg-[#21DBA4]/10 border border-[#21DBA4]/30'
-                                        : isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-50 hover:bg-slate-100'
-                                    }`}
+                                className={cn(
+                                    "w-full text-left p-3 rounded-lg transition-all border border-transparent",
+                                    expandedId === clip.id
+                                        ? "bg-[#21DBA4]/[0.05] border-[#21DBA4]/20"
+                                        : hoverEffect
+                                )}
                             >
-                                <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
-                                        <h4 className={`text-xs font-medium line-clamp-1 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                                        <h4 className={cn("text-xs font-medium line-clamp-1 mb-0.5", textPrimary)}>
                                             {clip.title || 'Untitled'}
                                         </h4>
-                                        <p className={`text-[10px] mt-0.5 line-clamp-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        <p className={cn("text-[10px] line-clamp-1", textTertiary)}>
                                             {clip.summary?.slice(0, 60) || clip.url}
                                         </p>
                                     </div>
-                                    <svg
-                                        width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                                        className={`shrink-0 transition-transform ${expandedId === clip.id ? 'rotate-180' : ''} ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
-                                    >
-                                        <polyline points="6 9 12 15 18 9" />
-                                    </svg>
+                                    <ChevronDown
+                                        size={14}
+                                        className={cn(
+                                            "shrink-0 transition-transform duration-200",
+                                            expandedId === clip.id ? "rotate-180 text-[#21DBA4]" : textTertiary
+                                        )}
+                                    />
                                 </div>
                             </button>
 
                             {/* Expanded actions */}
                             {expandedId === clip.id && (
-                                <div className={`mt-1 p-3 rounded-lg ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
+                                <div className={cn(
+                                    "mt-2 mb-3 ml-3 p-3 rounded-lg border",
+                                    isDark ? "bg-black/20 border-white/5" : "bg-slate-50 border-black/5"
+                                )}>
                                     {clip.summary && (
-                                        <p className={`text-[11px] leading-relaxed mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        <p className={cn("text-[11px] leading-relaxed mb-3", textSecondary)}>
                                             {clip.summary.slice(0, 150)}...
                                         </p>
                                     )}
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-2">
                                         <button
                                             onClick={() => onQuickRead?.(clip)}
-                                            className="flex-1 py-1.5 text-[10px] font-medium rounded bg-[#21DBA4] text-white hover:bg-[#1bc290] transition-colors"
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium bg-[#21DBA4] text-white hover:bg-[#1bc290] transition-colors shadow-sm"
                                         >
+                                            <Eye size={12} />
                                             {language === 'ko' ? '30초 요약' : 'Quick Read'}
                                         </button>
                                         <button
                                             onClick={() => onAddToInterests?.(clip)}
-                                            className={`flex-1 py-1.5 text-[10px] font-medium rounded transition-colors ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                                }`}
+                                            className={cn(
+                                                "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium transition-colors border",
+                                                isDark
+                                                    ? "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
+                                                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                                            )}
                                         >
-                                            {language === 'ko' ? '관심사 반영' : 'Add to Interests'}
+                                            <PlusCircle size={12} />
+                                            {language === 'ko' ? '관심사' : 'Save Interest'}
                                         </button>
                                         <button
                                             onClick={() => onDismiss?.(clip.id)}
-                                            className={`px-2 py-1.5 text-[10px] font-medium rounded transition-colors ${isDark ? 'bg-slate-700/50 text-slate-500 hover:bg-slate-700' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                                                }`}
+                                            className={cn(
+                                                "w-8 flex items-center justify-center rounded-md border transition-colors",
+                                                isDark
+                                                    ? "bg-white/5 border-white/5 text-slate-400 hover:text-white"
+                                                    : "bg-white border-slate-200 text-slate-400 hover:text-red-500"
+                                            )}
                                         >
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <line x1="18" y1="6" x2="6" y2="18" />
-                                                <line x1="6" y1="6" x2="18" y2="18" />
-                                            </svg>
+                                            <X size={14} />
                                         </button>
                                     </div>
                                 </div>
@@ -122,11 +145,11 @@ export const UnreadInbox: React.FC<UnreadInboxProps> = ({
                         </div>
                     ))
                 ) : (
-                    <div className={`text-center py-6 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-2 opacity-50">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        <p className="text-xs">
+                    <div className="flex flex-col items-center justify-center h-[200px] text-center">
+                        <div className={cn("p-3 rounded-full mb-3", isDark ? "bg-white/5" : "bg-black/5")}>
+                            <Inbox size={20} className={textTertiary} opacity={0.5} />
+                        </div>
+                        <p className={cn("text-xs font-medium", textSecondary)}>
                             {language === 'ko' ? '모든 클립을 확인했습니다' : 'All caught up!'}
                         </p>
                     </div>
