@@ -1,4 +1,6 @@
 import React from 'react';
+import { Clock, ChevronRight, TrendingUp } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 interface InterestTimelineProps {
     links: any[];
@@ -14,6 +16,14 @@ export const InterestTimeline: React.FC<InterestTimelineProps> = ({
     onPeriodClick,
 }) => {
     const isDark = theme === 'dark';
+
+    // --- Plus X Design Tokens ---
+    const bgCard = isDark ? 'bg-[#111113]' : 'bg-white';
+    const border = isDark ? 'border-white/[0.06]' : 'border-black/[0.05]';
+    const textPrimary = isDark ? 'text-[#FAFAFA]' : 'text-[#111111]';
+    const textSecondary = isDark ? 'text-[#A1A1AA]' : 'text-[#525252]';
+    const textTertiary = isDark ? 'text-[#71717A]' : 'text-[#A3A3A3]';
+    const hoverEffect = "transition-all duration-200 hover:bg-black/[0.015] dark:hover:bg-white/[0.02]";
 
     // Analyze interest evolution over 4 weeks
     const evolutionData = React.useMemo(() => {
@@ -87,80 +97,94 @@ export const InterestTimeline: React.FC<InterestTimelineProps> = ({
     }, [evolutionData, language]);
 
     return (
-        <div className={`rounded-xl p-4 md:p-5 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={cn("rounded-2xl border p-6 flex flex-col h-full", bgCard, border)}>
             {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#21DBA4]">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                    </svg>
+            <div className="flex items-center gap-3 mb-6">
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", isDark ? "bg-white/[0.04]" : "bg-black/[0.03]")}>
+                    <Clock size={16} className={textSecondary} />
                 </div>
-                <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                <h3 className={cn("text-sm font-semibold", textPrimary)}>
                     {language === 'ko' ? '관심사 변화' : 'Interest Evolution'}
                 </h3>
             </div>
 
             {/* Timeline */}
-            <div className="relative">
+            <div className="relative flex-1 pl-2">
                 {/* Vertical line */}
-                <div className={`absolute left-3 top-3 bottom-3 w-0.5 ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`} />
+                <div className={cn("absolute left-5 top-4 bottom-8 w-px", isDark ? "bg-white/[0.06]" : "bg-black/[0.06]")} />
 
-                <div className="space-y-4">
-                    {evolutionData.map((period, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => onPeriodClick?.(period.label, period.clips)}
-                            className={`relative flex items-start gap-3 w-full text-left p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50'
-                                }`}
-                        >
-                            {/* Dot */}
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 z-10 ${idx === evolutionData.length - 1
-                                ? 'bg-[#21DBA4]'
-                                : isDark ? 'bg-slate-700' : 'bg-slate-200'
-                                }`}>
-                                <div className={`w-2 h-2 rounded-full ${idx === evolutionData.length - 1 ? 'bg-white' : 'bg-[#21DBA4]'
-                                    }`} />
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                    <span className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                                        {period.label}
-                                    </span>
-                                    <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                        {period.count} {language === 'ko' ? '개' : 'clips'}
-                                    </span>
+                <div className="space-y-6">
+                    {evolutionData.map((period, idx) => {
+                        const isLast = idx === evolutionData.length - 1;
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => onPeriodClick?.(period.label, period.clips)}
+                                className={cn(
+                                    "relative flex items-start gap-4 w-full text-left p-2 -ml-2 rounded-lg transition-all group",
+                                    hoverEffect
+                                )}
+                            >
+                                {/* Dot */}
+                                <div className={cn(
+                                    "w-4 h-4 rounded-full flex items-center justify-center shrink-0 z-10 my-0.5 ring-4",
+                                    isDark ? "ring-[#121214]" : "ring-white",
+                                    isLast
+                                        ? "bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.2)]"
+                                        : isDark ? "bg-white/10" : "bg-black/10"
+                                )}>
+                                    {isLast && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                 </div>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                    {period.topTags.length > 0 ? (
-                                        period.topTags.map(tag => (
-                                            <span
-                                                key={tag}
-                                                className={`text-[10px] px-1.5 py-0.5 rounded ${idx === evolutionData.length - 1
-                                                    ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
-                                                    : isDark ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-500'
-                                                    }`}
-                                            >
-                                                {tag}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className={`text-[10px] ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                                            {language === 'ko' ? '데이터 없음' : 'No data'}
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className={cn(
+                                            "text-xs font-semibold",
+                                            isLast ? textPrimary : textSecondary
+                                        )}>
+                                            {period.label}
                                         </span>
-                                    )}
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className={cn("text-[10px]", textTertiary)}>{period.count} items</span>
+                                            <ChevronRight size={12} className={textTertiary} />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {period.topTags.length > 0 ? (
+                                            period.topTags.map(tag => (
+                                                <span
+                                                    key={tag}
+                                                    className={cn(
+                                                        "text-[10px] px-2 py-0.5 rounded-full border transition-colors",
+                                                        isLast
+                                                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                                                            : isDark ? "bg-white/5 border-white/5 text-slate-400" : "bg-white border-black/5 text-slate-500"
+                                                    )}
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className={cn("text-[10px] italic", textTertiary)}>
+                                                {language === 'ko' ? '데이터 없음' : 'No data'}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        </button>
-                    ))}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {/* AI Insight */}
-            <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
-                <p className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            <div className={cn(
+                "mt-4 p-3 rounded-lg border flex items-start gap-3",
+                isDark ? "bg-emerald-500/[0.03] border-emerald-500/10" : "bg-emerald-500/[0.03] border-emerald-500/10"
+            )}>
+                <TrendingUp size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+                <p className={cn("text-xs leading-relaxed", textSecondary)}>
                     {aiInsight}
                 </p>
             </div>

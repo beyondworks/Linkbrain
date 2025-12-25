@@ -1,4 +1,6 @@
 import React from 'react';
+import { Clock, Activity } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 interface SavePatternHeatmapProps {
     links: any[];
@@ -12,6 +14,13 @@ export const SavePatternHeatmap: React.FC<SavePatternHeatmapProps> = ({
     language,
 }) => {
     const isDark = theme === 'dark';
+
+    // --- Plus X Design Tokens ---
+    const bgCard = isDark ? 'bg-[#111113]' : 'bg-white';
+    const border = isDark ? 'border-white/[0.06]' : 'border-black/[0.05]';
+    const textPrimary = isDark ? 'text-[#FAFAFA]' : 'text-[#111111]';
+    const textSecondary = isDark ? 'text-[#A1A1AA]' : 'text-[#525252]';
+    const textTertiary = isDark ? 'text-[#71717A]' : 'text-[#A3A3A3]';
 
     // Analyze save patterns by day and hour
     const patternData = React.useMemo(() => {
@@ -107,39 +116,36 @@ export const SavePatternHeatmap: React.FC<SavePatternHeatmapProps> = ({
 
     // Get cell color based on intensity
     const getCellColor = (count: number) => {
-        if (count === 0) return isDark ? 'bg-slate-800' : 'bg-slate-100';
+        if (count === 0) return isDark ? 'bg-white/[0.03]' : 'bg-black/[0.03]';
         const intensity = count / patternData.maxCount;
         if (intensity > 0.7) return 'bg-[#21DBA4]';
         if (intensity > 0.4) return isDark ? 'bg-[#21DBA4]/60' : 'bg-[#21DBA4]/50';
         if (intensity > 0.1) return isDark ? 'bg-[#21DBA4]/30' : 'bg-[#21DBA4]/25';
-        return isDark ? 'bg-slate-700' : 'bg-slate-200';
+        return isDark ? 'bg-white/10' : 'bg-black/10';
     };
 
     // Hour labels (show every 4 hours)
     const hourLabels = [0, 4, 8, 12, 16, 20];
 
     return (
-        <div className={`rounded-xl p-4 md:p-5 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={cn("rounded-2xl border p-6 flex flex-col h-full", bgCard, border)}>
             {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#21DBA4]">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                    </svg>
+            <div className="flex items-center gap-3 mb-6">
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", isDark ? "bg-white/[0.04]" : "bg-black/[0.03]")}>
+                    <Clock size={16} className={textSecondary} />
                 </div>
-                <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                <h3 className={cn("text-sm font-semibold", textPrimary)}>
                     {language === 'ko' ? '저장 패턴' : 'Save Pattern'}
                 </h3>
             </div>
 
             {/* Heatmap */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1 flex flex-col justify-center">
                 <div className="min-w-[280px]">
                     {/* Hour labels */}
-                    <div className="flex mb-1 pl-8">
+                    <div className="flex mb-2 pl-8">
                         {hourLabels.map(h => (
-                            <div key={h} className={`text-[9px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`} style={{ width: `${100 / 6}%` }}>
+                            <div key={h} className={cn("text-[9px]", textTertiary)} style={{ width: `${100 / 6}%` }}>
                                 {h}
                             </div>
                         ))}
@@ -147,15 +153,18 @@ export const SavePatternHeatmap: React.FC<SavePatternHeatmapProps> = ({
 
                     {/* Grid rows */}
                     {patternData.days.map((day, dayIdx) => (
-                        <div key={day} className="flex items-center gap-1 mb-0.5">
-                            <span className={`w-7 text-[10px] shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <div key={day} className="flex items-center gap-1.5 mb-1">
+                            <span className={cn("w-7 text-[10px] shrink-0", textSecondary)}>
                                 {day}
                             </span>
-                            <div className="flex-1 flex gap-px">
+                            <div className="flex-1 flex gap-[2px]">
                                 {patternData.grid[dayIdx].map((count, hourIdx) => (
                                     <div
                                         key={hourIdx}
-                                        className={`h-3 flex-1 rounded-sm transition-colors ${getCellColor(count)}`}
+                                        className={cn(
+                                            "h-3 flex-1 rounded-[2px] transition-colors",
+                                            getCellColor(count)
+                                        )}
                                         title={`${day} ${hourIdx}:00 - ${count} ${language === 'ko' ? '개' : 'clips'}`}
                                     />
                                 ))}
@@ -166,33 +175,28 @@ export const SavePatternHeatmap: React.FC<SavePatternHeatmapProps> = ({
             </div>
 
             {/* Legend */}
-            <div className="flex items-center justify-end gap-1 mt-2">
-                <span className={`text-[9px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="flex items-center justify-end gap-1 mt-3 mb-2">
+                <span className={cn("text-[9px]", textTertiary)}>
                     {language === 'ko' ? '적음' : 'Less'}
                 </span>
-                <div className={`w-3 h-3 rounded-sm ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`} />
-                <div className={`w-3 h-3 rounded-sm ${isDark ? 'bg-[#21DBA4]/30' : 'bg-[#21DBA4]/25'}`} />
-                <div className={`w-3 h-3 rounded-sm ${isDark ? 'bg-[#21DBA4]/60' : 'bg-[#21DBA4]/50'}`} />
-                <div className="w-3 h-3 rounded-sm bg-[#21DBA4]" />
-                <span className={`text-[9px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                <div className={cn("w-2.5 h-2.5 rounded-[2px]", isDark ? "bg-white/[0.03]" : "bg-black/[0.03]")} />
+                <div className={cn("w-2.5 h-2.5 rounded-[2px]", isDark ? "bg-[#21DBA4]/30" : "bg-[#21DBA4]/25")} />
+                <div className={cn("w-2.5 h-2.5 rounded-[2px]", isDark ? "bg-[#21DBA4]/60" : "bg-[#21DBA4]/50")} />
+                <div className="w-2.5 h-2.5 rounded-[2px] bg-[#21DBA4]" />
+                <span className={cn("text-[9px]", textTertiary)}>
                     {language === 'ko' ? '많음' : 'More'}
                 </span>
             </div>
 
             {/* AI Comment */}
-            <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
-                <div className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full bg-[#21DBA4] flex items-center justify-center shrink-0 mt-0.5">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                            <path d="M2 17l10 5 10-5" />
-                            <path d="M2 12l10 5 10-5" />
-                        </svg>
-                    </div>
-                    <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                        {aiComment}
-                    </p>
-                </div>
+            <div className={cn(
+                "mt-2 p-3 rounded-lg border flex items-start gap-3",
+                isDark ? "bg-emerald-500/[0.03] border-emerald-500/10" : "bg-emerald-500/[0.03] border-emerald-500/10"
+            )}>
+                <Activity size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+                <p className={cn("text-xs leading-relaxed", textSecondary)}>
+                    {aiComment}
+                </p>
             </div>
         </div>
     );

@@ -17,6 +17,29 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 
+// Helper function to parse Firebase Timestamp or ISO string to Date
+const parseTimestamp = (value: any): Date | null => {
+    if (!value) return null;
+    // Firebase Timestamp object
+    if (value && typeof value.toDate === 'function') {
+        return value.toDate();
+    }
+    // Firestore Timestamp-like object with seconds
+    if (value && typeof value.seconds === 'number') {
+        return new Date(value.seconds * 1000);
+    }
+    // ISO string or any string date
+    if (typeof value === 'string') {
+        const date = new Date(value);
+        return isNaN(date.getTime()) ? null : date;
+    }
+    // Already a Date
+    if (value instanceof Date) {
+        return value;
+    }
+    return null;
+};
+
 // Types
 export interface Announcement {
     id?: string;
@@ -370,16 +393,16 @@ export const useAdmin = () => {
                 }
 
                 // New users
-                if (data.createdAt) {
-                    const userCreated = new Date(data.createdAt);
+                const userCreated = parseTimestamp(data.createdAt);
+                if (userCreated) {
                     if (userCreated >= today) newUsersToday++;
                     if (userCreated >= weekAgo) newUsersThisWeek++;
                     if (userCreated >= monthAgo) newUsersThisMonth++;
                 }
 
                 // Active users (based on lastLoginAt)
-                if (data.lastLoginAt) {
-                    const lastLogin = new Date(data.lastLoginAt);
+                const lastLogin = parseTimestamp(data.lastLoginAt);
+                if (lastLogin) {
                     if (lastLogin >= today) activeUsersToday.add(doc.id);
                     if (lastLogin >= weekAgo) activeUsersWeek.add(doc.id);
                     if (lastLogin >= monthAgo) activeUsersMonth.add(doc.id);
@@ -389,8 +412,9 @@ export const useAdmin = () => {
             // Recent clips (last 7 days)
             const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
             const recentClipsCount = clipsData.filter(c => {
-                if (!c.createdAt) return false;
-                return new Date(c.createdAt) >= sevenDaysAgo;
+                const created = parseTimestamp(c.createdAt);
+                if (!created) return false;
+                return created >= sevenDaysAgo;
             }).length;
 
             // Daily stats for last 30 days
@@ -401,15 +425,15 @@ export const useAdmin = () => {
                 const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
 
                 const dayClips = clipsData.filter(c => {
-                    if (!c.createdAt) return false;
-                    const created = new Date(c.createdAt);
+                    const created = parseTimestamp(c.createdAt);
+                    if (!created) return false;
                     return created >= date && created < nextDate;
                 }).length;
 
                 const dayNewUsers = usersDataSnapshot.docs.filter(d => {
                     const data = d.data();
-                    if (!data.createdAt) return false;
-                    const created = new Date(data.createdAt);
+                    const created = parseTimestamp(data.createdAt);
+                    if (!created) return false;
                     return created >= date && created < nextDate;
                 }).length;
 
@@ -590,8 +614,9 @@ export const useAdmin = () => {
             // Hourly activity
             const hourlyActivity: HourlyActivity[] = Array.from({ length: 24 }, (_, i) => ({ hour: i, count: 0 }));
             clipsData.forEach(clip => {
-                if (clip.createdAt) {
-                    const hour = new Date(clip.createdAt).getHours();
+                const created = parseTimestamp(clip.createdAt);
+                if (created) {
+                    const hour = created.getHours();
                     hourlyActivity[hour].count++;
                 }
             });
@@ -600,8 +625,9 @@ export const useAdmin = () => {
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const weekdayCount = [0, 0, 0, 0, 0, 0, 0];
             clipsData.forEach(clip => {
-                if (clip.createdAt) {
-                    const day = new Date(clip.createdAt).getDay();
+                const created = parseTimestamp(clip.createdAt);
+                if (created) {
+                    const day = created.getDay();
                     weekdayCount[day]++;
                 }
             });
@@ -618,8 +644,8 @@ export const useAdmin = () => {
                 const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
 
                 const dayClips = clipsData.filter(c => {
-                    if (!c.createdAt) return false;
-                    const created = new Date(c.createdAt);
+                    const created = parseTimestamp(c.createdAt);
+                    if (!created) return false;
                     return created >= date && created < nextDate;
                 });
 
@@ -642,14 +668,15 @@ export const useAdmin = () => {
                 const weekEnd = new Date(today.getTime() - (w - 1) * 7 * 24 * 60 * 60 * 1000);
 
                 const usersCreatedBefore = usersData.filter(u => {
-                    if (!u.createdAt) return false;
-                    return new Date(u.createdAt) < weekStart;
+                    const created = parseTimestamp(u.createdAt);
+                    if (!created) return false;
+                    return created < weekStart;
                 }).length;
 
                 const activeInWeek = usersData.filter(u => {
-                    if (!u.lastLoginAt || !u.createdAt) return false;
-                    const created = new Date(u.createdAt);
-                    const lastLogin = new Date(u.lastLoginAt);
+                    const created = parseTimestamp(u.createdAt);
+                    const lastLogin = parseTimestamp(u.lastLoginAt);
+                    if (!lastLogin || !created) return false;
                     return created < weekStart && lastLogin >= weekStart && lastLogin < weekEnd;
                 }).length;
 

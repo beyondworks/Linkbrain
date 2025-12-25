@@ -1,4 +1,6 @@
 import React from 'react';
+import { Hash, ChevronDown, FileText, PenTool, Sparkles } from 'lucide-react';
+import { cn } from '../ui/utils';
 
 interface KeywordSectionProps {
     links: any[];
@@ -16,6 +18,14 @@ export const KeywordSection: React.FC<KeywordSectionProps> = ({
     onGenerateAction,
 }) => {
     const isDark = theme === 'dark';
+
+    // --- Plus X Design Tokens ---
+    const bgCard = isDark ? 'bg-[#111113]' : 'bg-white';
+    const border = isDark ? 'border-white/[0.06]' : 'border-black/[0.05]';
+    const textPrimary = isDark ? 'text-[#FAFAFA]' : 'text-[#111111]';
+    const textSecondary = isDark ? 'text-[#A1A1AA]' : 'text-[#525252]';
+    const textTertiary = isDark ? 'text-[#71717A]' : 'text-[#A3A3A3]';
+    const hoverEffect = "transition-all duration-200 hover:bg-black/[0.015] dark:hover:bg-white/[0.02]";
 
     // Analyze keywords with context
     const keywordData = React.useMemo(() => {
@@ -69,92 +79,145 @@ export const KeywordSection: React.FC<KeywordSectionProps> = ({
     const [selectedKeyword, setSelectedKeyword] = React.useState<string | null>(null);
 
     return (
-        <div className={`rounded-xl p-4 md:p-5 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={cn("rounded-2xl border p-6 flex flex-col", bgCard, border)}>
             {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#21DBA4]">
-                        <line x1="4" y1="9" x2="20" y2="9" />
-                        <line x1="4" y1="15" x2="20" y2="15" />
-                        <line x1="10" y1="3" x2="8" y2="21" />
-                        <line x1="16" y1="3" x2="14" y2="21" />
-                    </svg>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", isDark ? "bg-white/[0.04]" : "bg-black/[0.03]")}>
+                        <Hash size={16} className={textSecondary} />
+                    </div>
+                    <h3 className={cn("text-sm font-semibold", textPrimary)}>
+                        {language === 'ko' ? '이번 주 키워드' : "This Week's Keywords"}
+                    </h3>
                 </div>
-                <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    {language === 'ko' ? '이번 주 키워드' : 'This Week\'s Keywords'}
-                </h3>
+                {keywordData.length > 0 && (
+                    <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500")}>
+                        {keywordData.length} active
+                    </span>
+                )}
             </div>
 
-            {/* Keywords */}
-            <div className="space-y-2">
+            {/* Keywords List */}
+            <div className="space-y-1 flex-1">
                 {keywordData.length > 0 ? (
-                    keywordData.map(({ tag, count, related }) => (
-                        <div key={tag}>
-                            <button
-                                onClick={() => {
-                                    setSelectedKeyword(selectedKeyword === tag ? null : tag);
-                                    onKeywordClick?.(tag);
-                                }}
-                                className={`w-full flex items-center justify-between p-2.5 rounded-lg transition-all ${selectedKeyword === tag
-                                    ? 'bg-[#21DBA4]/10 border border-[#21DBA4]/30'
-                                    : isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-50 hover:bg-slate-100'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span className={`font-bold text-xs ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                                        {tag}
-                                    </span>
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-slate-700 text-slate-400' : 'bg-slate-200 text-slate-500'}`}>
-                                        {count}
-                                    </span>
-                                </div>
-                                <svg
-                                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                                    className={`transition-transform ${selectedKeyword === tag ? 'rotate-180' : ''} ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
-                                >
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                            </button>
-
-                            {/* Expanded content */}
-                            {selectedKeyword === tag && (
-                                <div className={`mt-1 ml-3 p-2 rounded-lg ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
-                                    {related.length > 0 && (
-                                        <div className="mb-2">
-                                            <span className={`text-[9px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                {language === 'ko' ? '함께 등장:' : 'Also appears with:'}
-                                            </span>
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                {related.map(r => (
-                                                    <span key={r} className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
-                                                        {r}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
+                    keywordData.map(({ tag, count, related }) => {
+                        const isSelected = selectedKeyword === tag;
+                        return (
+                            <div key={tag} className="group">
+                                <button
+                                    onClick={() => {
+                                        setSelectedKeyword(isSelected ? null : tag);
+                                        onKeywordClick?.(tag);
+                                    }}
+                                    className={cn(
+                                        "w-full flex items-center justify-between p-2.5 rounded-lg transition-all border border-transparent",
+                                        isSelected
+                                            ? "bg-[#21DBA4]/[0.05] border-[#21DBA4]/20"
+                                            : hoverEffect
                                     )}
-                                    <div className="flex gap-1 mt-2">
-                                        <button
-                                            onClick={() => onGenerateAction?.('report', tag)}
-                                            className="flex-1 py-1.5 text-[10px] font-medium rounded bg-[#21DBA4]/10 text-[#21DBA4] hover:bg-[#21DBA4]/20 transition-colors"
-                                        >
-                                            {language === 'ko' ? '리포트' : 'Report'}
-                                        </button>
-                                        <button
-                                            onClick={() => onGenerateAction?.('article', tag)}
-                                            className="flex-1 py-1.5 text-[10px] font-medium rounded bg-[#21DBA4]/10 text-[#21DBA4] hover:bg-[#21DBA4]/20 transition-colors"
-                                        >
-                                            {language === 'ko' ? '아티클' : 'Article'}
-                                        </button>
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className={cn(
+                                            "text-xs font-medium px-1.5 py-0.5 rounded text-opacity-80 transition-colors",
+                                            isSelected
+                                                ? "bg-[#21DBA4]/20 text-[#21DBA4]"
+                                                : isDark ? "bg-white/5 text-slate-400 group-hover:text-slate-300" : "bg-black/5 text-slate-500 group-hover:text-slate-700"
+                                        )}>
+                                            {count}
+                                        </span>
+                                        <span className={cn(
+                                            "text-sm font-medium transition-colors",
+                                            isSelected ? "text-[#21DBA4]" : textPrimary
+                                        )}>
+                                            {tag}
+                                        </span>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    ))
+                                    <ChevronDown
+                                        size={14}
+                                        className={cn(
+                                            "transition-transform duration-200",
+                                            isSelected ? "rotate-180 text-[#21DBA4]" : textTertiary
+                                        )}
+                                    />
+                                </button>
+
+                                {/* Expanded content */}
+                                {isSelected && (
+                                    <div className={cn(
+                                        "mt-2 mb-3 ml-3 p-3 rounded-lg border",
+                                        isDark ? "bg-black/20 border-white/5" : "bg-slate-50 border-black/5"
+                                    )}>
+                                        {related.length > 0 && (
+                                            <div className="mb-3">
+                                                <div className="flex items-center gap-1.5 mb-2">
+                                                    <Sparkles size={10} className={textTertiary} />
+                                                    <span className={cn("text-[10px] uppercase tracking-wider font-semibold", textTertiary)}>
+                                                        {language === 'ko' ? '연관 주제' : 'RELATED TOPICS'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {related.map(r => (
+                                                        <span key={r} className={cn(
+                                                            "text-[11px] px-2 py-0.5 rounded-full border transition-colors",
+                                                            isDark
+                                                                ? "bg-white/5 border-white/5 text-slate-300 hover:border-white/20"
+                                                                : "bg-white border-black/5 text-slate-600 hover:border-black/20"
+                                                        )}>
+                                                            {r}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onGenerateAction?.('report', tag);
+                                                }}
+                                                className={cn(
+                                                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium transition-all",
+                                                    isDark
+                                                        ? "bg-[#21DBA4]/10 hover:bg-[#21DBA4]/20 text-[#21DBA4]"
+                                                        : "bg-[#21DBA4]/5 hover:bg-[#21DBA4]/10 text-[#1fa57e]"
+                                                )}
+                                            >
+                                                <FileText size={12} />
+                                                {language === 'ko' ? '리포트 생성' : 'Generate Report'}
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onGenerateAction?.('article', tag);
+                                                }}
+                                                className={cn(
+                                                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-medium transition-all",
+                                                    isDark
+                                                        ? "bg-white/5 hover:bg-white/10 text-slate-300"
+                                                        : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-600"
+                                                )}
+                                            >
+                                                <PenTool size={12} />
+                                                {language === 'ko' ? '글쓰기' : 'Write Article'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
                 ) : (
-                    <p className={`text-xs text-center py-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                        {language === 'ko' ? '이번 주 저장된 클립이 없습니다' : 'No clips saved this week'}
-                    </p>
+                    <div className="flex flex-col items-center justify-center h-[200px] text-center">
+                        <div className={cn("p-3 rounded-full mb-3", isDark ? "bg-white/5" : "bg-black/5")}>
+                            <Hash size={20} className={textTertiary} opacity={0.5} />
+                        </div>
+                        <p className={cn("text-xs font-medium", textSecondary)}>
+                            {language === 'ko' ? '이번 주 키워드가 없습니다' : 'No keywords found this week'}
+                        </p>
+                        <p className={cn("text-[10px] mt-1", textTertiary)}>
+                            {language === 'ko' ? '새로운 링크를 저장해보세요' : 'Save links to see keywords'}
+                        </p>
+                    </div>
                 )}
             </div>
         </div>
