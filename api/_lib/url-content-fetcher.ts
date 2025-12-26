@@ -200,6 +200,43 @@ export const fetchUrlContent = async (url: string): Promise<FetchedUrlContent> =
             const jinaResult = await extractWithJina(jinaUrl, platform, authorHandle);
 
             if (jinaResult.rawText && jinaResult.rawText.length > 50) {
+                // CRITICAL: Validate that Jina content is related to the original author
+                // Jina sometimes returns random trending content instead of the actual post
+                const jinaTextLower = jinaResult.rawText.toLowerCase();
+                const authorHandleLower = (puppeteerResult.authorHandle || authorHandle || '').toLowerCase();
+
+                // Check if content seems completely unrelated to the author
+                // If we have author info but the content doesn't mention them at all,
+                // and the content talks about something completely different (e.g., FIFA, sports),
+                // it's likely Jina fetched wrong content
+                const hasUnrelatedContent = authorHandleLower &&
+                    !jinaTextLower.includes(authorHandleLower) &&
+                    (
+                        // Common false positive patterns - trending content that gets injected
+                        jinaTextLower.includes('fifa') ||
+                        jinaTextLower.includes('world cup') ||
+                        jinaTextLower.includes('champions') ||
+                        jinaTextLower.includes('trending') ||
+                        jinaTextLower.includes('for you')
+                    );
+
+                if (hasUnrelatedContent) {
+                    console.warn('[Content Fetcher] Jina returned unrelated content (detected trending/popular posts)');
+                    console.warn(`[Content Fetcher] Expected author: ${authorHandleLower}, but content seems unrelated`);
+
+                    // Return Puppeteer result with empty text - better to have no text than wrong text
+                    // The clip will be created with fallback title from URL
+                    return platform === 'threads'
+                        ? applyThreadsNormalization({
+                            ...puppeteerResult,
+                            rawText: '', // Force empty to prevent wrong AI metadata
+                        })
+                        : {
+                            ...puppeteerResult,
+                            rawText: '',
+                        };
+                }
+
                 console.log('[Content Fetcher] Jina fallback succeeded, merging with Puppeteer metadata');
 
                 // MERGE: Jina text + Puppeteer metadata

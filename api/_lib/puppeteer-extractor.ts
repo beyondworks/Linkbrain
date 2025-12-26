@@ -69,10 +69,12 @@ export const extractWithPuppeteer = async (url: string): Promise<{
                 } catch { return []; }
             };
 
-            // THREADS (ENHANCED - v2)
+            // THREADS (ENHANCED - v3 with og:description fallback)
             if (url.includes('threads.net') || url.includes('threads.com') || url.includes('www.threads')) {
                 const ogImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
                 const ogTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+                const ogDescription = document.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+                const metaDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
 
                 // ===== Extract author handle and name =====
                 let authorHandle = '';
@@ -94,7 +96,15 @@ export const extractWithPuppeteer = async (url: string): Promise<{
                     }
                 }
 
-                // Try 2: Find author info in DOM header
+                // Try 2: Extract from URL pattern /@username/
+                if (!authorHandle) {
+                    const urlMatch = url.match(/\/@([a-zA-Z0-9_.]+)/);
+                    if (urlMatch) {
+                        authorHandle = urlMatch[1];
+                    }
+                }
+
+                // Try 3: Find author info in DOM header
                 if (!authorHandle) {
                     const headerLink = document.querySelector('header a[href^="/@"]');
                     if (headerLink) {
@@ -129,7 +139,33 @@ export const extractWithPuppeteer = async (url: string): Promise<{
                     document.querySelector('main');
 
                 let postText = '';
-                if (mainArticle) {
+
+                // Strategy 0 (NEW - PRIORITY): Use og:description first - most reliable source!
+                // og:description contains the actual post content from Meta's servers
+                if (ogDescription && ogDescription.length > 10) {
+                    // Clean og:description - remove "Likes, X replies" suffix
+                    let cleanedDesc = ogDescription
+                        .replace(/\d+\s*(likes?|replies?|reposts?)\s*[-·]?\s*/gi, '')
+                        .replace(/\s*[-·]\s*\d+\s*(likes?|replies?|reposts?)/gi, '')
+                        .trim();
+
+                    // Use if it's meaningful content
+                    if (cleanedDesc.length > 10 && !cleanedDesc.match(/^(log in|sign up|로그인)/i)) {
+                        postText = cleanedDesc;
+                    }
+                }
+
+                // Strategy 0.5: Try meta description as fallback
+                if (!postText && metaDescription && metaDescription.length > 10) {
+                    let cleanedMeta = metaDescription
+                        .replace(/\d+\s*(likes?|replies?|reposts?)\s*[-·]?\s*/gi, '')
+                        .trim();
+                    if (cleanedMeta.length > 10 && !cleanedMeta.match(/^(log in|sign up|로그인)/i)) {
+                        postText = cleanedMeta;
+                    }
+                }
+
+                if (!postText && mainArticle) {
                     // Strategy 1: Try specific Threads content selectors
                     // Threads often uses nested divs with dir="auto" for content
                     const contentDivs = Array.from(mainArticle.querySelectorAll('div[dir="auto"]'));
@@ -191,6 +227,7 @@ export const extractWithPuppeteer = async (url: string): Promise<{
                     }
                 }
 
+                console.log('[Threads] og:description length:', ogDescription?.length || 0);
                 console.log('[Threads] Extracted text length:', postText.length);
 
                 // ===== Extract images and videos from post content =====
