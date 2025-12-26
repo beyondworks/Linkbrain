@@ -293,9 +293,9 @@ CRITICAL RULES:
 - DO NOT add examples, explanations, or expand on ideas
 - DO NOT make assumptions or predictions
 - ONLY extract and reorganize what already exists in CONTENT
-- If CONTENT is short, keep summary short too (direct quote is fine)
-- Summary MUST be derived ONLY from CONTENT, no additions
-- If the same paragraph appears multiple times in CONTENT, use it only ONCE in summary (remove duplicates)
+- Summary should be CONDENSED, not split into bullets that copy the original text verbatim
+- If CONTENT is short (1-3 sentences), summarize the key point in ONE sentence
+- If the same paragraph appears multiple times in CONTENT, use it only ONCE (remove duplicates)
 
 URL: ${url}
 Platform: ${platform}
@@ -308,7 +308,7 @@ ${rawText.substring(0, 5000)}
 Generate JSON metadata based STRICTLY on the CONTENT above:
 {
   "title": "Descriptive title in ${langName} (max 60 chars, from CONTENT only)",
-  "summary": "3-5 sentence summary in ${langName} (from CONTENT only, no additions)",
+  "summary": "Concise 1-3 sentence summary in ${langName}. DO NOT split original text into bullets. Condense the main idea.",
   "keywords": ["5 relevant keywords in ${langName} from CONTENT"],
   "category": "Choose the MOST relevant from: Design, Dev, AI, Product, Business, Marketing, Finance, Stock, Investment, Crypto, Health, Fitness, Education, Science, News, Entertainment, Music, Gaming, Travel, Food, Lifestyle, Sports, Fashion, Art, Photography, Automation, Productivity, Career, Startup, Other",
   "sentiment": "positive | neutral | negative",

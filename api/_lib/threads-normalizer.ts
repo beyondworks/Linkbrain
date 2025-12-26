@@ -132,9 +132,10 @@ function removeMetadata(text: string): string {
     // Translate block (Translate followed by content until next paragraph)
     t = t.replace(/^Translate\s*$/gm, '');
 
-    // Thread ===== metadata
-    t = t.replace(/Thread\s*={3,}.*$/gm, '');
-    t = t.replace(/\[Thread\s*={3,}[^\]]*\]/gi, '');
+    // Thread ===== metadata with views
+    t = t.replace(/Thread\s*[-=]{3,}.*$/gm, '');
+    t = t.replace(/Thread\s*[-=]{3,}\s*[\d.]+K?\s*views?/gi, '');
+    t = t.replace(/\[Thread\s*[-=]{3,}[^\]]*\]/gi, '');
 
     // System messages
     t = t.replace(/^Author$/gm, '');
@@ -148,6 +149,16 @@ function removeMetadata(text: string): string {
     t = t.replace(/^May be a.*image.*$/gm, '');
     t = t.replace(/^profile picture.*$/gm, '');
     t = t.replace(/^Sorry, we're having trouble.*$/gm, '');
+
+    // Login/Signup prompts
+    t = t.replace(/^Log in or sign up.*$/gim, '');
+    t = t.replace(/^Log in with username.*$/gim, '');
+    t = t.replace(/^Log in with Instagram.*$/gim, '');
+    t = t.replace(/^See what people are talking about.*$/gim, '');
+    t = t.replace(/^join the conversation.*$/gim, '');
+    t = t.replace(/^Create an account.*$/gim, '');
+    t = t.replace(/^Sign up.*$/gim, '');
+    t = t.replace(/^Forgot password.*$/gim, '');
 
     return t;
 }
