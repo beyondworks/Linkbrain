@@ -297,7 +297,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          author: clip.author || '',
          authorHandle: (clip.authorProfile as any)?.handle || '',
          authorAvatar: (clip.authorProfile as any)?.avatar || '',
-         chatHistory: clip.chatHistory || []  // ← CRITICAL: Include chatHistory!
+         chatHistory: clip.chatHistory || [],  // ← CRITICAL: Include chatHistory!
+         lastViewedAt: clip.lastViewedAt,  // ← Include lastViewedAt for tracking views
       };
    };
 
@@ -821,10 +822,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
       // Find the corresponding firebase clip to update lastViewedAt
       const clip = firebaseClips.find(c => c.id === id);
+      console.log('handleSelectLink called:', { id, clip, hasLastViewedAt: clip?.lastViewedAt });
+
       if (clip && !clip.lastViewedAt) {
          // Only update if never viewed before (to track first view)
          try {
+            console.log('Updating lastViewedAt for clip:', id);
             await updateClip(id, { lastViewedAt: new Date().toISOString() });
+            console.log('Successfully updated lastViewedAt');
          } catch (error) {
             console.error('Failed to update lastViewedAt:', error);
          }
