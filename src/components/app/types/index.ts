@@ -24,6 +24,7 @@ export type LinkItem = {
     authorHandle?: string;  // Author handle (@username)
     authorAvatar?: string;  // Author profile image
     chatHistory?: Array<{ role: 'user' | 'ai'; content: string; timestamp?: number }>;  // AI Chat history
+    lastViewedAt?: string;  // When the clip was last opened/viewed
 };
 
 export type Category = {
