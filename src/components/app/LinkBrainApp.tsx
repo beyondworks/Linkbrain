@@ -62,7 +62,8 @@ import {
    Copy,
    BookOpen,
    LayoutGrid,
-   ChevronUp
+   ChevronUp,
+   Inbox
 } from 'lucide-react';
 // @ts-ignore
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
@@ -465,7 +466,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
 
    // Advanced Filter State
-   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'score'>('date-desc');
+   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'score' | 'unread'>('date-desc');
    const [isFilterOpen, setIsFilterOpen] = useState(false);
    const filterRef = useRef<HTMLDivElement>(null);
    const [filterCategories, setFilterCategories] = useState<string[]>([]);
@@ -473,6 +474,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    const [filterTags, setFilterTags] = useState<string[]>([]);
    const [showAllTags, setShowAllTags] = useState(false);
    const [filterDateRange, setFilterDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
+   const [filterUnread, setFilterUnread] = useState(false); // Filter for unread clips
 
    // Modals
    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -787,15 +789,47 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          result = result.filter(l => l.timestamp >= cutoff);
       }
 
+      // Unread filter - show only clips that have never been viewed
+      if (filterUnread) {
+         const viewedClipIds = new Set(
+            firebaseClips.filter(c => c.lastViewedAt).map(c => c.id)
+         );
+         result = result.filter(l => !viewedClipIds.has(l.id));
+      }
+
       result = [...result].sort((a, b) => {
          if (sortBy === 'date-desc') return b.timestamp - a.timestamp;
          if (sortBy === 'date-asc') return a.timestamp - b.timestamp;
          if (sortBy === 'score') return b.aiScore - a.aiScore;
+         if (sortBy === 'unread') {
+            // Unread clips first, then by date
+            const aViewed = firebaseClips.find(c => c.id === a.id)?.lastViewedAt;
+            const bViewed = firebaseClips.find(c => c.id === b.id)?.lastViewedAt;
+            if (!aViewed && bViewed) return -1; // a is unread, b is read → a first
+            if (aViewed && !bViewed) return 1;  // a is read, b is unread → b first
+            return b.timestamp - a.timestamp;   // both same status, sort by date
+         }
          return 0;
       });
 
       return result;
-   }, [links, activeTab, searchQuery, categories, collections, sortBy, filterCategories, filterSources, filterTags, filterDateRange]);
+   }, [links, activeTab, searchQuery, categories, collections, sortBy, filterCategories, filterSources, filterTags, filterDateRange, filterUnread, firebaseClips]);
+
+   // Handle selecting/opening a clip - also marks it as viewed
+   const handleSelectLink = async (id: string) => {
+      setSelectedLinkId(id);
+
+      // Find the corresponding firebase clip to update lastViewedAt
+      const clip = firebaseClips.find(c => c.id === id);
+      if (clip && !clip.lastViewedAt) {
+         // Only update if never viewed before (to track first view)
+         try {
+            await updateClip(id, { lastViewedAt: new Date().toISOString() });
+         } catch (error) {
+            console.error('Failed to update lastViewedAt:', error);
+         }
+      }
+   };
 
    // Actions
    const handleToggleFavorite = async (id: string, e?: React.MouseEvent) => {
@@ -2202,10 +2236,22 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     return title;
                                  })()}
                               </h1>
-                              <p className={`text-sm ${textMuted}`}>
-                                 {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
-                                 {activeTab === 'home' && ` ${t('aiSummary')}`}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                 <p className={`text-sm ${textMuted}`}>
+                                    {activeTab === 'insights' ? '' : `${filteredLinks.length} ${t('linksFound')}`}
+                                    {activeTab === 'home' && !filterUnread && ` ${t('aiSummary')}`}
+                                 </p>
+                                 {filterUnread && (
+                                    <button
+                                       onClick={() => setFilterUnread(false)}
+                                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500/20 transition-colors"
+                                    >
+                                       <Inbox size={12} />
+                                       {language === 'ko' ? '미열람 필터' : 'Unread'}
+                                       <X size={12} />
+                                    </button>
+                                 )}
+                              </div>
                            </div>
 
                            {/* Sort & Advanced Filter Dropdown - Hide on insights/discovery */}
@@ -2238,7 +2284,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              <div className="mt-2 space-y-1">
                                                 {[
                                                    { id: 'date-desc', label: t('recentlyAdded') },
-                                                   { id: 'date-asc', label: t('oldestFirst') }
+                                                   { id: 'date-asc', label: t('oldestFirst') },
+                                                   { id: 'unread', label: language === 'ko' ? '미열람' : 'Unread First' }
                                                 ].map((opt) => (
                                                    <button
                                                       key={opt.id}
@@ -2374,6 +2421,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               t={t}
                               language={language}
                               onOpenSettings={() => setIsSettingsOpen(true)}
+                              onNavigateToUnread={() => {
+                                 setActiveTab('home');
+                                 setFilterUnread(true);
+                                 toast.success(language === 'ko' ? '읽지 않은 클립을 표시합니다' : 'Showing unread clips');
+                              }}
                            />
                         ) : viewMode === 'grid' ? (
                            <>
@@ -2385,7 +2437,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     return (
                                        <div
                                           key={link.id}
-                                          onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                          onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
                                           className={`rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
                                              } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : ''}`}
                                        >
@@ -2452,7 +2504,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              selected={selectedItemIds.has(link.id)}
                                              selectionMode={isSelectionMode}
                                              onToggleSelect={() => toggleSelection(link.id)}
-                                             onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                             onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
                                              onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
                                              onToggleReadLater={(e) => handleToggleReadLater(link.id, e)}
                                              categories={categories}
@@ -2474,7 +2526,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     selected={selectedItemIds.has(link.id)}
                                     selectionMode={isSelectionMode}
                                     onToggleSelect={() => toggleSelection(link.id)}
-                                    onClick={() => isSelectionMode ? toggleSelection(link.id) : setSelectedLinkId(link.id)}
+                                    onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
                                     onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
                                     categories={categories}
                                     theme={theme}

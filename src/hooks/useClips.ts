@@ -57,6 +57,7 @@ export interface ClipData {
     contentHtml?: string;
     images?: string[];
     chatHistory?: ChatHistoryItem[];
+    lastViewedAt?: string; // When the clip was last opened/viewed
     userId?: string;
 }
 
