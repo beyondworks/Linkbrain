@@ -141,6 +141,7 @@ export const useClips = (): UseClipsReturn => {
         setError(null);
         try {
             // Call /api/analyze for content analysis
+            // keepalive: true ensures the request continues even if user navigates away
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: {
@@ -148,6 +149,7 @@ export const useClips = (): UseClipsReturn => {
                     'Authorization': `Bearer ${await user.getIdToken()}`,
                 },
                 body: JSON.stringify({ url, userId: user.uid }),
+                keepalive: true, // Continue request even if page navigates away
             });
 
             if (!response.ok) {
@@ -158,7 +160,14 @@ export const useClips = (): UseClipsReturn => {
             const result = await response.json();
             // Note: No setClips here - onSnapshot listener handles it
             return result;
-        } catch (err) {
+        } catch (err: any) {
+            // Check if this is an abort error (user navigated away)
+            // In this case, the server is still processing - don't treat as failure
+            if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+                console.log('[analyzeUrl] Request aborted (user navigated), server will continue processing');
+                // Return a placeholder - the real clip will appear via onSnapshot
+                throw new Error('NAVIGATED_AWAY');
+            }
             handleError(err, 'Failed to analyze URL');
             throw err;
         } finally {

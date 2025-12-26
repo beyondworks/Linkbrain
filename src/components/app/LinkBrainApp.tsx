@@ -998,12 +998,23 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          setTimeout(() => setAnalysisQueue([]), 3000);
       } catch (error: any) {
          console.error('Failed to analyze URL:', error);
-         // Mark as error
-         setAnalysisQueue([{ id: analysisId, url, status: 'error' as AnalysisStatus }]);
-         addLogEntry(url, 'error');
-         toast.error(language === 'ko' ? `분석 실패: ${error.message}` : `Analysis failed: ${error.message}`);
-         // Reset to idle after 3 seconds
-         setTimeout(() => setAnalysisQueue([]), 3000);
+
+         // Special handling for navigation during analysis
+         // Server continues processing, clip will appear via Firebase listener
+         if (error.message === 'NAVIGATED_AWAY') {
+            setAnalysisQueue([{ id: analysisId, url, status: 'complete' as AnalysisStatus }]);
+            toast.success(language === 'ko'
+               ? '백그라운드에서 분석이 계속됩니다. 잠시 후 링크가 추가됩니다.'
+               : 'Analysis continues in background. Link will appear shortly.');
+            setTimeout(() => setAnalysisQueue([]), 3000);
+         } else {
+            // Mark as error
+            setAnalysisQueue([{ id: analysisId, url, status: 'error' as AnalysisStatus }]);
+            addLogEntry(url, 'error');
+            toast.error(language === 'ko' ? `분석 실패: ${error.message}` : `Analysis failed: ${error.message}`);
+            // Reset to idle after 3 seconds
+            setTimeout(() => setAnalysisQueue([]), 3000);
+         }
       } finally {
          setIsAnalyzing(false);
       }
