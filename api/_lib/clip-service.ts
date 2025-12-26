@@ -88,6 +88,33 @@ export interface Clip {
 // ============================================================================
 
 /**
+ * Extract YouTube video ID from URL
+ * Supports: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/shorts/ID
+ */
+export const extractYouTubeVideoId = (url: string): string | null => {
+    const patterns = [
+        /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+        /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+    ];
+
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match) return match[1];
+    }
+    return null;
+};
+
+/**
+ * Get YouTube thumbnail URL from video ID
+ * Returns highest quality available (maxresdefault, then hqdefault as fallback)
+ */
+export const getYouTubeThumbnail = (videoId: string): string => {
+    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+};
+
+/**
  * Detect platform from URL
  * Handles redirect URLs (l.threads.net, t.co) and short domains (instagr.am, youtu.be)
  */
@@ -268,6 +295,7 @@ CRITICAL RULES:
 - ONLY extract and reorganize what already exists in CONTENT
 - If CONTENT is short, keep summary short too (direct quote is fine)
 - Summary MUST be derived ONLY from CONTENT, no additions
+- If the same paragraph appears multiple times in CONTENT, use it only ONCE in summary (remove duplicates)
 
 URL: ${url}
 Platform: ${platform}
@@ -379,6 +407,19 @@ export const createClipFromContent = async (
     const rawImages = images || [];
     const filteredImages = filterClipImages(rawImages);
     console.log(`[Clip Service] Filtered images: ${rawImages.length} -> ${filteredImages.length}`);
+
+    // YouTube: Use official thumbnail API for best quality
+    if (sourceType === 'youtube') {
+        const videoId = extractYouTubeVideoId(url);
+        if (videoId) {
+            const youtubeThumbnail = getYouTubeThumbnail(videoId);
+            console.log(`[Clip Service] YouTube detected, using thumbnail: ${youtubeThumbnail}`);
+            // Insert YouTube thumbnail at the beginning
+            if (!filteredImages.includes(youtubeThumbnail)) {
+                filteredImages.unshift(youtubeThumbnail);
+            }
+        }
+    }
 
     // Cache images to Firebase Storage for permanent access
     // This prevents image loss from expired CDN URLs (especially Instagram/Threads)
