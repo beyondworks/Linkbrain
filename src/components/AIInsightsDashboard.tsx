@@ -246,7 +246,7 @@ const InterestEvolutionCard = ({ links, isDark, theme, language }: any) => {
       </div>
 
       {/* Gradient Decor */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[#21DBA4] blur-[80px] opacity-5 pointer-events-none" />
+      <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#21DBA4] blur-[100px] opacity-[0.03] pointer-events-none" />
     </div>
   );
 };
@@ -356,36 +356,38 @@ const ContentStudio = ({
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#21DBA4] blur-[180px] opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-700" />
 
       <div className={cn("backdrop-blur-sm rounded-[20px] p-6 lg:p-8 h-full", isDark ? "bg-[#0F1115]/50" : "bg-white/80")}>
-        <div className="flex flex-col lg:flex-row gap-8 h-full">
+        <div className="flex flex-col gap-6 h-full">
 
-          {/* Left: Search & Select */}
-          <div className="flex-1 flex flex-col">
-            <div className="mb-6">
-              <h3 className={cn("text-xl font-bold flex items-center gap-2 mb-2", theme.text)}>
-                <PenTool className="w-5 h-5 text-[#21DBA4]" />
-                {language === 'ko' ? '콘텐츠 생성 스튜디오' : 'Content Creation Studio'}
-              </h3>
-              <p className={cn("text-sm", theme.textMuted)}>
-                {language === 'ko' ? '저장된 클립들을 조합하여 새로운 문서를 작성합니다.' : 'Combine saved clips to create new documents.'}
-              </p>
+          {/* Header */}
+          <div>
+            <h3 className={cn("text-xl font-bold flex items-center gap-2 mb-2", theme.text)}>
+              <PenTool className="w-5 h-5 text-[#21DBA4]" />
+              {language === 'ko' ? '콘텐츠 생성 스튜디오' : 'Content Creation Studio'}
+            </h3>
+            <p className={cn("text-sm", theme.textMuted)}>
+              {language === 'ko' ? '저장된 클립들을 조합하여 새로운 문서를 작성합니다.' : 'Combine saved clips to create new documents.'}
+            </p>
+          </div>
+
+          {/* Toolbar */}
+          <div className="space-y-3">
+            {/* Search Row */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder={language === 'ko' ? '키워드로 클립 검색...' : 'Search clips...'}
+                className={cn("w-full border rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#21DBA4]", theme.inputBg, theme.border, theme.text)}
+                value={searchQuery}
+                onChange={(e: any) => onSearchChange(e.target.value)}
+              />
             </div>
 
-            {/* Toolbar */}
-            <div className="flex gap-2 mb-4 flex-wrap">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder={language === 'ko' ? '키워드로 클립 검색...' : 'Search clips...'}
-                  className={cn("w-full border rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#21DBA4]", theme.inputBg, theme.border, theme.text)}
-                  value={searchQuery}
-                  onChange={(e: any) => onSearchChange(e.target.value)}
-                />
-              </div>
-
+            {/* Filter Row */}
+            <div className="flex gap-2 items-center flex-wrap">
               <div className="relative">
-                <button onClick={() => setShowFilter(!showFilter)} className={cn("px-4 py-2.5 border rounded-xl text-sm font-bold flex items-center gap-2", theme.itemBg, theme.border, theme.text, theme.itemHover)}>
-                  <Filter size={16} /> {language === 'ko' ? '필터' : 'Filter'}
+                <button onClick={() => setShowFilter(!showFilter)} className={cn("px-3 py-2 border rounded-xl text-sm font-medium flex items-center gap-2", theme.itemBg, theme.border, theme.text, theme.itemHover)}>
+                  <Filter size={14} /> {language === 'ko' ? '필터' : 'Filter'}
                 </button>
                 {showFilter && (
                   <div className={cn("absolute top-full mt-2 left-0 z-50 min-w-[140px] border rounded-xl shadow-lg overflow-hidden", theme.card, theme.border)}>
@@ -401,94 +403,86 @@ const ContentStudio = ({
                 )}
               </div>
 
-              <input type="date" value={startDate} onChange={(e: any) => onStartDateChange(e.target.value)} className={cn("px-3 py-2.5 text-sm w-[130px] border rounded-xl", theme.inputBg, theme.border, theme.textMuted)} />
-              <input type="date" value={endDate} onChange={(e: any) => onEndDateChange(e.target.value)} className={cn("px-3 py-2.5 text-sm w-[130px] border rounded-xl", theme.inputBg, theme.border, theme.textMuted)} />
+              <input type="date" value={startDate} onChange={(e: any) => onStartDateChange(e.target.value)} className={cn("px-3 py-2 text-sm w-[120px] border rounded-xl", theme.inputBg, theme.border, theme.textMuted)} />
+              <span className={cn("text-xs", theme.textSub)}>~</span>
+              <input type="date" value={endDate} onChange={(e: any) => onEndDateChange(e.target.value)} className={cn("px-3 py-2 text-sm w-[120px] border rounded-xl", theme.inputBg, theme.border, theme.textMuted)} />
 
-              <button onClick={onLoadClips} className="px-5 py-2.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-[#21DBA4]/10">
-                <RefreshCw size={16} /> {language === 'ko' ? '조회' : 'Load'}
+              <button onClick={onLoadClips} className="ml-auto px-4 py-2 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-[#21DBA4]/10">
+                <RefreshCw size={14} /> {language === 'ko' ? '조회' : 'Load'}
               </button>
-            </div>
-
-            {/* Clip List */}
-            <div className={cn("flex-1 border rounded-2xl overflow-hidden flex flex-col max-h-[320px]", theme.itemBg, theme.border)}>
-              <div className={cn("p-3 border-b flex justify-between items-center", isDark ? "bg-gray-900 border-gray-800" : "bg-gray-100 border-gray-200")}>
-                <span className={cn("text-xs font-bold pl-2", theme.textSub)}>
-                  {language === 'ko' ? `검색 결과 ${clips.length}건` : `${clips.length} clips found`}
-                </span>
-                <button onClick={onSelectAll} className="text-xs font-bold text-[#21DBA4] hover:underline pr-2">
-                  {language === 'ko' ? '전체 선택' : 'Select All'}
-                </button>
-              </div>
-
-              <div className="overflow-y-auto p-2 space-y-2 flex-1">
-                {clips.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Search size={20} className={cn("mb-3", theme.textSub)} />
-                    <p className={cn("text-sm font-medium", theme.textMuted)}>{language === 'ko' ? '클립을 불러오세요' : 'Load clips to start'}</p>
-                  </div>
-                ) : clips.map((clip: any) => (
-                  <div
-                    key={clip.id}
-                    onClick={() => onToggleClip(clip.id)}
-                    className={cn(
-                      "group/item flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all",
-                      selectedClips.includes(clip.id)
-                        ? "bg-[#21DBA4]/10 border-[#21DBA4] shadow-[inset_0_0_10px_rgba(33,219,164,0.05)]"
-                        : cn(isDark ? "bg-gray-800/20" : "bg-white", theme.border, theme.itemHover)
-                    )}
-                  >
-                    <div className={cn("mt-0.5 transition-colors", selectedClips.includes(clip.id) ? "text-[#21DBA4]" : "text-gray-400")}>
-                      {selectedClips.includes(clip.id) ? <CheckSquare size={18} /> : <Square size={18} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", isDark ? "bg-gray-800 text-gray-400 border-gray-700" : "bg-gray-100 text-gray-600 border-gray-200")}>
-                          {clip.tags?.[0] || 'Clip'}
-                        </span>
-                      </div>
-                      <h4 className={cn("text-sm font-bold leading-snug truncate", selectedClips.includes(clip.id) ? theme.text : theme.textMuted)}>
-                        {clip.title || 'Untitled'}
-                      </h4>
-                    </div>
-                    <button className={cn("p-1.5 rounded-lg transition-colors opacity-0 group-hover/item:opacity-100", isDark ? "text-gray-600 hover:text-white hover:bg-gray-700" : "text-gray-400 hover:text-black hover:bg-gray-200")}>
-                      <Eye size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
 
-          {/* Right: Output Type */}
-          <div className="w-full lg:w-72 flex flex-col">
-            <div className="mb-4">
-              <h4 className={cn("text-sm font-bold mb-2 flex items-center gap-2", theme.textMuted)}>
-                <Layout size={16} /> {language === 'ko' ? '출력 형태 선택' : 'Select Output Type'}
-              </h4>
+          {/* Clip List */}
+          <div className={cn("flex-1 border rounded-2xl overflow-hidden flex flex-col max-h-[240px]", theme.itemBg, theme.border)}>
+            <div className={cn("p-3 border-b flex justify-between items-center", isDark ? "bg-gray-900 border-gray-800" : "bg-gray-100 border-gray-200")}>
+              <span className={cn("text-xs font-bold pl-2", theme.textSub)}>
+                {language === 'ko' ? `검색 결과 ${clips.length}건` : `${clips.length} clips found`}
+              </span>
+              <button onClick={onSelectAll} className="text-xs font-bold text-[#21DBA4] hover:underline pr-2">
+                {language === 'ko' ? '전체 선택' : 'Select All'}
+              </button>
             </div>
 
-            <div className="flex-1 grid grid-cols-1 gap-2.5">
-              {contentTypes.map((type: any) => (
+            <div className="overflow-y-auto p-2 space-y-2 flex-1">
+              {clips.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Search size={20} className={cn("mb-3", theme.textSub)} />
+                  <p className={cn("text-sm font-medium", theme.textMuted)}>{language === 'ko' ? '클립을 불러오세요' : 'Load clips to start'}</p>
+                </div>
+              ) : clips.map((clip: any) => (
                 <div
+                  key={clip.id}
+                  onClick={() => onToggleClip(clip.id)}
+                  className={cn(
+                    "group/item flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all",
+                    selectedClips.includes(clip.id)
+                      ? "bg-[#21DBA4]/10 border-[#21DBA4] shadow-[inset_0_0_10px_rgba(33,219,164,0.05)]"
+                      : cn(isDark ? "bg-gray-800/20" : "bg-white", theme.border, theme.itemHover)
+                  )}
+                >
+                  <div className={cn("mt-0.5 transition-colors", selectedClips.includes(clip.id) ? "text-[#21DBA4]" : "text-gray-400")}>
+                    {selectedClips.includes(clip.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", isDark ? "bg-gray-800 text-gray-400 border-gray-700" : "bg-gray-100 text-gray-600 border-gray-200")}>
+                        {clip.tags?.[0] || 'Clip'}
+                      </span>
+                    </div>
+                    <h4 className={cn("text-sm font-bold leading-snug truncate", selectedClips.includes(clip.id) ? theme.text : theme.textMuted)}>
+                      {clip.title || 'Untitled'}
+                    </h4>
+                  </div>
+                  <button className={cn("p-1.5 rounded-lg transition-colors opacity-0 group-hover/item:opacity-100", isDark ? "text-gray-600 hover:text-white hover:bg-gray-700" : "text-gray-400 hover:text-black hover:bg-gray-200")}>
+                    <Eye size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Output Type - Full Width at Bottom */}
+          <div>
+            <h4 className={cn("text-sm font-bold mb-3 flex items-center gap-2", theme.textMuted)}>
+              <Layout size={16} /> {language === 'ko' ? '출력 형태 선택' : 'Select Output Type'}
+            </h4>
+
+            <div className="flex gap-3">
+              {contentTypes.map((type: any) => (
+                <button
                   key={type.id}
                   onClick={() => onSelectContentType(type.id)}
                   className={cn(
-                    "p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 relative overflow-hidden",
+                    "flex-1 px-4 py-3 rounded-xl border cursor-pointer transition-all flex items-center justify-center gap-2",
                     selectedContentType === type.id
-                      ? "bg-[#21DBA4] text-black border-[#21DBA4] shadow-lg shadow-[#21DBA4]/20"
-                      : cn(isDark ? "bg-gray-800/40" : "bg-white", theme.border, theme.textMuted, "hover:border-gray-500")
+                      ? "bg-[#21DBA4] text-black border-[#21DBA4] shadow-lg shadow-[#21DBA4]/20 font-bold"
+                      : cn(isDark ? "bg-gray-800/40" : "bg-white", theme.border, theme.textMuted, "hover:border-[#21DBA4] hover:text-[#21DBA4]")
                   )}
                 >
-                  {selectedContentType === type.id && <div className="absolute inset-0 bg-white/20 animate-pulse" />}
-                  <div className={cn("p-2 rounded-lg relative z-10", selectedContentType === type.id ? "bg-black/10" : (isDark ? "bg-gray-900" : "bg-gray-100"))}>
-                    {type.icon}
-                  </div>
-                  <div className="flex-1 relative z-10">
-                    <div className="text-sm font-bold">{type.label}</div>
-                    <div className={cn("text-[10px]", selectedContentType === type.id ? "text-black/70" : theme.textSub)}>{type.desc}</div>
-                  </div>
-                  {selectedContentType === type.id && <CheckCircle2 size={18} className="relative z-10" />}
-                </div>
+                  {type.icon}
+                  <span className="text-sm font-medium">{type.label}</span>
+                </button>
               ))}
             </div>
 

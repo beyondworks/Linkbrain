@@ -48,7 +48,7 @@ export const LinkCard = ({ data, onClick, onToggleFavorite, onToggleReadLater, s
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className={`rounded-2xl border transition-all duration-300 group overflow-hidden flex flex-col h-auto cursor-pointer relative
+            className={`rounded-2xl border transition-all duration-300 group overflow-hidden flex flex-col min-h-[360px] cursor-pointer relative
          ${selected ? 'border-[#21DBA4] ring-2 ring-[#21DBA4]/20 shadow-lg' : theme === 'dark' ? 'bg-slate-900 border-slate-800 shadow-sm hover:shadow-xl hover:shadow-slate-900/50' : 'bg-white border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:shadow-slate-200/50'}
       `}
         >
