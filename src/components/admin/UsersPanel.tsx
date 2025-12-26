@@ -15,8 +15,14 @@ import {
     ArrowUpDown,
     Check,
     Clock,
-    Sparkles,
-    Shield
+    Shield,
+    Globe,
+    Youtube,
+    Instagram,
+    Link2,
+    AtSign,
+    Filter,
+    X
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { toast } from 'sonner';
@@ -29,6 +35,10 @@ interface UsersPanelProps {
 
 type SortField = 'email' | 'clipCount' | 'createdAt' | 'lastLoginAt';
 type SortOrder = 'asc' | 'desc';
+type PlanFilter = 'all' | 'master' | 'pro' | 'free';
+
+// Master emails for automatic recognition
+const MASTER_EMAILS = ['beyondworks.br@gmail.com'];
 
 export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
     const { users, usersLoading, fetchUserList, updateUserSubscription, bulkUpdateTrialPeriod } = admin;
@@ -40,6 +50,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
     const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
     const [bulkDays, setBulkDays] = useState<string>('15');
     const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+    const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
     const isDark = theme === 'dark';
 
     // Theme
@@ -68,13 +79,22 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         totalUsers: language === 'ko' ? '전체 유저' : 'Total Users',
         daysLeft: language === 'ko' ? '일 남음' : 'days left',
         expired: language === 'ko' ? '만료됨' : 'Expired',
-        selectAll: language === 'ko' ? '전체 선택' : 'Select All',
-        deselectAll: language === 'ko' ? '전체 해제' : 'Deselect All',
         selected: language === 'ko' ? '명 선택됨' : ' selected',
-        bulkAdjust: language === 'ko' ? '일괄 기간 조정' : 'Bulk Adjust Period',
+        bulkAdjust: language === 'ko' ? '체험 기간' : 'Trial Period',
         days: language === 'ko' ? '일' : 'days',
         apply: language === 'ko' ? '적용' : 'Apply',
-        changePlan: language === 'ko' ? '플랜 변경' : 'Change Plan'
+        changePlan: language === 'ko' ? '플랜 변경' : 'Change Plan',
+        platforms: language === 'ko' ? '플랫폼별 클립' : 'Clips by Platform',
+        trialEnd: language === 'ko' ? '체험 종료일' : 'Trial Ends',
+        userId: language === 'ko' ? '유저 ID' : 'User ID',
+        filteringBy: language === 'ko' ? '필터' : 'Filter',
+        clearFilter: language === 'ko' ? '필터 해제' : 'Clear'
+    };
+
+    // Get effective tier (considering master emails)
+    const getEffectiveTier = (user: typeof users[0]): 'free' | 'pro' | 'master' => {
+        if (MASTER_EMAILS.includes(user.email)) return 'master';
+        return user.subscriptionTier || 'free';
     };
 
     const handleSort = (field: SortField) => {
@@ -127,17 +147,28 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         setSelectedUsers(newSet);
     };
 
-    const toggleSelectAll = () => {
-        if (selectedUsers.size === filteredUsers.length) {
-            setSelectedUsers(new Set());
-        } else {
-            setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
-        }
-    };
+    // Users with effective tier applied
+    const usersWithTier = useMemo(() => users.map(user => ({
+        ...user,
+        effectiveTier: getEffectiveTier(user)
+    })), [users]);
 
-    const filteredUsers = useMemo(() => users
-        .filter(user => user.email.toLowerCase().includes(searchQuery.toLowerCase()))
-        .sort((a, b) => {
+    // Filter and sort
+    const filteredUsers = useMemo(() => {
+        let result = usersWithTier;
+
+        // Plan filter
+        if (planFilter !== 'all') {
+            result = result.filter(user => user.effectiveTier === planFilter);
+        }
+
+        // Search filter
+        if (searchQuery) {
+            result = result.filter(user => user.email.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+
+        // Sort
+        result = [...result].sort((a, b) => {
             let cmp = 0;
             switch (sortField) {
                 case 'email': cmp = a.email.localeCompare(b.email); break;
@@ -146,11 +177,30 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 case 'lastLoginAt': cmp = new Date(a.lastLoginAt || 0).getTime() - new Date(b.lastLoginAt || 0).getTime(); break;
             }
             return sortOrder === 'asc' ? cmp : -cmp;
-        }), [users, searchQuery, sortField, sortOrder]);
+        });
+
+        return result;
+    }, [usersWithTier, searchQuery, sortField, sortOrder, planFilter]);
+
+    const toggleSelectAll = () => {
+        if (selectedUsers.size === filteredUsers.length) {
+            setSelectedUsers(new Set());
+        } else {
+            setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+        }
+    };
 
     const formatDate = (dateStr: string | undefined) => {
         if (!dateStr) return '-';
         return new Date(dateStr).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+    };
+
+    const formatFullDate = (dateStr: string | undefined) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
     };
 
     const getTrialDaysRemaining = (trialEndDate: string | undefined): number | null => {
@@ -161,18 +211,19 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         return diff;
     };
 
-    const getPlanBadge = (user: typeof users[0]) => {
-        if (user.subscriptionTier === 'master') {
+    const getPlanBadge = (user: typeof filteredUsers[0]) => {
+        const tier = user.effectiveTier;
+        if (tier === 'master') {
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-purple-500/15 text-purple-500">
-                    <Shield size={10} /> Master
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-500">
+                    <Shield size={11} /> Master
                 </span>
             );
         }
-        if (user.subscriptionTier === 'pro') {
+        if (tier === 'pro') {
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-amber-500/15 text-amber-500">
-                    <Crown size={10} /> Pro
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-500">
+                    <Crown size={11} /> Pro
                 </span>
             );
         }
@@ -180,28 +231,28 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         const daysLeft = getTrialDaysRemaining(user.trialEndDate);
         if (daysLeft !== null && daysLeft > 0) {
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-blue-500/15 text-blue-500">
-                    <Clock size={10} /> {daysLeft}{t.daysLeft}
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-500">
+                    <Clock size={11} /> {daysLeft}{t.daysLeft}
                 </span>
             );
         }
         if (daysLeft !== null && daysLeft <= 0) {
             return (
-                <span className={cn("inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold",
+                <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold",
                     isDark ? "bg-red-500/15 text-red-400" : "bg-red-100 text-red-600")}>
-                    <Clock size={10} /> {t.expired}
+                    <Clock size={11} /> {t.expired}
                 </span>
             );
         }
-        return <span className={cn("text-xs font-medium", textSub)}>Free</span>;
+        return <span className={cn("text-xs font-medium px-2.5 py-1", textSub)}>Free</span>;
     };
 
     // Stats
     const stats = useMemo(() => ({
-        master: users.filter(u => u.subscriptionTier === 'master').length,
-        pro: users.filter(u => u.subscriptionTier === 'pro').length,
-        free: users.filter(u => u.subscriptionTier !== 'pro' && u.subscriptionTier !== 'master').length
-    }), [users]);
+        master: usersWithTier.filter(u => u.effectiveTier === 'master').length,
+        pro: usersWithTier.filter(u => u.effectiveTier === 'pro').length,
+        free: usersWithTier.filter(u => u.effectiveTier === 'free').length
+    }), [usersWithTier]);
 
     if (usersLoading && users.length === 0) {
         return (
@@ -233,60 +284,115 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 </div>
             </div>
 
-            {/* Stats */}
-            <div className={cn("rounded-2xl border p-5 flex flex-wrap items-center justify-between gap-4", card, cardBorder)}>
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                        <User size={20} className="text-white" />
+            {/* Stats with Clickable Filters */}
+            <div className={cn("rounded-2xl border p-5", card, cardBorder)}>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                            <User size={20} className="text-white" />
+                        </div>
+                        <div>
+                            <p className={cn("text-3xl font-bold tabular-nums", text)}>{users.length}</p>
+                            <p className={cn("text-xs", textSub)}>{t.totalUsers}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className={cn("text-3xl font-bold tabular-nums", text)}>{users.length}</p>
-                        <p className={cn("text-xs", textSub)}>{t.totalUsers}</p>
+                    <div className="flex items-center gap-2">
+                        {/* Master */}
+                        <button
+                            onClick={() => setPlanFilter(planFilter === 'master' ? 'all' : 'master')}
+                            className={cn(
+                                "flex flex-col items-center px-4 py-2 rounded-xl transition-all cursor-pointer border-2",
+                                planFilter === 'master'
+                                    ? "border-purple-500 bg-purple-500/10"
+                                    : "border-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
+                            )}>
+                            <p className="text-xl font-bold text-purple-500 tabular-nums">{stats.master}</p>
+                            <p className={cn("text-xs", textSub)}>Master</p>
+                        </button>
+                        {/* Pro */}
+                        <button
+                            onClick={() => setPlanFilter(planFilter === 'pro' ? 'all' : 'pro')}
+                            className={cn(
+                                "flex flex-col items-center px-4 py-2 rounded-xl transition-all cursor-pointer border-2",
+                                planFilter === 'pro'
+                                    ? "border-[#21DBA4] bg-[#21DBA4]/10"
+                                    : "border-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
+                            )}>
+                            <p className="text-xl font-bold text-[#21DBA4] tabular-nums">{stats.pro}</p>
+                            <p className={cn("text-xs", textSub)}>Pro</p>
+                        </button>
+                        {/* Free */}
+                        <button
+                            onClick={() => setPlanFilter(planFilter === 'free' ? 'all' : 'free')}
+                            className={cn(
+                                "flex flex-col items-center px-4 py-2 rounded-xl transition-all cursor-pointer border-2",
+                                planFilter === 'free'
+                                    ? "border-gray-400 bg-gray-400/10"
+                                    : "border-transparent hover:bg-gray-100 dark:hover:bg-gray-800"
+                            )}>
+                            <p className={cn("text-xl font-bold tabular-nums", textMuted)}>{stats.free}</p>
+                            <p className={cn("text-xs", textSub)}>Free</p>
+                        </button>
                     </div>
                 </div>
-                <div className="flex items-center gap-6">
-                    <div className="text-center">
-                        <p className="text-xl font-bold text-purple-500 tabular-nums">{stats.master}</p>
-                        <p className={cn("text-xs", textSub)}>Master</p>
+
+                {/* Active Filter Indicator */}
+                {planFilter !== 'all' && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                        <Filter size={14} className={textSub} />
+                        <span className={cn("text-sm", textMuted)}>{t.filteringBy}:</span>
+                        <span className={cn(
+                            "px-2 py-0.5 rounded-full text-xs font-medium",
+                            planFilter === 'master' ? "bg-purple-500/15 text-purple-500" :
+                                planFilter === 'pro' ? "bg-[#21DBA4]/15 text-[#21DBA4]" :
+                                    "bg-gray-500/15 text-gray-500"
+                        )}>
+                            {planFilter.charAt(0).toUpperCase() + planFilter.slice(1)} ({filteredUsers.length})
+                        </span>
+                        <button
+                            onClick={() => setPlanFilter('all')}
+                            className={cn("text-xs px-2 py-0.5 rounded-lg", isDark ? "hover:bg-white/10" : "hover:bg-black/5", textSub)}>
+                            {t.clearFilter}
+                        </button>
                     </div>
-                    <div className="text-center">
-                        <p className="text-xl font-bold text-[#21DBA4] tabular-nums">{stats.pro}</p>
-                        <p className={cn("text-xs", textSub)}>Pro</p>
-                    </div>
-                    <div className="text-center">
-                        <p className={cn("text-xl font-bold tabular-nums", textMuted)}>{stats.free}</p>
-                        <p className={cn("text-xs", textSub)}>Free</p>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Bulk Actions Bar */}
             {selectedUsers.size > 0 && (
                 <div className={cn("rounded-2xl border p-4 flex flex-wrap items-center justify-between gap-4", card, cardBorder)}>
                     <div className="flex items-center gap-3">
-                        <span className={cn("text-sm font-medium", text)}>
-                            {selectedUsers.size}{t.selected}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center">
+                                <Check size={12} className="text-white" />
+                            </div>
+                            <span className={cn("text-sm font-semibold", text)}>
+                                {selectedUsers.size}{t.selected}
+                            </span>
+                        </div>
                         <button onClick={() => setSelectedUsers(new Set())}
-                            className={cn("text-xs px-3 py-1.5 rounded-lg transition-all", isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10", textMuted)}>
-                            {t.deselectAll}
+                            className={cn("text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all",
+                                isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10", textMuted)}>
+                            <X size={12} /> {language === 'ko' ? '선택 해제' : 'Clear'}
                         </button>
                     </div>
                     <div className="flex items-center gap-3">
-                        <span className={cn("text-xs", textSub)}>{t.bulkAdjust}:</span>
-                        <input
-                            type="number"
-                            value={bulkDays}
-                            onChange={(e) => setBulkDays(e.target.value)}
-                            className={cn("w-16 px-2 py-1.5 rounded-lg border text-sm text-center",
-                                isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200", text)}
-                            min="0"
-                        />
-                        <span className={cn("text-xs", textSub)}>{t.days}</span>
+                        <span className={cn("text-xs font-medium", textSub)}>{t.bulkAdjust}:</span>
+                        <div className="flex items-center gap-1">
+                            <input
+                                type="number"
+                                value={bulkDays}
+                                onChange={(e) => setBulkDays(e.target.value)}
+                                className={cn("w-16 px-3 py-2 rounded-lg border text-sm text-center font-medium",
+                                    isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200", text)}
+                                min="0"
+                            />
+                            <span className={cn("text-sm", textSub)}>{t.days}</span>
+                        </div>
                         <button
                             onClick={handleBulkTrialUpdate}
                             disabled={isBulkUpdating}
-                            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium bg-[#21DBA4] text-white hover:bg-[#1BC290] transition-all disabled:opacity-50">
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#21DBA4] text-white hover:bg-[#1BC290] transition-all disabled:opacity-50">
                             {isBulkUpdating ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                             {t.apply}
                         </button>
@@ -299,7 +405,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 <table className="w-full">
                     <thead className={tableBg}>
                         <tr className={cn("text-xs font-semibold uppercase tracking-wider", textSub)}>
-                            <th className="w-10 px-4 py-4">
+                            <th className="w-12 px-4 py-4">
                                 <button
                                     onClick={toggleSelectAll}
                                     className={cn("w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
@@ -310,33 +416,40 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                     {selectedUsers.size === filteredUsers.length && filteredUsers.length > 0 && <Check size={12} />}
                                 </button>
                             </th>
-                            <th className="text-left px-4 py-4 w-[30%]">
+                            <th className="text-left px-4 py-4">
                                 <button onClick={() => handleSort('email')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
                                     {t.email} <ArrowUpDown size={12} />
                                 </button>
                             </th>
-                            <th className="text-left px-4 py-4 w-[10%]">
-                                <button onClick={() => handleSort('clipCount')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
+                            <th className="text-center px-4 py-4 w-20">
+                                <button onClick={() => handleSort('clipCount')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors mx-auto">
                                     {t.clips} <ArrowUpDown size={12} />
                                 </button>
                             </th>
-                            <th className="text-left px-4 py-4 w-[15%]">{t.plan}</th>
-                            <th className="text-left px-4 py-4 w-[18%]">
-                                <button onClick={() => handleSort('createdAt')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
+                            <th className="text-center px-4 py-4 w-28">{t.plan}</th>
+                            <th className="text-center px-4 py-4 w-32">
+                                <button onClick={() => handleSort('createdAt')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors mx-auto">
                                     {t.joined} <ArrowUpDown size={12} />
                                 </button>
                             </th>
-                            <th className="text-right px-5 py-4 w-[17%]">{t.lastLogin}</th>
+                            <th className="text-center px-5 py-4 w-32">
+                                <button onClick={() => handleSort('lastLoginAt')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors mx-auto">
+                                    {t.lastLogin} <ArrowUpDown size={12} />
+                                </button>
+                            </th>
+                            <th className="w-10"></th>
                         </tr>
                     </thead>
                     <tbody className={cn("divide-y", divider)}>
                         {filteredUsers.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-12"><p className={textSub}>{t.noUsers}</p></td></tr>
+                            <tr><td colSpan={7} className="text-center py-12"><p className={textSub}>{t.noUsers}</p></td></tr>
                         ) : (
                             filteredUsers.map(user => (
                                 <React.Fragment key={user.id}>
-                                    <tr className={cn("cursor-pointer transition-colors", rowHover, selectedUsers.has(user.id) && (isDark ? "bg-[#21DBA4]/10" : "bg-[#21DBA4]/5"))}
-                                        onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}>
+                                    <tr className={cn("transition-colors", rowHover,
+                                        selectedUsers.has(user.id) && (isDark ? "bg-[#21DBA4]/10" : "bg-[#21DBA4]/5"),
+                                        expandedUser === user.id && (isDark ? "bg-gray-800/50" : "bg-gray-50")
+                                    )}>
                                         <td className="px-4 py-4">
                                             <button
                                                 onClick={(e) => toggleUserSelection(user.id, e)}
@@ -351,72 +464,166 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                         <td className="px-4 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className={cn(
-                                                    "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
-                                                    user.subscriptionTier === 'master'
+                                                    "w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0",
+                                                    user.effectiveTier === 'master'
                                                         ? "bg-gradient-to-br from-purple-400 to-purple-600 text-white"
-                                                        : user.subscriptionTier === 'pro'
+                                                        : user.effectiveTier === 'pro'
                                                             ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white"
                                                             : isDark ? "bg-white/10 text-gray-400" : "bg-gray-100 text-gray-500"
                                                 )}>
                                                     {user.email.charAt(0).toUpperCase()}
                                                 </div>
-                                                <span className={cn("text-sm font-medium truncate max-w-[200px]", text)}>{user.email}</span>
+                                                <span className={cn("text-sm font-medium", text)}>{user.email}</span>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-4">
+                                        <td className="px-4 py-4 text-center">
                                             <span className={cn("text-sm font-bold tabular-nums", text)}>{user.clipCount}</span>
                                         </td>
-                                        <td className="px-4 py-4">
+                                        <td className="px-4 py-4 text-center">
                                             {getPlanBadge(user)}
                                         </td>
-                                        <td className="px-4 py-4">
+                                        <td className="px-4 py-4 text-center">
                                             <span className={cn("text-sm", textMuted)}>{formatDate(user.createdAt)}</span>
                                         </td>
-                                        <td className="px-5 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <span className={cn("text-sm", textMuted)}>{formatDate(user.lastLoginAt)}</span>
-                                                {expandedUser === user.id ? <ChevronUp size={14} className={textSub} /> : <ChevronDown size={14} className={textSub} />}
-                                            </div>
+                                        <td className="px-5 py-4 text-center">
+                                            <span className={cn("text-sm", textMuted)}>{formatDate(user.lastLoginAt)}</span>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <button
+                                                onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
+                                                className={cn("p-1.5 rounded-lg transition-all", isDark ? "hover:bg-white/10" : "hover:bg-black/5")}>
+                                                {expandedUser === user.id ? <ChevronUp size={16} className={textSub} /> : <ChevronDown size={16} className={textSub} />}
+                                            </button>
                                         </td>
                                     </tr>
+                                    {/* Expanded Detail Row */}
                                     {expandedUser === user.id && (
-                                        <tr className={isDark ? 'bg-gray-900/30' : 'bg-gray-50/50'}>
-                                            <td colSpan={6} className="px-5 py-5">
-                                                <div className="flex flex-col sm:flex-row gap-6">
-                                                    <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                                        <div>
-                                                            <p className={cn("text-xs mb-1 flex items-center gap-1", textSub)}><Mail size={10} /> {t.email}</p>
-                                                            <p className={cn("text-sm font-medium", text)}>{user.email}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className={cn("text-xs mb-1 flex items-center gap-1", textSub)}><FileText size={10} /> {t.clips}</p>
-                                                            <p className={cn("text-sm font-bold tabular-nums", text)}>{user.clipCount}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className={cn("text-xs mb-1 flex items-center gap-1", textSub)}><Calendar size={10} /> {t.joined}</p>
-                                                            <p className={cn("text-sm", text)}>{formatDate(user.createdAt)}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className={cn("text-xs mb-1 flex items-center gap-1", textSub)}><Calendar size={10} /> {t.lastLogin}</p>
-                                                            <p className={cn("text-sm", text)}>{formatDate(user.lastLoginAt)}</p>
+                                        <tr className={isDark ? 'bg-gray-900/50' : 'bg-gray-50'}>
+                                            <td colSpan={7} className="px-6 py-6">
+                                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                                    {/* Basic Info */}
+                                                    <div className={cn("p-4 rounded-xl border", isDark ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200")}>
+                                                        <h4 className={cn("text-xs font-semibold uppercase tracking-wider mb-4", textSub)}>
+                                                            {language === 'ko' ? '기본 정보' : 'Basic Info'}
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <Mail size={14} className={textSub} />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className={cn("text-xs", textSub)}>{t.email}</p>
+                                                                    <p className={cn("text-sm font-medium truncate", text)}>{user.email}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <User size={14} className={textSub} />
+                                                                <div>
+                                                                    <p className={cn("text-xs", textSub)}>{t.userId}</p>
+                                                                    <p className={cn("text-xs font-mono", textMuted)}>{user.id}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <Calendar size={14} className={textSub} />
+                                                                <div>
+                                                                    <p className={cn("text-xs", textSub)}>{t.joined}</p>
+                                                                    <p className={cn("text-sm", text)}>{formatFullDate(user.createdAt)}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <Clock size={14} className={textSub} />
+                                                                <div>
+                                                                    <p className={cn("text-xs", textSub)}>{t.lastLogin}</p>
+                                                                    <p className={cn("text-sm", text)}>{formatFullDate(user.lastLoginAt)}</p>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={cn("text-xs", textSub)}>{t.changePlan}:</span>
-                                                        <select
-                                                            value={user.subscriptionTier || 'free'}
-                                                            onChange={(e) => handleUpdateSubscription(user.id, e.target.value as 'free' | 'pro' | 'master')}
-                                                            disabled={updatingUser === user.id}
-                                                            className={cn(
-                                                                "px-3 py-2 rounded-lg border text-sm font-medium transition-all cursor-pointer",
-                                                                isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200",
-                                                                text
-                                                            )}>
-                                                            <option value="free">Free</option>
-                                                            <option value="pro">Pro</option>
-                                                            <option value="master">Master</option>
-                                                        </select>
-                                                        {updatingUser === user.id && <Loader2 size={14} className="animate-spin text-[#21DBA4]" />}
+
+                                                    {/* Platform Stats */}
+                                                    <div className={cn("p-4 rounded-xl border", isDark ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200")}>
+                                                        <h4 className={cn("text-xs font-semibold uppercase tracking-wider mb-4", textSub)}>
+                                                            {t.platforms}
+                                                        </h4>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div className={cn("flex items-center gap-2 p-2 rounded-lg", isDark ? "bg-red-500/10" : "bg-red-50")}>
+                                                                <Youtube size={16} className="text-red-500" />
+                                                                <div>
+                                                                    <p className="text-lg font-bold text-red-500 tabular-nums">{user.platforms.youtube}</p>
+                                                                    <p className={cn("text-xs", textSub)}>YouTube</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className={cn("flex items-center gap-2 p-2 rounded-lg", isDark ? "bg-pink-500/10" : "bg-pink-50")}>
+                                                                <Instagram size={16} className="text-pink-500" />
+                                                                <div>
+                                                                    <p className="text-lg font-bold text-pink-500 tabular-nums">{user.platforms.instagram}</p>
+                                                                    <p className={cn("text-xs", textSub)}>Instagram</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className={cn("flex items-center gap-2 p-2 rounded-lg", isDark ? "bg-gray-500/10" : "bg-gray-50")}>
+                                                                <AtSign size={16} className={textMuted} />
+                                                                <div>
+                                                                    <p className={cn("text-lg font-bold tabular-nums", textMuted)}>{user.platforms.threads}</p>
+                                                                    <p className={cn("text-xs", textSub)}>Threads</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className={cn("flex items-center gap-2 p-2 rounded-lg", isDark ? "bg-blue-500/10" : "bg-blue-50")}>
+                                                                <Globe size={16} className="text-blue-500" />
+                                                                <div>
+                                                                    <p className="text-lg font-bold text-blue-500 tabular-nums">{user.platforms.web}</p>
+                                                                    <p className={cn("text-xs", textSub)}>Web</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className={cn("text-sm", textSub)}>Total</span>
+                                                                <span className={cn("text-lg font-bold", text)}>{user.clipCount}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Subscription Management */}
+                                                    <div className={cn("p-4 rounded-xl border", isDark ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200")}>
+                                                        <h4 className={cn("text-xs font-semibold uppercase tracking-wider mb-4", textSub)}>
+                                                            {language === 'ko' ? '구독 관리' : 'Subscription'}
+                                                        </h4>
+                                                        <div className="space-y-4">
+                                                            <div>
+                                                                <p className={cn("text-xs mb-2", textSub)}>{t.changePlan}</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <select
+                                                                        value={user.effectiveTier}
+                                                                        onChange={(e) => handleUpdateSubscription(user.id, e.target.value as 'free' | 'pro' | 'master')}
+                                                                        disabled={updatingUser === user.id}
+                                                                        className={cn(
+                                                                            "flex-1 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all cursor-pointer",
+                                                                            isDark ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200",
+                                                                            text
+                                                                        )}>
+                                                                        <option value="free">🆓 Free</option>
+                                                                        <option value="pro">👑 Pro</option>
+                                                                        <option value="master">🛡️ Master</option>
+                                                                    </select>
+                                                                    {updatingUser === user.id && <Loader2 size={18} className="animate-spin text-[#21DBA4]" />}
+                                                                </div>
+                                                            </div>
+                                                            {user.effectiveTier === 'free' && (
+                                                                <div>
+                                                                    <p className={cn("text-xs mb-2", textSub)}>{t.trialEnd}</p>
+                                                                    <p className={cn("text-sm font-medium", text)}>
+                                                                        {user.trialEndDate ? formatFullDate(user.trialEndDate) : '-'}
+                                                                    </p>
+                                                                    {user.trialEndDate && (
+                                                                        <p className={cn("text-xs mt-1",
+                                                                            getTrialDaysRemaining(user.trialEndDate)! > 0 ? "text-blue-500" : "text-red-500")}>
+                                                                            {getTrialDaysRemaining(user.trialEndDate)! > 0
+                                                                                ? `${getTrialDaysRemaining(user.trialEndDate)}${t.daysLeft}`
+                                                                                : t.expired
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
