@@ -42,6 +42,7 @@ type AIInsightsDashboardProps = {
   language?: 'en' | 'ko';
   onOpenSettings?: () => void;
   onNavigate?: (path: string) => void;
+  onNavigateToUnread?: () => void; // Navigate to home with unread filter
 };
 
 type ContentType = 'report' | 'article' | 'planning' | 'trend';
@@ -88,15 +89,19 @@ const formatNumber = (num: number): string => {
 // ═══════════════════════════════════════════════════
 
 const StatCard = ({
-  label, value, unit, trend, sub, icon, isDark, theme
+  label, value, unit, trend, sub, icon, isDark, theme, onClick
 }: {
   label: string; value: string; unit: string; trend: string; sub: string;
-  icon: React.ReactNode; isDark: boolean; theme: any;
+  icon: React.ReactNode; isDark: boolean; theme: any; onClick?: () => void;
 }) => (
-  <div className={cn(
-    "col-span-12 md:col-span-4 border rounded-3xl p-5 transition-colors flex items-center justify-between group",
-    theme.card, theme.cardBorder, theme.cardHover
-  )}>
+  <div
+    onClick={onClick}
+    className={cn(
+      "col-span-12 md:col-span-4 border rounded-3xl p-5 transition-colors flex items-center justify-between group",
+      theme.card, theme.cardBorder, theme.cardHover,
+      onClick && "cursor-pointer hover:border-[#21DBA4]/50"
+    )}
+  >
     <div className="flex items-center gap-4">
       <div className={cn(
         "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
@@ -115,6 +120,7 @@ const StatCard = ({
     <div className="flex flex-col items-end">
       <span className="text-xs font-bold text-[#21DBA4] bg-[#21DBA4]/10 px-2 py-0.5 rounded-full mb-1">{trend}</span>
       <span className={cn("text-[10px]", theme.textSub)}>{sub}</span>
+      {onClick && <ChevronRight size={14} className={cn("mt-1", theme.textSub)} />}
     </div>
   </div>
 );
@@ -587,7 +593,7 @@ const UnreadHistoryRow = ({ links, creationHistory, isDark, theme, language }: a
 // ═══════════════════════════════════════════════════
 
 export const AIInsightsDashboard = ({
-  links, categories, theme: themeMode, t, language = 'ko', onOpenSettings,
+  links, categories, theme: themeMode, t, language = 'ko', onOpenSettings, onNavigateToUnread,
 }: AIInsightsDashboardProps) => {
   const { isMaster } = useSubscription();
   const [period, setPeriod] = useState<Period>('weekly');
@@ -615,16 +621,73 @@ export const AIInsightsDashboard = ({
     const cutoff = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
     const recentClips = allActiveLinks.filter(l => { const d = parseDate(l.createdAt); return d && d >= cutoff; });
     const totalClips = allActiveLinks.length;
-    const withSummary = allActiveLinks.filter(l => l.summary).length;
-    const savedTime = Math.round(withSummary * 3);
-    const ideasCount = allActiveLinks.filter(l => l.tags?.length > 0).length;
+
+    // Unread clips - clips without lastViewedAt
+    const unreadClips = allActiveLinks.filter(l => !l.lastViewedAt);
+    const unreadCount = unreadClips.length;
+    const recentUnread = recentClips.filter(l => !l.lastViewedAt).length;
+
+    // Keyword engagement analysis
+    const tagStats: Record<string, { total: number; read: number }> = {};
+    allActiveLinks.forEach(l => {
+      const isRead = !!l.lastViewedAt;
+      (l.tags || []).forEach((tag: string) => {
+        if (!tagStats[tag]) tagStats[tag] = { total: 0, read: 0 };
+        tagStats[tag].total++;
+        if (isRead) tagStats[tag].read++;
+      });
+    });
+
+    // Find highest and lowest engagement tags
+    const tagEntries = Object.entries(tagStats).filter(([_, v]) => v.total >= 2);
+    const sortedByEngagement = tagEntries.sort((a, b) => (b[1].read / b[1].total) - (a[1].read / a[1].total));
+    const highEngagementTag = sortedByEngagement[0];
+    const lowEngagementTag = sortedByEngagement[sortedByEngagement.length - 1];
+
+    // Calculate overall engagement rate
+    const readClips = allActiveLinks.filter(l => l.lastViewedAt).length;
+    const engagementRate = totalClips > 0 ? Math.round((readClips / totalClips) * 100) : 0;
+
+    // Build engagement sub text
+    let engagementSub = '';
+    if (highEngagementTag && lowEngagementTag && highEngagementTag[0] !== lowEngagementTag[0]) {
+      const highRate = Math.round((highEngagementTag[1].read / highEngagementTag[1].total) * 100);
+      const lowRate = Math.round((lowEngagementTag[1].read / lowEngagementTag[1].total) * 100);
+      engagementSub = language === 'ko'
+        ? `${highEngagementTag[0]} ${highRate}%↑ / ${lowEngagementTag[0]} ${lowRate}%↓`
+        : `${highEngagementTag[0]} ${highRate}%↑ / ${lowEngagementTag[0]} ${lowRate}%↓`;
+    } else {
+      engagementSub = language === 'ko' ? '태그별 열람율 분석' : 'Tag engagement analysis';
+    }
 
     return [
-      { label: language === 'ko' ? '영구 보존된 지식' : 'Saved Knowledge', value: formatNumber(totalClips), unit: language === 'ko' ? '개' : 'clips', trend: `+${recentClips.length}`, sub: language === 'ko' ? '원본 소실 걱정 없음' : 'Permanently saved', icon: <ShieldCheck size={20} className="text-[#21DBA4]" /> },
-      { label: language === 'ko' ? '절약한 읽기 시간' : 'Time Saved', value: formatNumber(savedTime), unit: language === 'ko' ? '시간' : 'hrs', trend: `+${Math.round(recentClips.filter(l => l.summary).length * 3)}h`, sub: language === 'ko' ? 'AI 요약 활용' : 'AI summaries', icon: <Clock size={20} className="text-blue-400" /> },
-      { label: language === 'ko' ? '실행 아이디어' : 'Action Ideas', value: formatNumber(ideasCount), unit: language === 'ko' ? '개' : 'items', trend: `+${recentClips.filter(l => l.tags?.length > 0).length}`, sub: language === 'ko' ? '기획서 생성 가능' : 'Ready to create', icon: <Zap size={20} className="text-orange-400" /> },
+      {
+        label: language === 'ko' ? '영구 보존된 지식' : 'Saved Knowledge',
+        value: formatNumber(totalClips),
+        unit: language === 'ko' ? '개' : 'clips',
+        trend: `+${recentClips.length}`,
+        sub: language === 'ko' ? '원본 소실 걱정 없음' : 'Permanently saved',
+        icon: <ShieldCheck size={20} className="text-[#21DBA4]" />
+      },
+      {
+        label: language === 'ko' ? '읽지 않은 클립' : 'Unread Clips',
+        value: formatNumber(unreadCount),
+        unit: language === 'ko' ? '개' : 'clips',
+        trend: `+${recentUnread}`,
+        sub: language === 'ko' ? '클릭하여 확인하기' : 'Click to view',
+        icon: <Inbox size={20} className="text-blue-400" />,
+        onClick: onNavigateToUnread
+      },
+      {
+        label: language === 'ko' ? '저장 vs 활용' : 'Save vs Use',
+        value: `${engagementRate}`,
+        unit: '%',
+        trend: readClips > 0 ? `${readClips}/${totalClips}` : '0',
+        sub: engagementSub,
+        icon: <Zap size={20} className="text-orange-400" />
+      },
     ];
-  }, [allActiveLinks, period, language]);
+  }, [allActiveLinks, period, language, onNavigateToUnread]);
 
   const availableTags = useMemo(() => {
     const tagSet = new Set<string>();
