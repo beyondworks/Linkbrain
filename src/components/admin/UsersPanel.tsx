@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import {
     Search,
@@ -12,10 +12,14 @@ import {
     Mail,
     Calendar,
     FileText,
-    X,
-    ArrowUpDown
+    ArrowUpDown,
+    Check,
+    Clock,
+    Sparkles,
+    Shield
 } from 'lucide-react';
 import { cn } from '../ui/utils';
+import { toast } from 'sonner';
 
 interface UsersPanelProps {
     theme: 'light' | 'dark';
@@ -27,12 +31,15 @@ type SortField = 'email' | 'clipCount' | 'createdAt' | 'lastLoginAt';
 type SortOrder = 'asc' | 'desc';
 
 export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
-    const { users, usersLoading, fetchUserList, updateUserSubscription } = admin;
+    const { users, usersLoading, fetchUserList, updateUserSubscription, bulkUpdateTrialPeriod } = admin;
     const [searchQuery, setSearchQuery] = useState('');
     const [sortField, setSortField] = useState<SortField>('clipCount');
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
     const [expandedUser, setExpandedUser] = useState<string | null>(null);
     const [updatingUser, setUpdatingUser] = useState<string | null>(null);
+    const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+    const [bulkDays, setBulkDays] = useState<string>('15');
+    const [isBulkUpdating, setIsBulkUpdating] = useState(false);
     const isDark = theme === 'dark';
 
     // Theme
@@ -56,11 +63,18 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         plan: language === 'ko' ? '플랜' : 'Plan',
         joined: language === 'ko' ? '가입일' : 'Joined',
         lastLogin: language === 'ko' ? '마지막 접속' : 'Last Login',
-        grantPro: language === 'ko' ? 'Pro 부여' : 'Grant Pro',
-        revokePro: language === 'ko' ? 'Pro 해제' : 'Revoke Pro',
         loading: language === 'ko' ? '로딩 중...' : 'Loading...',
         noUsers: language === 'ko' ? '유저가 없습니다' : 'No users found',
-        totalUsers: language === 'ko' ? '전체 유저' : 'Total Users'
+        totalUsers: language === 'ko' ? '전체 유저' : 'Total Users',
+        daysLeft: language === 'ko' ? '일 남음' : 'days left',
+        expired: language === 'ko' ? '만료됨' : 'Expired',
+        selectAll: language === 'ko' ? '전체 선택' : 'Select All',
+        deselectAll: language === 'ko' ? '전체 해제' : 'Deselect All',
+        selected: language === 'ko' ? '명 선택됨' : ' selected',
+        bulkAdjust: language === 'ko' ? '일괄 기간 조정' : 'Bulk Adjust Period',
+        days: language === 'ko' ? '일' : 'days',
+        apply: language === 'ko' ? '적용' : 'Apply',
+        changePlan: language === 'ko' ? '플랜 변경' : 'Change Plan'
     };
 
     const handleSort = (field: SortField) => {
@@ -68,14 +82,60 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         else { setSortField(field); setSortOrder('desc'); }
     };
 
-    const handleUpdateSubscription = async (userId: string, tier: 'free' | 'pro') => {
+    const handleUpdateSubscription = async (userId: string, tier: 'free' | 'pro' | 'master') => {
         setUpdatingUser(userId);
-        try { await updateUserSubscription(userId, tier); }
-        catch (error) { console.error('Failed:', error); }
-        finally { setUpdatingUser(null); }
+        try {
+            await updateUserSubscription(userId, tier);
+            toast.success(language === 'ko' ? '플랜이 변경되었습니다' : 'Plan updated');
+        } catch (error) {
+            console.error('Failed:', error);
+            toast.error(language === 'ko' ? '변경 실패' : 'Update failed');
+        } finally {
+            setUpdatingUser(null);
+        }
     };
 
-    const filteredUsers = users
+    const handleBulkTrialUpdate = async () => {
+        if (selectedUsers.size === 0) return;
+        const days = parseInt(bulkDays);
+        if (isNaN(days) || days < 0) {
+            toast.error(language === 'ko' ? '올바른 일수를 입력하세요' : 'Enter valid days');
+            return;
+        }
+        setIsBulkUpdating(true);
+        try {
+            await bulkUpdateTrialPeriod(Array.from(selectedUsers), days);
+            toast.success(language === 'ko'
+                ? `${selectedUsers.size}명의 체험 기간이 ${days}일로 설정되었습니다`
+                : `Trial period set to ${days} days for ${selectedUsers.size} users`);
+            setSelectedUsers(new Set());
+        } catch (error) {
+            toast.error(language === 'ko' ? '일괄 수정 실패' : 'Bulk update failed');
+        } finally {
+            setIsBulkUpdating(false);
+        }
+    };
+
+    const toggleUserSelection = (userId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newSet = new Set(selectedUsers);
+        if (newSet.has(userId)) {
+            newSet.delete(userId);
+        } else {
+            newSet.add(userId);
+        }
+        setSelectedUsers(newSet);
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedUsers.size === filteredUsers.length) {
+            setSelectedUsers(new Set());
+        } else {
+            setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+        }
+    };
+
+    const filteredUsers = useMemo(() => users
         .filter(user => user.email.toLowerCase().includes(searchQuery.toLowerCase()))
         .sort((a, b) => {
             let cmp = 0;
@@ -86,12 +146,62 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 case 'lastLoginAt': cmp = new Date(a.lastLoginAt || 0).getTime() - new Date(b.lastLoginAt || 0).getTime(); break;
             }
             return sortOrder === 'asc' ? cmp : -cmp;
-        });
+        }), [users, searchQuery, sortField, sortOrder]);
 
     const formatDate = (dateStr: string | undefined) => {
         if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        return new Date(dateStr).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
     };
+
+    const getTrialDaysRemaining = (trialEndDate: string | undefined): number | null => {
+        if (!trialEndDate) return null;
+        const endDate = new Date(trialEndDate);
+        const now = new Date();
+        const diff = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return diff;
+    };
+
+    const getPlanBadge = (user: typeof users[0]) => {
+        if (user.subscriptionTier === 'master') {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-purple-500/15 text-purple-500">
+                    <Shield size={10} /> Master
+                </span>
+            );
+        }
+        if (user.subscriptionTier === 'pro') {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-amber-500/15 text-amber-500">
+                    <Crown size={10} /> Pro
+                </span>
+            );
+        }
+        // Free tier - show trial days
+        const daysLeft = getTrialDaysRemaining(user.trialEndDate);
+        if (daysLeft !== null && daysLeft > 0) {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-blue-500/15 text-blue-500">
+                    <Clock size={10} /> {daysLeft}{t.daysLeft}
+                </span>
+            );
+        }
+        if (daysLeft !== null && daysLeft <= 0) {
+            return (
+                <span className={cn("inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold",
+                    isDark ? "bg-red-500/15 text-red-400" : "bg-red-100 text-red-600")}>
+                    <Clock size={10} /> {t.expired}
+                </span>
+            );
+        }
+        return <span className={cn("text-xs font-medium", textSub)}>Free</span>;
+    };
+
+    // Stats
+    const stats = useMemo(() => ({
+        master: users.filter(u => u.subscriptionTier === 'master').length,
+        pro: users.filter(u => u.subscriptionTier === 'pro').length,
+        free: users.filter(u => u.subscriptionTier !== 'pro' && u.subscriptionTier !== 'master').length
+    }), [users]);
 
     if (usersLoading && users.length === 0) {
         return (
@@ -136,28 +246,76 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="text-center">
-                        <p className="text-xl font-bold text-[#21DBA4] tabular-nums">{users.filter(u => u.subscriptionTier === 'pro').length}</p>
+                        <p className="text-xl font-bold text-purple-500 tabular-nums">{stats.master}</p>
+                        <p className={cn("text-xs", textSub)}>Master</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-xl font-bold text-[#21DBA4] tabular-nums">{stats.pro}</p>
                         <p className={cn("text-xs", textSub)}>Pro</p>
                     </div>
                     <div className="text-center">
-                        <p className={cn("text-xl font-bold tabular-nums", textMuted)}>{users.filter(u => u.subscriptionTier !== 'pro').length}</p>
+                        <p className={cn("text-xl font-bold tabular-nums", textMuted)}>{stats.free}</p>
                         <p className={cn("text-xs", textSub)}>Free</p>
                     </div>
                 </div>
             </div>
 
+            {/* Bulk Actions Bar */}
+            {selectedUsers.size > 0 && (
+                <div className={cn("rounded-2xl border p-4 flex flex-wrap items-center justify-between gap-4", card, cardBorder)}>
+                    <div className="flex items-center gap-3">
+                        <span className={cn("text-sm font-medium", text)}>
+                            {selectedUsers.size}{t.selected}
+                        </span>
+                        <button onClick={() => setSelectedUsers(new Set())}
+                            className={cn("text-xs px-3 py-1.5 rounded-lg transition-all", isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10", textMuted)}>
+                            {t.deselectAll}
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className={cn("text-xs", textSub)}>{t.bulkAdjust}:</span>
+                        <input
+                            type="number"
+                            value={bulkDays}
+                            onChange={(e) => setBulkDays(e.target.value)}
+                            className={cn("w-16 px-2 py-1.5 rounded-lg border text-sm text-center",
+                                isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200", text)}
+                            min="0"
+                        />
+                        <span className={cn("text-xs", textSub)}>{t.days}</span>
+                        <button
+                            onClick={handleBulkTrialUpdate}
+                            disabled={isBulkUpdating}
+                            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium bg-[#21DBA4] text-white hover:bg-[#1BC290] transition-all disabled:opacity-50">
+                            {isBulkUpdating ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                            {t.apply}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Table */}
             <div className={cn("rounded-2xl border overflow-hidden", card, cardBorder)}>
-                {/* Using HTML table for proper alignment */}
                 <table className="w-full">
                     <thead className={tableBg}>
                         <tr className={cn("text-xs font-semibold uppercase tracking-wider", textSub)}>
-                            <th className="text-left px-5 py-4 w-[35%]">
+                            <th className="w-10 px-4 py-4">
+                                <button
+                                    onClick={toggleSelectAll}
+                                    className={cn("w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                        selectedUsers.size === filteredUsers.length && filteredUsers.length > 0
+                                            ? "bg-[#21DBA4] border-[#21DBA4] text-white"
+                                            : isDark ? "border-gray-600 hover:border-gray-400" : "border-gray-300 hover:border-gray-400"
+                                    )}>
+                                    {selectedUsers.size === filteredUsers.length && filteredUsers.length > 0 && <Check size={12} />}
+                                </button>
+                            </th>
+                            <th className="text-left px-4 py-4 w-[30%]">
                                 <button onClick={() => handleSort('email')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
                                     {t.email} <ArrowUpDown size={12} />
                                 </button>
                             </th>
-                            <th className="text-left px-4 py-4 w-[12%]">
+                            <th className="text-left px-4 py-4 w-[10%]">
                                 <button onClick={() => handleSort('clipCount')} className="flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
                                     {t.clips} <ArrowUpDown size={12} />
                                 </button>
@@ -168,23 +326,37 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                     {t.joined} <ArrowUpDown size={12} />
                                 </button>
                             </th>
-                            <th className="text-right px-5 py-4 w-[20%]">{t.lastLogin}</th>
+                            <th className="text-right px-5 py-4 w-[17%]">{t.lastLogin}</th>
                         </tr>
                     </thead>
                     <tbody className={cn("divide-y", divider)}>
                         {filteredUsers.length === 0 ? (
-                            <tr><td colSpan={5} className="text-center py-12"><p className={textSub}>{t.noUsers}</p></td></tr>
+                            <tr><td colSpan={6} className="text-center py-12"><p className={textSub}>{t.noUsers}</p></td></tr>
                         ) : (
                             filteredUsers.map(user => (
                                 <React.Fragment key={user.id}>
-                                    <tr className={cn("cursor-pointer transition-colors", rowHover)} onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}>
-                                        <td className="px-5 py-4">
+                                    <tr className={cn("cursor-pointer transition-colors", rowHover, selectedUsers.has(user.id) && (isDark ? "bg-[#21DBA4]/10" : "bg-[#21DBA4]/5"))}
+                                        onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}>
+                                        <td className="px-4 py-4">
+                                            <button
+                                                onClick={(e) => toggleUserSelection(user.id, e)}
+                                                className={cn("w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                                    selectedUsers.has(user.id)
+                                                        ? "bg-[#21DBA4] border-[#21DBA4] text-white"
+                                                        : isDark ? "border-gray-600 hover:border-gray-400" : "border-gray-300 hover:border-gray-400"
+                                                )}>
+                                                {selectedUsers.has(user.id) && <Check size={12} />}
+                                            </button>
+                                        </td>
+                                        <td className="px-4 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className={cn(
                                                     "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
-                                                    user.subscriptionTier === 'pro'
-                                                        ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white"
-                                                        : isDark ? "bg-white/10 text-gray-400" : "bg-gray-100 text-gray-500"
+                                                    user.subscriptionTier === 'master'
+                                                        ? "bg-gradient-to-br from-purple-400 to-purple-600 text-white"
+                                                        : user.subscriptionTier === 'pro'
+                                                            ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white"
+                                                            : isDark ? "bg-white/10 text-gray-400" : "bg-gray-100 text-gray-500"
                                                 )}>
                                                     {user.email.charAt(0).toUpperCase()}
                                                 </div>
@@ -195,13 +367,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                             <span className={cn("text-sm font-bold tabular-nums", text)}>{user.clipCount}</span>
                                         </td>
                                         <td className="px-4 py-4">
-                                            {user.subscriptionTier === 'pro' ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-amber-500/15 text-amber-500">
-                                                    <Crown size={10} /> Pro
-                                                </span>
-                                            ) : (
-                                                <span className={cn("text-xs font-medium", textSub)}>Free</span>
-                                            )}
+                                            {getPlanBadge(user)}
                                         </td>
                                         <td className="px-4 py-4">
                                             <span className={cn("text-sm", textMuted)}>{formatDate(user.createdAt)}</span>
@@ -215,7 +381,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                     </tr>
                                     {expandedUser === user.id && (
                                         <tr className={isDark ? 'bg-gray-900/30' : 'bg-gray-50/50'}>
-                                            <td colSpan={5} className="px-5 py-5">
+                                            <td colSpan={6} className="px-5 py-5">
                                                 <div className="flex flex-col sm:flex-row gap-6">
                                                     <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
                                                         <div>
@@ -235,22 +401,22 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                                             <p className={cn("text-sm", text)}>{formatDate(user.lastLoginAt)}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center">
-                                                        {user.subscriptionTier === 'pro' ? (
-                                                            <button onClick={(e) => { e.stopPropagation(); handleUpdateSubscription(user.id, 'free'); }}
-                                                                disabled={updatingUser === user.id}
-                                                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all">
-                                                                {updatingUser === user.id ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
-                                                                {t.revokePro}
-                                                            </button>
-                                                        ) : (
-                                                            <button onClick={(e) => { e.stopPropagation(); handleUpdateSubscription(user.id, 'pro'); }}
-                                                                disabled={updatingUser === user.id}
-                                                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-[#21DBA4]/10 text-[#21DBA4] hover:bg-[#21DBA4]/20 transition-all">
-                                                                {updatingUser === user.id ? <Loader2 size={14} className="animate-spin" /> : <Crown size={14} />}
-                                                                {t.grantPro}
-                                                            </button>
-                                                        )}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={cn("text-xs", textSub)}>{t.changePlan}:</span>
+                                                        <select
+                                                            value={user.subscriptionTier || 'free'}
+                                                            onChange={(e) => handleUpdateSubscription(user.id, e.target.value as 'free' | 'pro' | 'master')}
+                                                            disabled={updatingUser === user.id}
+                                                            className={cn(
+                                                                "px-3 py-2 rounded-lg border text-sm font-medium transition-all cursor-pointer",
+                                                                isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200",
+                                                                text
+                                                            )}>
+                                                            <option value="free">Free</option>
+                                                            <option value="pro">Pro</option>
+                                                            <option value="master">Master</option>
+                                                        </select>
+                                                        {updatingUser === user.id && <Loader2 size={14} className="animate-spin text-[#21DBA4]" />}
                                                     </div>
                                                 </div>
                                             </td>

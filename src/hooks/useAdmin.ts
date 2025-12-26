@@ -93,8 +93,9 @@ export interface UserInfo {
     lastLoginAt?: string;
     clipCount: number;
     subscriptionStatus: 'trial' | 'active' | 'expired' | 'free';
-    subscriptionTier?: 'free' | 'pro';
+    subscriptionTier?: 'free' | 'pro' | 'master';
     trialStartDate?: string;
+    trialEndDate?: string;
     platforms: { youtube: number; instagram: number; threads: number; web: number };
 }
 
@@ -490,6 +491,14 @@ export const useAdmin = () => {
                     subscriptionStatus = daysSinceStart <= 15 ? 'trial' : 'expired';
                 }
 
+                // Calculate trial end date
+                let trialEndDate = data.trialEndDate;
+                if (!trialEndDate && data.trialStartDate) {
+                    // Legacy: calculate from trialStartDate + 15 days
+                    const trialStart = new Date(data.trialStartDate);
+                    trialEndDate = new Date(trialStart.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString();
+                }
+
                 return {
                     id: doc.id,
                     email: data.email || 'Unknown',
@@ -501,6 +510,7 @@ export const useAdmin = () => {
                     subscriptionStatus,
                     subscriptionTier: data.subscriptionTier || 'free',
                     trialStartDate: data.trialStartDate,
+                    trialEndDate,
                     platforms: {
                         youtube: userClips.filter(c => c.platform === 'youtube').length,
                         instagram: userClips.filter(c => c.platform === 'instagram').length,
@@ -521,18 +531,46 @@ export const useAdmin = () => {
     }, []);
 
     // Update user subscription
-    const updateUserSubscription = useCallback(async (userId: string, tier: 'free' | 'pro') => {
+    const updateUserSubscription = useCallback(async (
+        userId: string,
+        tier: 'free' | 'pro' | 'master',
+        options?: { trialEndDate?: string }
+    ) => {
         try {
             const userRef = doc(db, 'users', userId);
-            await updateDoc(userRef, {
+            const updateData: any = {
                 subscriptionTier: tier,
-                subscriptionStatus: tier === 'pro' ? 'active' : 'free',
+                subscriptionStatus: tier === 'pro' || tier === 'master' ? 'active' : 'free',
                 subscriptionUpdatedAt: new Date().toISOString(),
                 subscriptionUpdatedBy: user?.email
-            });
+            };
+            if (options?.trialEndDate) {
+                updateData.trialEndDate = options.trialEndDate;
+            }
+            await updateDoc(userRef, updateData);
             await fetchUserList();
         } catch (error) {
             console.error('[useAdmin] Failed to update user subscription:', error);
+            throw error;
+        }
+    }, [user, fetchUserList]);
+
+    // Bulk update trial period for multiple users
+    const bulkUpdateTrialPeriod = useCallback(async (userIds: string[], daysToAdd: number) => {
+        try {
+            const newEndDate = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+            const promises = userIds.map(userId => {
+                const userRef = doc(db, 'users', userId);
+                return updateDoc(userRef, {
+                    trialEndDate: newEndDate,
+                    subscriptionUpdatedAt: new Date().toISOString(),
+                    subscriptionUpdatedBy: user?.email
+                });
+            });
+            await Promise.all(promises);
+            await fetchUserList();
+        } catch (error) {
+            console.error('[useAdmin] Failed to bulk update trial period:', error);
             throw error;
         }
     }, [user, fetchUserList]);
@@ -742,6 +780,7 @@ export const useAdmin = () => {
         fetchAnalytics,
         fetchUserList,
         updateUserSubscription,
+        bulkUpdateTrialPeriod,
         fetchCategoryAnalytics,
         fetchDetailedAnalytics
     };
