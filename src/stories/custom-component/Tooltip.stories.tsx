@@ -32,27 +32,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
     },
 };
 
-const TooltipPreview = ({
-    position = 'top',
-    content = '툴팁 내용'
-}: {
-    position: 'top' | 'bottom' | 'left' | 'right';
-    content: string;
-}) => {
-    const arrow = {
-        top: 'before:absolute before:left-1/2 before:-translate-x-1/2 before:top-full before:border-4 before:border-transparent before:border-t-slate-900',
-        bottom: 'before:absolute before:left-1/2 before:-translate-x-1/2 before:bottom-full before:border-4 before:border-transparent before:border-b-slate-900',
-        left: 'before:absolute before:top-1/2 before:-translate-y-1/2 before:left-full before:border-4 before:border-transparent before:border-l-slate-900',
-        right: 'before:absolute before:top-1/2 before:-translate-y-1/2 before:right-full before:border-4 before:border-transparent before:border-r-slate-900',
-    };
-
-    return (
-        <div className={`relative px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-lg whitespace-nowrap ${arrow[position]}`}>
-            {content}
-        </div>
-    );
-};
-
 // SVG Icons
 const StarIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -84,28 +63,82 @@ const TrashIcon = () => (
     </svg>
 );
 
+const CheckIcon = () => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#21DBA4" strokeWidth="3">
+        <polyline points="20 6 9 17 4 12" />
+    </svg>
+);
+
 export const Positions = {
     render: () => (
-        <div className="grid grid-cols-2 gap-12 p-12">
-            <div className="flex flex-col items-center gap-3">
-                <TooltipPreview position="top" content="위쪽 툴팁" />
-                <button className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-medium">Hover me</button>
-                <span className="text-xs text-slate-400">top (기본)</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', padding: '48px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1e293b',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    whiteSpace: 'nowrap'
+                }}>
+                    위쪽 툴팁
+                </div>
+                <button style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}>
+                    Hover me
+                </button>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>top (기본)</span>
             </div>
-            <div className="flex flex-col items-center gap-3">
-                <button className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-medium">Hover me</button>
-                <TooltipPreview position="bottom" content="아래쪽 툴팁" />
-                <span className="text-xs text-slate-400">bottom</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <button style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}>
+                    Hover me
+                </button>
+                <div style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1e293b',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    whiteSpace: 'nowrap'
+                }}>
+                    아래쪽 툴팁
+                </div>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>bottom</span>
             </div>
-            <div className="flex items-center gap-3">
-                <TooltipPreview position="left" content="왼쪽" />
-                <button className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-medium">Hover</button>
-                <span className="text-xs text-slate-400">left</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1e293b',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    whiteSpace: 'nowrap'
+                }}>
+                    왼쪽
+                </div>
+                <button style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}>
+                    Hover
+                </button>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>left</span>
             </div>
-            <div className="flex items-center gap-3">
-                <button className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-medium">Hover</button>
-                <TooltipPreview position="right" content="오른쪽" />
-                <span className="text-xs text-slate-400">right</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}>
+                    Hover
+                </button>
+                <div style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1e293b',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    whiteSpace: 'nowrap'
+                }}>
+                    오른쪽
+                </div>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>right</span>
             </div>
         </div>
     ),
@@ -113,20 +146,41 @@ export const Positions = {
 
 export const IconTooltips = {
     render: () => (
-        <div className="flex items-center gap-4">
+        <div style={{ display: 'flex', gap: '32px', padding: '48px' }}>
             {[
                 { icon: <StarIcon />, tip: '즐겨찾기' },
                 { icon: <LinkIcon />, tip: '링크 복사' },
                 { icon: <ShareIcon />, tip: '공유하기' },
                 { icon: <TrashIcon />, tip: '삭제' },
-            ].map((item) => (
-                <div key={item.tip} className="relative group">
-                    <button className="w-10 h-10 flex items-center justify-center text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+            ].map((item, index) => (
+                <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    {/* Tooltip */}
+                    <div style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#1e293b',
+                        color: 'white',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        borderRadius: '8px',
+                        whiteSpace: 'nowrap'
+                    }}>
+                        {item.tip}
+                    </div>
+                    {/* Button */}
+                    <button style={{
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f1f5f9',
+                        borderRadius: '8px',
+                        color: '#64748b',
+                        border: 'none',
+                        cursor: 'pointer'
+                    }}>
                         {item.icon}
                     </button>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <TooltipPreview position="top" content={item.tip} />
-                    </div>
                 </div>
             ))}
         </div>
@@ -142,32 +196,42 @@ export const IconTooltips = {
 
 export const RichTooltip = {
     render: () => (
-        <div className="relative inline-block">
-            <button className="px-4 py-2 bg-[#21DBA4] text-white font-medium rounded-lg">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '32px' }}>
+            <button style={{
+                padding: '8px 16px',
+                backgroundColor: '#21DBA4',
+                color: 'white',
+                fontWeight: 500,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer'
+            }}>
                 Pro 플랜
             </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 p-3 bg-slate-900 text-white rounded-xl">
-                <p className="text-sm font-bold mb-2">Pro 플랜 혜택</p>
-                <ul className="text-xs text-slate-300 space-y-1">
-                    <li className="flex items-center gap-2">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#21DBA4" strokeWidth="2">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        무제한 클립 저장
-                    </li>
-                    <li className="flex items-center gap-2">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#21DBA4" strokeWidth="2">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        AI 분석 무제한
-                    </li>
-                    <li className="flex items-center gap-2">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#21DBA4" strokeWidth="2">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        우선 지원
-                    </li>
-                </ul>
+            <div style={{
+                minWidth: '200px',
+                padding: '16px',
+                backgroundColor: '#1e293b',
+                color: 'white',
+                borderRadius: '12px'
+            }}>
+                <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', whiteSpace: 'nowrap' }}>
+                    Pro 플랜 혜택
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckIcon />
+                        <span style={{ fontSize: '12px', color: '#cbd5e1', whiteSpace: 'nowrap' }}>무제한 클립 저장</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckIcon />
+                        <span style={{ fontSize: '12px', color: '#cbd5e1', whiteSpace: 'nowrap' }}>AI 분석 무제한</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckIcon />
+                        <span style={{ fontSize: '12px', color: '#cbd5e1', whiteSpace: 'nowrap' }}>우선 지원</span>
+                    </div>
+                </div>
             </div>
         </div>
     ),
@@ -175,6 +239,64 @@ export const RichTooltip = {
         docs: {
             description: {
                 story: '복잡한 내용이 있는 리치 툴팁입니다.',
+            },
+        },
+    },
+};
+
+export const SimpleTooltip = {
+    render: () => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '32px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1e293b',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '8px'
+                }}>
+                    저장
+                </div>
+                <button style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#21DBA4',
+                    color: 'white',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    border: 'none'
+                }}>
+                    Save
+                </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1e293b',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    borderRadius: '8px'
+                }}>
+                    취소
+                </div>
+                <button style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#f1f5f9',
+                    color: '#64748b',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    border: 'none'
+                }}>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    ),
+    parameters: {
+        docs: {
+            description: {
+                story: '간단한 텍스트 툴팁입니다.',
             },
         },
     },
