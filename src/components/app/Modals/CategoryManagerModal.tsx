@@ -21,9 +21,11 @@ export const CategoryManagerModal = ({ categories, links, onClose, onEdit, onDel
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className={`rounded-2xl w-full max-w-sm max-h-[70vh] flex flex-col shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-100'}`}
+                className={`rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col ${theme === 'dark' ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-100'}`}
+                style={{ maxHeight: 'min(70vh, 500px)' }}
                 onClick={e => e.stopPropagation()}
             >
+                {/* Header - Fixed */}
                 <div className={`p-4 border-b flex items-center justify-between shrink-0 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
                     <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('smartFolders')}</h3>
                     <button onClick={onClose} className={`p-1.5 rounded-full ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>
@@ -31,7 +33,15 @@ export const CategoryManagerModal = ({ categories, links, onClose, onEdit, onDel
                     </button>
                 </div>
 
-                <div className="overflow-y-auto p-2 space-y-1">
+                {/* Scrollable Content */}
+                <div
+                    className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-1"
+                    style={{
+                        WebkitOverflowScrolling: 'touch',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: theme === 'dark' ? '#475569 #1e293b' : '#cbd5e1 #f1f5f9'
+                    }}
+                >
                     {categories.map((cat: Category) => {
                         const count = links.filter((l: LinkItem) => l.categoryId === cat.id && !l.isArchived).length;
                         const isEmpty = count === 0;
@@ -82,6 +92,13 @@ export const CategoryManagerModal = ({ categories, links, onClose, onEdit, onDel
                             No categories found.
                         </div>
                     )}
+                </div>
+
+                {/* Footer - Fixed (shows category count) */}
+                <div className={`px-4 py-3 border-t shrink-0 ${theme === 'dark' ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                    <p className={`text-xs text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {categories.length} {categories.length === 1 ? 'category' : 'categories'}
+                    </p>
                 </div>
             </motion.div>
         </div>
