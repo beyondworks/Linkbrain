@@ -75,7 +75,7 @@ export const Default = {
             {/* Image Carousel */}
             <div className="relative h-64 bg-slate-100">
                 <img
-                    src="https://via.placeholder.com/480x256/1a1a2e/ffffff?text=Content+Preview"
+                    src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=480&h=256&fit=crop"
                     alt="Content preview"
                     className="w-full h-full object-cover"
                 />

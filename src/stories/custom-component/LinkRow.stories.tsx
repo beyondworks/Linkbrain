@@ -29,6 +29,7 @@ export default {
     },
 };
 
+// 실제 이미지 URL (Unsplash - 64x64 썸네일)
 const sampleItems = [
     {
         title: '정지된 이미지를 3D 공간으로 변환하는 웹 앱',
@@ -37,7 +38,7 @@ const sampleItems = [
         category: 'Other',
         date: '2025.12.27',
         isFavorite: true,
-        image: 'https://via.placeholder.com/64x64/1a1a2e/ffffff?text=3D',
+        image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=64&h=64&fit=crop',
     },
     {
         title: '코덱스가 클로드 스킬을 흡수했습니다! (보너스: 나노바나나 프로 & GPT 이미지 생성 스킬)',
@@ -46,7 +47,7 @@ const sampleItems = [
         category: 'Dev',
         date: '2025.12.27',
         isFavorite: false,
-        image: 'https://via.placeholder.com/64x64/667eea/ffffff?text=YT',
+        image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=64&h=64&fit=crop',
     },
     {
         title: "99%가 그냥 지나치는 '숨겨진 무료도구' 4가지",
@@ -55,7 +56,7 @@ const sampleItems = [
         category: 'Productivity',
         date: '2025.12.27',
         isFavorite: false,
-        image: 'https://via.placeholder.com/64x64/10b981/ffffff?text=Tools',
+        image: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=64&h=64&fit=crop',
     },
 ];
 

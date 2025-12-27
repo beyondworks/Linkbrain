@@ -31,12 +31,22 @@ Linkbrain의 핵심 컴포넌트 - 저장된 링크를 그리드 형태로 표�
     },
 };
 
+// 실제 이미지 URL (Unsplash)
+const REAL_IMAGES = {
+    threads3D: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=200&fit=crop',  // 3D/Tech
+    youtubeCode: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=200&fit=crop', // Code
+    productivity: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=200&fit=crop', // Productivity
+    aiTech: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=200&fit=crop', // AI
+    design: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&h=200&fit=crop', // Design
+    business: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=200&fit=crop', // Business
+};
+
 // 샘플 데이터
 const sampleData = {
     title: '정지된 이미지를 3D 공간으로 변환하는 웹 앱',
     summary: '애플의 "SHARP" 모델을 활용해 정지된 이미지를 인터랙티브한 3D 장면으로 바꿔주는 오픈소스 웹 앱이 공개되었으며, 다양한 분야에서 활용 가능성이 있습니다.',
     url: 'https://www.threads.net',
-    image: 'https://via.placeholder.com/400x200/1a1a2e/ffffff?text=3D+Web+App',
+    image: REAL_IMAGES.threads3D,
     date: '2025.12.27',
     tags: ['3D 공간', '웹 앱', 'SHARP 모델'],
     categoryId: 'Other',
@@ -136,7 +146,7 @@ export const WithFavorite = {
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm group overflow-hidden">
                 <div className="relative h-48 overflow-hidden bg-slate-100">
                     <img
-                        src="https://via.placeholder.com/400x200/667eea/ffffff?text=YouTube+Video"
+                        src={REAL_IMAGES.youtubeCode}
                         alt="YouTube Video"
                         className="w-full h-full object-cover"
                     />
