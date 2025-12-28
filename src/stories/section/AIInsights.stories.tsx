@@ -1,5 +1,31 @@
 import React from 'react';
 
+// SVG Icons
+const PaperclipIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+        <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+    </svg>
+);
+
+const CheckCircleIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#21DBA4" strokeWidth="2">
+        <circle cx="12" cy="12" r="10" />
+        <path d="m9 12 2 2 4-4" />
+    </svg>
+);
+
+const FolderIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+    </svg>
+);
+
+const MessageCircleIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" />
+    </svg>
+);
+
 /**
  * AIInsights 스토리
  *
@@ -143,6 +169,14 @@ export const SavePatternHeatmap = {
     },
 };
 
+// Icon mapping for stat cards
+const statIcons: Record<string, React.ReactNode> = {
+    '총 저장': <PaperclipIcon />,
+    '분석 완료': <CheckCircleIcon />,
+    '카테고리': <FolderIcon />,
+    'AI 질문': <MessageCircleIcon />,
+};
+
 export const FullDashboard = {
     render: () => (
         <div className="space-y-6 max-w-4xl">
@@ -161,13 +195,13 @@ export const FullDashboard = {
             {/* Summary Cards */}
             <div className="grid grid-cols-4 gap-4">
                 {[
-                    { label: '총 저장', value: '142', icon: '📎' },
-                    { label: '분석 완료', value: '138', icon: '✅' },
-                    { label: '카테고리', value: '12', icon: '📁' },
-                    { label: 'AI 질문', value: '45', icon: '💬' },
+                    { label: '총 저장', value: '142' },
+                    { label: '분석 완료', value: '138' },
+                    { label: '카테고리', value: '12' },
+                    { label: 'AI 질문', value: '45' },
                 ].map((stat) => (
                     <div key={stat.label} className="p-4 bg-white rounded-xl border border-slate-100 text-center">
-                        <span className="text-2xl mb-1 block">{stat.icon}</span>
+                        <span className="flex justify-center mb-2">{statIcons[stat.label]}</span>
                         <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
                         <p className="text-xs text-slate-400">{stat.label}</p>
                     </div>
