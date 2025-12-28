@@ -76,7 +76,7 @@ export function CategoryAnalyticsPanel({ theme, language, admin }: CategoryAnaly
 
     if (loading || !categoryAnalytics) {
         return (
-            <div className={cn("rounded-2xl border p-16 text-center", card, cardBorder)}>
+            <div className={cn("rounded-3xl border p-16 text-center", card, cardBorder)}>
                 <Loader2 className="w-8 h-8 text-violet-500 animate-spin mx-auto mb-4" />
                 <p className={textMuted}>{t.loading}</p>
             </div>
@@ -103,9 +103,9 @@ export function CategoryAnalyticsPanel({ theme, language, admin }: CategoryAnaly
 
             {/* Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className={cn("rounded-2xl border p-5", card, cardBorder)}>
+                <div className={cn("rounded-3xl border p-5", card, cardBorder)}>
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
+                        <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
                             <Layers size={20} className="text-white" />
                         </div>
                         <div>
@@ -116,9 +116,9 @@ export function CategoryAnalyticsPanel({ theme, language, admin }: CategoryAnaly
                         </div>
                     </div>
                 </div>
-                <div className={cn("rounded-2xl border p-5", card, cardBorder)}>
+                <div className={cn("rounded-3xl border p-5", card, cardBorder)}>
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0">
+                        <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0">
                             <TrendingUp size={20} className="text-white" />
                         </div>
                         <div>
@@ -132,7 +132,7 @@ export function CategoryAnalyticsPanel({ theme, language, admin }: CategoryAnaly
             </div>
 
             {/* Top Categories Chart */}
-            <div className={cn("rounded-2xl border p-6", card, cardBorder)}>
+            <div className={cn("rounded-3xl border p-6", card, cardBorder)}>
                 <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center">
                         <BarChart3 size={18} className="text-white" />
@@ -168,7 +168,7 @@ export function CategoryAnalyticsPanel({ theme, language, admin }: CategoryAnaly
             </div>
 
             {/* Keywords */}
-            <div className={cn("rounded-2xl border p-6", card, cardBorder)}>
+            <div className={cn("rounded-3xl border p-6", card, cardBorder)}>
                 <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
                         <Hash size={18} className="text-white" />

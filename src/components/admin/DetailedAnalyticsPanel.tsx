@@ -84,7 +84,7 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
         return (
             <div className={cn("rounded-3xl border p-16 text-center", t$.card, t$.cardBorder)}>
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/5 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-orange-500/20 to-orange-600/5 flex items-center justify-center">
                         <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
                     </div>
                     <p className={t$.textMuted}>{t.loading}</p>
@@ -217,7 +217,7 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
                 </div>
                 <div className="grid grid-cols-4 gap-4">
                     {detailedAnalytics.retentionData.map((data) => (
-                        <div key={data.week} className={cn("rounded-2xl p-5 text-center transition-all hover:scale-105", t$.itemBg)}>
+                        <div key={data.week} className={cn("rounded-3xl p-5 text-center transition-all hover:scale-105", t$.itemBg)}>
                             <p className={cn("text-xs font-medium mb-2", t$.textSub)}>{data.week}</p>
                             <p className={cn("text-3xl font-bold tabular-nums", data.retention > 50 ? "text-[#21DBA4]" : data.retention > 25 ? "text-amber-500" : "text-red-500")}>
                                 {data.retention}%

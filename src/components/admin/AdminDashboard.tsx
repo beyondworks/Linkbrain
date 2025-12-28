@@ -84,7 +84,7 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
         return (
             <div className={cn("min-h-screen flex items-center justify-center", t$.bg)}>
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center">
                         <Loader2 className="w-6 h-6 animate-spin text-white" />
                     </div>
                     <p className={t$.textMuted}>{t.loading}</p>
@@ -107,7 +107,7 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                     </div>
                     <button
                         onClick={onBack}
-                        className="px-8 py-3 bg-gradient-to-r from-[#21DBA4] to-[#1bc290] text-white rounded-2xl font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[#21DBA4]/20"
+                        className="px-8 py-3 bg-gradient-to-r from-[#21DBA4] to-[#1bc290] text-white rounded-3xl font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[#21DBA4]/20"
                     >
                         {t.back}
                     </button>

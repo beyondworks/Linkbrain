@@ -86,7 +86,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
     if (!analytics) {
         return (
             <div className={cn(
-                "flex flex-col items-center justify-center min-h-[400px] rounded-2xl border border-dashed",
+                "flex flex-col items-center justify-center min-h-[400px] rounded-3xl border border-dashed",
                 tokens.border
             )}>
                 <Activity className={cn("w-6 h-6 mb-3 animate-pulse", tokens.textTertiary)} />
@@ -136,7 +136,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
     const platformData = [
         { name: 'YouTube', value: analytics.platformStats.youtube, icon: Youtube, color: '#FF0000' },
         { name: 'Instagram', value: analytics.platformStats.instagram, icon: Instagram, color: '#E1306C' },
-        { name: 'Threads', value: analytics.platformStats.threads, emoji: '🧵', color: isDark ? '#FAFAFA' : '#111111' },
+        { name: 'Threads', value: analytics.platformStats.threads, textIcon: '@', color: isDark ? '#FAFAFA' : '#111111' },
         { name: 'Web', value: analytics.platformStats.web, icon: Globe, color: '#21DBA4' }
     ];
 
@@ -179,7 +179,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
                     <div
                         key={i}
                         className={cn(
-                            "group relative rounded-2xl border p-6 transition-all duration-200",
+                            "group relative rounded-3xl border p-6 transition-all duration-200",
                             tokens.bgCard,
                             tokens.border,
                             tokens.borderHover,
@@ -235,7 +235,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
 
                     {/* Clip Trends Chart */}
                     <div className={cn(
-                        "rounded-2xl border p-6",
+                        "rounded-3xl border p-6",
                         tokens.bgCard,
                         tokens.border
                     )}>
@@ -314,7 +314,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
 
                     {/* Platform Stats - Strict 8px Grid */}
                     <div className={cn(
-                        "rounded-2xl border p-6",
+                        "rounded-3xl border p-6",
                         tokens.bgCard,
                         tokens.border
                     )}>
@@ -334,8 +334,8 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
                                 >
                                     {/* Platform Label */}
                                     <div className="flex items-center gap-2 mb-3">
-                                        {platform.emoji ? (
-                                            <span className="text-base leading-none">{platform.emoji}</span>
+                                        {platform.textIcon ? (
+                                            <span className="text-base leading-none font-bold" style={{ color: platform.color }}>{platform.textIcon}</span>
                                         ) : (
                                             platform.icon && <platform.icon size={16} style={{ color: platform.color }} />
                                         )}
@@ -373,7 +373,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
 
                     {/* New Users - Compact Chart */}
                     <div className={cn(
-                        "rounded-2xl border p-6",
+                        "rounded-3xl border p-6",
                         tokens.bgCard,
                         tokens.border
                     )}>
@@ -434,7 +434,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
 
                     {/* Subscription Status */}
                     <div className={cn(
-                        "rounded-2xl border p-6",
+                        "rounded-3xl border p-6",
                         tokens.bgCard,
                         tokens.border
                     )}>
@@ -486,7 +486,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
 
                     {/* Active Users (DAU/WAU/MAU) */}
                     <div className={cn(
-                        "rounded-2xl border p-6",
+                        "rounded-3xl border p-6",
                         tokens.bgCard,
                         tokens.border
                     )}>
