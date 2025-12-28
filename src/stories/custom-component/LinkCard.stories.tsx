@@ -1,5 +1,12 @@
 import React from 'react';
 
+// SVG Icons
+const SparklesIcon = () => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#21DBA4" strokeWidth="2">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+    </svg>
+);
+
 /**
  * LinkCard 스토리
  *
@@ -169,7 +176,7 @@ export const WithFavorite = {
                     </h3>
                     <div className="rounded-xl p-3 bg-[#F8FAFC] border border-slate-100">
                         <div className="flex items-center gap-1.5 mb-1.5">
-                            <span className="text-[10px] font-bold text-[#21DBA4]">✨ AI Summary</span>
+                            <span className="text-[10px] font-bold text-[#21DBA4] flex items-center gap-1"><SparklesIcon /> AI Summary</span>
                         </div>
                         <p className="text-[11px] text-slate-500 line-clamp-2">
                             이 비디오에서는 클로드 코드의 핵심 기능인 '스킬'을 코덱스로 완벽하게 포팅하는 혁신적인 방법을 소개합니다.

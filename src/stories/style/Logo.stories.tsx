@@ -6,6 +6,13 @@ import React from 'react';
  * Linkbrain 로고 및 심볼 사용 가이드라인입니다.
  */
 
+// Check Icon
+const CheckIcon = ({ color = '#21DBA4' }: { color?: string }) => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }}>
+        <polyline points="20 6 9 17 4 12" />
+    </svg>
+);
+
 export default {
     title: 'Style/Logo',
     parameters: {
@@ -256,17 +263,17 @@ export const BackgroundUsage = {
                 <div className="p-6 bg-white border border-slate-200 rounded-xl text-center">
                     <p className="text-[10px] text-slate-400 mb-3">밝은 배경</p>
                     <FullLogo size={48} />
-                    <p className="text-xs text-[#21DBA4] mt-2 font-medium">✓ Primary</p>
+                    <p className="text-xs text-[#21DBA4] mt-2 font-medium flex items-center justify-center"><CheckIcon /> Primary</p>
                 </div>
                 <div className="p-6 bg-[#21DBA4] rounded-xl text-center">
                     <p className="text-[10px] text-white/70 mb-3">브랜드 배경</p>
                     <SymbolWhite size={48} />
-                    <p className="text-xs text-white mt-2 font-medium">✓ White Symbol</p>
+                    <p className="text-xs text-white mt-2 font-medium flex items-center justify-center"><CheckIcon color="white" /> White Symbol</p>
                 </div>
                 <div className="p-6 bg-slate-900 rounded-xl text-center">
                     <p className="text-[10px] text-slate-400 mb-3">어두운 배경</p>
                     <FullLogo size={48} />
-                    <p className="text-xs text-[#21DBA4] mt-2 font-medium">✓ Primary</p>
+                    <p className="text-xs text-[#21DBA4] mt-2 font-medium flex items-center justify-center"><CheckIcon /> Primary</p>
                 </div>
             </div>
         </div>
