@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { cn } from './ui/utils';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { StatCard } from './AIInsightsDashboard/StatCard';
+import { TagReadingRateCard } from './AIInsightsDashboard/TagReadingRateCard';
 
 // ═══════════════════════════════════════════════════
 // Types & Interfaces
@@ -85,56 +86,7 @@ const formatNumber = (num: number): string => {
 
 // StatCard is now imported from ./AIInsightsDashboard/StatCard
 
-// ═══════════════════════════════════════════════════
-// Tag Reading Rate Card - Bar Chart Style
-// ═══════════════════════════════════════════════════
-
-const TagReadingRateCard = ({
-  tagData, isDark, theme, language
-}: {
-  tagData: Array<{ tag: string; rate: number; total: number }>;
-  isDark: boolean; theme: any; language: string;
-}) => (
-  <div className={cn(
-    "col-span-12 md:col-span-4 border rounded-3xl p-6 transition-colors",
-    theme.card, theme.cardBorder, theme.cardHover
-  )}>
-    <div className="flex items-center gap-3 mb-6">
-      <Zap size={20} className="text-orange-400 shrink-0" />
-      <div className={cn("text-sm font-bold", theme.text)}>
-        {language === 'ko' ? '태그별 열람율' : 'Tag Reading Rate'}
-      </div>
-    </div>
-
-    <div className="space-y-4">
-      {tagData.length > 0 ? tagData.map((item, idx) => (
-        <div key={idx} className="flex items-center gap-4">
-          <span className={cn("text-sm font-semibold w-20 shrink-0", theme.text)}>
-            {item.tag}
-          </span>
-          <div className="flex-1 flex items-center gap-3">
-            <div className={cn("flex-1 h-3 rounded-full overflow-hidden", isDark ? "bg-gray-700" : "bg-gray-200")}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.max(item.rate, 3)}%`,
-                  backgroundColor: `rgba(33, 219, 164, ${0.3 + (item.rate / 100) * 0.7})`
-                }}
-              />
-            </div>
-            <span className={cn("text-sm font-bold tabular-nums shrink-0", theme.text)}>
-              {item.rate}%
-            </span>
-          </div>
-        </div>
-      )) : (
-        <div className={cn("text-sm text-center py-6", theme.textSub)}>
-          {language === 'ko' ? '클립을 읽어보세요!' : 'Start reading clips!'}
-        </div>
-      )}
-    </div>
-  </div>
-);
+// TagReadingRateCard is now imported from ./AIInsightsDashboard/TagReadingRateCard
 
 // ═══════════════════════════════════════════════════
 // Heatmap Component - Reference Design

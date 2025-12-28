@@ -10,6 +10,7 @@ export { AIInsightsDashboard } from '../AIInsightsDashboard';
 export { SectionHeader, SectionHeaderCompact } from './SectionHeader';
 export { InfoCard, InfoCardCompact } from './InfoCard';
 export { StatCard } from './StatCard';
+export { TagReadingRateCard } from './TagReadingRateCard';
 
 // Sub-components
 export { SavePatternHeatmap } from './SavePatternHeatmap';
