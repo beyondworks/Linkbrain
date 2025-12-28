@@ -172,55 +172,42 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
             </div>
 
             {/* ═══════════════════════════════════════════════════
-                KPI Cards - Hero Numbers Style
+                KPI Cards - Storybook Pattern (Simple & Clean)
                 ═══════════════════════════════════════════════════ */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {mainStats.map((stat, i) => (
                     <div
                         key={i}
                         className={cn(
-                            "group relative rounded-3xl border p-6 transition-all duration-200",
+                            "p-5 rounded-3xl border transition-all duration-200 hover:border-[#21DBA4]/30",
                             tokens.bgCard,
-                            tokens.border,
-                            tokens.borderHover,
-                            "hover:shadow-sm hover:-translate-y-0.5"
+                            tokens.border
                         )}
                     >
-                        {/* Icon & Trend */}
-                        <div className="flex items-start justify-between mb-5">
-                            <div className={cn(
-                                "w-10 h-10 rounded-xl flex items-center justify-center",
-                                isDark ? "bg-white/[0.04]" : "bg-black/[0.03]"
-                            )}>
-                                <stat.icon size={18} className={tokens.textSecondary} />
-                            </div>
-                            {stat.trend && (
-                                <div className={cn(
-                                    "flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold",
-                                    stat.trendUp
-                                        ? "bg-emerald-500/10 text-emerald-500"
-                                        : "bg-rose-500/10 text-rose-500"
-                                )}>
-                                    {stat.trendUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                                    {stat.trend}
-                                </div>
-                            )}
-                        </div>
+                        {/* Label */}
+                        <p className={cn("text-xs font-medium mb-2", tokens.textTertiary)}>
+                            {stat.label}
+                        </p>
 
-                        {/* Hero Number */}
-                        <div className="space-y-1">
+                        {/* Hero Value */}
+                        <p className={cn(
+                            "text-2xl font-bold tabular-nums mb-1",
+                            tokens.textPrimary
+                        )}>
+                            {typeof stat.value === 'number'
+                                ? stat.value.toLocaleString()
+                                : stat.value}
+                        </p>
+
+                        {/* Trend */}
+                        {stat.trend && (
                             <p className={cn(
-                                "text-[32px] font-black tracking-tight tabular-nums leading-none",
-                                tokens.textPrimary
+                                "text-xs font-medium",
+                                stat.trendUp ? "text-[#21DBA4]" : "text-rose-500"
                             )}>
-                                {typeof stat.value === 'number'
-                                    ? stat.value.toLocaleString()
-                                    : stat.value}
+                                {stat.trend} {language === 'ko' ? '이번 주' : 'this week'}
                             </p>
-                            <p className={cn("text-[13px] font-medium", tokens.textTertiary)}>
-                                {stat.label}
-                            </p>
-                        </div>
+                        )}
                     </div>
                 ))}
             </div>
