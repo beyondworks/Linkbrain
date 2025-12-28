@@ -6,9 +6,12 @@
 // Main dashboard component (includes most UI internally)
 export { AIInsightsDashboard } from '../AIInsightsDashboard';
 
-// Legacy sub-components (kept for backwards compatibility)
-// These are now integrated into the main AIInsightsDashboard component
-// Consider removing if not used elsewhere in the codebase
+// Reusable UI Components (Storybook patterns)
+export { SectionHeader, SectionHeaderCompact } from './SectionHeader';
+export { InfoCard, InfoCardCompact } from './InfoCard';
+export { StatCard } from './StatCard';
+
+// Sub-components
 export { SavePatternHeatmap } from './SavePatternHeatmap';
 export { TrendCards } from './TrendCards';
 export { KeywordSection } from './KeywordSection';
