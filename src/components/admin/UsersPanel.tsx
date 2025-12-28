@@ -256,7 +256,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
 
     if (usersLoading && users.length === 0) {
         return (
-            <div className={cn("rounded-2xl border p-16 text-center", card, cardBorder)}>
+            <div className={cn("rounded-3xl border p-16 text-center", card, cardBorder)}>
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
                 <p className={textMuted}>{t.loading}</p>
             </div>
@@ -285,10 +285,10 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
             </div>
 
             {/* Stats with Clickable Filters */}
-            <div className={cn("rounded-2xl border p-5", card, cardBorder)}>
+            <div className={cn("rounded-3xl border p-5", card, cardBorder)}>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                             <User size={20} className="text-white" />
                         </div>
                         <div>
@@ -360,7 +360,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
 
             {/* Bulk Actions Bar */}
             {selectedUsers.size > 0 && (
-                <div className={cn("rounded-2xl border p-4 flex flex-wrap items-center justify-between gap-4", card, cardBorder)}>
+                <div className={cn("rounded-3xl border p-4 flex flex-wrap items-center justify-between gap-4", card, cardBorder)}>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center">
@@ -401,7 +401,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
             )}
 
             {/* Table */}
-            <div className={cn("rounded-2xl border overflow-hidden", card, cardBorder)}>
+            <div className={cn("rounded-3xl border overflow-hidden", card, cardBorder)}>
                 <table className="w-full">
                     <thead className={tableBg}>
                         <tr className={cn("text-xs font-semibold uppercase tracking-wider", textSub)}>
