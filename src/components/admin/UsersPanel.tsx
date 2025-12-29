@@ -188,11 +188,11 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
             )}>
                 {/* Table Header */}
                 <div className={cn(
-                    "grid grid-cols-[1fr,80px,100px,100px,80px,40px] gap-4 px-6 py-3 text-xs font-semibold border-b",
+                    "grid grid-cols-[2fr_1fr_1fr_1fr_1fr_40px] px-6 py-3 text-xs font-semibold border-b",
                     isDark ? "bg-gray-900/50 text-gray-400 border-gray-800" : "bg-slate-50 text-slate-500 border-slate-100"
                 )}>
                     <div className="flex items-center gap-1">{t.email} <ChevronDown size={12} /></div>
-                    <div className="text-center">{t.clips}</div>
+                    <div className="text-right">{t.clips}</div>
                     <div className="text-center">{t.plan}</div>
                     <div className="text-center">{t.date}</div>
                     <div className="text-center">{t.status}</div>
@@ -205,10 +205,10 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 ) : (
                     filteredUsers.map(user => (
                         <UserRow
-                            key={user.uid}
+                            key={user.id}
                             user={user}
-                            isExpanded={expandedUserId === user.uid}
-                            onToggle={() => setExpandedUserId(expandedUserId === user.uid ? null : user.uid)}
+                            isExpanded={expandedUserId === user.id}
+                            onToggle={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
                             isDark={isDark}
                             t={t}
                         />
@@ -222,7 +222,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
 // UserRow Component
 interface UserRowProps {
     user: {
-        uid: string;
+        id: string;
         email: string;
         plan: 'Master' | 'Pro' | 'Free';
         clipCount?: number;
@@ -246,7 +246,7 @@ function UserRow({ user, isExpanded, onToggle, isDark, t }: UserRowProps) {
         )}>
             {/* Main Row */}
             <div
-                className="grid grid-cols-[1fr,80px,100px,100px,80px,40px] gap-4 px-6 py-4 cursor-pointer items-center"
+                className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_40px] px-6 py-4 cursor-pointer items-center"
                 onClick={onToggle}
             >
                 <div className="flex items-center gap-3">
@@ -262,7 +262,7 @@ function UserRow({ user, isExpanded, onToggle, isDark, t }: UserRowProps) {
                         {user.email}
                     </span>
                 </div>
-                <div className={cn("text-center text-sm", isDark ? "text-gray-400" : "text-slate-600")}>
+                <div className={cn("text-right text-sm", isDark ? "text-gray-400" : "text-slate-600")}>
                     {user.clipCount || 0}
                 </div>
                 <div className="text-center">
@@ -306,7 +306,7 @@ function UserRow({ user, isExpanded, onToggle, isDark, t }: UserRowProps) {
                                 <span className={isDark ? "text-gray-400" : "text-slate-600"}>{t.userId}</span>
                             </div>
                             <p className={cn("text-xs font-mono ml-5", isDark ? "text-gray-500" : "text-slate-500")}>
-                                {user.uid}
+                                {user.id}
                             </p>
                             <div className="flex items-center gap-2 text-sm mt-3">
                                 <Calendar size={14} className="text-slate-400" />
