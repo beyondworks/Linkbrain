@@ -2375,50 +2375,24 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                    ))}
                                                 </div>
                                              </div>
-
-                                             {availableCategories.length > 0 && (
-                                                <>
-                                                   <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                                   <div className="px-3 py-1.5">
-                                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('category')}</span>
-                                                      <div className="mt-1 space-y-1">
-                                                         {availableCategories.map(cat => (
-                                                            <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer group">
-                                                               <div
-                                                                  onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
-                                                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                               >
-                                                                  {filterCategories.includes(cat.id) && <Check size={8} strokeWidth={4} />}
-                                                               </div>
-                                                               <span className={`text-xs truncate ${filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{cat.name}</span>
-                                                            </label>
-                                                         ))}
+                                             {/* Unread Filter - Mobile Only */}
+                                             <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
+                                             <div className="px-3 py-1.5">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'ko' ? '필터' : 'Filter'}</span>
+                                                <div className="mt-1">
+                                                   <label className="flex items-center gap-1.5 cursor-pointer group">
+                                                      <div
+                                                         onClick={() => setFilterUnread(!filterUnread)}
+                                                         className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors ${filterUnread ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
+                                                      >
+                                                         {filterUnread && <Check size={8} strokeWidth={4} />}
                                                       </div>
-                                                   </div>
-                                                </>
-                                             )}
-
-                                             {availableSources.length > 0 && (
-                                                <>
-                                                   <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                                   <div className="px-3 py-1.5">
-                                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Source</span>
-                                                      <div className="mt-1 space-y-1">
-                                                         {availableSources.map(src => (
-                                                            <label key={src} className="flex items-center gap-1.5 cursor-pointer group">
-                                                               <div
-                                                                  onClick={() => toggleFilter(setFilterSources, filterSources, src)}
-                                                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
-                                                               >
-                                                                  {filterSources.includes(src) && <Check size={8} strokeWidth={4} />}
-                                                               </div>
-                                                               <span className={`text-xs truncate ${filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>{src}</span>
-                                                            </label>
-                                                         ))}
-                                                      </div>
-                                                   </div>
-                                                </>
-                                             )}
+                                                      <span className={`text-xs ${filterUnread ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500'}`}>
+                                                         {language === 'ko' ? '미열람만 보기' : 'Unread only'}
+                                                      </span>
+                                                   </label>
+                                                </div>
+                                             </div>
                                           </div>
                                        </div>
                                     </>
