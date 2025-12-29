@@ -1931,13 +1931,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          {/* Main Content Wrapper - translates down for pull-to-refresh */}
          <div
             ref={mainContentWrapperRef}
-            className="flex-1 flex flex-col h-full w-full overflow-visible"
+            className="flex-1 flex flex-col h-full w-full overflow-auto md:overflow-visible"
             style={{ willChange: 'transform' }}
          >
             {/* Main Content */}
             <main
                ref={mainContentRef}
-               className="flex-1 flex flex-col min-h-0 overflow-y-auto relative w-full isolate no-scrollbar"
+               className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar"
+               style={{ WebkitOverflowScrolling: 'touch' }}
                onClick={() => { if (isRearranging) setIsRearranging(false); }}
             >
 
