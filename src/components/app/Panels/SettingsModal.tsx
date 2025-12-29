@@ -57,119 +57,6 @@ interface SettingsModalProps {
     initialTab?: string;
 }
 
-// Invite Codes Section Component
-const InviteCodesSection = ({ theme, t }: { theme: string; t: (key: string) => string }) => {
-    const { subscription, inviteCodes, usedCodesCount, remainingDays, isTrial, isPro } = useSubscriptionContext();
-    const [copiedCode, setCopiedCode] = useState<string | null>(null);
-
-    const handleCopyCode = (code: string) => {
-        navigator.clipboard.writeText(code);
-        setCopiedCode(code);
-        toast.success(t('language') === '언어' ? '코드가 복사되었습니다!' : 'Code copied!');
-        setTimeout(() => setCopiedCode(null), 2000);
-    };
-
-    if (!subscription) return null;
-
-    const extensionDays = (subscription.referralCount || 0) * 2;
-
-    return (
-        <div className={`p-4 md:p-5 rounded-2xl border ${theme === 'dark' ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <Gift size={18} className="text-[#21DBA4]" />
-                    <h4 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                        {t('language') === '언어' ? '내 초대 코드' : 'My Invite Codes'}
-                    </h4>
-                </div>
-                {isTrial && (
-                    <div className="flex items-center gap-1.5 text-xs">
-                        <Clock size={12} className="text-amber-500" />
-                        <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>
-                            {t('language') === '언어' ? `${remainingDays}일 남음` : `${remainingDays} days left`}
-                            {extensionDays > 0 && (
-                                <span className="text-[#21DBA4] ml-1">(+{extensionDays}일)</span>
-                            )}
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            <p className={`text-xs mb-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                {t('language') === '언어'
-                    ? '친구를 초대하면 체험 기간이 2일 연장됩니다!'
-                    : 'Invite friends to extend your trial by 2 days each!'}
-            </p>
-
-            <div className="space-y-2">
-                {inviteCodes.map((invite: { code: string; usedBy: string | null }) => {
-                    const isUsed = invite.usedBy !== null;
-                    const isCopied = copiedCode === invite.code;
-
-                    return (
-                        <div
-                            key={invite.code}
-                            className={`flex items-center justify-between p-3 rounded-xl transition-all ${isUsed
-                                ? theme === 'dark'
-                                    ? 'bg-slate-700/50 opacity-60'
-                                    : 'bg-slate-100 opacity-60'
-                                : theme === 'dark'
-                                    ? 'bg-slate-700'
-                                    : 'bg-white border border-slate-200'
-                                }`}
-                        >
-                            <code className={`font-mono text-sm font-bold tracking-wider ${isUsed
-                                ? 'text-slate-400 line-through'
-                                : theme === 'dark' ? 'text-white' : 'text-slate-900'
-                                }`}>
-                                {invite.code}
-                            </code>
-
-                            <div className="flex items-center gap-2">
-                                {isUsed ? (
-                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${theme === 'dark' ? 'bg-slate-600 text-slate-300' : 'bg-slate-200 text-slate-500'
-                                        }`}>
-                                        {t('language') === '언어' ? '사용완료' : 'Used'}
-                                    </span>
-                                ) : (
-                                    <>
-                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'
-                                            }`}>
-                                            {t('language') === '언어' ? '대기중' : 'Available'}
-                                        </span>
-                                        <button
-                                            onClick={() => handleCopyCode(invite.code)}
-                                            className={`p-2 rounded-lg transition-all ${isCopied
-                                                ? 'bg-[#21DBA4] text-white'
-                                                : theme === 'dark'
-                                                    ? 'bg-slate-600 text-slate-300 hover:bg-[#21DBA4] hover:text-white'
-                                                    : 'bg-slate-100 text-slate-500 hover:bg-[#21DBA4] hover:text-white'
-                                                }`}
-                                        >
-                                            {isCopied ? <CheckIcon size={14} /> : <Copy size={14} />}
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            <div className={`mt-4 pt-4 border-t flex items-center justify-between text-xs ${theme === 'dark' ? 'border-slate-700 text-slate-400' : 'border-slate-200 text-slate-500'
-                }`}>
-                <span>{t('language') === '언어' ? '초대 현황' : 'Invite Status'}</span>
-                <span className="font-bold">
-                    {usedCodesCount}/{inviteCodes.length} {t('language') === '언어' ? '사용됨' : 'used'}
-                    {extensionDays > 0 && (
-                        <span className="text-[#21DBA4] ml-2">(+{extensionDays} {t('language') === '언어' ? '일 연장' : 'days extended'})</span>
-                    )}
-                </span>
-            </div>
-        </div>
-    );
-};
-
 export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmin, isAdmin, t, user, initialTab }: SettingsModalProps) => {
     const [activeTab, setActiveTab] = useState(initialTab || 'general');
     const { theme, language, showThumbnails, notifications } = settings;
@@ -521,8 +408,6 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                 )}
             </div>
 
-            {/* Invite Codes Section */}
-            <InviteCodesSection theme={theme} t={t} />
 
             {/* Subscription Card */}
             <div className={`p-4 md:p-6 rounded-2xl relative overflow-hidden ${isPro
