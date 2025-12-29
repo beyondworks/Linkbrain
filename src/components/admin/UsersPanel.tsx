@@ -3,14 +3,15 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import {
     Search,
-    RefreshCw,
-    Loader2,
     ChevronDown,
     ChevronUp,
+    ArrowUp,
+    ArrowDown,
     Mail,
     User,
     Calendar,
-    Clock
+    Clock,
+    Loader2
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { SectionHeader } from '../shared/SectionHeader';
@@ -26,7 +27,7 @@ interface UsersPanelProps {
 const MASTER_EMAILS = ['beyondworks.br@gmail.com'];
 
 type PlanFilter = 'all' | 'Master' | 'Pro' | 'Free';
-type SortField = 'email' | 'clips' | 'date' | 'status';
+type SortField = 'email' | 'plan' | 'clips' | 'date' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 /**
@@ -114,6 +115,10 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
             switch (sortField) {
                 case 'email':
                     comparison = a.email.localeCompare(b.email);
+                    break;
+                case 'plan':
+                    const planOrder = { 'Master': 0, 'Pro': 1, 'Free': 2 };
+                    comparison = planOrder[a.plan] - planOrder[b.plan];
                     break;
                 case 'clips':
                     comparison = (a.clipCount || 0) - (b.clipCount || 0);
@@ -206,38 +211,6 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                         {filter === 'all' ? t.all : filter} ({planCounts[filter]})
                     </button>
                 ))}
-
-                {/* Sort Dropdown */}
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <select
-                            value={sortField}
-                            onChange={(e) => setSortField(e.target.value as SortField)}
-                            className={cn(
-                                "h-8 pl-3 pr-8 text-sm font-medium rounded-full appearance-none cursor-pointer",
-                                isDark
-                                    ? "bg-gray-800 text-gray-400 border-gray-700"
-                                    : "bg-slate-100 text-slate-600 border-slate-200"
-                            )}
-                        >
-                            <option value="email">{t.sortEmail}</option>
-                            <option value="clips">{t.sortClips}</option>
-                            <option value="date">{t.sortDate}</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </div>
-                    <button
-                        onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                        className={cn(
-                            "h-8 px-3 text-xs font-medium rounded-full transition-colors",
-                            isDark
-                                ? "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        )}
-                    >
-                        {sortOrder === 'asc' ? '↑' : '↓'} {sortOrder === 'asc' ? t.asc : t.desc}
-                    </button>
-                </div>
             </div>
 
             {/* Table Card */}
@@ -251,10 +224,54 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                             "border-b",
                             isDark ? "bg-gray-800 border-gray-700" : "bg-slate-100 border-slate-200"
                         )}>
-                            <th className={cn("px-6 py-4 text-left text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.email}</th>
-                            <th className={cn("px-6 py-4 text-center text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.plan}</th>
-                            <th className={cn("px-6 py-4 text-center text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.clips}</th>
-                            <th className={cn("px-6 py-4 text-center text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.date}</th>
+                            {/* Email - Sortable */}
+                            <th
+                                onClick={() => { setSortField('email'); setSortOrder(sortField === 'email' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                className={cn("px-6 py-4 text-left text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
+                            >
+                                <div className="flex items-center gap-1">
+                                    {t.email}
+                                    {sortField === 'email' && (
+                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
+                                    )}
+                                </div>
+                            </th>
+                            {/* Plan - Sortable */}
+                            <th
+                                onClick={() => { setSortField('plan'); setSortOrder(sortField === 'plan' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
+                            >
+                                <div className="flex items-center justify-center gap-1">
+                                    {t.plan}
+                                    {sortField === 'plan' && (
+                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
+                                    )}
+                                </div>
+                            </th>
+                            {/* Clips - Sortable */}
+                            <th
+                                onClick={() => { setSortField('clips'); setSortOrder(sortField === 'clips' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
+                            >
+                                <div className="flex items-center justify-center gap-1">
+                                    {t.clips}
+                                    {sortField === 'clips' && (
+                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
+                                    )}
+                                </div>
+                            </th>
+                            {/* Date - Sortable */}
+                            <th
+                                onClick={() => { setSortField('date'); setSortOrder(sortField === 'date' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
+                            >
+                                <div className="flex items-center justify-center gap-1">
+                                    {t.date}
+                                    {sortField === 'date' && (
+                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
+                                    )}
+                                </div>
+                            </th>
                             <th className={cn("px-6 py-4 text-center text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.status}</th>
                             <th className="w-12"></th>
                         </tr>
