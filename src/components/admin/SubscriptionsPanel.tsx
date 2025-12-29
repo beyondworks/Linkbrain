@@ -21,11 +21,7 @@ interface SubscriptionRow {
 }
 
 /**
- * SubscriptionsPanel
- * 
- * Storybook AdminDashboard.stories.tsx SubscriptionsPanel 스토리 100% 반영:
- * - 구독 통계 카드 (총 구독자, MRR, ARR)
- * - DataTable with Badge
+ * SubscriptionsPanel - AnalyticsPanel과 동일한 레이아웃
  */
 export function SubscriptionsPanel({ theme, language, admin }: SubscriptionsPanelProps) {
     const { analytics, users } = admin;
@@ -54,7 +50,7 @@ export function SubscriptionsPanel({ theme, language, admin }: SubscriptionsPane
     const proUsers = users?.filter(u => u.subscriptionTier === 'pro') || [];
     const activeSubs = analytics?.subscriptionStats?.active || 0;
 
-    // Sample data for demo (matching Storybook)
+    // Sample data for demo
     const subscriptionData: SubscriptionRow[] = proUsers.slice(0, 10).map(user => ({
         email: user.email,
         plan: 'Pro Monthly',
@@ -80,30 +76,26 @@ export function SubscriptionsPanel({ theme, language, admin }: SubscriptionsPane
     ];
 
     return (
-        <div className={cn(
-            "p-6 rounded-3xl border max-w-5xl",
-            isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
-        )}>
+        <div className="space-y-6">
+            {/* Header */}
             <SectionHeader
                 title={t.title}
                 subtitle={t.subtitle}
                 isDark={isDark}
                 action={
-                    <div className="flex gap-2">
-                        <button className={cn(
-                            "h-9 px-4 text-sm font-medium rounded-xl transition-colors",
-                            isDark
-                                ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        )}>
-                            {t.csvExport}
-                        </button>
-                    </div>
+                    <button className={cn(
+                        "h-9 px-4 text-sm font-medium rounded-xl border transition-colors",
+                        isDark
+                            ? "bg-slate-50 text-slate-600 hover:bg-slate-100 border-gray-800"
+                            : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200"
+                    )}>
+                        {t.csvExport}
+                    </button>
                 }
             />
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <StatCard
                     label={t.totalSubs}
                     value={activeSubs}
@@ -127,13 +119,18 @@ export function SubscriptionsPanel({ theme, language, admin }: SubscriptionsPane
                 />
             </div>
 
-            {/* DataTable */}
-            <DataTable
-                data={subscriptionData}
-                columns={columns}
-                isDark={isDark}
-                emptyMessage={t.noData}
-            />
+            {/* DataTable Card */}
+            <div className={cn(
+                "p-6 rounded-3xl border",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
+                <DataTable
+                    data={subscriptionData}
+                    columns={columns}
+                    isDark={isDark}
+                    emptyMessage={t.noData}
+                />
+            </div>
         </div>
     );
 }

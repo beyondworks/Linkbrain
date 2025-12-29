@@ -12,11 +12,7 @@ interface ServiceStatsPanelProps {
 }
 
 /**
- * ServiceStatsPanel
- * 
- * Storybook AdminDashboard.stories.tsx ServiceStatsPanel 스토리 100% 반영:
- * - DAU/WAU/MAU 통계
- * - 플랫폼별 사용량 프로그레스 바
+ * ServiceStatsPanel - AnalyticsPanel과 동일한 레이아웃
  */
 export function ServiceStatsPanel({ theme, language, admin }: ServiceStatsPanelProps) {
     const { analytics, fetchAnalytics } = admin;
@@ -52,10 +48,8 @@ export function ServiceStatsPanel({ theme, language, admin }: ServiceStatsPanelP
     const maxCount = Math.max(...platformData.map(p => p.count), 1);
 
     return (
-        <div className={cn(
-            "p-6 rounded-3xl border max-w-4xl",
-            isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
-        )}>
+        <div className="space-y-6">
+            {/* Header */}
             <SectionHeader
                 title={t.title}
                 subtitle={t.subtitle}
@@ -64,10 +58,10 @@ export function ServiceStatsPanel({ theme, language, admin }: ServiceStatsPanelP
                     <button
                         onClick={() => fetchAnalytics()}
                         className={cn(
-                            "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors",
+                            "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border transition-colors",
                             isDark
-                                ? "text-gray-400 bg-gray-800 hover:bg-gray-700"
-                                : "text-slate-500 bg-slate-50 hover:bg-slate-100"
+                                ? "text-gray-400 bg-slate-50 hover:bg-slate-100 border-gray-800"
+                                : "text-slate-500 bg-slate-50 hover:bg-slate-100 border-slate-200"
                         )}
                     >
                         <RefreshCw size={14} />
@@ -77,22 +71,22 @@ export function ServiceStatsPanel({ theme, language, admin }: ServiceStatsPanelP
             />
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard label="DAU" value={analytics.dau || 0} trend="+12%" trendUp={true} isDark={isDark} />
                 <StatCard label="WAU" value={analytics.wau || 0} trend="+8%" trendUp={true} isDark={isDark} />
                 <StatCard label="MAU" value={analytics.mau || 0} trend="+15%" trendUp={true} isDark={isDark} />
                 <StatCard label="Retention" value="68%" trend="-2%" trendUp={false} isDark={isDark} />
             </div>
 
-            {/* Platform Usage - Storybook Exact Pattern */}
+            {/* Platform Usage Card */}
             <div className={cn(
-                "p-4 rounded-xl",
-                isDark ? "bg-gray-900/50" : "bg-slate-50"
+                "p-6 rounded-3xl border",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
             )}>
-                <h4 className={cn("font-medium mb-3", isDark ? "text-slate-200" : "text-slate-700")}>
+                <h4 className={cn("font-semibold mb-4", isDark ? "text-slate-200" : "text-slate-700")}>
                     {t.platformUsage}
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {platformData.map((item) => (
                         <div key={item.platform} className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
