@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { AnalyticsPanel } from './AnalyticsPanel';
+import { ServiceStatsPanel } from './ServiceStatsPanel';
+import { SubscriptionsPanel } from './SubscriptionsPanel';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 import { InquiriesPanel } from './InquiriesPanel';
 import { PopupsPanel } from './PopupsPanel';
@@ -26,7 +28,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 
-type AdminTab = 'analytics' | 'users' | 'categories' | 'detailed' | 'announcements' | 'inquiries' | 'popups';
+type AdminTab = 'analytics' | 'serviceStats' | 'users' | 'subscriptions' | 'categories' | 'detailed' | 'announcements' | 'inquiries' | 'popups';
 
 interface AdminDashboardProps {
     theme: 'light' | 'dark';
@@ -108,7 +110,9 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
 
     const navItems: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
         { id: 'analytics', label: t.analytics, icon: <LayoutDashboard size={16} /> },
+        { id: 'serviceStats', label: t.serviceStats, icon: <TrendingUp size={16} /> },
         { id: 'users', label: t.users, icon: <Users size={16} /> },
+        { id: 'subscriptions', label: t.subscriptions, icon: <CreditCard size={16} /> },
         { id: 'categories', label: t.categories, icon: <Layers size={16} /> },
         { id: 'detailed', label: t.detailed, icon: <Activity size={16} /> },
         { id: 'announcements', label: t.announcements, icon: <Bell size={16} /> },
@@ -228,7 +232,9 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                 {/* Main Content */}
                 <main className="flex-1 p-6 lg:p-8 min-h-[calc(100vh-64px)]">
                     {activeTab === 'analytics' && <AnalyticsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'serviceStats' && <ServiceStatsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'users' && <UsersPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'subscriptions' && <SubscriptionsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'categories' && <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'detailed' && <DetailedAnalyticsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'announcements' && <AnnouncementsPanel theme={theme} language={language} admin={admin} />}
