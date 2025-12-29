@@ -23,6 +23,7 @@ import {
     Layers
 } from 'lucide-react';
 import { cn } from '../ui/utils';
+import { SectionHeader } from '../shared/SectionHeader';
 
 interface DetailedAnalyticsPanelProps {
     theme: 'light' | 'dark';
@@ -97,24 +98,25 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
 
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="flex items-end justify-between">
-                <div>
-                    <h2 className={cn("text-2xl font-bold tracking-tight mb-1", t$.text)}>{t.title}</h2>
-                    <p className={cn("text-sm", t$.textSub)}>{t.subtitle}</p>
-                </div>
-                <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className={cn(
-                        "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
-                        isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-black/5 text-gray-500 hover:bg-black/10"
-                    )}
-                >
-                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                    {t.refresh}
-                </button>
-            </div>
+            {/* Header - Using SectionHeader Component */}
+            <SectionHeader
+                title={t.title}
+                subtitle={t.subtitle}
+                isDark={isDark}
+                action={
+                    <button
+                        onClick={handleRefresh}
+                        disabled={loading}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                            isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-black/5 text-gray-500 hover:bg-black/10"
+                        )}
+                    >
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                        {t.refresh}
+                    </button>
+                }
+            />
 
             {/* Hourly & Weekday Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -10,6 +10,8 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
+import { cn } from '../ui/utils';
+import { SectionHeader } from '../shared/SectionHeader';
 import { toast } from 'sonner';
 
 interface InquiriesPanelProps {
@@ -84,21 +86,22 @@ export function InquiriesPanel({ theme, language, admin }: InquiriesPanelProps) 
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <h2 className={`text-xl font-bold ${textPrimary}`}>{t.title}</h2>
-                    {pendingCount > 0 && (
+            {/* Header - Using SectionHeader Component */}
+            <SectionHeader
+                title={t.title}
+                isDark={theme === 'dark'}
+                action={
+                    pendingCount > 0 ? (
                         <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 text-xs font-bold rounded-full">
                             {pendingCount} {t.pending}
                         </span>
-                    )}
-                </div>
-            </div>
+                    ) : undefined
+                }
+            />
 
             {/* List */}
             {inquiries.length === 0 ? (
-                <div className={`rounded-xl border p-8 text-center ${cardBg}`}>
+                <div className={cn("rounded-3xl border p-8 text-center", cardBg)}>
                     <MessageSquare className={`w-10 h-10 mx-auto mb-3 ${textSecondary}`} />
                     <p className={textSecondary}>{t.empty}</p>
                 </div>
