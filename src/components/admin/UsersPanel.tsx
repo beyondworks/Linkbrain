@@ -299,18 +299,20 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                                     <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
                                                         <h4 className={cn("text-sm font-semibold mb-4", isDark ? "text-gray-300" : "text-slate-700")}>{t.subscriptionMgmt}</h4>
                                                         <p className={cn("text-xs mb-2", isDark ? "text-gray-500" : "text-slate-500")}>{t.changePlan}</p>
-                                                        <select
-                                                            defaultValue={user.plan}
-                                                            className={cn(
-                                                                "w-full h-10 px-3 pr-8 rounded-xl border text-sm font-medium appearance-none bg-no-repeat bg-[right_12px_center] bg-[length:16px_16px]",
-                                                                isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-slate-200 text-slate-800"
-                                                            )}
-                                                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
-                                                        >
-                                                            <option value="Master">Master</option>
-                                                            <option value="Pro">Pro</option>
-                                                            <option value="Free">Free</option>
-                                                        </select>
+                                                        <div className="relative">
+                                                            <select
+                                                                defaultValue={user.plan}
+                                                                className={cn(
+                                                                    "w-full h-10 px-3 pr-10 rounded-xl border text-sm font-medium appearance-none cursor-pointer",
+                                                                    isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-slate-200 text-slate-800"
+                                                                )}
+                                                            >
+                                                                <option value="Master">Master</option>
+                                                                <option value="Pro">Pro</option>
+                                                                <option value="Free">Free</option>
+                                                            </select>
+                                                            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
