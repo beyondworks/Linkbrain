@@ -2316,8 +2316,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                  {isFilterOpen && (
                                     <>
                                        <div
-                                          className="fixed inset-0 z-20 bg-black/5 backdrop-blur-[1px]"
-                                          style={{ touchAction: 'none' }}
+                                          className="fixed inset-0 z-20"
                                           onClick={(e) => {
                                              e.stopPropagation();
                                              setIsFilterOpen(false);
@@ -2326,13 +2325,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        <div
                                           onMouseDown={(e) => e.stopPropagation()}
                                           onClick={(e) => e.stopPropagation()}
-                                          onTouchStart={(e) => e.stopPropagation()}
                                           className={`absolute left-0 top-full mt-1 w-4/5 rounded-xl shadow-xl border z-30 overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}
                                        >
                                           {/* Scrollable Content */}
                                           <div
                                              className="max-h-[50vh] overflow-y-auto overscroll-contain"
-                                             style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
                                           >
                                              <div className="px-3 py-1.5">
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
