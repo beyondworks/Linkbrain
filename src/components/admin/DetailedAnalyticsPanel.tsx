@@ -13,15 +13,7 @@ import {
     ResponsiveContainer,
     Legend
 } from 'recharts';
-import {
-    Clock,
-    Calendar,
-    TrendingUp,
-    RefreshCw,
-    Loader2,
-    Activity,
-    Layers
-} from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { SectionHeader } from '../shared/SectionHeader';
 
@@ -31,26 +23,19 @@ interface DetailedAnalyticsPanelProps {
     admin: ReturnType<typeof useAdmin>;
 }
 
-// ═══════════════════════════════════════════════════
-// Theme System (Reference Design)
-// ═══════════════════════════════════════════════════
-
-const useTheme = (isDark: boolean) => ({
-    card: isDark ? 'bg-[#161B22]' : 'bg-white',
-    cardBorder: isDark ? 'border-gray-800' : 'border-gray-200',
-    text: isDark ? 'text-white' : 'text-gray-900',
-    textMuted: isDark ? 'text-gray-400' : 'text-gray-500',
-    textSub: isDark ? 'text-gray-500' : 'text-gray-400',
-    itemBg: isDark ? 'bg-gray-900/50' : 'bg-gray-50',
-    itemHover: isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100',
-});
-
+/**
+ * DetailedAnalyticsPanel - Storybook Style
+ * 
+ * 수정사항:
+ * - 아이콘 박스 제거, 텍스트 헤더만
+ * - 시간대별/요일별/플랫폼추이 → 1열/3줄
+ * - 주간 리텐션 → 4열/1줄
+ */
 export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnalyticsPanelProps) {
     const { detailedAnalytics, fetchDetailedAnalytics } = admin;
     const [loading, setLoading] = React.useState(true);
     const [hasLoaded, setHasLoaded] = React.useState(false);
     const isDark = theme === 'dark';
-    const t$ = useTheme(isDark);
 
     useEffect(() => {
         if (hasLoaded) return;
@@ -70,8 +55,7 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
         weekdayActivity: language === 'ko' ? '요일별 활동' : 'Weekly Pattern',
         platformTrends: language === 'ko' ? '플랫폼 추이' : 'Platform Trends',
         retention: language === 'ko' ? '주간 리텐션' : 'Weekly Retention',
-        loading: language === 'ko' ? '로딩 중...' : 'Loading...',
-        clips: language === 'ko' ? '클립' : 'clips'
+        loading: language === 'ko' ? '로딩 중...' : 'Loading...'
     };
 
     const handleRefresh = async () => {
@@ -83,22 +67,24 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
 
     if (loading || !detailedAnalytics) {
         return (
-            <div className={cn("rounded-3xl border p-16 text-center", t$.card, t$.cardBorder)}>
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-orange-500/20 to-orange-600/5 flex items-center justify-center">
-                        <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
-                    </div>
-                    <p className={t$.textMuted}>{t.loading}</p>
-                </div>
+            <div className={cn(
+                "rounded-3xl border p-16 text-center",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
+                <Loader2 className="w-8 h-8 text-[#21DBA4] animate-spin mx-auto mb-4" />
+                <p className={isDark ? "text-gray-400" : "text-slate-500"}>{t.loading}</p>
             </div>
         );
     }
 
     const hourlyData = detailedAnalytics.hourlyActivity.map(h => ({ ...h, label: `${h.hour}h` }));
 
+    // Retention colors
+    const retentionColors = ['text-[#21DBA4]', 'text-[#21DBA4]', 'text-amber-500', 'text-orange-500'];
+
     return (
-        <div className="space-y-8">
-            {/* Header - Using SectionHeader Component */}
+        <div className="space-y-6">
+            {/* Header */}
             <SectionHeader
                 title={t.title}
                 subtitle={t.subtitle}
@@ -118,61 +104,58 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
                 }
             />
 
-            {/* Hourly & Weekday Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Hourly Activity */}
-                <div className={cn("rounded-3xl border p-6", t$.card, t$.cardBorder)}>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                            <Clock size={18} className="text-white" />
-                        </div>
-                        <span className={cn("font-semibold", t$.text)}>{t.hourlyActivity}</span>
-                    </div>
-                    <div className="h-56">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={hourlyData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1f1f23' : '#f1f5f9'} />
-                                <XAxis dataKey="label" stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={9} interval={3} />
-                                <YAxis stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={10} />
-                                <Tooltip contentStyle={{ backgroundColor: isDark ? '#18181b' : '#fff', border: `1px solid ${isDark ? '#27272a' : '#e2e8f0'}`, borderRadius: '12px', fontSize: '12px' }} />
-                                <Bar dataKey="count" fill="#21DBA4" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Weekday Activity */}
-                <div className={cn("rounded-3xl border p-6", t$.card, t$.cardBorder)}>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-                            <Calendar size={18} className="text-white" />
-                        </div>
-                        <span className={cn("font-semibold", t$.text)}>{t.weekdayActivity}</span>
-                    </div>
-                    <div className="h-56">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={detailedAnalytics.weekdayActivity} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1f1f23' : '#f1f5f9'} />
-                                <XAxis dataKey="day" stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={11} />
-                                <YAxis stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={10} />
-                                <Tooltip contentStyle={{ backgroundColor: isDark ? '#18181b' : '#fff', border: `1px solid ${isDark ? '#27272a' : '#e2e8f0'}`, borderRadius: '12px', fontSize: '12px' }} />
-                                <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+            {/* 시간대별 활동 (1열) */}
+            <div className={cn(
+                "rounded-3xl border p-6",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
+                <h3 className={cn("text-base font-bold mb-6", isDark ? "text-white" : "text-slate-900")}>
+                    {t.hourlyActivity}
+                </h3>
+                <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={hourlyData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1f1f23' : '#f1f5f9'} />
+                            <XAxis dataKey="label" stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={9} interval={3} />
+                            <YAxis stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={10} />
+                            <Tooltip contentStyle={{ backgroundColor: isDark ? '#18181b' : '#fff', border: `1px solid ${isDark ? '#27272a' : '#e2e8f0'}`, borderRadius: '12px', fontSize: '12px' }} />
+                            <Bar dataKey="count" fill="#21DBA4" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
-            {/* Platform Trends */}
-            <div className={cn("rounded-3xl border p-6", t$.card, t$.cardBorder)}>
+            {/* 요일별 활동 (1열) */}
+            <div className={cn(
+                "rounded-3xl border p-6",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
+                <h3 className={cn("text-base font-bold mb-6", isDark ? "text-white" : "text-slate-900")}>
+                    {t.weekdayActivity}
+                </h3>
+                <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={detailedAnalytics.weekdayActivity} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1f1f23' : '#f1f5f9'} />
+                            <XAxis dataKey="day" stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={11} />
+                            <YAxis stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={10} />
+                            <Tooltip contentStyle={{ backgroundColor: isDark ? '#18181b' : '#fff', border: `1px solid ${isDark ? '#27272a' : '#e2e8f0'}`, borderRadius: '12px', fontSize: '12px' }} />
+                            <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* 플랫폼 추이 (1열) */}
+            <div className={cn(
+                "rounded-3xl border p-6",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
                 <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                            <Layers size={18} className="text-white" />
-                        </div>
-                        <span className={cn("font-semibold", t$.text)}>{t.platformTrends}</span>
-                    </div>
-                    <span className={cn("text-xs", t$.textSub)}>30 days</span>
+                    <h3 className={cn("text-base font-bold", isDark ? "text-white" : "text-slate-900")}>
+                        {t.platformTrends}
+                    </h3>
+                    <span className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-400")}>30 days</span>
                 </div>
                 <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
@@ -199,7 +182,7 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
                             <XAxis dataKey="date" stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={9} tickFormatter={(v: string) => v.slice(5)} interval={5} />
                             <YAxis stroke={isDark ? '#3f3f46' : '#cbd5e1'} fontSize={10} />
                             <Tooltip contentStyle={{ backgroundColor: isDark ? '#18181b' : '#fff', border: `1px solid ${isDark ? '#27272a' : '#e2e8f0'}`, borderRadius: '12px', fontSize: '11px' }} />
-                            <Legend wrapperStyle={{ fontSize: '11px' }} formatter={(value) => <span className={t$.textMuted}>{value}</span>} />
+                            <Legend wrapperStyle={{ fontSize: '11px' }} />
                             <Area type="monotone" dataKey="youtube" stroke="#EF4444" strokeWidth={2} fill="url(#youtubeGrad)" />
                             <Area type="monotone" dataKey="instagram" stroke="#EC4899" strokeWidth={2} fill="url(#instaGrad)" />
                             <Area type="monotone" dataKey="threads" stroke="#3B82F6" strokeWidth={2} fill="url(#threadsGrad)" />
@@ -209,33 +192,31 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
                 </div>
             </div>
 
-            {/* Retention - Storybook Style (4열 수평 카드) */}
-            <div className={cn("rounded-3xl border p-6", t$.card, t$.cardBorder)}>
-                <h3 className={cn("text-base font-bold mb-6", t$.text)}>{t.retention}</h3>
+            {/* 주간 리텐션 (4열/1줄) */}
+            <div className={cn(
+                "rounded-3xl border p-6",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
+                <h3 className={cn("text-base font-bold mb-6", isDark ? "text-white" : "text-slate-900")}>
+                    {t.retention}
+                </h3>
                 <div className="grid grid-cols-4 gap-4">
-                    {detailedAnalytics.retentionData.map((data, index) => {
-                        // Gradient color based on week
-                        const colors = [
-                            'text-[#21DBA4]',  // Week 1 - Green
-                            'text-[#21DBA4]',  // Week 2 - Green
-                            'text-amber-500',   // Week 3 - Amber
-                            'text-orange-500'   // Week 4 - Orange
-                        ];
-                        return (
-                            <div
-                                key={data.week}
-                                className={cn(
-                                    "rounded-2xl p-5 text-center",
-                                    isDark ? "bg-gray-800/50" : "bg-slate-50"
-                                )}
-                            >
-                                <p className={cn("text-xs font-medium mb-3", t$.textSub)}>{data.week}</p>
-                                <p className={cn("text-3xl font-bold tabular-nums", colors[index] || colors[3])}>
-                                    {data.retention}%
-                                </p>
-                            </div>
-                        );
-                    })}
+                    {detailedAnalytics.retentionData.map((data, index) => (
+                        <div
+                            key={data.week}
+                            className={cn(
+                                "rounded-2xl p-5 text-center",
+                                isDark ? "bg-gray-800/50" : "bg-slate-50"
+                            )}
+                        >
+                            <p className={cn("text-xs font-medium mb-3", isDark ? "text-gray-500" : "text-slate-500")}>
+                                {data.week}
+                            </p>
+                            <p className={cn("text-3xl font-bold tabular-nums", retentionColors[index] || retentionColors[3])}>
+                                {data.retention}%
+                            </p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
