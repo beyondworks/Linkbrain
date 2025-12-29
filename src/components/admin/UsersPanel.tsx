@@ -26,6 +26,8 @@ interface UsersPanelProps {
 const MASTER_EMAILS = ['beyondworks.br@gmail.com'];
 
 type PlanFilter = 'all' | 'Master' | 'Pro' | 'Free';
+type SortField = 'email' | 'clips' | 'date' | 'status';
+type SortOrder = 'asc' | 'desc';
 
 /**
  * UsersPanel - 필터 + 상세정보 드롭다운 추가
@@ -40,6 +42,8 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
     const { users, usersLoading, fetchUserList } = admin;
     const [searchQuery, setSearchQuery] = useState('');
     const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
+    const [sortField, setSortField] = useState<SortField>('clips');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
     const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
     const [hasLoaded, setHasLoaded] = useState(false);
     const isDark = theme === 'dark';
@@ -65,7 +69,14 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         userId: language === 'ko' ? '유저 ID' : 'User ID',
         joinDate: language === 'ko' ? '가입일' : 'Joined',
         lastAccess: language === 'ko' ? '마지막 접속' : 'Last Access',
-        changePlan: language === 'ko' ? '플랜 변경' : 'Change Plan'
+        changePlan: language === 'ko' ? '플랜 변경' : 'Change Plan',
+        sortBy: language === 'ko' ? '정렬' : 'Sort by',
+        sortEmail: language === 'ko' ? '이메일순' : 'Email',
+        sortClips: language === 'ko' ? '클립순' : 'Clips',
+        sortDate: language === 'ko' ? '날짜순' : 'Date',
+        sortStatus: language === 'ko' ? '상태순' : 'Status',
+        asc: language === 'ko' ? '오름차순' : 'Ascending',
+        desc: language === 'ko' ? '내림차순' : 'Descending'
     };
 
     // Fetch users on mount
@@ -89,14 +100,36 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
         });
     }, [users]);
 
-    // Filter users
+    // Filter and sort users
     const filteredUsers = useMemo(() => {
-        return processedUsers.filter(user => {
+        let result = processedUsers.filter(user => {
             if (planFilter !== 'all' && user.plan !== planFilter) return false;
             if (searchQuery && !user.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
             return true;
         });
-    }, [processedUsers, planFilter, searchQuery]);
+
+        // Sort
+        result.sort((a, b) => {
+            let comparison = 0;
+            switch (sortField) {
+                case 'email':
+                    comparison = a.email.localeCompare(b.email);
+                    break;
+                case 'clips':
+                    comparison = (a.clipCount || 0) - (b.clipCount || 0);
+                    break;
+                case 'date':
+                    comparison = (a.createdAt || '').localeCompare(b.createdAt || '');
+                    break;
+                case 'status':
+                    comparison = 0; // All active for now
+                    break;
+            }
+            return sortOrder === 'asc' ? comparison : -comparison;
+        });
+
+        return result;
+    }, [processedUsers, planFilter, searchQuery, sortField, sortOrder]);
 
     // Plan counts
     const planCounts = useMemo(() => ({
@@ -173,6 +206,38 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                         {filter === 'all' ? t.all : filter} ({planCounts[filter]})
                     </button>
                 ))}
+
+                {/* Sort Dropdown */}
+                <div className="flex items-center gap-2">
+                    <div className="relative">
+                        <select
+                            value={sortField}
+                            onChange={(e) => setSortField(e.target.value as SortField)}
+                            className={cn(
+                                "h-8 pl-3 pr-8 text-sm font-medium rounded-full appearance-none cursor-pointer",
+                                isDark
+                                    ? "bg-gray-800 text-gray-400 border-gray-700"
+                                    : "bg-slate-100 text-slate-600 border-slate-200"
+                            )}
+                        >
+                            <option value="email">{t.sortEmail}</option>
+                            <option value="clips">{t.sortClips}</option>
+                            <option value="date">{t.sortDate}</option>
+                        </select>
+                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                    <button
+                        onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                        className={cn(
+                            "h-8 px-3 text-xs font-medium rounded-full transition-colors",
+                            isDark
+                                ? "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        )}
+                    >
+                        {sortOrder === 'asc' ? '↑' : '↓'} {sortOrder === 'asc' ? t.asc : t.desc}
+                    </button>
+                </div>
             </div>
 
             {/* Table Card */}
@@ -184,7 +249,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                     <thead>
                         <tr className={cn(
                             "border-b",
-                            isDark ? "bg-gray-900/50 border-gray-800" : "bg-slate-50 border-slate-100"
+                            isDark ? "bg-gray-800 border-gray-700" : "bg-slate-100 border-slate-200"
                         )}>
                             <th className={cn("px-6 py-4 text-left text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.email}</th>
                             <th className={cn("px-6 py-4 text-center text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.plan}</th>
@@ -207,8 +272,8 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                         onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
                                         className={cn(
                                             "border-b cursor-pointer transition-colors",
-                                            isDark ? "border-gray-800 hover:bg-gray-900/30" : "border-slate-50 hover:bg-slate-50/50",
-                                            expandedUserId === user.id && (isDark ? "bg-gray-900/30" : "bg-slate-50/50")
+                                            isDark ? "border-gray-800 hover:bg-gray-800/50" : "border-slate-100 hover:bg-slate-50",
+                                            expandedUserId === user.id && (isDark ? "bg-gray-800/50" : "bg-slate-50")
                                         )}
                                     >
                                         <td className="px-6 py-4">

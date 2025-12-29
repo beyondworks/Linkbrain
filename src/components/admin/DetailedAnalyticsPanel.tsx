@@ -200,12 +200,12 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
                 <h3 className={cn("text-base font-bold mb-6", isDark ? "text-white" : "text-slate-900")}>
                     {t.retention}
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="flex flex-row gap-4">
                     {detailedAnalytics.retentionData.map((data, index) => (
                         <div
                             key={data.week}
                             className={cn(
-                                "rounded-2xl p-5 text-center",
+                                "flex-1 rounded-2xl p-5 text-center",
                                 isDark ? "bg-gray-800/50" : "bg-slate-50"
                             )}
                         >
