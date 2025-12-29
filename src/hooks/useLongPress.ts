@@ -18,8 +18,12 @@ const useLongPress = (
 
     const start = useCallback(
         (event: React.MouseEvent | React.TouchEvent) => {
+            const eventType = 'touches' in event ? 'touch' : 'mouse';
+            console.log('[useLongPress] start:', eventType, 'isTouchEvent.current:', isTouchEvent.current);
+
             // If this is a mouse event but we're in a touch interaction, ignore it (simulated event)
             if (!('touches' in event) && isTouchEvent.current) {
+                console.log('[useLongPress] IGNORED simulated mouse start');
                 return;
             }
 
@@ -48,8 +52,12 @@ const useLongPress = (
 
     const clear = useCallback(
         (event: React.MouseEvent | React.TouchEvent) => {
+            const eventType = 'touches' in event ? 'touch' : 'mouse';
+            console.log('[useLongPress] clear:', eventType, 'isTouchEvent.current:', isTouchEvent.current);
+
             // If this is a mouse event but we started with touch, ignore it (simulated event)
             if (!('touches' in event) && isTouchEvent.current) {
+                console.log('[useLongPress] IGNORED simulated mouse clear');
                 return;
             }
 
@@ -60,6 +68,7 @@ const useLongPress = (
             // If the press duration was shorter than 'delay', it's a click.
             // But if we already triggered long press or moved too much, skip.
             if (!isLongPress.current && !hasMoved.current && onClick) {
+                console.log('[useLongPress] CALLING onClick');
                 onClick(event);
             }
 
