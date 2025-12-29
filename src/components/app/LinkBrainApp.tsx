@@ -1937,7 +1937,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             {/* Main Content */}
             <main
                ref={mainContentRef}
-               className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar"
+               className="flex-1 flex flex-col min-h-0 overflow-y-auto relative w-full isolate no-scrollbar"
                onClick={() => { if (isRearranging) setIsRearranging(false); }}
             >
 
