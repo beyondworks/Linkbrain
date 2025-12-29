@@ -33,11 +33,22 @@ const parseTimestamp = (value: any): Date | null => {
         const date = new Date(value);
         return isNaN(date.getTime()) ? null : date;
     }
-    // Already a Date
     if (value instanceof Date) {
         return value;
     }
     return null;
+};
+
+// Helper to get start of day
+const getStartOfDay = (date: Date) => {
+    const newDate = new Date(date);
+    newDate.setHours(0, 0, 0, 0);
+    return newDate;
+};
+
+// Helper function to format date as YYYY-MM-DD
+const formatDateKey = (date: Date) => {
+    return date.toISOString().split('T')[0];
 };
 
 // Types
@@ -396,17 +407,22 @@ export const useAdmin = () => {
                 // New users
                 const userCreated = parseTimestamp(data.createdAt);
                 if (userCreated) {
-                    if (userCreated >= today) newUsersToday++;
-                    if (userCreated >= weekAgo) newUsersThisWeek++;
-                    if (userCreated >= monthAgo) newUsersThisMonth++;
+                    const createdDate = getStartOfDay(userCreated);
+                    if (createdDate.getTime() >= today.getTime()) newUsersToday++;
+                    if (createdDate.getTime() >= weekAgo.getTime()) newUsersThisWeek++;
+                    if (createdDate.getTime() >= monthAgo.getTime()) newUsersThisMonth++;
                 }
 
                 // Active users (based on lastLoginAt)
                 const lastLogin = parseTimestamp(data.lastLoginAt);
-                if (lastLogin) {
-                    if (lastLogin >= today) activeUsersToday.add(doc.id);
-                    if (lastLogin >= weekAgo) activeUsersWeek.add(doc.id);
-                    if (lastLogin >= monthAgo) activeUsersMonth.add(doc.id);
+                // Fallback: If no lastLoginAt, use createdAt as activity for new users
+                const lastActivity = lastLogin || userCreated;
+
+                if (lastActivity) {
+                    const activityDate = getStartOfDay(lastActivity);
+                    if (activityDate.getTime() >= today.getTime()) activeUsersToday.add(doc.id);
+                    if (activityDate.getTime() >= weekAgo.getTime()) activeUsersWeek.add(doc.id);
+                    if (activityDate.getTime() >= monthAgo.getTime()) activeUsersMonth.add(doc.id);
                 }
             });
 
@@ -504,8 +520,8 @@ export const useAdmin = () => {
                     email: data.email || 'Unknown',
                     displayName: data.displayName || data.name,
                     photoURL: data.photoURL,
-                    createdAt: data.createdAt || '',
-                    lastLoginAt: data.lastLoginAt,
+                    createdAt: parseTimestamp(data.createdAt)?.toISOString() || '',
+                    lastLoginAt: parseTimestamp(data.lastLoginAt)?.toISOString(),
                     clipCount: userClips.length,
                     subscriptionStatus,
                     subscriptionTier: data.subscriptionTier || 'free',
@@ -717,14 +733,24 @@ export const useAdmin = () => {
                 const usersCreatedBefore = usersData.filter(u => {
                     const created = parseTimestamp(u.createdAt);
                     if (!created) return false;
-                    return created < weekStart;
+                    const createdDate = getStartOfDay(created);
+                    return createdDate.getTime() < weekStart.getTime();
                 }).length;
 
                 const activeInWeek = usersData.filter(u => {
                     const created = parseTimestamp(u.createdAt);
                     const lastLogin = parseTimestamp(u.lastLoginAt);
-                    if (!lastLogin || !created) return false;
-                    return created < weekStart && lastLogin >= weekStart && lastLogin < weekEnd;
+                    // Fallback: use createdAt if lastLoginAt is missing for new users
+                    const activity = lastLogin || created;
+
+                    if (!activity || !created) return false;
+
+                    const createdDate = getStartOfDay(created);
+                    const activityDate = getStartOfDay(activity);
+
+                    return createdDate.getTime() < weekStart.getTime() &&
+                        activityDate.getTime() >= weekStart.getTime() &&
+                        activityDate.getTime() < weekEnd.getTime();
                 }).length;
 
                 retentionData.push({
