@@ -1931,7 +1931,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          {/* Main Content Wrapper - translates down for pull-to-refresh */}
          <div
             ref={mainContentWrapperRef}
-            className="flex-1 flex flex-col h-full w-full overflow-hidden md:overflow-visible"
+            className="flex-1 flex flex-col h-full w-full overflow-visible"
             style={{ willChange: 'transform' }}
          >
             {/* Main Content */}
