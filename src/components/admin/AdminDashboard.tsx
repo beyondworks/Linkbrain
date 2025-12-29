@@ -106,9 +106,9 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
 
     return (
         <div className={cn("min-h-screen flex", isDark ? "bg-[#0A0A0B]" : "bg-[#F8F9FA]")}>
-            {/* Sidebar - 홈 화면 스타일 (좌측 고정, 전체 높이) */}
+            {/* Sidebar - 넓은 사이드바 */}
             <aside className={cn(
-                "w-56 shrink-0 border-r flex flex-col h-screen sticky top-0",
+                "w-64 shrink-0 border-r flex flex-col h-screen sticky top-0",
                 isDark ? "bg-[#111113] border-gray-800" : "bg-white border-gray-100"
             )}>
                 {/* Logo Area */}
@@ -177,17 +177,19 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                 </div>
             </aside>
 
-            {/* Main Content Area */}
+            {/* Main Content Area - 중앙 정렬 */}
             <main className="flex-1 p-8 overflow-y-auto">
-                {activeTab === 'analytics' && <AnalyticsPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'serviceStats' && <ServiceStatsPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'users' && <UsersPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'subscriptions' && <SubscriptionsPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'categories' && <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'detailed' && <DetailedAnalyticsPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'announcements' && <AnnouncementsPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'inquiries' && <InquiriesPanel theme={theme} language={language} admin={admin} />}
-                {activeTab === 'popups' && <PopupsPanel theme={theme} language={language} admin={admin} />}
+                <div className="max-w-5xl mx-auto">
+                    {activeTab === 'analytics' && <AnalyticsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'serviceStats' && <ServiceStatsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'users' && <UsersPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'subscriptions' && <SubscriptionsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'categories' && <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'detailed' && <DetailedAnalyticsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'announcements' && <AnnouncementsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'inquiries' && <InquiriesPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'popups' && <PopupsPanel theme={theme} language={language} admin={admin} />}
+                </div>
             </main>
         </div>
     );
