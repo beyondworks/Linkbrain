@@ -1436,10 +1436,16 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
    const isAllSelected = filteredLinks.length > 0 && filteredLinks.every(l => selectedItemIds.has(l.id));
 
-   const toggleFilter = (setFn: any, current: string[], val: string) => {
-      console.log('[toggleFilter] called with val:', val, 'current:', current, 'action:', current.includes(val) ? 'REMOVE' : 'ADD');
-      if (current.includes(val)) setFn(current.filter(c => c !== val));
-      else setFn([...current, val]);
+   const toggleFilter = (setFn: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
+      setFn(prev => {
+         const action = prev.includes(val) ? 'REMOVE' : 'ADD';
+         console.log('[toggleFilter] val:', val, 'prev:', prev, 'action:', action);
+         if (prev.includes(val)) {
+            return prev.filter(c => c !== val);
+         } else {
+            return [...prev, val];
+         }
+      });
    };
 
    const handleDeleteCategory = async (catId: string) => {
@@ -1677,7 +1683,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              id={`cat-${cat.id}`}
                                              isEditing={isRearranging}
                                              onLongPress={() => setIsRearranging(true)}
-                                             onClick={() => !isRearranging && toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                             onClick={() => !isRearranging && toggleFilter(setFilterCategories, cat.id)}
                                              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
                                                 ? 'bg-[#21DBA4] text-white shadow-sm'
                                                 : theme === 'dark'
@@ -1761,7 +1767,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              id={`src-${src}`}
                                              isEditing={isRearranging}
                                              onLongPress={() => setIsRearranging(true)}
-                                             onClick={() => !isRearranging && toggleFilter(setFilterSources, filterSources, src)}
+                                             onClick={() => !isRearranging && toggleFilter(setFilterSources, src)}
                                              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
                                                 ? 'bg-[#21DBA4] text-white shadow-sm'
                                                 : theme === 'dark'
@@ -2534,7 +2540,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                    {availableCategories.map(cat => (
                                                       <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
                                                          <div
-                                                            onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                                            onClick={() => toggleFilter(setFilterCategories, cat.id)}
                                                             className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
                                                          >
                                                             {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
@@ -2555,7 +2561,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                       {availableSources.map(src => (
                                                          <label key={src} className="flex items-center gap-2 cursor-pointer group">
                                                             <div
-                                                               onClick={() => toggleFilter(setFilterSources, filterSources, src)}
+                                                               onClick={() => toggleFilter(setFilterSources, src)}
                                                                className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]'}`}
                                                             >
                                                                {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
@@ -2587,7 +2593,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                       {(showAllTags ? availableTags : availableTags.slice(0, 8)).map((tag: string) => (
                                                          <button
                                                             key={tag}
-                                                            onClick={() => toggleFilter(setFilterTags, filterTags, tag)}
+                                                            onClick={() => toggleFilter(setFilterTags, tag)}
                                                             className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${filterTags.includes(tag) ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]'}`}
                                                          >
                                                             #{tag}
