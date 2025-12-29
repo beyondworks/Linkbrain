@@ -238,14 +238,22 @@ html {
   --ai-space-16: 64px;
 
   /* Typography Scale (1.25 ratio) */
-  --ai-text-xs: 0.75rem;     /* 12px */
-  --ai-text-sm: 0.875rem;    /* 14px */
-  --ai-text-base: 1rem;      /* 16px */
-  --ai-text-lg: 1.125rem;    /* 18px */
-  --ai-text-xl: 1.25rem;     /* 20px */
-  --ai-text-2xl: 1.5rem;     /* 24px */
-  --ai-text-3xl: 1.875rem;   /* 30px */
-  --ai-text-4xl: 2.25rem;    /* 36px */
+  --ai-text-xs: 0.75rem;
+  /* 12px */
+  --ai-text-sm: 0.875rem;
+  /* 14px */
+  --ai-text-base: 1rem;
+  /* 16px */
+  --ai-text-lg: 1.125rem;
+  /* 18px */
+  --ai-text-xl: 1.25rem;
+  /* 20px */
+  --ai-text-2xl: 1.5rem;
+  /* 24px */
+  --ai-text-3xl: 1.875rem;
+  /* 30px */
+  --ai-text-4xl: 2.25rem;
+  /* 36px */
 
   /* Border Radius */
   --ai-radius-sm: 6px;
@@ -433,8 +441,15 @@ html {
 
 /* Skeleton Loading */
 @keyframes ai-skeleton-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .ai-skeleton {
@@ -446,8 +461,15 @@ html {
 
 /* Fade In Animation */
 @keyframes ai-fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .ai-fade-in {
@@ -455,22 +477,46 @@ html {
 }
 
 /* Stagger Animation */
-.ai-stagger > * {
+.ai-stagger>* {
   opacity: 0;
   animation: ai-fade-in var(--ai-transition-slow) ease-out forwards;
 }
 
-.ai-stagger > *:nth-child(1) { animation-delay: 0ms; }
-.ai-stagger > *:nth-child(2) { animation-delay: 50ms; }
-.ai-stagger > *:nth-child(3) { animation-delay: 100ms; }
-.ai-stagger > *:nth-child(4) { animation-delay: 150ms; }
-.ai-stagger > *:nth-child(5) { animation-delay: 200ms; }
-.ai-stagger > *:nth-child(6) { animation-delay: 250ms; }
+.ai-stagger>*:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.ai-stagger>*:nth-child(2) {
+  animation-delay: 50ms;
+}
+
+.ai-stagger>*:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.ai-stagger>*:nth-child(4) {
+  animation-delay: 150ms;
+}
+
+.ai-stagger>*:nth-child(5) {
+  animation-delay: 200ms;
+}
+
+.ai-stagger>*:nth-child(6) {
+  animation-delay: 250ms;
+}
 
 /* Number Counter Animation */
 @keyframes ai-count-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .ai-count {
@@ -500,4 +546,30 @@ html {
 
 .ai-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--ai-border-hover);
+}
+
+@keyframes shake {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(1deg);
+  }
+
+  50% {
+    transform: rotate(0deg);
+  }
+
+  75% {
+    transform: rotate(-1deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out infinite;
 }
