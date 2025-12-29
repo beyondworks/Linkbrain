@@ -194,7 +194,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
             />
 
             {/* Filter Tabs */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
                 {(['all', 'Master', 'Pro', 'Free'] as PlanFilter[]).map(filter => (
                     <button
                         key={filter}
@@ -218,199 +218,201 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 "rounded-3xl border overflow-hidden",
                 isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
             )}>
-                <table className="w-full">
-                    <thead>
-                        <tr className={cn(
-                            "border-b",
-                            isDark ? "bg-gray-800 border-gray-700" : "bg-slate-100 border-slate-200"
-                        )}>
-                            {/* Email - Sortable */}
-                            <th
-                                onClick={() => { setSortField('email'); setSortOrder(sortField === 'email' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
-                                className={cn("px-6 py-4 text-left text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
-                            >
-                                <div className="flex items-center gap-1">
-                                    {t.email}
-                                    {sortField === 'email' && (
-                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
-                                    )}
-                                </div>
-                            </th>
-                            {/* Plan - Sortable */}
-                            <th
-                                onClick={() => { setSortField('plan'); setSortOrder(sortField === 'plan' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
-                                className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
-                            >
-                                <div className="flex items-center justify-center gap-1">
-                                    {t.plan}
-                                    {sortField === 'plan' && (
-                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
-                                    )}
-                                </div>
-                            </th>
-                            {/* Clips - Sortable */}
-                            <th
-                                onClick={() => { setSortField('clips'); setSortOrder(sortField === 'clips' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
-                                className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
-                            >
-                                <div className="flex items-center justify-center gap-1">
-                                    {t.clips}
-                                    {sortField === 'clips' && (
-                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
-                                    )}
-                                </div>
-                            </th>
-                            {/* Date - Sortable */}
-                            <th
-                                onClick={() => { setSortField('date'); setSortOrder(sortField === 'date' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
-                                className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5", isDark ? "text-gray-400" : "text-slate-500")}
-                            >
-                                <div className="flex items-center justify-center gap-1">
-                                    {t.date}
-                                    {sortField === 'date' && (
-                                        sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
-                                    )}
-                                </div>
-                            </th>
-                            <th className={cn("px-6 py-4 text-center text-xs font-semibold", isDark ? "text-gray-400" : "text-slate-500")}>{t.status}</th>
-                            <th className="w-12"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredUsers.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="py-12 text-center text-slate-400">{t.noUsers}</td>
-                            </tr>
-                        ) : (
-                            filteredUsers.map(user => (
-                                <React.Fragment key={user.id}>
-                                    {/* Main Row */}
-                                    <tr
-                                        onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
-                                        className={cn(
-                                            "border-b cursor-pointer transition-colors",
-                                            isDark ? "border-gray-800 hover:bg-gray-800/50" : "border-slate-100 hover:bg-slate-50",
-                                            expandedUserId === user.id && (isDark ? "bg-gray-800/50" : "bg-slate-50")
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className={cn(
+                                "border-b",
+                                isDark ? "bg-gray-800 border-gray-700" : "bg-slate-100 border-slate-200"
+                            )}>
+                                {/* Email - Sortable */}
+                                <th
+                                    onClick={() => { setSortField('email'); setSortOrder(sortField === 'email' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                    className={cn("px-6 py-4 text-left text-xs font-semibold cursor-pointer select-none hover:bg-black/5 whitespace-nowrap", isDark ? "text-gray-400" : "text-slate-500")}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        {t.email}
+                                        {sortField === 'email' && (
+                                            sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
                                         )}
-                                    >
-                                        <td className="px-6 py-4">
-                                            <span className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>{user.email}</span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Badge variant={user.plan === 'Master' || user.plan === 'Pro' ? 'pro' : 'free'} isDark={isDark}>{user.plan}</Badge>
-                                        </td>
-                                        <td className={cn("px-6 py-4 text-center text-sm", isDark ? "text-gray-400" : "text-slate-600")}>{user.clipCount || 0}</td>
-                                        <td className={cn("px-6 py-4 text-center text-sm", isDark ? "text-gray-400" : "text-slate-600")}>
-                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Badge variant="success" isDark={isDark}>{t.active}</Badge>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            {expandedUserId === user.id ? (
-                                                <ChevronUp size={16} className="text-slate-400 mx-auto" />
-                                            ) : (
-                                                <ChevronDown size={16} className="text-slate-400 mx-auto" />
+                                    </div>
+                                </th>
+                                {/* Plan - Sortable */}
+                                <th
+                                    onClick={() => { setSortField('plan'); setSortOrder(sortField === 'plan' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                    className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5 whitespace-nowrap", isDark ? "text-gray-400" : "text-slate-500")}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        {t.plan}
+                                        {sortField === 'plan' && (
+                                            sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
+                                        )}
+                                    </div>
+                                </th>
+                                {/* Clips - Sortable */}
+                                <th
+                                    onClick={() => { setSortField('clips'); setSortOrder(sortField === 'clips' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                    className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5 whitespace-nowrap", isDark ? "text-gray-400" : "text-slate-500")}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        {t.clips}
+                                        {sortField === 'clips' && (
+                                            sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
+                                        )}
+                                    </div>
+                                </th>
+                                {/* Date - Sortable */}
+                                <th
+                                    onClick={() => { setSortField('date'); setSortOrder(sortField === 'date' && sortOrder === 'asc' ? 'desc' : 'asc'); }}
+                                    className={cn("px-6 py-4 text-center text-xs font-semibold cursor-pointer select-none hover:bg-black/5 whitespace-nowrap", isDark ? "text-gray-400" : "text-slate-500")}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        {t.date}
+                                        {sortField === 'date' && (
+                                            sortOrder === 'asc' ? <ArrowUp size={12} className="text-[#21DBA4]" /> : <ArrowDown size={12} className="text-[#21DBA4]" />
+                                        )}
+                                    </div>
+                                </th>
+                                <th className={cn("px-6 py-4 text-center text-xs font-semibold whitespace-nowrap", isDark ? "text-gray-400" : "text-slate-500")}>{t.status}</th>
+                                <th className="w-12 whitespace-nowrap"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="py-12 text-center text-slate-400">{t.noUsers}</td>
+                                </tr>
+                            ) : (
+                                filteredUsers.map(user => (
+                                    <React.Fragment key={user.id}>
+                                        {/* Main Row */}
+                                        <tr
+                                            onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
+                                            className={cn(
+                                                "border-b cursor-pointer transition-colors",
+                                                isDark ? "border-gray-800 hover:bg-gray-800/50" : "border-slate-100 hover:bg-slate-50",
+                                                expandedUserId === user.id && (isDark ? "bg-gray-800/50" : "bg-slate-50")
                                             )}
-                                        </td>
-                                    </tr>
-
-                                    {/* Expanded Details Row */}
-                                    {expandedUserId === user.id && (
-                                        <tr className={isDark ? "bg-gray-900/20" : "bg-slate-50/30"}>
-                                            <td colSpan={6} className="px-6 py-6">
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    {/* Basic Info */}
-                                                    <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
-                                                        <h4 className={cn("text-sm font-semibold mb-4", isDark ? "text-gray-300" : "text-slate-700")}>{t.basicInfo}</h4>
-                                                        <div className="space-y-3">
-                                                            <div className="flex items-start gap-2">
-                                                                <Mail size={14} className="text-slate-400 mt-0.5" />
-                                                                <div>
-                                                                    <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.email}</p>
-                                                                    <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-800")}>{user.email}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-start gap-2">
-                                                                <User size={14} className="text-slate-400 mt-0.5" />
-                                                                <div>
-                                                                    <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.userId}</p>
-                                                                    <p className={cn("text-xs font-mono", isDark ? "text-gray-400" : "text-slate-600")}>{user.id}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-start gap-2">
-                                                                <Calendar size={14} className="text-slate-400 mt-0.5" />
-                                                                <div>
-                                                                    <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.joinDate}</p>
-                                                                    <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>
-                                                                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-start gap-2">
-                                                                <Clock size={14} className="text-slate-400 mt-0.5" />
-                                                                <div>
-                                                                    <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.lastAccess}</p>
-                                                                    <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>
-                                                                        {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '-'}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Platform Clips */}
-                                                    <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
-                                                        <div className="flex items-center justify-between mb-4">
-                                                            <h4 className={cn("text-sm font-semibold", isDark ? "text-gray-300" : "text-slate-700")}>{t.platformClips}</h4>
-                                                            <span className={cn("text-sm font-semibold", isDark ? "text-white" : "text-slate-800")}>{user.clipCount || 0}</span>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            {[
-                                                                { name: 'YouTube', count: user.platforms?.youtube || 0, color: '#FF0000' },
-                                                                { name: 'Instagram', count: user.platforms?.instagram || 0, color: '#E4405F' },
-                                                                { name: 'Threads', count: user.platforms?.threads || 0, color: isDark ? '#FFFFFF' : '#000000' },
-                                                                { name: 'Web', count: user.platforms?.web || 0, color: '#21DBA4' }
-                                                            ].map(p => (
-                                                                <div key={p.name} className={cn("p-3 rounded-xl", isDark ? "bg-gray-900/50" : "bg-slate-50")}>
-                                                                    <div className="flex items-center gap-2 mb-1">
-                                                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
-                                                                        <span className={cn("text-lg font-bold", isDark ? "text-white" : "text-slate-800")}>{p.count}</span>
-                                                                    </div>
-                                                                    <span className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{p.name}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Subscription Management */}
-                                                    <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
-                                                        <h4 className={cn("text-sm font-semibold mb-4", isDark ? "text-gray-300" : "text-slate-700")}>{t.subscriptionMgmt}</h4>
-                                                        <p className={cn("text-xs mb-2", isDark ? "text-gray-500" : "text-slate-500")}>{t.changePlan}</p>
-                                                        <div className="relative">
-                                                            <select
-                                                                defaultValue={user.plan}
-                                                                className={cn(
-                                                                    "w-full h-10 px-3 pr-10 rounded-xl border text-sm font-medium appearance-none cursor-pointer",
-                                                                    isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-slate-200 text-slate-800"
-                                                                )}
-                                                            >
-                                                                <option value="Master">Master</option>
-                                                                <option value="Pro">Pro</option>
-                                                                <option value="Free">Free</option>
-                                                            </select>
-                                                            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                        >
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>{user.email}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                <Badge variant={user.plan === 'Master' || user.plan === 'Pro' ? 'pro' : 'free'} isDark={isDark}>{user.plan}</Badge>
+                                            </td>
+                                            <td className={cn("px-6 py-4 text-center text-sm whitespace-nowrap", isDark ? "text-gray-400" : "text-slate-600")}>{user.clipCount || 0}</td>
+                                            <td className={cn("px-6 py-4 text-center text-sm whitespace-nowrap", isDark ? "text-gray-400" : "text-slate-600")}>
+                                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                <Badge variant="success" isDark={isDark}>{t.active}</Badge>
+                                            </td>
+                                            <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                {expandedUserId === user.id ? (
+                                                    <ChevronUp size={16} className="text-slate-400 mx-auto" />
+                                                ) : (
+                                                    <ChevronDown size={16} className="text-slate-400 mx-auto" />
+                                                )}
                                             </td>
                                         </tr>
-                                    )}
-                                </React.Fragment>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+
+                                        {/* Expanded Details Row */}
+                                        {expandedUserId === user.id && (
+                                            <tr className={isDark ? "bg-gray-900/20" : "bg-slate-50/30"}>
+                                                <td colSpan={6} className="px-6 py-6">
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                        {/* Basic Info */}
+                                                        <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
+                                                            <h4 className={cn("text-sm font-semibold mb-4", isDark ? "text-gray-300" : "text-slate-700")}>{t.basicInfo}</h4>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-start gap-2">
+                                                                    <Mail size={14} className="text-slate-400 mt-0.5" />
+                                                                    <div>
+                                                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.email}</p>
+                                                                        <p className={cn("text-sm font-medium break-all", isDark ? "text-white" : "text-slate-800")}>{user.email}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-start gap-2">
+                                                                    <User size={14} className="text-slate-400 mt-0.5" />
+                                                                    <div>
+                                                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.userId}</p>
+                                                                        <p className={cn("text-xs font-mono break-all", isDark ? "text-gray-400" : "text-slate-600")}>{user.id}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-start gap-2">
+                                                                    <Calendar size={14} className="text-slate-400 mt-0.5" />
+                                                                    <div>
+                                                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.joinDate}</p>
+                                                                        <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>
+                                                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-start gap-2">
+                                                                    <Clock size={14} className="text-slate-400 mt-0.5" />
+                                                                    <div>
+                                                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.lastAccess}</p>
+                                                                        <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>
+                                                                            {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '-'}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Platform Clips */}
+                                                        <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <h4 className={cn("text-sm font-semibold", isDark ? "text-gray-300" : "text-slate-700")}>{t.platformClips}</h4>
+                                                                <span className={cn("text-sm font-semibold", isDark ? "text-white" : "text-slate-800")}>{user.clipCount || 0}</span>
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                {[
+                                                                    { name: 'YouTube', count: user.platforms?.youtube || 0, color: '#FF0000' },
+                                                                    { name: 'Instagram', count: user.platforms?.instagram || 0, color: '#E4405F' },
+                                                                    { name: 'Threads', count: user.platforms?.threads || 0, color: isDark ? '#FFFFFF' : '#000000' },
+                                                                    { name: 'Web', count: user.platforms?.web || 0, color: '#21DBA4' }
+                                                                ].map(p => (
+                                                                    <div key={p.name} className={cn("p-3 rounded-xl", isDark ? "bg-gray-900/50" : "bg-slate-50")}>
+                                                                        <div className="flex items-center gap-2 mb-1">
+                                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                                                                            <span className={cn("text-lg font-bold", isDark ? "text-white" : "text-slate-800")}>{p.count}</span>
+                                                                        </div>
+                                                                        <span className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{p.name}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Subscription Management */}
+                                                        <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
+                                                            <h4 className={cn("text-sm font-semibold mb-4", isDark ? "text-gray-300" : "text-slate-700")}>{t.subscriptionMgmt}</h4>
+                                                            <p className={cn("text-xs mb-2", isDark ? "text-gray-500" : "text-slate-500")}>{t.changePlan}</p>
+                                                            <div className="relative">
+                                                                <select
+                                                                    defaultValue={user.plan}
+                                                                    className={cn(
+                                                                        "w-full h-10 px-3 pr-10 rounded-xl border text-sm font-medium appearance-none cursor-pointer",
+                                                                        isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-slate-200 text-slate-800"
+                                                                    )}
+                                                                >
+                                                                    <option value="Master">Master</option>
+                                                                    <option value="Pro">Pro</option>
+                                                                    <option value="Free">Free</option>
+                                                                </select>
+                                                                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
