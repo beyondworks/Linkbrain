@@ -31,7 +31,7 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { DateRange } from "react-day-picker";
-import { addDays, format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { addDays, subDays, format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ko } from "date-fns/locale";
 import { StatCard } from './AIInsightsDashboard/StatCard';
 import { TagReadingRateCard } from './AIInsightsDashboard/TagReadingRateCard';
@@ -1397,8 +1397,8 @@ export const AIInsightsDashboard = ({
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const now = new Date();
     return {
-      from: startOfWeek(now, { weekStartsOn: 1 }), // Monday start
-      to: endOfWeek(now, { weekStartsOn: 1 })
+      from: subDays(now, 6), // Recent 7 days (including today)
+      to: now
     };
   });
 
@@ -1407,13 +1407,13 @@ export const AIInsightsDashboard = ({
     const now = new Date();
     if (period === 'weekly') {
       setDateRange({
-        from: startOfWeek(now, { weekStartsOn: 1 }),
-        to: endOfWeek(now, { weekStartsOn: 1 })
+        from: subDays(now, 6),
+        to: now
       });
     } else if (period === 'monthly') {
       setDateRange({
-        from: startOfMonth(now),
-        to: endOfMonth(now)
+        from: subDays(now, 29),
+        to: now
       });
     }
   };
