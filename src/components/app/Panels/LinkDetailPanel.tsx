@@ -165,6 +165,9 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; content: string; timestamp?: number }>>([]);
     const [chatExpanded, setChatExpanded] = useState(false);
     const [chatMaximized, setChatMaximized] = useState(false); // 채팅창 크기 조절
+    const [isAskAIHidden, setIsAskAIHidden] = useState(true); // AskAI 패널 숨김 상태 (기본값 숨김)
+    const [isAddingTag, setIsAddingTag] = useState(false); // 태그 추가 모드
+    const [newTagInput, setNewTagInput] = useState(''); // 새 태그 입력
     const chatMessagesRef = useRef<HTMLDivElement>(null);
     const chatInputRef = useRef<HTMLInputElement>(null);
 
@@ -828,22 +831,71 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
                         </div>
 
                         {/* Tags */}
-                        <div>
+                        <div className="mb-4">
                             <h3 className="font-bold text-sm text-slate-400 uppercase tracking-wider mb-3">{t('tags')}</h3>
                             <div className="flex flex-wrap gap-2">
                                 {link.tags.map((tag: string) => (
-                                    <span key={tag} className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition-colors cursor-pointer ${theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400 hover:border-[#21DBA4]' : 'bg-white border-slate-200 text-slate-600 hover:border-[#21DBA4] hover:text-[#21DBA4]'}`}>
-                                        #{tag}
-                                    </span>
+                                    <div key={tag} className="group relative">
+                                        <span className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-400 hover:border-[#21DBA4]' : 'bg-white border-slate-200 text-slate-600 hover:border-[#21DBA4] hover:text-[#21DBA4]'}`}>
+                                            #{tag}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const newTags = link.tags.filter((t: string) => t !== tag);
+                                                    if (onUpdateClip) onUpdateClip(link.id, { tags: newTags });
+                                                }}
+                                                className="ml-1 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                                            >
+                                                <X size={10} />
+                                            </button>
+                                        </span>
+                                    </div>
                                 ))}
-                                <button className={`px-3 py-1.5 border border-dashed rounded-lg text-xs font-bold flex items-center gap-1 transition-colors ${theme === 'dark' ? 'border-slate-700 text-slate-500 hover:text-slate-300' : 'border-slate-300 text-slate-400 hover:text-slate-600 hover:border-slate-400'}`}>
-                                    <Plus size={12} /> {t('addLink')}
-                                </button>
+
+                                {isAddingTag ? (
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        value={newTagInput}
+                                        onChange={(e) => setNewTagInput(e.target.value)}
+                                        onBlur={() => {
+                                            if (newTagInput.trim()) {
+                                                const newTags = [...(link.tags || []), newTagInput.trim()];
+                                                if (onUpdateClip) onUpdateClip(link.id, { tags: newTags });
+                                            }
+                                            setNewTagInput('');
+                                            setIsAddingTag(false);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                if (newTagInput.trim()) {
+                                                    const newTags = [...(link.tags || []), newTagInput.trim()];
+                                                    if (onUpdateClip) onUpdateClip(link.id, { tags: newTags });
+                                                }
+                                                setNewTagInput('');
+                                                setIsAddingTag(false);
+                                            } else if (e.key === 'Escape') {
+                                                setNewTagInput('');
+                                                setIsAddingTag(false);
+                                            }
+                                        }}
+                                        className={`px-3 py-1.5 border rounded-lg text-xs font-bold outline-none min-w-[80px] ${theme === 'dark' ? 'bg-slate-900 border-[#21DBA4] text-white' : 'bg-white border-[#21DBA4] text-slate-900'}`}
+                                        placeholder="Tag..."
+                                    />
+                                ) : (
+                                    <button
+                                        onClick={() => setIsAddingTag(true)}
+                                        className={`px-3 py-1.5 border border-dashed rounded-lg text-xs font-bold flex items-center gap-1 transition-colors ${theme === 'dark' ? 'border-slate-700 text-slate-500 hover:text-slate-300' : 'border-slate-300 text-slate-400 hover:text-slate-600 hover:border-slate-400'}`}
+                                    >
+                                        <Plus size={12} /> {language === 'ko' ? '태그 추가' : 'Add Tag'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    <div className="h-32 md:h-20"></div>
+                    <div className="transition-all duration-300" style={{ height: isAskAIHidden ? '6rem' : (chatMessages.length > 0 ? '55vh' : '18rem') }}></div>
                 </div>
 
                 {/* AI Chat Section - Context-aware */}
@@ -866,41 +918,63 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
                         hasSummary: !!link.summary,
                         relatedCount: relatedClipsForDisplay.length
                     };
+                    if (isAskAIHidden) {
+                        return (
+                            <div className="absolute bottom-6 right-6 z-30">
+                                <button
+                                    onClick={() => setIsAskAIHidden(false)}
+                                    className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 ${theme === 'dark' ? 'bg-slate-800 text-white border border-slate-700' : 'bg-white text-slate-800 border border-slate-100'}`}
+                                >
+                                    <Sparkles size={16} className="text-[#21DBA4]" />
+                                    <span className="text-sm font-bold">{language === 'ko' ? 'AskAI 열기' : 'Open AskAI'}</span>
+                                </button>
+                            </div>
+                        );
+                    }
                     return (
                         <div className={`absolute bottom-0 left-0 right-0 z-20 shadow-xl overflow-hidden flex flex-col transition-all duration-300 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`} style={{ maxHeight: chatMaximized ? 'calc(100% - 64px)' : '50vh' }}>
                             {/* Context Display - Always visible */}
-                            <div className={`shrink-0 px-5 py-3 border-t ${theme === 'dark' ? 'border-slate-800 bg-slate-900/95' : 'border-slate-100 bg-white/95'}`}>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Sparkles size={14} className="text-[#21DBA4]" />
-                                    <span className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                                        {language === 'ko' ? '이 질문은 아래 콘텐츠를 기반으로 답변돼요' : 'AI will answer based on:'}
-                                    </span>
-                                </div>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-                                        {clipContext.currentClip.slice(0, 25)}{clipContext.currentClip.length > 25 ? '...' : ''}
-                                    </span>
-                                    {clipContext.hasSummary && (
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : 'bg-[#E0FBF4] text-[#21DBA4]'}`}>
-                                            AI 요약
+                            <div className={`shrink-0 px-5 py-3 border-t flex items-start justify-between ${theme === 'dark' ? 'border-slate-800 bg-slate-900/95' : 'border-slate-100 bg-white/95'}`}>
+                                <div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Sparkles size={14} className="text-[#21DBA4]" />
+                                        <span className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {language === 'ko' ? '이 질문은 아래 콘텐츠를 기반으로 답변돼요' : 'AI will answer based on:'}
                                         </span>
-                                    )}
-                                    {clipContext.tags.length > 0 && (
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-2">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
-                                            {clipContext.tags.join(', ')}
+                                            {clipContext.currentClip.slice(0, 25)}{clipContext.currentClip.length > 25 ? '...' : ''}
                                         </span>
-                                    )}
-                                    {clipContext.hasNotes && (
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
-                                            {language === 'ko' ? '내 메모' : 'My Notes'}
-                                        </span>
-                                    )}
-                                    {clipContext.relatedCount > 0 && (
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                                            {language === 'ko' ? `관련 클립 ${clipContext.relatedCount}개` : `${clipContext.relatedCount} related`}
-                                        </span>
-                                    )}
+                                        {clipContext.hasSummary && (
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : 'bg-[#E0FBF4] text-[#21DBA4]'}`}>
+                                                AI 요약
+                                            </span>
+                                        )}
+                                        {clipContext.tags.length > 0 && (
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                                                {clipContext.tags.join(', ')}
+                                            </span>
+                                        )}
+                                        {clipContext.hasNotes && (
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+                                                {language === 'ko' ? '내 메모' : 'My Notes'}
+                                            </span>
+                                        )}
+                                        {clipContext.relatedCount > 0 && (
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                                                {language === 'ko' ? `관련 클립 ${clipContext.relatedCount}개` : `${clipContext.relatedCount} related`}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={() => setIsAskAIHidden(true)}
+                                    className={`p-1.5 rounded-lg -mr-2 transition-colors ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-500' : 'hover:bg-slate-100 text-slate-400'}`}
+                                    title={language === 'ko' ? 'AskAI 숨기기' : 'Hide AskAI'}
+                                >
+                                    <ChevronDown size={18} />
+                                </button>
                             </div>
 
                             {/* Toggle Header - show when messages exist */}
@@ -1058,7 +1132,7 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
                                 {/* Open AskAI Modal button */}
                                 <button
                                     onClick={() => setIsAskAIModalOpen(true)}
-                                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4] hover:bg-slate-700' : 'bg-slate-100 text-[#21DBA4] hover:bg-slate-200'}`}
+                                    className={`w-10 h-10 rounded-lg hidden md:flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-slate-800 text-[#21DBA4] hover:bg-slate-700' : 'bg-slate-100 text-[#21DBA4] hover:bg-slate-200'}`}
                                     title={language === 'ko' ? 'AskAI 확장' : 'Expand AskAI'}
                                 >
                                     <Sparkles size={16} />
