@@ -36,72 +36,31 @@ interface AdminDashboardProps {
     onBack: () => void;
 }
 
-// ═══════════════════════════════════════════════════
-// Theme System (Storybook MUI Style)
-// ═══════════════════════════════════════════════════
-const useTheme = (isDark: boolean) => ({
-    // Layout backgrounds
-    bg: isDark ? 'bg-[#0A0A0B]' : 'bg-slate-50',
-    sidebarBg: isDark ? 'bg-[#111113] border-gray-800' : 'bg-white border-slate-200',
-    headerBg: isDark ? 'bg-[#111113]/95 border-gray-800' : 'bg-white/95 border-slate-200',
-    // Text
-    text: isDark ? 'text-[#FAFAFA]' : 'text-slate-800',
-    textMuted: isDark ? 'text-[#71717A]' : 'text-slate-500',
-    // Nav item
-    navActive: 'bg-[#21DBA4]/10 text-[#21DBA4]',
-    navInactive: isDark ? 'text-gray-400 hover:bg-gray-800' : 'text-slate-500 hover:bg-slate-50',
-});
-
-// NavItem Component (matching Storybook)
-function NavItem({
-    icon,
-    label,
-    active,
-    onClick,
-    isDark
-}: {
-    icon: React.ReactNode;
-    label: string;
-    active: boolean;
-    onClick: () => void;
-    isDark: boolean;
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left",
-                active
-                    ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
-                    : isDark
-                        ? 'text-gray-400 hover:bg-gray-800'
-                        : 'text-slate-500 hover:bg-slate-50'
-            )}
-        >
-            {icon}
-            <span>{label}</span>
-        </button>
-    );
-}
-
+/**
+ * AdminDashboard
+ * 
+ * Storybook AdminDashboard.stories.tsx Default 스토리 100% 반영:
+ * - 배경: bg-slate-50 (라이트) / bg-[#0A0A0B] (다크)
+ * - 사이드바: w-60, bg-white, border-r, 데스크톱에서 항상 표시
+ * - 메인: flex-1 p-6
+ */
 export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps) {
     const [activeTab, setActiveTab] = useState<AdminTab>('analytics');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const admin = useAdmin();
     const isDark = theme === 'dark';
-    const t$ = useTheme(isDark);
 
     const t = {
-        title: language === 'ko' ? 'Linkbrain Admin' : 'Linkbrain Admin',
-        analytics: language === 'ko' ? '개요' : 'Overview',
-        serviceStats: language === 'ko' ? '서비스 통계' : 'Service Stats',
-        users: language === 'ko' ? '사용자' : 'Users',
-        subscriptions: language === 'ko' ? '구독' : 'Subscriptions',
-        categories: language === 'ko' ? '카테고리' : 'Categories',
-        detailed: language === 'ko' ? '분석' : 'Analytics',
-        announcements: language === 'ko' ? '공지사항' : 'Announcements',
-        inquiries: language === 'ko' ? '문의' : 'Inquiries',
-        popups: language === 'ko' ? '팝업' : 'Popups',
+        title: 'Linkbrain Admin',
+        analytics: language === 'ko' ? 'Overview' : 'Overview',
+        serviceStats: language === 'ko' ? 'Service Stats' : 'Service Stats',
+        users: language === 'ko' ? 'Users' : 'Users',
+        subscriptions: language === 'ko' ? 'Subscriptions' : 'Subscriptions',
+        categories: language === 'ko' ? 'Categories' : 'Categories',
+        detailed: language === 'ko' ? 'Analytics' : 'Analytics',
+        announcements: language === 'ko' ? 'Announcements' : 'Announcements',
+        inquiries: language === 'ko' ? 'Inquiries' : 'Inquiries',
+        popups: language === 'ko' ? 'Popups' : 'Popups',
         loading: language === 'ko' ? '로딩 중...' : 'Loading...',
         accessDenied: language === 'ko' ? '접근 불가' : 'Access Denied',
         accessDeniedDesc: language === 'ko' ? '관리자 권한이 필요합니다.' : 'Administrator access required.',
@@ -123,12 +82,10 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
     // Loading State
     if (admin.loading) {
         return (
-            <div className={cn("min-h-screen flex items-center justify-center", t$.bg)}>
+            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#0A0A0B]" : "bg-slate-50")}>
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-[#21DBA4] to-[#1bc290] flex items-center justify-center">
-                        <Loader2 className="w-6 h-6 animate-spin text-white" />
-                    </div>
-                    <p className={t$.textMuted}>{t.loading}</p>
+                    <Loader2 className="w-8 h-8 animate-spin text-[#21DBA4]" />
+                    <p className="text-slate-500">{t.loading}</p>
                 </div>
             </div>
         );
@@ -137,18 +94,16 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
     // Access Denied
     if (!admin.isAdmin) {
         return (
-            <div className={cn("min-h-screen flex items-center justify-center", t$.bg)}>
+            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#0A0A0B]" : "bg-slate-50")}>
                 <div className="flex flex-col items-center gap-6 text-center px-8">
-                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-500/20 to-red-600/10 flex items-center justify-center">
-                        <ShieldAlert className="w-10 h-10 text-red-500" />
-                    </div>
-                    <div className="space-y-2">
-                        <h1 className={cn("text-2xl font-bold tracking-tight", t$.text)}>{t.accessDenied}</h1>
-                        <p className={cn("text-sm max-w-xs", t$.textMuted)}>{t.accessDeniedDesc}</p>
+                    <ShieldAlert className="w-16 h-16 text-red-500" />
+                    <div>
+                        <h1 className={cn("text-2xl font-bold mb-2", isDark ? "text-white" : "text-slate-800")}>{t.accessDenied}</h1>
+                        <p className="text-slate-500">{t.accessDeniedDesc}</p>
                     </div>
                     <button
                         onClick={onBack}
-                        className="px-8 py-3 bg-gradient-to-r from-[#21DBA4] to-[#1bc290] text-white rounded-3xl font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[#21DBA4]/20"
+                        className="px-6 py-3 bg-[#21DBA4] text-white rounded-xl font-medium hover:bg-[#1bc290] transition-colors"
                     >
                         {t.back}
                     </button>
@@ -158,9 +113,12 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
     }
 
     return (
-        <div className={cn("min-h-screen", t$.bg)}>
-            {/* Header - Storybook Style */}
-            <header className={cn("h-16 border-b flex items-center px-6", t$.headerBg)}>
+        <div className={cn("min-h-screen", isDark ? "bg-[#0A0A0B]" : "bg-slate-50")}>
+            {/* Header - Storybook Exact Pattern */}
+            <header className={cn(
+                "h-16 border-b flex items-center px-6",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-200"
+            )}>
                 <div className="flex items-center gap-3">
                     {/* Mobile Menu Toggle */}
                     <button
@@ -173,50 +131,44 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                         {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
                     </button>
 
-                    {/* Back Button */}
-                    <button
-                        onClick={onBack}
-                        className={cn(
-                            "hidden lg:flex w-8 h-8 rounded-lg items-center justify-center",
-                            isDark ? "bg-gray-800 hover:bg-gray-700 text-gray-400" : "bg-slate-100 hover:bg-slate-200 text-slate-500"
-                        )}
-                    >
-                        <ArrowLeft size={16} />
-                    </button>
-
                     {/* Logo + Title */}
                     <div className="w-8 h-8 bg-[#21DBA4] rounded-lg" />
-                    <span className={cn("font-bold", t$.text)}>{t.title}</span>
+                    <span className={cn("font-bold", isDark ? "text-white" : "text-slate-800")}>{t.title}</span>
                 </div>
 
-                {/* Email Badge */}
+                {/* Email + Avatar */}
                 <div className="ml-auto flex items-center gap-4">
-                    <span className={cn("text-sm hidden sm:block", t$.textMuted)}>{admin.user?.email}</span>
+                    <span className="text-sm text-slate-500 hidden sm:block">{admin.user?.email}</span>
                     <div className="w-8 h-8 bg-slate-200 rounded-full" />
                 </div>
             </header>
 
             <div className="flex">
-                {/* Sidebar - Storybook Style */}
+                {/* Sidebar - Storybook w-60 Pattern (always visible on desktop) */}
                 <aside className={cn(
-                    "fixed inset-y-0 left-0 z-40 w-60 pt-16 transform transition-transform duration-200 lg:relative lg:translate-x-0 lg:pt-0",
-                    "border-r min-h-[calc(100vh-64px)] p-4",
-                    t$.sidebarBg,
-                    sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                    "w-60 border-r min-h-[calc(100vh-64px)] p-4",
+                    isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-200",
+                    // Mobile: hidden by default, shown when sidebarOpen
+                    "fixed inset-y-0 left-0 z-40 pt-16 transform transition-transform lg:relative lg:translate-x-0 lg:pt-0",
+                    sidebarOpen ? "translate-x-0" : "-translate-x-full"
                 )}>
                     <nav className="space-y-1">
                         {navItems.map((item) => (
-                            <NavItem
+                            <button
                                 key={item.id}
-                                icon={item.icon}
-                                label={item.label}
-                                active={activeTab === item.id}
-                                onClick={() => {
-                                    setActiveTab(item.id);
-                                    setSidebarOpen(false);
-                                }}
-                                isDark={isDark}
-                            />
+                                onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+                                className={cn(
+                                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left",
+                                    activeTab === item.id
+                                        ? "bg-[#21DBA4]/10 text-[#21DBA4]"
+                                        : isDark
+                                            ? "text-gray-400 hover:bg-gray-800"
+                                            : "text-slate-500 hover:bg-slate-50"
+                                )}
+                            >
+                                {item.icon}
+                                <span>{item.label}</span>
+                            </button>
                         ))}
                     </nav>
                 </aside>
@@ -229,8 +181,8 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                     />
                 )}
 
-                {/* Main Content */}
-                <main className="flex-1 p-6 lg:p-8 min-h-[calc(100vh-64px)]">
+                {/* Main Content - Storybook p-6 Pattern */}
+                <main className="flex-1 p-6 min-h-[calc(100vh-64px)]">
                     {activeTab === 'analytics' && <AnalyticsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'serviceStats' && <ServiceStatsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'users' && <UsersPanel theme={theme} language={language} admin={admin} />}

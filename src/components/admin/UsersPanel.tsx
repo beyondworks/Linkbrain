@@ -54,10 +54,10 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
     const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
     const isDark = theme === 'dark';
 
-    // Theme
-    const card = isDark ? 'bg-[#161B22]' : 'bg-white';
-    const cardBorder = isDark ? 'border-gray-800' : 'border-gray-200';
-    const text = isDark ? 'text-white' : 'text-gray-900';
+    // Theme - Storybook Pattern (slate colors)
+    const card = isDark ? 'bg-[#111113]' : 'bg-white';
+    const cardBorder = isDark ? 'border-gray-800' : 'border-slate-100';
+    const text = isDark ? 'text-white' : 'text-slate-900';
     const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
     const textSub = isDark ? 'text-gray-500' : 'text-gray-400';
     const tableBg = isDark ? 'bg-gray-900/50' : 'bg-gray-50';
@@ -265,28 +265,43 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                    <h2 className={cn("text-2xl font-bold tracking-tight mb-1", text)}>{t.title}</h2>
-                    <p className={cn("text-sm", textSub)}>{t.subtitle}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className={cn("flex items-center gap-2 px-4 py-2.5 rounded-xl border", isDark ? 'bg-gray-800/50' : 'bg-white', cardBorder)}>
-                        <Search size={14} className={textSub} />
-                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t.search} className={cn("bg-transparent border-none outline-none text-sm w-40", text)} />
+        <div className={cn("p-6 rounded-3xl border", card, cardBorder)}>
+            {/* Header - Using SectionHeader Component */}
+            <SectionHeader
+                title={t.title}
+                subtitle={t.subtitle}
+                isDark={isDark}
+                action={
+                    <div className="flex items-center gap-3">
+                        <div className={cn(
+                            "flex items-center gap-2 h-9 px-3 rounded-xl border",
+                            isDark ? "bg-gray-800 border-gray-700" : "bg-white border-slate-200"
+                        )}>
+                            <Search size={14} className="text-slate-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder={t.search}
+                                className={cn("bg-transparent border-none outline-none text-sm w-40", text)}
+                            />
+                        </div>
+                        <button
+                            onClick={() => fetchUserList()}
+                            disabled={usersLoading}
+                            className={cn(
+                                "h-9 px-4 text-sm font-medium rounded-xl transition-colors",
+                                isDark ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            )}
+                        >
+                            <RefreshCw size={14} className={usersLoading ? 'animate-spin' : ''} />
+                        </button>
                     </div>
-                    <button onClick={() => fetchUserList()} disabled={usersLoading}
-                        className={cn("p-2.5 rounded-xl transition-all", isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10")}>
-                        <RefreshCw size={16} className={cn(textMuted, usersLoading && 'animate-spin')} />
-                    </button>
-                </div>
-            </div>
+                }
+            />
 
             {/* Stats with Clickable Filters */}
-            <div className={cn("rounded-3xl border p-5", card, cardBorder)}>
+            <div className={cn("rounded-3xl border p-5 mt-6", card, cardBorder)}>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
@@ -360,46 +375,48 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
             </div>
 
             {/* Bulk Actions Bar */}
-            {selectedUsers.size > 0 && (
-                <div className={cn("rounded-3xl border p-4 flex flex-wrap items-center justify-between gap-4", card, cardBorder)}>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center">
-                                <Check size={12} className="text-white" />
+            {
+                selectedUsers.size > 0 && (
+                    <div className={cn("rounded-3xl border p-4 flex flex-wrap items-center justify-between gap-4", card, cardBorder)}>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center">
+                                    <Check size={12} className="text-white" />
+                                </div>
+                                <span className={cn("text-sm font-semibold", text)}>
+                                    {selectedUsers.size}{t.selected}
+                                </span>
                             </div>
-                            <span className={cn("text-sm font-semibold", text)}>
-                                {selectedUsers.size}{t.selected}
-                            </span>
+                            <button onClick={() => setSelectedUsers(new Set())}
+                                className={cn("text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all",
+                                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10", textMuted)}>
+                                <X size={12} /> {language === 'ko' ? '선택 해제' : 'Clear'}
+                            </button>
                         </div>
-                        <button onClick={() => setSelectedUsers(new Set())}
-                            className={cn("text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all",
-                                isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10", textMuted)}>
-                            <X size={12} /> {language === 'ko' ? '선택 해제' : 'Clear'}
-                        </button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <span className={cn("text-xs font-medium", textSub)}>{t.bulkAdjust}:</span>
-                        <div className="flex items-center gap-1">
-                            <input
-                                type="number"
-                                value={bulkDays}
-                                onChange={(e) => setBulkDays(e.target.value)}
-                                className={cn("w-16 px-3 py-2 rounded-lg border text-sm text-center font-medium",
-                                    isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200", text)}
-                                min="0"
-                            />
-                            <span className={cn("text-sm", textSub)}>{t.days}</span>
+                        <div className="flex items-center gap-3">
+                            <span className={cn("text-xs font-medium", textSub)}>{t.bulkAdjust}:</span>
+                            <div className="flex items-center gap-1">
+                                <input
+                                    type="number"
+                                    value={bulkDays}
+                                    onChange={(e) => setBulkDays(e.target.value)}
+                                    className={cn("w-16 px-3 py-2 rounded-lg border text-sm text-center font-medium",
+                                        isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200", text)}
+                                    min="0"
+                                />
+                                <span className={cn("text-sm", textSub)}>{t.days}</span>
+                            </div>
+                            <button
+                                onClick={handleBulkTrialUpdate}
+                                disabled={isBulkUpdating}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#21DBA4] text-white hover:bg-[#1BC290] transition-all disabled:opacity-50">
+                                {isBulkUpdating ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                {t.apply}
+                            </button>
                         </div>
-                        <button
-                            onClick={handleBulkTrialUpdate}
-                            disabled={isBulkUpdating}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#21DBA4] text-white hover:bg-[#1BC290] transition-all disabled:opacity-50">
-                            {isBulkUpdating ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                            {t.apply}
-                        </button>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Table */}
             <div className={cn("rounded-3xl border overflow-hidden", card, cardBorder)}>
@@ -636,6 +653,6 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div >
     );
 }
