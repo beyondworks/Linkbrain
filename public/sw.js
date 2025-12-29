@@ -1,5 +1,5 @@
 // Service Worker for LinkBrain PWA
-const CACHE_NAME = 'linkbrain-v1';
+const CACHE_NAME = 'linkbrain-v2';
 const urlsToCache = [
   '/',
   '/index.html',
