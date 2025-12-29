@@ -7,7 +7,10 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell
 } from 'recharts';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '../ui/utils';
@@ -26,7 +29,7 @@ interface AnalyticsPanelProps {
  * 3번 스크린샷처럼 Overview와 Service Stats를 하나의 페이지에 표시
  */
 export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) {
-    const { analytics, fetchAnalytics } = admin;
+    const { analytics, fetchAnalytics, categoryAnalytics, detailedAnalytics } = admin;
     const isDark = theme === 'dark';
 
     const t = {
@@ -49,6 +52,9 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
 
     const chartLine = isDark ? '#27272A' : '#E5E7EB';
     const chartTick = isDark ? '#71717A' : '#9CA3AF';
+
+    // Category colors for pie chart
+    const categoryColors = ['#21DBA4', '#4ADE80', '#38BDF8', '#A78BFA', '#F472B6', '#FB923C', '#FACC15', '#94A3B8', '#64748B', '#334155'];
 
     if (!analytics) {
         return (
@@ -168,12 +174,55 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
                     <h3 className={cn("font-bold mb-4", isDark ? "text-slate-200" : "text-slate-700")}>
                         {t.categoryDist}
                     </h3>
-                    <div className={cn(
-                        "h-48 rounded-xl flex items-center justify-center",
-                        isDark ? "bg-gray-900/50 text-gray-500" : "bg-slate-50 text-slate-400"
-                    )}>
-                        [{t.chartArea}]
-                    </div>
+                    {categoryAnalytics?.topCategories && categoryAnalytics.topCategories.length > 0 ? (
+                        <div className="h-48 flex items-center">
+                            <ResponsiveContainer width="50%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={categoryAnalytics.topCategories.slice(0, 5)}
+                                        dataKey="count"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={60}
+                                        innerRadius={30}
+                                    >
+                                        {categoryAnalytics.topCategories.slice(0, 5).map((_, index) => (
+                                            <Cell key={`cell-${index}`} fill={categoryColors[index % categoryColors.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+                                            borderColor: isDark ? '#27272A' : '#E5E7EB',
+                                            borderRadius: '8px',
+                                            fontSize: '12px'
+                                        }}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                            <div className="flex-1 space-y-2">
+                                {categoryAnalytics.topCategories.slice(0, 5).map((cat, i) => (
+                                    <div key={cat.name} className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: categoryColors[i] }} />
+                                        <span className={cn("text-xs truncate flex-1", isDark ? "text-gray-400" : "text-slate-600")}>
+                                            {cat.name}
+                                        </span>
+                                        <span className={cn("text-xs font-medium", isDark ? "text-white" : "text-slate-800")}>
+                                            {cat.count}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={cn(
+                            "h-48 rounded-xl flex items-center justify-center",
+                            isDark ? "bg-gray-900/50 text-gray-500" : "bg-slate-50 text-slate-400"
+                        )}>
+                            [{t.chartArea}]
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -189,7 +238,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
                 <StatCard label="DAU" value={analytics.dau || 0} trend="+12%" trendUp={true} isDark={isDark} />
                 <StatCard label="WAU" value={analytics.wau || 0} trend="+8%" trendUp={true} isDark={isDark} />
                 <StatCard label="MAU" value={analytics.mau || 0} trend="+15%" trendUp={true} isDark={isDark} />
-                <StatCard label="Retention" value="68%" trend="-2%" trendUp={false} isDark={isDark} />
+                <StatCard label="Retention" value={`${detailedAnalytics?.retentionData?.[0]?.retention || 0}%`} trend="-2%" trendUp={false} isDark={isDark} />
             </div>
 
             {/* Platform Usage */}

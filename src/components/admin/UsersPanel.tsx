@@ -300,7 +300,9 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                             <Badge variant={user.plan === 'Master' || user.plan === 'Pro' ? 'pro' : 'free'} isDark={isDark}>{user.plan}</Badge>
                                         </td>
                                         <td className={cn("px-6 py-4 text-center text-sm", isDark ? "text-gray-400" : "text-slate-600")}>{user.clipCount || 0}</td>
-                                        <td className={cn("px-6 py-4 text-center text-sm", isDark ? "text-gray-400" : "text-slate-600")}>{user.createdAt?.slice(0, 10) || '-'}</td>
+                                        <td className={cn("px-6 py-4 text-center text-sm", isDark ? "text-gray-400" : "text-slate-600")}>
+                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                                        </td>
                                         <td className="px-6 py-4 text-center">
                                             <Badge variant="success" isDark={isDark}>{t.active}</Badge>
                                         </td>
@@ -340,14 +342,18 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                                                 <Calendar size={14} className="text-slate-400 mt-0.5" />
                                                                 <div>
                                                                     <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.joinDate}</p>
-                                                                    <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>{user.createdAt?.slice(0, 10) || '-'}</p>
+                                                                    <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>
+                                                                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                                                                    </p>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-start gap-2">
                                                                 <Clock size={14} className="text-slate-400 mt-0.5" />
                                                                 <div>
                                                                     <p className={cn("text-xs", isDark ? "text-gray-500" : "text-slate-500")}>{t.lastAccess}</p>
-                                                                    <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>-</p>
+                                                                    <p className={cn("text-sm", isDark ? "text-white" : "text-slate-800")}>
+                                                                        {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '-'}
+                                                                    </p>
                                                                 </div>
                                                             </div>
                                                         </div>

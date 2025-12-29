@@ -13,11 +13,14 @@ interface SubscriptionsPanelProps {
 }
 
 interface SubscriptionRow {
+    id: string; // userId
     email: string;
     plan: string;
     amount: string;
     startDate: string;
     status: string;
+    remainingDays: number;
+    trialEndDate?: string;
 }
 
 /**
@@ -47,17 +50,47 @@ export function SubscriptionsPanel({ theme, language, admin }: SubscriptionsPane
     };
 
     // Get pro users from users list
-    const proUsers = users?.filter(u => u.subscriptionTier === 'pro') || [];
+    const proUsers = users?.filter(u => u.subscriptionTier === 'pro' || u.subscriptionStatus === 'trial') || [];
     const activeSubs = analytics?.subscriptionStats?.active || 0;
 
-    // Sample data for demo
-    const subscriptionData: SubscriptionRow[] = proUsers.slice(0, 10).map(user => ({
-        email: user.email,
-        plan: 'Pro Monthly',
-        amount: '₩9,900',
-        startDate: user.createdAt?.slice(0, 10) || '-',
-        status: t.active
-    }));
+    const handleExtendSubscription = async (userId: string, currentEndDate: string | undefined) => {
+        const days = prompt(language === 'ko' ? '연장할 일수를 입력하세요 (예: 30)' : 'Enter days to extend (e.g., 30)');
+        if (!days || isNaN(Number(days))) return;
+
+        try {
+            const baseDate = currentEndDate ? new Date(currentEndDate) : new Date();
+            const newEndDate = new Date(baseDate.getTime() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
+
+            await admin.updateUserSubscription(userId, 'pro', { trialEndDate: newEndDate });
+            alert(language === 'ko' ? '구독 기간이 연장되었습니다.' : 'Subscription extended.');
+        } catch (error) {
+            console.error('Failed to extend subscription', error);
+            alert(language === 'ko' ? '오류가 발생했습니다.' : 'Error occurred.');
+        }
+    };
+
+    const subscriptionData: SubscriptionRow[] = proUsers.map(user => {
+        const trialEndDate = user.trialEndDate;
+        let remainingDays = 0;
+
+        if (trialEndDate) {
+            const end = new Date(trialEndDate);
+            const now = new Date();
+            const diffTime = end.getTime() - now.getTime();
+            remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        return {
+            id: user.id,
+            email: user.email,
+            plan: user.subscriptionTier === 'pro' ? 'Pro' : 'Trial',
+            amount: user.subscriptionTier === 'pro' ? '₩9,900' : '₩0',
+            startDate: user.trialStartDate ? new Date(user.trialStartDate).toLocaleDateString() : '-',
+            status: remainingDays > 0 ? t.active : t.expired,
+            remainingDays,
+            trialEndDate
+        };
+    });
 
     const columns: Column<SubscriptionRow>[] = [
         { key: 'email', header: t.email },
@@ -69,9 +102,26 @@ export function SubscriptionsPanel({ theme, language, admin }: SubscriptionsPane
         { key: 'amount', header: t.amount },
         { key: 'startDate', header: t.startDate },
         {
+            key: 'remainingDays',
+            header: language === 'ko' ? '남은 기간' : 'Remaining',
+            render: (value) => <span className={cn("font-medium", Number(value) < 3 ? "text-red-500" : "")}>{value} {language === 'ko' ? '일' : 'days'}</span>
+        },
+        {
             key: 'status',
             header: t.status,
             render: (value) => <Badge variant={value === t.active ? 'success' : 'error'}>{value}</Badge>
+        },
+        {
+            key: 'id',
+            header: language === 'ko' ? '관리' : 'Manage',
+            render: (_, row) => (
+                <button
+                    onClick={() => handleExtendSubscription(row.id, row.trialEndDate)}
+                    className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                >
+                    {language === 'ko' ? '+ 연장' : '+ Extend'}
+                </button>
+            )
         }
     ];
 
