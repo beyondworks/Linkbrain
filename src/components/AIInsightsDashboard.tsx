@@ -15,6 +15,7 @@ import {
   CheckSquare,
   Square,
   ChevronRight,
+  ChevronDown,
   Loader2,
   Eye,
   Layout,
@@ -29,6 +30,8 @@ import { cn } from './ui/utils';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { StatCard } from './AIInsightsDashboard/StatCard';
 import { TagReadingRateCard } from './AIInsightsDashboard/TagReadingRateCard';
+import { generateStudioContent, StudioContentType } from '../lib/aiService';
+import { getSourceInfo } from './app/Cards';
 
 // ═══════════════════════════════════════════════════
 // Types & Interfaces
@@ -75,8 +78,61 @@ const parseDate = (createdAt: any): Date | null => {
   if (!createdAt) return null;
   if (createdAt.seconds) return new Date(createdAt.seconds * 1000);
   if (createdAt.toDate) return createdAt.toDate();
+
+  // Custom Korean format check with robust regex
+  // Matches: '2025년 12월 22일 AM 4시...', '2025년 12월 22일 오전 4시...'
+  if (typeof createdAt === 'string' && createdAt.includes('년')) {
+    const regex = /(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일\s*(AM|PM|오전|오후)\s*(\d{1,2})시\s*(\d{1,2})분\s*(\d{1,2})초/;
+    const match = createdAt.match(regex);
+    if (match) {
+      let [_, year, month, day, meridian, hour, minute, second] = match;
+      let h = parseInt(hour, 10);
+
+      // Handle 12-hour format konversion
+      if (meridian === 'PM' || meridian === '오후') {
+        if (h < 12) h += 12;
+      }
+      if (meridian === 'AM' || meridian === '오전') {
+        if (h === 12) h = 0;
+      }
+
+      const pad = (n: string | number) => String(n).padStart(2, '0');
+      // Construct ISO string with KST offset (+09:00) 
+      const isoStr = `${year}-${pad(month)}-${pad(day)}T${pad(h)}:${pad(minute)}:${pad(second)}+09:00`;
+      const d = new Date(isoStr);
+
+      // Debug log for verification
+      console.log(`[parseDate] Parsed KST Date: ${createdAt} -> ${isoStr} -> ${d.toISOString()}`);
+
+      return isNaN(d.getTime()) ? null : d;
+    }
+  }
+
+  // Handle number timestamp
+  if (typeof createdAt === 'number') {
+    const d = new Date(createdAt);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // Handle "YYYY. MM. DD." format
+  if (typeof createdAt === 'string' && /^\d{4}\.\s*\d{1,2}\.\s*\d{1,2}\.?$/.test(createdAt.trim())) {
+    const parts = createdAt.split('.').map(s => s.trim()).filter(Boolean);
+    if (parts.length === 3) {
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return isNaN(d.getTime()) ? null : d;
+    }
+  }
+
   const d = new Date(createdAt);
   return isNaN(d.getTime()) ? null : d;
+};
+
+// Helper: Get 'YYYY-MM-DD' string in local time
+const getLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const formatNumber = (num: number): string => {
@@ -461,12 +517,14 @@ const KeywordsTrendsCard = ({ links, isDark, theme, language, period, categories
 const ContentStudio = ({
   clips, selectedClips, onToggleClip, onSelectAll, contentTypes, selectedContentType,
   onSelectContentType, onGenerate, isGenerating, searchQuery, onSearchChange,
-  filterTag, onFilterChange, availableTags,
-  selectedKeywords, availableKeywords, categories, onToggleKeyword, onClearKeywords,
   startDate, endDate, onStartDateChange, onEndDateChange,
-  onLoadClips, loadClipsWithDates, onClearResults, language, isDark, theme
+  onLoadClips, loadClipsWithDates, onClearResults, language, isDark, theme,
+  // 새로 추가된 필터 props
+  availableSources, selectedSources, onToggleSource, onClearSources,
+  allAvailableCategories, selectedCategories, onToggleCategory, onClearCategories,
+  // 생성 결과
+  generatedContent, onClearContent
 }: any) => {
-  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [previewClip, setPreviewClip] = useState<any>(null);
 
@@ -695,14 +753,105 @@ const ContentStudio = ({
             </div>
 
             {/* Filter Section */}
-            <div className="space-y-4">
+            <div className="space-y-2 md:space-y-4">
               {/* Row 1: Period + Action Buttons */}
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <span className={cn("text-xs font-bold shrink-0", theme.textMuted)}>
-                    {language === 'ko' ? '기간' : 'Period'}
-                  </span>
-                  <div className="flex gap-2">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-wrap">
+
+                {/* Desktop: Period & Actions */}
+                <div className="hidden md:flex items-center justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <span className={cn("text-xs font-bold shrink-0", theme.textMuted)}>
+                      {language === 'ko' ? '기간' : 'Period'}
+                    </span>
+                    <div className="flex gap-2">
+                      {[
+                        { id: 'all', label: language === 'ko' ? '전체' : 'All' },
+                        { id: 'today', label: language === 'ko' ? '오늘' : 'Today' },
+                        { id: 'week', label: language === 'ko' ? '이번 주' : 'Week' },
+                        { id: 'month', label: language === 'ko' ? '이번 달' : 'Month' }
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => {
+                            setSelectedPeriod(opt.id);
+                            const now = new Date();
+                            let newStart = '';
+                            let newEnd = '';
+
+                            if (opt.id === 'all') {
+                              newStart = '';
+                              newEnd = '';
+                            } else if (opt.id === 'today') {
+                              newStart = getLocalDateString(now);
+                              newEnd = newStart;
+                            } else if (opt.id === 'week') {
+                              const weekAgo = new Date(now);
+                              weekAgo.setDate(now.getDate() - 7);
+                              newStart = getLocalDateString(weekAgo);
+                              newEnd = getLocalDateString(now);
+                            } else if (opt.id === 'month') {
+                              const monthAgo = new Date(now);
+                              monthAgo.setDate(now.getDate() - 30);
+                              newStart = getLocalDateString(monthAgo);
+                              newEnd = getLocalDateString(now);
+                            }
+
+                            onStartDateChange(newStart);
+                            onEndDateChange(newEnd);
+                          }}
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all",
+                            selectedPeriod === opt.id
+                              ? "bg-[#21DBA4] text-black border-[#21DBA4]"
+                              : cn(
+                                isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                "hover:border-[#21DBA4] hover:text-[#21DBA4]"
+                              )
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={onClearResults}
+                      disabled={clips.length === 0}
+                      className={cn(
+                        "px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors",
+                        clips.length === 0
+                          ? "opacity-40 cursor-not-allowed"
+                          : "hover:border-red-400 hover:text-red-400",
+                        isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"
+                      )}
+                    >
+                      {language === 'ko' ? '초기화' : 'Clear'}
+                    </button>
+                    <button
+                      onClick={onLoadClips}
+                      className="px-4 py-1.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all hover:scale-[1.02] shadow-lg shadow-[#21DBA4]/20"
+                    >
+                      <RefreshCw size={12} /> {language === 'ko' ? '클립 불러오기' : 'Load Clips'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile: Period Dropdown (Accordion) */}
+                <details className="md:hidden group w-full border rounded-xl overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                  <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
+                    <span className={cn("text-xs font-bold", theme.textMuted)}>
+                      {language === 'ko' ? '기간' : 'Period'}: <span className="text-[#21DBA4] ml-1">{
+                        selectedPeriod === 'all' ? (language === 'ko' ? '전체' : 'All') :
+                          selectedPeriod === 'today' ? (language === 'ko' ? '오늘' : 'Today') :
+                            selectedPeriod === 'week' ? (language === 'ko' ? '이번 주' : 'Week') :
+                              selectedPeriod === 'month' ? (language === 'ko' ? '이번 달' : 'Month') : ''
+                      }</span>
+                    </span>
+                    <ChevronDown size={14} className="transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="p-3 pt-0 flex gap-2 overflow-x-auto pb-3">
                     {[
                       { id: 'all', label: language === 'ko' ? '전체' : 'All' },
                       { id: 'today', label: language === 'ko' ? '오늘' : 'Today' },
@@ -717,187 +866,182 @@ const ContentStudio = ({
                           let newStart = '';
                           let newEnd = '';
                           if (opt.id === 'all') { newStart = ''; newEnd = ''; }
-                          else if (opt.id === 'today') { newStart = now.toISOString().split('T')[0]; newEnd = newStart; }
-                          else if (opt.id === 'week') { newStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; newEnd = now.toISOString().split('T')[0]; }
-                          else if (opt.id === 'month') { newStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; newEnd = now.toISOString().split('T')[0]; }
+                          else if (opt.id === 'today') { newStart = getLocalDateString(now); newEnd = newStart; }
+                          else if (opt.id === 'week') { const d = new Date(now); d.setDate(now.getDate() - 7); newStart = getLocalDateString(d); newEnd = getLocalDateString(now); }
+                          else if (opt.id === 'month') { const d = new Date(now); d.setDate(now.getDate() - 30); newStart = getLocalDateString(d); newEnd = getLocalDateString(now); }
                           onStartDateChange(newStart);
                           onEndDateChange(newEnd);
-                          // Load clips with the new dates directly (bypasses stale state)
-                          loadClipsWithDates(newStart, newEnd);
                         }}
                         className={cn(
-                          "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all",
+                          "px-3 py-2 rounded-lg text-xs font-bold border shrink-0 transition-all",
                           selectedPeriod === opt.id
                             ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                            : cn(
-                              isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
-                              "hover:border-[#21DBA4] hover:text-[#21DBA4]"
-                            )
+                            : cn(isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
                         )}
                       >
                         {opt.label}
                       </button>
                     ))}
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={onClearResults}
-                    disabled={clips.length === 0}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors",
-                      clips.length === 0
-                        ? "opacity-40 cursor-not-allowed"
-                        : "hover:border-red-400 hover:text-red-400",
-                      isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"
-                    )}
-                  >
-                    {language === 'ko' ? '초기화' : 'Clear'}
-                  </button>
-                  <button
-                    onClick={onLoadClips}
-                    className="px-4 py-1.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all hover:scale-[1.02] shadow-lg shadow-[#21DBA4]/20"
-                  >
-                    <RefreshCw size={12} /> {language === 'ko' ? '클립 불러오기' : 'Load Clips'}
-                  </button>
-                </div>
+                </details>
               </div>
 
-              {/* Row 2: Categories */}
-              {availableTags.length > 0 && (
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className={cn("text-xs font-bold shrink-0", theme.textMuted)}>
-                    {language === 'ko' ? '카테고리' : 'Category'}
-                  </span>
-                  <div className="flex gap-2 flex-wrap">
-                    <button
-                      onClick={() => onFilterChange('')}
-                      className={cn(
-                        "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all",
-                        !filterTag
-                          ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                          : cn(
-                            isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
-                            "hover:border-[#21DBA4] hover:text-[#21DBA4]"
-                          )
+              {/* Row 2: 출처 필터 */}
+              {availableSources && availableSources.length > 0 && (
+                <>
+                  {/* Desktop Source */}
+                  <div className="hidden md:flex items-start gap-3 flex-wrap">
+                    <span className={cn("text-xs font-bold shrink-0 pt-1.5", theme.textMuted)}>
+                      {language === 'ko' ? '출처' : 'Source'}
+                    </span>
+                    <div className="flex gap-2 flex-wrap flex-1">
+                      {availableSources.map((src: any) => (
+                        <button
+                          key={src.group}
+                          onClick={() => onToggleSource(src.group)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all",
+                            selectedSources.includes(src.group)
+                              ? "bg-[#21DBA4] text-black border-[#21DBA4]"
+                              : cn(
+                                isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                "hover:border-[#21DBA4] hover:text-[#21DBA4]"
+                              )
+                          )}
+                        >
+                          {src.group} <span className="opacity-60">({src.count})</span>
+                        </button>
+                      ))}
+                      {selectedSources.length > 0 && (
+                        <button
+                          onClick={onClearSources}
+                          className="text-xs text-red-400 hover:text-red-500 font-medium px-2"
+                        >
+                          ✕
+                        </button>
                       )}
-                    >
-                      {language === 'ko' ? '전체' : 'All'}
-                    </button>
-                    {availableTags.slice(0, 8).map((tag: string) => (
-                      <button
-                        key={tag}
-                        onClick={() => onFilterChange(tag)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all",
-                          filterTag === tag
-                            ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                            : cn(
-                              isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
-                              "hover:border-[#21DBA4] hover:text-[#21DBA4]"
-                            )
-                        )}
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                    </div>
                   </div>
-                </div>
+
+                  {/* Mobile Source Dropdown */}
+                  <details className="md:hidden group w-full border rounded-xl overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                    <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
+                      <span className={cn("text-xs font-bold", theme.textMuted)}>
+                        {language === 'ko' ? '출처' : 'Source'} {selectedSources.length > 0 && <span className="text-[#21DBA4]">({selectedSources.length})</span>}
+                      </span>
+                      <ChevronDown size={14} className="transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="p-3 pt-0 flex flex-wrap gap-2">
+                      {availableSources.map((src: any) => (
+                        <button
+                          key={src.group}
+                          onClick={() => onToggleSource(src.group)}
+                          className={cn(
+                            "px-3 py-2 rounded-lg text-xs font-medium border transition-all",
+                            selectedSources.includes(src.group)
+                              ? "bg-[#21DBA4] text-black border-[#21DBA4]"
+                              : cn(isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                          )}
+                        >
+                          {src.group} <span className="opacity-60">({src.count})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                </>
               )}
 
-              {/* Advanced Filter Toggle */}
-              <div className="flex items-center justify-between pt-2">
+              {/* Row 3: 카테고리 필터 */}
+              {allAvailableCategories && allAvailableCategories.length > 0 && (
+                <>
+                  {/* Desktop Category */}
+                  <div className="hidden md:flex items-start gap-3 flex-wrap">
+                    <span className={cn("text-xs font-bold shrink-0 pt-1.5", theme.textMuted)}>
+                      {language === 'ko' ? '카테고리' : 'Category'}
+                    </span>
+                    <div className="flex gap-2 flex-wrap flex-1">
+                      {allAvailableCategories.map((cat: any) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => onToggleCategory(cat.id)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all",
+                            selectedCategories.includes(cat.id)
+                              ? "bg-[#21DBA4] text-black border-[#21DBA4]"
+                              : cn(
+                                isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                "hover:border-[#21DBA4] hover:text-[#21DBA4]"
+                              )
+                          )}
+                        >
+                          {cat.name} <span className="opacity-60">({cat.count})</span>
+                        </button>
+                      ))}
+                      {selectedCategories.length > 0 && (
+                        <button
+                          onClick={onClearCategories}
+                          className="text-xs text-red-400 hover:text-red-500 font-medium px-2"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mobile Category Dropdown */}
+                  <details className="md:hidden group w-full border rounded-xl overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                    <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
+                      <span className={cn("text-xs font-bold", theme.textMuted)}>
+                        {language === 'ko' ? '카테고리' : 'Category'} {selectedCategories.length > 0 && <span className="text-[#21DBA4]">({selectedCategories.length})</span>}
+                      </span>
+                      <ChevronDown size={14} className="transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="p-3 pt-0 flex flex-wrap gap-2">
+                      {allAvailableCategories.map((cat: any) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => onToggleCategory(cat.id)}
+                          className={cn(
+                            "px-3 py-2 rounded-lg text-xs font-medium border transition-all",
+                            selectedCategories.includes(cat.id)
+                              ? "bg-[#21DBA4] text-black border-[#21DBA4]"
+                              : cn(isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                          )}
+                        >
+                          {cat.name} <span className="opacity-60">({cat.count})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                </>
+              )}
+
+              {/* Mobile Action Buttons (Bottom of Filters) */}
+              <div className="flex md:hidden items-center gap-2 mt-4 pt-2 border-t dark:border-gray-800">
                 <button
-                  onClick={() => setShowAdvancedFilter(!showAdvancedFilter)}
+                  onClick={onClearResults}
+                  disabled={clips.length === 0}
                   className={cn(
-                    "flex items-center gap-1.5 text-xs font-medium transition-colors",
-                    showAdvancedFilter ? "text-[#21DBA4]" : theme.textMuted
+                    "flex-1 px-3 py-2.5 rounded-xl text-xs font-bold border transition-colors",
+                    clips.length === 0
+                      ? "opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-800 text-gray-400 border-transparent"
+                      : "hover:border-red-400 hover:text-red-400 bg-white dark:bg-gray-900",
+                    isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"
                   )}
                 >
-                  <Filter size={12} />
-                  {language === 'ko' ? '고급 필터' : 'Advanced Filters'}
-                  <span className={cn("transition-transform", showAdvancedFilter && "rotate-180")}>▼</span>
+                  {language === 'ko' ? '초기화' : 'Clear'}
                 </button>
-
-                {/* Active Filters Badge */}
-                {selectedKeywords.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#21DBA4]/15 text-[#21DBA4] font-medium">
-                      {selectedKeywords.length} {language === 'ko' ? '개 키워드' : 'keywords'}
-                    </span>
-                    <button
-                      onClick={onClearKeywords}
-                      className="text-xs text-red-400 hover:text-red-500 font-medium"
-                    >
-                      {language === 'ko' ? '초기화' : 'Clear'}
-                    </button>
-                  </div>
-                )}
+                <button
+                  onClick={onLoadClips}
+                  className="flex-[2] px-4 py-2.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] shadow-lg shadow-[#21DBA4]/20"
+                >
+                  <RefreshCw size={14} /> {language === 'ko' ? '클립 불러오기' : 'Load Clips'}
+                </button>
               </div>
 
-              {/* Advanced Filter Panel */}
-              {showAdvancedFilter && (
-                <div className={cn(
-                  "p-5 rounded-2xl border space-y-4",
-                  isDark ? "bg-[#161B22] border-gray-800" : "bg-gray-50/50 border-gray-200"
-                )}>
-                  <div className="flex items-center justify-between">
-                    <p className={cn("text-sm font-bold", theme.text)}>
-                      {language === 'ko' ? '키워드 필터' : 'Keyword Filter'}
-                    </p>
-                    {selectedKeywords.length > 0 && (
-                      <button
-                        onClick={onClearKeywords}
-                        className="text-xs text-red-400 hover:text-red-500 font-medium"
-                      >
-                        {language === 'ko' ? '선택 해제' : 'Clear'}
-                      </button>
-                    )}
-                  </div>
 
-                  {availableKeywords.length === 0 ? (
-                    <p className={cn("text-sm py-4 text-center", theme.textMuted)}>
-                      {language === 'ko'
-                        ? '먼저 클립을 불러오세요. 불러온 클립의 키워드가 여기에 표시됩니다.'
-                        : 'Load clips first. Keywords from loaded clips will appear here.'}
-                    </p>
-                  ) : (
-                    <>
-                      <p className={cn("text-xs", theme.textMuted)}>
-                        {language === 'ko'
-                          ? `${availableKeywords.length}개 키워드 중 선택 (다중 선택 가능)`
-                          : `Select from ${availableKeywords.length} keywords (multi-select)`}
-                      </p>
-                      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto py-1">
-                        {availableKeywords.slice(0, 40).map((kw: string) => (
-                          <button
-                            key={kw}
-                            onClick={() => onToggleKeyword(kw)}
-                            className={cn(
-                              "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all",
-                              selectedKeywords.includes(kw)
-                                ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                                : cn(
-                                  isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
-                                  "hover:border-[#21DBA4] hover:text-[#21DBA4]"
-                                )
-                            )}
-                          >
-                            {selectedKeywords.includes(kw) && <span className="mr-1">✓</span>}
-                            {kw}
-                          </button>
-                        ))}
-                      </div>
-                      {availableKeywords.length > 40 && (
-                        <p className={cn("text-xs", theme.textSub)}>
-                          +{availableKeywords.length - 40} {language === 'ko' ? '개 더...' : 'more...'}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
+
+
             </div>
 
             {/* Results Header with Selection Info */}
@@ -924,14 +1068,21 @@ const ContentStudio = ({
                   clips.length === 0 ? "opacity-40 cursor-not-allowed" : "text-[#21DBA4] hover:underline"
                 )}
               >
-                {language === 'ko' ? '전체 선택' : 'Select All'}
+                {clips.length > 0 && selectedClips.length === clips.length
+                  ? (language === 'ko' ? '전체 해제' : 'Deselect All')
+                  : (language === 'ko' ? '전체 선택' : 'Select All')}
               </button>
             </div>
 
             {/* Clip List */}
-            <div className={cn("flex-1 border rounded-2xl overflow-hidden flex flex-col max-h-[320px]", theme.border)}>
-
-              <div className={cn("overflow-y-auto flex-1", theme.itemBg)}>
+            <div
+              className={cn("w-full border rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out", theme.border)}
+              style={{ height: clips.length > 0 ? '600px' : 'auto' }}
+            >
+              <div
+                className={cn("flex-1", theme.itemBg)}
+                style={{ overflowY: 'auto' }}
+              >
                 {clips.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Search size={24} className={cn("mb-3", theme.textSub)} />
@@ -1010,7 +1161,7 @@ const ContentStudio = ({
                 <Layout size={16} /> {language === 'ko' ? '출력 형태 선택' : 'Select Output Type'}
               </h4>
 
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 gap-2 md:flex md:gap-3">
                 {contentTypes.map((type: any) => (
                   <button
                     key={type.id}
@@ -1049,6 +1200,65 @@ const ContentStudio = ({
                       : (language === 'ko' ? '옵션을 선택하세요' : 'Select an option')}</>
                 )}
               </button>
+
+              {/* Generated Content Display */}
+              {generatedContent && (
+                <div className={cn(
+                  "mt-6 p-6 rounded-2xl border",
+                  isDark ? "bg-gray-900/50 border-gray-700" : "bg-gray-50 border-gray-200"
+                )}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className={cn("text-sm font-bold flex items-center gap-2", theme.text)}>
+                      <Sparkles size={16} className="text-[#21DBA4]" />
+                      {language === 'ko' ? '생성된 콘텐츠' : 'Generated Content'}
+                    </h4>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(generatedContent);
+                          toast.success(language === 'ko' ? '클립보드에 복사되었습니다!' : 'Copied to clipboard!');
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                          isDark ? "bg-gray-800 hover:bg-gray-700 text-gray-300" : "bg-white hover:bg-gray-100 text-gray-600 border border-gray-200"
+                        )}
+                      >
+                        {language === 'ko' ? '복사' : 'Copy'}
+                      </button>
+                      <button
+                        onClick={onClearContent}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:text-red-500 transition-colors"
+                      >
+                        {language === 'ko' ? '닫기' : 'Close'}
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    className={cn(
+                      "prose prose-sm max-w-none max-h-[500px] overflow-y-auto",
+                      isDark ? "prose-invert" : ""
+                    )}
+                    style={{ whiteSpace: 'pre-wrap' }}
+                  >
+                    {/* 마크다운 렌더링 (간단 버전) */}
+                    {generatedContent.split('\n').map((line: string, i: number) => {
+                      // Heading 처리
+                      if (line.startsWith('# ')) return <h1 key={i} className={cn("text-xl font-bold mt-4 mb-2", theme.text)}>{line.slice(2)}</h1>;
+                      if (line.startsWith('## ')) return <h2 key={i} className={cn("text-lg font-bold mt-4 mb-2", theme.text)}>{line.slice(3)}</h2>;
+                      if (line.startsWith('### ')) return <h3 key={i} className={cn("text-base font-bold mt-3 mb-1", theme.text)}>{line.slice(4)}</h3>;
+                      // List 처리
+                      if (line.startsWith('- ')) return <li key={i} className={cn("ml-4", theme.textSub)}>{line.slice(2)}</li>;
+                      if (line.startsWith('* ')) return <li key={i} className={cn("ml-4", theme.textSub)}>{line.slice(2)}</li>;
+                      // Blockquote 처리
+                      if (line.startsWith('> ')) return <blockquote key={i} className={cn("border-l-4 border-[#21DBA4] pl-4 italic my-2", theme.textMuted)}>{line.slice(2)}</blockquote>;
+                      // Empty line
+                      if (line.trim() === '') return <br key={i} />;
+                      // Regular paragraph
+                      return <p key={i} className={cn("my-1", theme.textSub)}>{line}</p>;
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1072,11 +1282,11 @@ export const AIInsightsDashboard = ({
   const [generatingReport, setGeneratingReport] = useState(false);
   const [studioStartDate, setStudioStartDate] = useState<string>('');
   const [studioEndDate, setStudioEndDate] = useState<string>('');
-  const [studioFilterTag, setStudioFilterTag] = useState<string>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [studioClips, setStudioClips] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [generatedContent, setGeneratedContent] = useState<string | null>(null);
 
   // Creation history - persisted in localStorage
   const [creationHistory, setCreationHistory] = useState<Array<{
@@ -1185,115 +1395,170 @@ export const AIInsightsDashboard = ({
     };
   }, [allActiveLinks, period, language, onNavigateToUnread]);
 
-  const availableTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    allActiveLinks.forEach(l => (l.keywords || []).forEach((t: string) => tagSet.add(t)));
-    return Array.from(tagSet).slice(0, 10);
-  }, [allActiveLinks]);
 
-  // Get all unique keywords from loaded clips for keyword multi-select
-  const availableKeywords = useMemo(() => {
-    console.log('[DEBUG] availableKeywords recalculating, studioClips:', studioClips.length);
-    if (studioClips.length === 0) return [];
 
-    const keywordSet = new Set<string>();
-
-    // Add all category names that exist in the loaded clips
-    const clipCategoryIds = new Set(studioClips.map(c => c.category).filter(Boolean));
-    console.log('[DEBUG] clipCategoryIds:', Array.from(clipCategoryIds));
-    console.log('[DEBUG] categories prop:', categories?.length, categories?.slice(0, 3));
-
-    categories?.forEach((cat: any) => {
-      if (clipCategoryIds.has(cat.id) && cat.name) {
-        console.log('[DEBUG] Adding category name:', cat.name);
-        keywordSet.add(cat.name);
-      }
-    });
-
-    // Also add any keywords from clips if they exist
-    studioClips.forEach(c => {
-      (c.keywords || []).forEach((k: string) => {
-        if (k && k.trim()) keywordSet.add(k.trim());
+  // 기간 필터 적용된 클립 계산 (실시간 카운트용) - Local Date Fix
+  const studioFilteredLinks = useMemo(() => {
+    let links = allActiveLinks;
+    // 1. Date Filter
+    if (studioStartDate || studioEndDate) {
+      links = links.filter(clip => {
+        const dateValue = clip.createdAt || clip.date || clip.timestamp;
+        const d = parseDate(dateValue);
+        if (!d) return false;
+        const clipDate = getLocalDateString(d);
+        return (!studioStartDate || clipDate >= studioStartDate) && (!studioEndDate || clipDate <= studioEndDate);
       });
-    });
-
-    const result = Array.from(keywordSet).sort();
-    console.log('[DEBUG] availableKeywords result:', result);
-    return result;
-  }, [studioClips, categories]);
-
-  const filteredClips = useMemo(() => {
-    if (studioClips.length === 0) return [];
-    let result = studioClips;
-    // Text search
+    }
+    // 2. Search Filter (For real-time counts)
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(c => c.title?.toLowerCase().includes(q) || c.keywords?.some((t: string) => t.toLowerCase().includes(q)));
+      links = links.filter(c =>
+        c.title?.toLowerCase().includes(q) ||
+        c.keywords?.some((t: string) => t.toLowerCase().includes(q)) ||
+        c.summary?.toLowerCase().includes(q)
+      );
     }
-    // Single category filter (legacy)
-    if (studioFilterTag) {
-      result = result.filter(c => c.keywords?.includes(studioFilterTag));
-    }
-    // Multi-select keyword filter (includes category name matching)
-    if (selectedKeywords.length > 0) {
-      result = result.filter(c => {
-        // Check keywords array
-        if (c.keywords?.some((kw: string) => selectedKeywords.includes(kw))) return true;
-        // Check category name
-        if (c.category) {
-          const cat = categories?.find((cat: any) => cat.id === c.category);
-          if (cat?.name && selectedKeywords.includes(cat.name)) return true;
-        }
+    return links;
+  }, [allActiveLinks, studioStartDate, studioEndDate, searchQuery]);
+
+  // 출처 그룹별 카운트 (기간 + 검색 + 카테고리 필터 적용)
+  const availableSources = useMemo(() => {
+    let baseClips = studioFilteredLinks;
+    if (selectedCategories.length > 0) {
+      baseClips = baseClips.filter(l => {
+        if (!l.categoryId) return false;
+        if (selectedCategories.includes(l.categoryId)) return true;
+        const catName = categories?.find(c => c.id === l.categoryId)?.name;
+        if (catName && selectedCategories.some(id => categories?.find(c => c.id === id)?.name?.toLowerCase() === catName.toLowerCase())) return true;
         return false;
       });
     }
-    return result.slice(0, 50);
-  }, [studioClips, searchQuery, studioFilterTag, selectedKeywords, categories]);
 
-  const handleLoadClips = useCallback(() => {
-    let result = allActiveLinks;
-    if (studioStartDate || studioEndDate) {
-      result = result.filter(clip => { const d = parseDate(clip.createdAt); if (!d) return false; const clipDate = d.toISOString().split('T')[0]; if (studioStartDate && clipDate < studioStartDate) return false; if (studioEndDate && clipDate > studioEndDate) return false; return true; });
+    const sourceMap = new Map<string, number>();
+    baseClips.forEach(l => {
+      if (l.url) {
+        const group = getSourceInfo(l.url).name;
+        sourceMap.set(group, (sourceMap.get(group) || 0) + 1);
+      }
+    });
+    return Array.from(sourceMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([group, count]) => ({ group, count }));
+  }, [studioFilteredLinks, selectedCategories, categories]);
+
+  // 카테고리별 카운트 (기간 + 검색 + 출처 필터 적용)
+  const allAvailableCategories = useMemo(() => {
+    let baseClips = studioFilteredLinks;
+    if (selectedSources.length > 0) {
+      baseClips = baseClips.filter(l => l.url && selectedSources.includes(getSourceInfo(l.url).name));
     }
-    setStudioClips(result);
-    setSelectedClips([]);
-    setSelectedKeywords([]);
-    toast.success(language === 'ko' ? `${result.length}개의 클립을 불러왔습니다` : `Loaded ${result.length} clips`);
-  }, [allActiveLinks, studioStartDate, studioEndDate, language]);
+
+    return categories
+      ?.map((cat: any) => {
+        const count = baseClips.filter((l: any) =>
+          l.categoryId === cat.id ||
+          (cat.name && l.categoryId?.toLowerCase() === cat.name.toLowerCase())
+        ).length;
+        return { ...cat, count };
+      })
+      .sort((a: any, b: any) => b.count - a.count) || [];
+  }, [studioFilteredLinks, selectedSources, categories]);
+
+  const filteredClips = useMemo(() => {
+    // studioClips is the explicit "Loaded" clips. 
+    // If we want real-time filtering on the "Result Window" as well, we usually filter studioClips.
+    // The user requirement "Result window scroll" + "Real-time count" suggests consistent behavior.
+    if (studioClips.length === 0) return [];
+    let result = studioClips;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(c =>
+        c.title?.toLowerCase().includes(q) ||
+        c.keywords?.some((t: string) => t.toLowerCase().includes(q)) ||
+        c.summary?.toLowerCase().includes(q)
+      );
+    }
+    return result.slice(0, 100);
+  }, [studioClips, searchQuery]);
 
   // Load clips with specific dates (bypasses stale state issue)
   const loadClipsWithDates = useCallback((startDate: string, endDate: string) => {
-    console.log('[DEBUG] loadClipsWithDates called with:', { startDate, endDate });
-    console.log('[DEBUG] allActiveLinks count:', allActiveLinks.length);
+    console.log('[DEBUG] loadClipsWithDates called with:', { startDate, endDate, selectedSources, selectedCategories });
 
     let result = allActiveLinks;
+
+    // 1. 기간 필터 (Local Date String Comparison)
     if (startDate || endDate) {
-      result = result.filter(clip => {
-        const d = parseDate(clip.createdAt);
+      console.log(`[DEBUG] Filtering with dates: ${startDate} ~ ${endDate}. Total clips: ${result.length}`);
+      result = result.filter((clip: any, index) => {
+        // Fallback checks for date field
+        const dateValue = clip.createdAt || clip.date || clip.timestamp;
+
+        // Log first 3 items to debug format if parsing fails (optional, keep it clean for now)
+        // if (index < 3) console.log(`[DEBUG] Clip[${index}] dateValue:`, dateValue);
+
+        const d = parseDate(dateValue);
         if (!d) {
-          console.log('[DEBUG] parseDate returned null for:', clip.createdAt);
+          // Only log failures for first few items to avoid spam
+          if (index < 3) console.log(`[DEBUG] Clip[${index}] parseDate failed for:`, dateValue);
           return false;
         }
-        const clipDate = d.toISOString().split('T')[0];
-        const include = (!startDate || clipDate >= startDate) && (!endDate || clipDate <= endDate);
-        if (!include && result.length < 5) {
-          console.log('[DEBUG] Excluded clip:', { clipDate, startDate, endDate, createdAt: clip.createdAt });
-        }
-        return include;
+
+        const clipDate = getLocalDateString(d); // Use local date string
+        const match = (!startDate || clipDate >= startDate) && (!endDate || clipDate <= endDate);
+        return match;
+      });
+    }
+
+    // 2. 출처 필터 (그룹 기반)
+    if (selectedSources.length > 0) {
+      result = result.filter(clip => {
+        if (!clip.url) return false;
+        return selectedSources.includes(getSourceInfo(clip.url).name);
+      });
+    }
+
+    // 3. 카테고리 필터
+    if (selectedCategories.length > 0) {
+      result = result.filter(clip => {
+        if (!clip.categoryId) return false;
+        if (selectedCategories.includes(clip.categoryId)) return true;
+
+        // Name match fallback
+        const catName = categories?.find(c => c.id === clip.categoryId)?.name;
+        if (catName && selectedCategories.some(id => categories?.find(c => c.id === id)?.name?.toLowerCase() === catName.toLowerCase())) return true;
+        return false;
       });
     }
 
     console.log('[DEBUG] Filtered result count:', result.length);
-    console.log('[DEBUG] Categories available:', categories?.length);
 
     setStudioClips(result);
     setSelectedClips([]);
-    setSelectedKeywords([]);
-    toast.success(language === 'ko' ? `${result.length}개의 클립을 불러왔습니다` : `Loaded ${result.length} clips`);
-  }, [allActiveLinks, language, categories]);
+
+    if (result.length === 0) {
+      toast.error(language === 'ko' ? '조건에 맞는 클립이 없습니다' : 'No clips match the criteria');
+    } else {
+      toast.success(language === 'ko' ? `${result.length}개의 클립을 불러왔습니다` : `Loaded ${result.length} clips`);
+    }
+  }, [allActiveLinks, language, selectedSources, selectedCategories, categories]);
+
+  // handleLoadClips - 현재 설정된 날짜로 loadClipsWithDates 호출
+  const handleLoadClips = useCallback(() => {
+    loadClipsWithDates(studioStartDate, studioEndDate);
+  }, [loadClipsWithDates, studioStartDate, studioEndDate]);
 
   const toggleClipSelection = useCallback((id: string) => { setSelectedClips(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]); }, []);
-  const selectAllClips = useCallback(() => { setSelectedClips(filteredClips.map(c => c.id)); }, [filteredClips]);
+  const selectAllClips = useCallback(() => {
+    setSelectedClips(prev => {
+      const allIds = filteredClips.map(c => c.id);
+      if (prev.length === allIds.length && allIds.every(id => prev.includes(id))) {
+        return [];
+      }
+      return allIds;
+    });
+  }, [filteredClips]);
   const clearResults = useCallback(() => {
     setStudioClips([]);
     setSelectedClips([]);
@@ -1303,9 +1568,10 @@ export const AIInsightsDashboard = ({
   const handleGenerate = useCallback(async () => {
     if (!selectedContentType || selectedClips.length === 0) return;
     setGeneratingReport(true);
-    toast.loading(language === 'ko' ? '콘텐츠 생성 중...' : 'Generating...');
+    setGeneratedContent(null);
+    toast.loading(language === 'ko' ? 'AI가 콘텐츠를 생성하고 있습니다...' : 'AI is generating content...');
 
-    // Get selected clip titles for generating content title
+    // Get selected clip data
     const selectedClipData = studioClips.filter(c => selectedClips.includes(c.id));
     const mainTopic = selectedClipData[0]?.keywords?.[0] || selectedClipData[0]?.title?.slice(0, 20) || 'Content';
 
@@ -1316,31 +1582,43 @@ export const AIInsightsDashboard = ({
       trend: { ko: '트렌드 분석', en: 'Trend Analysis' },
     };
 
-    // Simulate generation (in real implementation, call AI API here)
-    setTimeout(() => {
+    try {
+      // 실제 AI API 호출
+      const result = await generateStudioContent(
+        selectedClipData,
+        selectedContentType as StudioContentType,
+        language as 'ko' | 'en'
+      );
+
       setGeneratingReport(false);
       toast.dismiss();
-      toast.success(language === 'ko' ? '콘텐츠가 생성되었습니다!' : 'Content generated!');
 
-      // Save to creation history
-      const newEntry = {
-        id: `gen_${Date.now()}`,
-        type: typeLabels[selectedContentType]?.[language === 'ko' ? 'ko' : 'en'] || selectedContentType,
-        title: `${mainTopic} ${typeLabels[selectedContentType]?.[language === 'ko' ? 'ko' : 'en'] || ''}`,
-        date: new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace('.', ''),
-        clipCount: selectedClips.length,
-      };
+      if (result.success && result.content) {
+        setGeneratedContent(result.content);
+        toast.success(language === 'ko' ? '콘텐츠가 생성되었습니다!' : 'Content generated!');
 
-      setCreationHistory(prev => {
-        const updated = [newEntry, ...prev].slice(0, 10); // Keep last 10
-        localStorage.setItem('linkbrain_creation_history', JSON.stringify(updated));
-        return updated;
-      });
+        // Save to creation history
+        const newEntry = {
+          id: `gen_${Date.now()}`,
+          type: typeLabels[selectedContentType]?.[language === 'ko' ? 'ko' : 'en'] || selectedContentType,
+          title: `${mainTopic} ${typeLabels[selectedContentType]?.[language === 'ko' ? 'ko' : 'en'] || ''}`,
+          date: new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace('.', ''),
+          clipCount: selectedClips.length,
+        };
 
-      // Reset selection
-      setSelectedClips([]);
-      setSelectedContentType(null);
-    }, 2000);
+        setCreationHistory(prev => {
+          const updated = [newEntry, ...prev].slice(0, 10);
+          localStorage.setItem('linkbrain_creation_history', JSON.stringify(updated));
+          return updated;
+        });
+      } else {
+        toast.error(result.error || (language === 'ko' ? '생성 중 오류가 발생했습니다.' : 'An error occurred.'));
+      }
+    } catch (error: any) {
+      setGeneratingReport(false);
+      toast.dismiss();
+      toast.error(error.message || (language === 'ko' ? '생성 중 오류가 발생했습니다.' : 'An error occurred.'));
+    }
   }, [selectedContentType, selectedClips, studioClips, language]);
 
   const contentTypes = [
@@ -1442,12 +1720,19 @@ export const AIInsightsDashboard = ({
           clips={filteredClips} selectedClips={selectedClips} onToggleClip={toggleClipSelection} onSelectAll={selectAllClips}
           contentTypes={contentTypes} selectedContentType={selectedContentType} onSelectContentType={(id: any) => setSelectedContentType(id as ContentType)}
           onGenerate={handleGenerate} isGenerating={generatingReport} searchQuery={searchQuery} onSearchChange={setSearchQuery}
-          filterTag={studioFilterTag} onFilterChange={setStudioFilterTag} availableTags={availableTags}
-          selectedKeywords={selectedKeywords} availableKeywords={availableKeywords} categories={categories}
-          onToggleKeyword={(kw: string) => setSelectedKeywords(prev => prev.includes(kw) ? prev.filter(k => k !== kw) : [...prev, kw])}
-          onClearKeywords={() => setSelectedKeywords([])}
           startDate={studioStartDate} endDate={studioEndDate} onStartDateChange={setStudioStartDate} onEndDateChange={setStudioEndDate}
           onLoadClips={handleLoadClips} loadClipsWithDates={loadClipsWithDates} onClearResults={clearResults} language={language} isDark={isDark} theme={theme}
+          // 새로 추가된 필터/정렬 props
+          availableSources={availableSources}
+          selectedSources={selectedSources}
+          onToggleSource={(domain: string) => setSelectedSources(prev => prev.includes(domain) ? prev.filter(d => d !== domain) : [...prev, domain])}
+          onClearSources={() => setSelectedSources([])}
+          allAvailableCategories={allAvailableCategories}
+          selectedCategories={selectedCategories}
+          onToggleCategory={(catId: string) => setSelectedCategories(prev => prev.includes(catId) ? prev.filter(c => c !== catId) : [...prev, catId])}
+          onClearCategories={() => setSelectedCategories([])}
+          generatedContent={generatedContent}
+          onClearContent={() => setGeneratedContent(null)}
         />
 
         {/* Creation History */}

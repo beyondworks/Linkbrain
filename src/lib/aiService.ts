@@ -152,6 +152,369 @@ export const callGemini = async (apiKey: string, model: string, prompt: string):
     }
 };
 
+// =============================================================================
+// Content Studio - 출력 형태별 AI 콘텐츠 생성
+// =============================================================================
+
+export type StudioContentType = 'report' | 'article' | 'planning' | 'trend';
+
+export const generateStudioContent = async (
+    clips: any[],
+    contentType: StudioContentType,
+    language: 'ko' | 'en'
+): Promise<AIResponse> => {
+    const config = getAIConfig();
+    if (!config) {
+        return { success: false, error: language === 'ko' ? 'AI 설정이 필요합니다. 설정에서 API 키를 입력해주세요.' : 'AI not configured. Please add your API key in settings.' };
+    }
+
+    if (clips.length === 0) {
+        return { success: false, error: language === 'ko' ? '선택된 클립이 없습니다.' : 'No clips selected.' };
+    }
+
+    // 클립 데이터 정리
+    const clipSummaries = clips.map((clip, i) => {
+        const date = clip.createdAt?.seconds
+            ? new Date(clip.createdAt.seconds * 1000).toISOString().split('T')[0]
+            : (clip.createdAt ? new Date(clip.createdAt).toISOString().split('T')[0] : 'Unknown');
+        return `[${i + 1}] ${clip.title || 'Untitled'}
+   - 날짜: ${date}
+   - 키워드: ${(clip.keywords || []).join(', ') || 'None'}
+   - 요약: ${clip.summary || clip.memo || 'No summary'}
+   - 원문 일부: ${(clip.content || '').slice(0, 300)}${(clip.content?.length || 0) > 300 ? '...' : ''}`;
+    }).join('\n\n');
+
+    // 출력 형태별 프롬프트
+    const prompts: Record<StudioContentType, { ko: string; en: string }> = {
+        report: {
+            ko: `[리포트 생성 요청]
+
+다음은 사용자가 선택한 ${clips.length}개의 클립입니다:
+
+${clipSummaries}
+
+📌 리포트 작성 지침:
+1. 객관적이고 분석적인 톤으로 작성하세요.
+2. 데이터와 수치를 중심으로 구성하세요.
+3. 핵심 인사이트를 명확하게 도출하세요.
+4. 실행 가능한 결론을 제시하세요.
+
+📌 출력 형식 (Markdown):
+# 📊 [주제] 분석 리포트
+
+## 핵심 요약
+(3줄 이내로 핵심 내용 요약)
+
+## 주요 발견점
+### 1. [첫 번째 발견]
+(상세 설명)
+
+### 2. [두 번째 발견]
+(상세 설명)
+
+### 3. [세 번째 발견]
+(상세 설명)
+
+## 데이터 기반 인사이트
+(클립 내용을 근거로 한 분석)
+
+## 결론 및 제언
+(실행 가능한 다음 단계 제안)
+
+⚠️ 주의: 제공된 클립 데이터만 사용하세요. 외부 정보를 추가하지 마세요.`,
+            en: `[Generate Report]
+
+Here are ${clips.length} clips selected by the user:
+
+${clipSummaries}
+
+📌 Report Guidelines:
+1. Write in an objective, analytical tone.
+2. Focus on data and metrics.
+3. Extract clear insights.
+4. Provide actionable conclusions.
+
+📌 Output Format (Markdown):
+# 📊 [Topic] Analysis Report
+
+## Executive Summary
+(3 lines max summarizing key points)
+
+## Key Findings
+### 1. [First Finding]
+(Detailed explanation)
+
+### 2. [Second Finding]
+(Detailed explanation)
+
+### 3. [Third Finding]
+(Detailed explanation)
+
+## Data-Driven Insights
+(Analysis based on clip content)
+
+## Conclusions & Recommendations
+(Actionable next steps)
+
+⚠️ Warning: Use ONLY the provided clip data. Do not add external information.`
+        },
+        article: {
+            ko: `[아티클 생성 요청]
+
+다음은 사용자가 선택한 ${clips.length}개의 클립입니다:
+
+${clipSummaries}
+
+📌 아티클 작성 지침:
+1. 읽기 쉽고 흥미로운 스토리텔링으로 작성하세요.
+2. 독자의 관심을 끄는 서론으로 시작하세요.
+3. 클립들을 자연스럽게 연결하여 하나의 이야기로 만드세요.
+4. 개인적인 인사이트와 생각을 담아주세요.
+
+📌 출력 형식 (Markdown):
+# ✍️ [흥미로운 제목]
+
+> [인상적인 한 줄 인용]
+
+## 들어가며
+(독자의 관심을 끄는 서론)
+
+## 본론
+(클립들을 엮어 만든 스토리)
+
+### [소제목 1]
+(내용)
+
+### [소제목 2]
+(내용)
+
+## 마치며
+(생각할 거리를 남기는 결론)
+
+---
+*이 글은 ${clips.length}개의 저장된 콘텐츠를 기반으로 작성되었습니다.*`,
+            en: `[Generate Article]
+
+Here are ${clips.length} clips selected by the user:
+
+${clipSummaries}
+
+📌 Article Guidelines:
+1. Write in an engaging, storytelling style.
+2. Start with a compelling introduction.
+3. Weave clips together into a cohesive narrative.
+4. Include personal insights and thoughts.
+
+📌 Output Format (Markdown):
+# ✍️ [Compelling Title]
+
+> [Memorable one-liner]
+
+## Introduction
+(Hook the reader)
+
+## Main Content
+(Story woven from clips)
+
+### [Subheading 1]
+(Content)
+
+### [Subheading 2]
+(Content)
+
+## Conclusion
+(Leave the reader thinking)
+
+---
+*This article is based on ${clips.length} saved clips.*`
+        },
+        planning: {
+            ko: `[기획서 생성 요청]
+
+다음은 사용자가 선택한 ${clips.length}개의 클립입니다:
+
+${clipSummaries}
+
+📌 기획서 작성 지침:
+1. 명확한 목표와 전략을 제시하세요.
+2. 구체적인 실행 계획을 포함하세요.
+3. 타임라인과 마일스톤을 명시하세요.
+4. 예상 결과와 성공 지표를 정의하세요.
+
+📌 출력 형식 (Markdown):
+# 📋 [프로젝트명] 기획서
+
+## 1. 개요
+### 배경
+(왜 이 기획이 필요한가)
+
+### 목표
+- 주요 목표 1
+- 주요 목표 2
+- 주요 목표 3
+
+## 2. 전략 방향
+(핵심 전략 설명)
+
+## 3. 실행 계획
+### Phase 1: [단계명]
+- [ ] 액션 아이템 1
+- [ ] 액션 아이템 2
+
+### Phase 2: [단계명]
+- [ ] 액션 아이템 3
+- [ ] 액션 아이템 4
+
+## 4. 타임라인
+| 단계 | 기간 | 산출물 |
+|------|------|--------|
+| Phase 1 | 2주 | TBD |
+| Phase 2 | 3주 | TBD |
+
+## 5. 성공 지표 (KPI)
+- 지표 1: [측정 기준]
+- 지표 2: [측정 기준]
+
+## 6. 리스크 및 대응 방안
+(예상 리스크와 해결책)`,
+            en: `[Generate Planning Document]
+
+Here are ${clips.length} clips selected by the user:
+
+${clipSummaries}
+
+📌 Planning Guidelines:
+1. Define clear goals and strategy.
+2. Include specific action plans.
+3. Specify timeline and milestones.
+4. Define expected outcomes and success metrics.
+
+📌 Output Format (Markdown):
+# 📋 [Project Name] Planning Document
+
+## 1. Overview
+### Background
+(Why this project is needed)
+
+### Objectives
+- Objective 1
+- Objective 2
+- Objective 3
+
+## 2. Strategic Direction
+(Core strategy explanation)
+
+## 3. Execution Plan
+### Phase 1: [Phase Name]
+- [ ] Action Item 1
+- [ ] Action Item 2
+
+### Phase 2: [Phase Name]
+- [ ] Action Item 3
+- [ ] Action Item 4
+
+## 4. Timeline
+| Phase | Duration | Deliverables |
+|-------|----------|--------------|
+| Phase 1 | 2 weeks | TBD |
+| Phase 2 | 3 weeks | TBD |
+
+## 5. Success Metrics (KPIs)
+- Metric 1: [Measurement]
+- Metric 2: [Measurement]
+
+## 6. Risks & Mitigation
+(Expected risks and solutions)`
+        },
+        trend: {
+            ko: `[트렌드 분석 요청]
+
+다음은 사용자가 선택한 ${clips.length}개의 클립입니다:
+
+${clipSummaries}
+
+📌 트렌드 분석 지침:
+1. 클립들에서 공통 패턴과 트렌드를 발견하세요.
+2. 시간 흐름에 따른 변화를 분석하세요.
+3. 향후 예상되는 방향성을 제시하세요.
+4. 비교 분석을 통해 인사이트를 도출하세요.
+
+📌 출력 형식 (Markdown):
+# 📈 트렌드 분석 리포트
+
+## 핵심 트렌드 요약
+(한눈에 보는 주요 트렌드)
+
+## 발견된 패턴
+### 🔥 상승 트렌드
+- 트렌드 1: 설명
+- 트렌드 2: 설명
+
+### 📉 하락 트렌드
+- 트렌드 1: 설명
+
+### 🆕 새롭게 등장한 주제
+- 주제 1: 설명
+
+## 시계열 분석
+(시간에 따른 관심사 변화)
+
+## 향후 전망
+(예상되는 다음 트렌드)
+
+## 액션 포인트
+- [ ] 주목해야 할 것
+- [ ] 준비해야 할 것`,
+            en: `[Generate Trend Analysis]
+
+Here are ${clips.length} clips selected by the user:
+
+${clipSummaries}
+
+📌 Trend Analysis Guidelines:
+1. Identify common patterns and trends.
+2. Analyze changes over time.
+3. Suggest future directions.
+4. Derive insights through comparative analysis.
+
+📌 Output Format (Markdown):
+# 📈 Trend Analysis Report
+
+## Key Trends Summary
+(Quick overview of main trends)
+
+## Identified Patterns
+### 🔥 Rising Trends
+- Trend 1: Description
+- Trend 2: Description
+
+### 📉 Declining Trends
+- Trend 1: Description
+
+### 🆕 Emerging Topics
+- Topic 1: Description
+
+## Time-Series Analysis
+(How interests changed over time)
+
+## Future Outlook
+(Expected next trends)
+
+## Action Points
+- [ ] What to watch
+- [ ] What to prepare for`
+        }
+    };
+
+    const prompt = prompts[contentType][language];
+
+    if (config.provider === 'openai') {
+        return await callOpenAI(config.apiKey, config.model, prompt);
+    } else {
+        return await callGemini(config.apiKey, config.model, prompt);
+    }
+};
+
 // Generate AI insights report
 export const generateAIReport = async (
     clips: any[],
