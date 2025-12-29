@@ -11,6 +11,8 @@ import {
     Megaphone,
     Lightbulb
 } from 'lucide-react';
+import { cn } from '../ui/utils';
+import { SectionHeader } from '../shared/SectionHeader';
 import { toast } from 'sonner';
 
 interface AnnouncementsPanelProps {
@@ -140,21 +142,24 @@ export function AnnouncementsPanel({ theme, language, admin }: AnnouncementsPane
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h2 className={`text-xl font-bold ${textPrimary}`}>{t.title}</h2>
-                <button
-                    onClick={openCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#21DBA4] text-white rounded-lg text-sm font-medium hover:bg-[#1bc290] transition-colors"
-                >
-                    <Plus size={16} />
-                    {t.add}
-                </button>
-            </div>
+            {/* Header - Using SectionHeader Component */}
+            <SectionHeader
+                title={t.title}
+                isDark={theme === 'dark'}
+                action={
+                    <button
+                        onClick={openCreate}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#21DBA4] text-white rounded-xl text-sm font-medium hover:bg-[#1bc290] transition-colors"
+                    >
+                        <Plus size={16} />
+                        {t.add}
+                    </button>
+                }
+            />
 
             {/* Form Modal */}
             {form.isOpen && (
-                <div className={`rounded-xl border p-5 ${cardBg}`}>
+                <div className={cn("rounded-3xl border p-5", cardBg)}>
                     <div className="space-y-4">
                         <div>
                             <label className={`block text-sm font-medium mb-1.5 ${textSecondary}`}>{t.titleLabel}</label>
@@ -222,7 +227,7 @@ export function AnnouncementsPanel({ theme, language, admin }: AnnouncementsPane
 
             {/* List */}
             {announcements.length === 0 ? (
-                <div className={`rounded-xl border p-8 text-center ${cardBg}`}>
+                <div className={cn("rounded-3xl border p-8 text-center", cardBg)}>
                     <p className={textSecondary}>{t.empty}</p>
                 </div>
             ) : (

@@ -25,6 +25,7 @@ import {
     X
 } from 'lucide-react';
 import { cn } from '../ui/utils';
+import { SectionHeader } from '../shared/SectionHeader';
 import { toast } from 'sonner';
 
 interface UsersPanelProps {

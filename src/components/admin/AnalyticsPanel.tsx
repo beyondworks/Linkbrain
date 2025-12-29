@@ -26,6 +26,8 @@ import {
     ArrowUpRight
 } from 'lucide-react';
 import { cn } from '../ui/utils';
+import { StatCard } from '../shared/StatCard';
+import { SectionHeader } from '../shared/SectionHeader';
 
 interface AnalyticsPanelProps {
     theme: 'light' | 'dark';
@@ -145,70 +147,43 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
     return (
         <div className="space-y-8 max-w-[1600px] mx-auto">
             {/* ═══════════════════════════════════════════════════
-                Header Section - Plus X Style
+                Header Section - Using SectionHeader Component
                 ═══════════════════════════════════════════════════ */}
-            <div className="flex items-end justify-between">
-                <div className="space-y-1">
-                    <h2 className={cn("text-2xl font-bold tracking-tight", tokens.textPrimary)}>
-                        {t.title}
-                    </h2>
-                    <p className={cn("text-sm", tokens.textSecondary)}>
-                        {t.subtitle}
-                    </p>
-                </div>
-                <button
-                    onClick={() => fetchAnalytics()}
-                    className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200",
-                        tokens.border,
-                        tokens.borderHover,
-                        tokens.textSecondary,
-                        "hover:text-[#21DBA4]"
-                    )}
-                >
-                    <RefreshCw size={14} />
-                    {t.refresh}
-                </button>
-            </div>
+            <SectionHeader
+                title={t.title}
+                subtitle={t.subtitle}
+                isDark={isDark}
+                action={
+                    <button
+                        onClick={() => fetchAnalytics()}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200",
+                            tokens.border,
+                            tokens.borderHover,
+                            tokens.textSecondary,
+                            "hover:text-[#21DBA4]"
+                        )}
+                    >
+                        <RefreshCw size={14} />
+                        {t.refresh}
+                    </button>
+                }
+                className="mb-0"
+            />
 
             {/* ═══════════════════════════════════════════════════
-                KPI Cards - Storybook Pattern (Simple & Clean)
+                KPI Cards - Using StatCard Component
                 ═══════════════════════════════════════════════════ */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {mainStats.map((stat, i) => (
-                    <div
+                    <StatCard
                         key={i}
-                        className={cn(
-                            "p-5 rounded-3xl border transition-all duration-200 hover:border-[#21DBA4]/30",
-                            tokens.bgCard,
-                            tokens.border
-                        )}
-                    >
-                        {/* Label */}
-                        <p className={cn("text-xs font-medium mb-2", tokens.textTertiary)}>
-                            {stat.label}
-                        </p>
-
-                        {/* Hero Value */}
-                        <p className={cn(
-                            "text-2xl font-bold tabular-nums mb-1",
-                            tokens.textPrimary
-                        )}>
-                            {typeof stat.value === 'number'
-                                ? stat.value.toLocaleString()
-                                : stat.value}
-                        </p>
-
-                        {/* Trend */}
-                        {stat.trend && (
-                            <p className={cn(
-                                "text-xs font-medium",
-                                stat.trendUp ? "text-[#21DBA4]" : "text-rose-500"
-                            )}>
-                                {stat.trend} {language === 'ko' ? '이번 주' : 'this week'}
-                            </p>
-                        )}
-                    </div>
+                        label={stat.label}
+                        value={stat.value}
+                        trend={stat.trend ? `${stat.trend} ${language === 'ko' ? '이번 주' : 'this week'}` : undefined}
+                        trendUp={stat.trendUp ?? undefined}
+                        isDark={isDark}
+                    />
                 ))}
             </div>
 
