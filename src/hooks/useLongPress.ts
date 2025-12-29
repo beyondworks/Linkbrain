@@ -14,9 +14,18 @@ const useLongPress = (
     const isLongPress = useRef(false);
     const startPos = useRef<{ x: number; y: number } | null>(null);
     const hasMoved = useRef(false);
+    const isTouchEvent = useRef(false); // Track if this interaction started with touch
 
     const start = useCallback(
         (event: React.MouseEvent | React.TouchEvent) => {
+            // If this is a mouse event but we're in a touch interaction, ignore it (simulated event)
+            if (!('touches' in event) && isTouchEvent.current) {
+                return;
+            }
+
+            // Track if this is a touch event
+            isTouchEvent.current = 'touches' in event;
+
             isLongPress.current = false;
             hasMoved.current = false;
 
@@ -39,12 +48,17 @@ const useLongPress = (
 
     const clear = useCallback(
         (event: React.MouseEvent | React.TouchEvent) => {
+            // If this is a mouse event but we started with touch, ignore it (simulated event)
+            if (!('touches' in event) && isTouchEvent.current) {
+                return;
+            }
+
             if (timeout.current) {
                 clearTimeout(timeout.current);
             }
 
             // If the press duration was shorter than 'delay', it's a click.
-            // But if we already triggered long press or moved too much, we shouldn't trigger click.
+            // But if we already triggered long press or moved too much, skip.
             if (!isLongPress.current && !hasMoved.current && onClick) {
                 onClick(event);
             }
@@ -52,6 +66,11 @@ const useLongPress = (
             isLongPress.current = false;
             hasMoved.current = false;
             startPos.current = null;
+
+            // Reset touch flag after a short delay to allow next interaction
+            setTimeout(() => {
+                isTouchEvent.current = false;
+            }, 100);
         },
         [onClick]
     );
@@ -91,4 +110,3 @@ const useLongPress = (
 };
 
 export default useLongPress;
-
