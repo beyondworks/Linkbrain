@@ -55,7 +55,7 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
             style={dndStyle}
             {...(isEditing ? { ...attributes, ...listeners } : longPressEvents)}
             onClick={handleClick}
-            className={`${className} ${isEditing && !isDragging ? 'animate-shake cursor-move select-none' : 'cursor-pointer'} ${isEditing ? 'relative z-[60]' : ''} touch-none`}
+            className={`${className} ${isEditing && !isDragging ? 'animate-shake cursor-move select-none' : 'cursor-pointer'} ${isEditing ? 'relative z-[60] touch-none' : ''}`}
         >
             {children}
         </div>
