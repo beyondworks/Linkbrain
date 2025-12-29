@@ -582,13 +582,22 @@ export const useAdmin = () => {
             const clipsData = clipsSnapshot.docs.map(d => d.data());
             const categoriesSnapshot = await getDocs(collection(db, 'categories'));
 
+            // Build category ID -> name mapping
+            const categoryIdToName: Record<string, string> = {};
+            categoriesSnapshot.docs.forEach(doc => {
+                const data = doc.data();
+                categoryIdToName[doc.id] = data.name || doc.id;
+            });
+
             // Count clips per category
             const categoryCount: Record<string, number> = {};
             const keywordCount: Record<string, number> = {};
 
             clipsData.forEach(clip => {
-                const cat = clip.category || 'Uncategorized';
-                categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+                // Convert category ID to name
+                const catId = clip.category || 'Uncategorized';
+                const catName = categoryIdToName[catId] || catId;
+                categoryCount[catName] = (categoryCount[catName] || 0) + 1;
 
                 if (clip.keywords && Array.isArray(clip.keywords)) {
                     clip.keywords.forEach((kw: string) => {
