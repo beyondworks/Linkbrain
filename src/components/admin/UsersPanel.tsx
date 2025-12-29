@@ -25,12 +25,7 @@ interface UserRow {
 const MASTER_EMAILS = ['beyondworks.br@gmail.com'];
 
 /**
- * UsersPanel - Storybook AdminDashboard.stories.tsx UsersPanel 100% 반영
- * 
- * 핵심 패턴:
- * - p-6 bg-white rounded-3xl border border-slate-100 래퍼
- * - SectionHeader with 검색 + 버튼
- * - DataTable with Badge
+ * UsersPanel - AnalyticsPanel과 동일한 레이아웃 (space-y-6)
  */
 export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
     const { users, usersLoading, fetchUserList } = admin;
@@ -85,7 +80,7 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
             });
     }, [users, searchQuery, t.active]);
 
-    // Table columns - Storybook exact pattern
+    // Table columns
     const columns: Column<UserRow>[] = [
         { key: 'email', header: t.email },
         {
@@ -121,11 +116,8 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
     }
 
     return (
-        <div className={cn(
-            "p-6 rounded-3xl border",
-            isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
-        )}>
-            {/* Header - Storybook SectionHeader Pattern */}
+        <div className="space-y-6">
+            {/* Header */}
             <SectionHeader
                 title={t.title}
                 subtitle={t.subtitle}
@@ -159,13 +151,18 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                 }
             />
 
-            {/* DataTable - Storybook Pattern */}
-            <DataTable
-                data={userData}
-                columns={columns}
-                isDark={isDark}
-                emptyMessage={t.noUsers}
-            />
+            {/* DataTable Card */}
+            <div className={cn(
+                "p-6 rounded-3xl border",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
+                <DataTable
+                    data={userData}
+                    columns={columns}
+                    isDark={isDark}
+                    emptyMessage={t.noUsers}
+                />
+            </div>
         </div>
     );
 }
