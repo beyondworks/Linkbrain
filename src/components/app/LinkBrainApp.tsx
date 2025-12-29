@@ -390,8 +390,12 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    });
    const [isRearranging, setIsRearranging] = useState(false);
    const [activeId, setActiveId] = useState<string | null>(null);
-   // 커스텀 순서가 있으면 custom 모드로 시작
+   // 커스텀 순서가 있으면 custom 모드로 시작 (localStorage에서 persisted sortMode 우선)
    const [sortMode, setSortMode] = useState<'count' | 'name' | 'custom'>(() => {
+      const savedSortMode = localStorage.getItem('sortMode') as 'count' | 'name' | 'custom' | null;
+      if (savedSortMode && ['count', 'name', 'custom'].includes(savedSortMode)) {
+         return savedSortMode;
+      }
       const hasCustomOrder = (localStorage.getItem('sourceOrder')?.length ?? 0) > 2 ||
          (localStorage.getItem('categoryOrder')?.length ?? 0) > 2;
       return hasCustomOrder ? 'custom' : 'count';
@@ -407,6 +411,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
    }, [isRearranging]);
+
+   // Persist sortMode changes to localStorage
+   useEffect(() => {
+      localStorage.setItem('sortMode', sortMode);
+   }, [sortMode]);
 
    // DnD Sensors - Activation constraints for drag
    const sensors = useSensors(
@@ -2308,14 +2317,23 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     <>
                                        <div
                                           className="fixed inset-0 z-20 bg-black/5 backdrop-blur-[1px]"
+                                          style={{ touchAction: 'none' }}
                                           onClick={(e) => {
                                              e.stopPropagation();
                                              setIsFilterOpen(false);
                                           }}
                                        />
-                                       <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute left-0 top-full mt-1 w-4/5 rounded-xl shadow-xl border z-30 overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}>
+                                       <div
+                                          onMouseDown={(e) => e.stopPropagation()}
+                                          onClick={(e) => e.stopPropagation()}
+                                          onTouchStart={(e) => e.stopPropagation()}
+                                          className={`absolute left-0 top-full mt-1 w-4/5 rounded-xl shadow-xl border z-30 overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100'}`}
+                                       >
                                           {/* Scrollable Content */}
-                                          <div className="max-h-[50vh] overflow-y-auto overscroll-contain">
+                                          <div
+                                             className="max-h-[50vh] overflow-y-auto overscroll-contain"
+                                             style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+                                          >
                                              <div className="px-3 py-1.5">
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
                                                 <div className="mt-1 space-y-0.5">
