@@ -68,6 +68,10 @@ import {
 // @ts-ignore
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { motion, AnimatePresence } from 'motion/react';
+import { DndContext, closestCenter, TouchSensor, MouseSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
+import { arrayMove, SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { SortableChip } from './SortableChip';
+
 import { toast } from 'sonner';
 import {
    DropdownMenu,
@@ -376,6 +380,81 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    const [activeTab, setActiveTab] = useState(() => {
       return localStorage.getItem('activeTab') || initialTab;
    });
+
+   // Sorting Orders
+   const [sourceOrder, setSourceOrder] = useState<string[]>(() => {
+      try { return JSON.parse(localStorage.getItem('sourceOrder') || '[]'); } catch { return []; }
+   });
+   const [categoryOrder, setCategoryOrder] = useState<string[]>(() => {
+      try { return JSON.parse(localStorage.getItem('categoryOrder') || '[]'); } catch { return []; }
+   });
+   const [isRearranging, setIsRearranging] = useState(false);
+   const [activeId, setActiveId] = useState<string | null>(null);
+   // 커스텀 순서가 있으면 custom 모드로 시작
+   const [sortMode, setSortMode] = useState<'count' | 'name' | 'custom'>(() => {
+      const hasCustomOrder = (localStorage.getItem('sourceOrder')?.length ?? 0) > 2 ||
+         (localStorage.getItem('categoryOrder')?.length ?? 0) > 2;
+      return hasCustomOrder ? 'custom' : 'count';
+   });
+
+   // ESC 키로 편집 모드 종료
+   useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+         if (e.key === 'Escape' && isRearranging) {
+            setIsRearranging(false);
+         }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+   }, [isRearranging]);
+
+   // DnD Sensors - Activation constraints for drag
+   const sensors = useSensors(
+      useSensor(MouseSensor, {
+         activationConstraint: { distance: 5 }
+      }),
+      useSensor(TouchSensor, {
+         activationConstraint: { delay: 5, tolerance: 5 }
+      })
+   );
+
+   const handleDragStart = (event: any) => {
+      setActiveId(event.active.id);
+   };
+
+   const handleDragEnd = (event: any) => {
+      const { active, over } = event;
+      setActiveId(null);
+
+      if (active.id !== over?.id) {
+         // 드래그로 순서 변경 시 자동으로 커스텀 모드로 전환
+         setSortMode('custom');
+
+         // Determine if it's source or category
+         if (active.id.startsWith('src-')) {
+            const oldIndex = sortedSources.indexOf(active.id.replace('src-', ''));
+            const newIndex = sortedSources.indexOf(over.id.replace('src-', ''));
+            const newOrder = arrayMove(sortedSources, oldIndex, newIndex);
+            setSourceOrder(newOrder);
+            localStorage.setItem('sourceOrder', JSON.stringify(newOrder));
+         } else if (active.id.startsWith('cat-')) {
+            const oldCatId = active.id.replace('cat-', '');
+            const newCatId = over.id.replace('cat-', '');
+            const oldIndex = sortedCategories.findIndex(c => c.id === oldCatId);
+            const newIndex = sortedCategories.findIndex(c => c.id === newCatId);
+
+            // Extract just IDs for storage
+            const newSortedCats = arrayMove(sortedCategories, oldIndex, newIndex);
+            const newOrderIds = newSortedCats.map(c => c.id);
+
+            setCategoryOrder(newOrderIds);
+            localStorage.setItem('categoryOrder', JSON.stringify(newOrderIds));
+         }
+      }
+   };
+
+
+
 
    // Persist activeTab
    useEffect(() => {
@@ -725,6 +804,55 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          availableCategories: categories.filter(c => usedCatIds.has(c.id))
       };
    }, [links, categories]);
+
+   // Create sorted lists for DnD
+   const sortedSources = useMemo(() => {
+      // 커스텀 정렬이 있으면 커스텀 우선
+      if (sortMode === 'custom' && sourceOrder.length > 0) {
+         return [...availableSources].sort((a, b) => {
+            const idxA = sourceOrder.indexOf(a);
+            const idxB = sourceOrder.indexOf(b);
+            if (idxA === -1 && idxB === -1) return a.localeCompare(b);
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+         });
+      }
+      // 이름순 정렬
+      if (sortMode === 'name') {
+         return [...availableSources].sort((a, b) => a.localeCompare(b));
+      }
+      // 개수순 정렬 (디폴트)
+      return [...availableSources].sort((a, b) => {
+         const countA = links.filter((l: LinkItem) => getSourceInfo(l.url).name === a && !l.isArchived).length;
+         const countB = links.filter((l: LinkItem) => getSourceInfo(l.url).name === b && !l.isArchived).length;
+         return countB - countA; // 내림차순
+      });
+   }, [availableSources, sourceOrder, links, sortMode]);
+
+   const sortedCategories = useMemo(() => {
+      // 커스텀 정렬이 있으면 커스텀 우선
+      if (sortMode === 'custom' && categoryOrder.length > 0) {
+         return [...categories].sort((a, b) => {
+            const idxA = categoryOrder.indexOf(a.id);
+            const idxB = categoryOrder.indexOf(b.id);
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+         });
+      }
+      // 이름순 정렬
+      if (sortMode === 'name') {
+         return [...categories].sort((a, b) => a.name.localeCompare(b.name));
+      }
+      // 개수순 정렬 (디폴트)
+      return [...categories].sort((a, b) => {
+         const countA = links.filter((l: LinkItem) => (l.categoryId === a.id || l.categoryId?.toLowerCase() === a.name?.toLowerCase()) && !l.isArchived).length;
+         const countB = links.filter((l: LinkItem) => (l.categoryId === b.id || l.categoryId?.toLowerCase() === b.name?.toLowerCase()) && !l.isArchived).length;
+         return countB - countA; // 내림차순
+      });
+   }, [categories, categoryOrder, links, sortMode]);
 
    const selectedLink = useMemo(() =>
       selectedLinkId ? links.find(l => l.id === selectedLinkId) || null : null
@@ -1354,6 +1482,61 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
 
 
+         {/* Rearrange Mode Overlay - 전체 화면 클릭으로 편집 종료 */}
+         {isRearranging && (
+            <>
+               {/* 전체 화면 클릭 영역 */}
+               <div
+                  className="fixed inset-0 z-[55] cursor-default bg-black/20"
+                  onClick={() => setIsRearranging(false)}
+               />
+
+               {/* 정렬 버튼 + 닫기 버튼 */}
+               <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-1 px-2 py-1.5 rounded-full text-xs font-medium shadow-lg pointer-events-auto ${theme === 'dark'
+                  ? 'bg-slate-800 border border-slate-600'
+                  : 'bg-white border border-slate-200'
+                  }`}>
+                  <button
+                     onClick={(e) => { e.stopPropagation(); setSortMode('count'); }}
+                     className={`px-3 py-1 rounded-full transition-all whitespace-nowrap ${sortMode === 'count'
+                        ? 'bg-[#21DBA4] text-white'
+                        : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                  >
+                     {language === 'ko' ? '개수순' : 'Count'}
+                  </button>
+                  <button
+                     onClick={(e) => { e.stopPropagation(); setSortMode('name'); }}
+                     className={`px-3 py-1 rounded-full transition-all whitespace-nowrap ${sortMode === 'name'
+                        ? 'bg-[#21DBA4] text-white'
+                        : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                  >
+                     {language === 'ko' ? '이름순' : 'Name'}
+                  </button>
+                  <button
+                     onClick={(e) => { e.stopPropagation(); setSortMode('custom'); }}
+                     className={`px-3 py-1 rounded-full transition-all whitespace-nowrap ${sortMode === 'custom'
+                        ? 'bg-[#21DBA4] text-white'
+                        : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                  >
+                     {language === 'ko' ? '커스텀' : 'Custom'}
+                  </button>
+                  {/* 닫기 버튼 */}
+                  <button
+                     onClick={(e) => { e.stopPropagation(); setIsRearranging(false); }}
+                     className={`ml-1 p-1 rounded-full transition-all ${theme === 'dark'
+                        ? 'text-slate-400 hover:text-white hover:bg-slate-700'
+                        : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'
+                        }`}
+                  >
+                     <X size={14} />
+                  </button>
+               </div>
+            </>
+         )}
+
          {/* Mobile Sidebar Overlay */}
          <AnimatePresence>
             {sidebarOpen && (
@@ -1385,18 +1568,26 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8 no-scrollbar">
+            <div
+               className="flex-1 overflow-y-auto py-6 px-4 space-y-8 no-scrollbar"
+               onClick={(e) => {
+                  // 빈 공간 클릭 시에만 편집 종료 (칩 클릭은 제외)
+                  if (isRearranging && e.target === e.currentTarget) {
+                     setIsRearranging(false);
+                  }
+               }}
+            >
 
                {/* Main Nav */}
                <div className="space-y-1">
-                  <NavItem icon={<Home size={18} />} label={t('home')} active={activeTab === 'home'} onClick={() => setActiveTab('home')} theme={theme} />
-                  <NavItem icon={<Compass size={18} />} label={t('discovery')} active={activeTab === 'discovery'} onClick={() => setActiveTab('discovery')} theme={theme} />
+                  <NavItem icon={<Home size={18} />} label={t('home')} active={activeTab === 'home'} onClick={() => { if (isRearranging) { setIsRearranging(false); return; } setActiveTab('home'); }} theme={theme} />
+                  <NavItem icon={<Compass size={18} />} label={t('discovery')} active={activeTab === 'discovery'} onClick={() => { if (isRearranging) { setIsRearranging(false); return; } setActiveTab('discovery'); }} theme={theme} />
                   <NavItem
                      icon={<Clock size={18} />}
                      label={t('readLater')}
                      count={links.filter(l => l.isReadLater && !l.isArchived).length}
                      active={activeTab === 'later'}
-                     onClick={() => setActiveTab('later')}
+                     onClick={() => { if (isRearranging) { setIsRearranging(false); return; } setActiveTab('later'); }}
                      theme={theme}
                   />
                   <NavItem
@@ -1404,7 +1595,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                      label={t('favorites')}
                      count={links.filter(l => l.isFavorite && !l.isArchived).length}
                      active={activeTab === 'favorites'}
-                     onClick={() => setActiveTab('favorites')}
+                     onClick={() => { if (isRearranging) { setIsRearranging(false); return; } setActiveTab('favorites'); }}
                      theme={theme}
                   />
                   <NavItem
@@ -1412,7 +1603,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                      label={t('archive')}
                      count={links.filter(l => l.isArchived).length}
                      active={activeTab === 'archive'}
-                     onClick={() => setActiveTab('archive')}
+                     onClick={() => { if (isRearranging) { setIsRearranging(false); return; } setActiveTab('archive'); }}
                      theme={theme}
                   />
                   <NavItem
@@ -1420,11 +1611,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                      label="AskAI"
                      count={links.filter(l => l.chatHistory && l.chatHistory.length > 0 && !l.isArchived).length}
                      active={activeTab === 'askAI'}
-                     onClick={() => setActiveTab('askAI')}
+                     onClick={() => { if (isRearranging) { setIsRearranging(false); return; } setActiveTab('askAI'); }}
                      theme={theme}
                      iconClassName="text-[#21DBA4]"
                   />
-                  <NavItem icon={<Sparkles size={18} />} label={t('aiInsights')} active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} theme={theme} iconClassName="text-[#21DBA4]" />
+                  <NavItem icon={<Sparkles size={18} />} label={t('aiInsights')} active={activeTab === 'insights'} onClick={() => { if (isRearranging) { setIsRearranging(false); return; } setActiveTab('insights'); }} theme={theme} iconClassName="text-[#21DBA4]" />
                </div>
 
                {/* Categories */}
@@ -1461,38 +1652,66 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            animate={{ height: "auto", opacity: 1 }}
                            exit={{ height: 0, opacity: 0 }}
                            className="overflow-hidden"
+                           style={{ zIndex: isRearranging ? 50 : 'auto', position: isRearranging ? 'relative' : undefined }}
                         >
-                           <div className="flex flex-wrap gap-2 px-3 py-2">
-                              {categories.map((cat: Category) => {
-                                 const isActive = filterCategories.includes(cat.id);
-                                 // Match by both ID and name
-                                 const count = links.filter((l: LinkItem) => (l.categoryId === cat.id || l.categoryId?.toLowerCase() === cat.name?.toLowerCase()) && !l.isArchived).length;
-                                 return (
-                                    <div key={cat.id} className="group relative">
-                                       <button
-                                          onClick={() => toggleFilter(setFilterCategories, filterCategories, cat.id)}
-                                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
-                                             ? 'bg-[#21DBA4] text-white shadow-sm'
+                           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                              <SortableContext items={sortedCategories.map(c => `cat-${c.id}`)} strategy={rectSortingStrategy}>
+                                 <div className="flex flex-wrap gap-2 px-3 py-2">
+                                    {sortedCategories.map((cat: Category) => {
+                                       const isActive = filterCategories.includes(cat.id);
+                                       // Match by both ID and name
+                                       const count = links.filter((l: LinkItem) => (l.categoryId === cat.id || l.categoryId?.toLowerCase() === cat.name?.toLowerCase()) && !l.isArchived).length;
+                                       return (
+                                          <SortableChip
+                                             key={cat.id}
+                                             id={`cat-${cat.id}`}
+                                             isEditing={isRearranging}
+                                             onLongPress={() => setIsRearranging(true)}
+                                             onClick={() => !isRearranging && toggleFilter(setFilterCategories, filterCategories, cat.id)}
+                                             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
+                                                ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                : theme === 'dark'
+                                                   ? `text-slate-800 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                   : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                }`}
+                                             style={!isActive ? { backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' } : {}}
+                                          >
+                                             <span>{cat.name}</span>
+                                             {count > 0 && (
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                                   ? 'bg-white/20 text-white'
+                                                   : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
+                                                   }`}>
+                                                   {count}
+                                                </span>
+                                             )}
+                                          </SortableChip>
+                                       );
+                                    })}
+                                 </div>
+                              </SortableContext>
+                              <DragOverlay>
+                                 {activeId && activeId.startsWith('cat-') && (() => {
+                                    const catId = activeId.replace('cat-', '');
+                                    const cat = categories.find(c => c.id === catId);
+                                    if (!cat) return null;
+                                    const isActive = filterCategories.includes(catId);
+                                    return (
+                                       <div
+                                          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing ${isActive
+                                             ? 'bg-[#21DBA4] text-white'
                                              : theme === 'dark'
-                                                ? `text-slate-800 hover:ring-2 hover:ring-[#21DBA4]/50`
-                                                : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                ? 'text-slate-800 ring-2 ring-[#21DBA4]'
+                                                : 'text-slate-600 ring-2 ring-[#21DBA4]'
                                              }`}
                                           style={!isActive ? { backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' } : {}}
                                        >
                                           <span>{cat.name}</span>
-                                          {count > 0 && (
-                                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
-                                                ? 'bg-white/20 text-white'
-                                                : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
-                                                }`}>
-                                                {count}
-                                             </span>
-                                          )}
-                                       </button>
-                                    </div>
-                                 );
-                              })}
-                           </div>
+                                       </div>
+                                    );
+                                 })()}
+                              </DragOverlay>
+                           </DndContext>
                         </motion.div>
                      )}
                   </AnimatePresence>
@@ -1517,36 +1736,62 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            animate={{ height: "auto", opacity: 1 }}
                            exit={{ height: 0, opacity: 0 }}
                            className="overflow-hidden"
+                           style={{ zIndex: isRearranging ? 50 : 'auto', position: isRearranging ? 'relative' : undefined }}
                         >
-                           <div className="flex flex-wrap gap-2 px-3 py-2">
-                              {availableSources.map((src: string) => {
-                                 const isActive = filterSources.includes(src);
-                                 const count = links.filter((l: LinkItem) => getSourceInfo(l.url).name === src && !l.isArchived).length;
-                                 const sourceInfo = getSourceInfo(`https://${src.toLowerCase().replace(' ', '')}.com`);
-                                 return (
-                                    <button
-                                       key={src}
-                                       onClick={() => toggleFilter(setFilterSources, filterSources, src)}
-                                       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
-                                          ? 'bg-[#21DBA4] text-white shadow-sm'
-                                          : theme === 'dark'
-                                             ? 'bg-slate-800 text-slate-400 hover:ring-2 hover:ring-[#21DBA4]/50'
-                                             : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
-                                          }`}
-                                    >
-                                       <span>{src}</span>
-                                       {count > 0 && (
-                                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
-                                             ? 'bg-white/20 text-white'
-                                             : theme === 'dark' ? 'bg-slate-700 text-slate-500' : 'bg-white/50 text-slate-500'
-                                             }`}>
-                                             {count}
-                                          </span>
-                                       )}
-                                    </button>
-                                 );
-                              })}
-                           </div>
+                           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                              <SortableContext items={sortedSources.map(s => `src-${s}`)} strategy={rectSortingStrategy}>
+                                 <div className="flex flex-wrap gap-2 px-3 py-2">
+                                    {sortedSources.map((src: string) => {
+                                       const isActive = filterSources.includes(src);
+                                       const count = links.filter((l: LinkItem) => getSourceInfo(l.url).name === src && !l.isArchived).length;
+
+                                       return (
+                                          <SortableChip
+                                             key={src}
+                                             id={`src-${src}`}
+                                             isEditing={isRearranging}
+                                             onLongPress={() => setIsRearranging(true)}
+                                             onClick={() => !isRearranging && toggleFilter(setFilterSources, filterSources, src)}
+                                             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
+                                                ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                : theme === 'dark'
+                                                   ? 'bg-slate-800 text-slate-400 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                   : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                }`}
+                                          >
+                                             <span>{src}</span>
+                                             {count > 0 && (
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                                   ? 'bg-white/20 text-white'
+                                                   : theme === 'dark' ? 'bg-slate-700 text-slate-500' : 'bg-white/50 text-slate-500'
+                                                   }`}>
+                                                   {count}
+                                                </span>
+                                             )}
+                                          </SortableChip>
+                                       );
+                                    })}
+                                 </div>
+                              </SortableContext>
+                              <DragOverlay>
+                                 {activeId && activeId.startsWith('src-') && (() => {
+                                    const src = activeId.replace('src-', '');
+                                    const isActive = filterSources.includes(src);
+                                    return (
+                                       <div
+                                          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing ${isActive
+                                             ? 'bg-[#21DBA4] text-white'
+                                             : theme === 'dark'
+                                                ? 'bg-slate-800 text-slate-400 ring-2 ring-[#21DBA4]'
+                                                : 'bg-slate-100 text-slate-600 ring-2 ring-[#21DBA4]'
+                                             }`}
+                                       >
+                                          <span>{src}</span>
+                                       </div>
+                                    );
+                                 })()}
+                              </DragOverlay>
+                           </DndContext>
                         </motion.div>
                      )}
                   </AnimatePresence>
@@ -1681,7 +1926,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             style={{ willChange: 'transform' }}
          >
             {/* Main Content */}
-            <main ref={mainContentRef} className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar">
+            <main
+               ref={mainContentRef}
+               className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar"
+               onClick={() => { if (isRearranging) setIsRearranging(false); }}
+            >
 
                {/* Top Header */}
                <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
@@ -2797,6 +3046,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                </motion.button>
             )}
          </AnimatePresence>
+
       </div>
    );
 };

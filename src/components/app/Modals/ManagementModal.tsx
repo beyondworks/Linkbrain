@@ -15,26 +15,30 @@ interface ManagementModalProps {
 }
 
 export const ManagementModal = ({ title, initialData, type, onClose, onSave, onDelete, links, theme, t }: ManagementModalProps) => {
+    const categoryColors = [
+        'bg-pink-100 text-pink-600',
+        'bg-blue-100 text-blue-600',
+        'bg-emerald-100 text-emerald-600',
+        'bg-orange-100 text-orange-600',
+        'bg-purple-100 text-purple-600',
+        'bg-green-200 text-green-700',
+        'bg-indigo-200 text-indigo-700',
+        'bg-red-200 text-red-700'
+    ];
+    const collectionColors = ['bg-indigo-500', 'bg-teal-500', 'bg-rose-500', 'bg-amber-500', 'bg-slate-800'];
+
+    const colors = type === 'category' ? categoryColors : collectionColors;
+
+    // 랜덤 컬러 생성 함수
+    const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
+
     const [name, setName] = useState(initialData?.name || '');
-    const [color, setColor] = useState(initialData?.color || (type === 'category' ? 'bg-blue-100 text-blue-600' : 'bg-slate-500'));
+    const [color, setColor] = useState(initialData?.color || getRandomColor());
 
     // For collections: count clips that belong to this collection
     const clipCount = type === 'collection' && initialData && links
         ? links.filter((l) => l.collectionIds?.includes(initialData.id)).length
         : 0;
-
-    const colors = type === 'category'
-        ? [
-            'bg-pink-100 text-pink-600',
-            'bg-blue-100 text-blue-600',
-            'bg-emerald-100 text-emerald-600',
-            'bg-orange-100 text-orange-600',
-            'bg-purple-100 text-purple-600',
-            'bg-green-200 text-green-700',
-            'bg-indigo-200 text-indigo-700',
-            'bg-red-200 text-red-700'
-        ]
-        : ['bg-indigo-500', 'bg-teal-500', 'bg-rose-500', 'bg-amber-500', 'bg-slate-800'];
 
     // Manage body scroll lock
     React.useEffect(() => {
