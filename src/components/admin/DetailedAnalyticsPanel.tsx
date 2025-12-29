@@ -209,23 +209,33 @@ export function DetailedAnalyticsPanel({ theme, language, admin }: DetailedAnaly
                 </div>
             </div>
 
-            {/* Retention */}
+            {/* Retention - Storybook Style (4열 수평 카드) */}
             <div className={cn("rounded-3xl border p-6", t$.card, t$.cardBorder)}>
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                        <Activity size={18} className="text-white" />
-                    </div>
-                    <span className={cn("font-semibold", t$.text)}>{t.retention}</span>
-                </div>
+                <h3 className={cn("text-base font-bold mb-6", t$.text)}>{t.retention}</h3>
                 <div className="grid grid-cols-4 gap-4">
-                    {detailedAnalytics.retentionData.map((data) => (
-                        <div key={data.week} className={cn("rounded-3xl p-5 text-center transition-all hover:scale-105", t$.itemBg)}>
-                            <p className={cn("text-xs font-medium mb-2", t$.textSub)}>{data.week}</p>
-                            <p className={cn("text-3xl font-bold tabular-nums", data.retention > 50 ? "text-[#21DBA4]" : data.retention > 25 ? "text-amber-500" : "text-red-500")}>
-                                {data.retention}%
-                            </p>
-                        </div>
-                    ))}
+                    {detailedAnalytics.retentionData.map((data, index) => {
+                        // Gradient color based on week
+                        const colors = [
+                            'text-[#21DBA4]',  // Week 1 - Green
+                            'text-[#21DBA4]',  // Week 2 - Green
+                            'text-amber-500',   // Week 3 - Amber
+                            'text-orange-500'   // Week 4 - Orange
+                        ];
+                        return (
+                            <div
+                                key={data.week}
+                                className={cn(
+                                    "rounded-2xl p-5 text-center",
+                                    isDark ? "bg-gray-800/50" : "bg-slate-50"
+                                )}
+                            >
+                                <p className={cn("text-xs font-medium mb-3", t$.textSub)}>{data.week}</p>
+                                <p className={cn("text-3xl font-bold tabular-nums", colors[index] || colors[3])}>
+                                    {data.retention}%
+                                </p>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
