@@ -1730,20 +1730,7 @@ export const AIInsightsDashboard = ({
     { id: 'trend', label: language === 'ko' ? '트렌드' : 'Trend', icon: <TrendingUp size={18} />, desc: language === 'ko' ? '요약 정리' : 'Summary' },
   ];
 
-  // Access Check
-  if (!isMaster) {
-    return (
-      <div className={cn("min-h-screen flex items-center justify-center p-8", theme.bg)}>
-        <div className={cn("text-center p-12 max-w-md rounded-3xl border", theme.card, theme.cardBorder)}>
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#21DBA4] to-emerald-600 flex items-center justify-center shadow-lg shadow-[#21DBA4]/20">
-            <Sparkles size={32} className="text-black" />
-          </div>
-          <h2 className={cn("text-2xl font-bold mb-3", theme.text)}>{language === 'ko' ? '준비중입니다' : 'Coming Soon'}</h2>
-          <p className={cn("text-sm mb-6 leading-relaxed", theme.textMuted)}>{language === 'ko' ? 'AI 인사이트 기능은 현재 개발 중입니다.' : 'AI Insights is under development.'}</p>
-        </div>
-      </div>
-    );
-  }
+
 
   if (isLoading) {
     return (
