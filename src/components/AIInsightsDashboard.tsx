@@ -1772,10 +1772,10 @@ export const AIInsightsDashboard = ({
 
         </div>
 
-        <div className="flex items-center gap-3 self-start md:self-auto">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
           {/* Date Range Display (Moved) */}
           <div className={cn(
-            "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border",
+            "flex md:inline-flex items-center justify-center md:justify-start gap-2 px-3 py-2 rounded-lg text-xs font-medium border w-full md:w-auto",
             theme.itemBg, theme.textMuted, theme.border
           )}>
             <CalendarIcon size={14} />
@@ -1790,14 +1790,14 @@ export const AIInsightsDashboard = ({
 
           {/* Dashboard Date Filter Control (Pill Style) */}
           <div className={cn(
-            "flex items-center p-1 rounded-full shadow-sm border",
+            "flex items-center p-1 rounded-full shadow-sm border w-full md:w-auto justify-between md:justify-start overflow-x-auto",
             isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
           )}>
             {/* Week Button */}
             <button
               onClick={() => handleDashboardPeriodChange('weekly')}
               className={cn(
-                "px-5 py-2 rounded-full text-xs font-bold transition-all",
+                "px-4 md:px-5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap flex-1 md:flex-none",
                 dashboardPeriod === 'weekly'
                   ? "bg-[#21DBA4]/20 text-[#21DBA4]"
                   : (isDark ? "text-gray-200 hover:bg-gray-700" : "text-gray-900 hover:bg-gray-100")
@@ -1810,7 +1810,7 @@ export const AIInsightsDashboard = ({
             <button
               onClick={() => handleDashboardPeriodChange('monthly')}
               className={cn(
-                "px-5 py-2 rounded-full text-xs font-bold transition-all",
+                "px-4 md:px-5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap flex-1 md:flex-none",
                 dashboardPeriod === 'monthly'
                   ? "bg-[#21DBA4]/20 text-[#21DBA4]"
                   : (isDark ? "text-gray-200 hover:bg-gray-700" : "text-gray-900 hover:bg-gray-100")
@@ -1824,7 +1824,7 @@ export const AIInsightsDashboard = ({
               <PopoverTrigger asChild>
                 <button
                   className={cn(
-                    "px-5 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2",
+                    "px-4 md:px-5 py-2 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap flex-1 md:flex-none",
                     dashboardPeriod === 'custom'
                       ? "bg-[#21DBA4]/20 text-[#21DBA4]"
                       : (isDark ? "text-gray-200 hover:bg-gray-700" : "text-gray-900 hover:bg-gray-100")
