@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { AnalyticsPanel } from './AnalyticsPanel';
-import { ServiceStatsPanel } from './ServiceStatsPanel';
 import { SubscriptionsPanel } from './SubscriptionsPanel';
 import { AnnouncementsPanel } from './AnnouncementsPanel';
 import { InquiriesPanel } from './InquiriesPanel';
@@ -26,7 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 
-type AdminTab = 'analytics' | 'serviceStats' | 'users' | 'subscriptions' | 'categories' | 'detailed' | 'announcements' | 'inquiries' | 'popups';
+type AdminTab = 'analytics' | 'users' | 'subscriptions' | 'categories' | 'detailed' | 'announcements' | 'inquiries' | 'popups';
 
 interface AdminDashboardProps {
     theme: 'light' | 'dark';
@@ -67,7 +66,6 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
 
     const navItems: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
         { id: 'analytics', label: t.analytics, icon: <LayoutDashboard size={18} /> },
-        { id: 'serviceStats', label: t.serviceStats, icon: <TrendingUp size={18} /> },
         { id: 'users', label: t.users, icon: <Users size={18} /> },
         { id: 'subscriptions', label: t.subscriptions, icon: <CreditCard size={18} /> },
         { id: 'categories', label: t.categories, icon: <Layers size={18} /> },
@@ -181,7 +179,6 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
             <main className="flex-1 p-8 overflow-y-auto">
                 <div className="max-w-5xl mx-auto">
                     {activeTab === 'analytics' && <AnalyticsPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'serviceStats' && <ServiceStatsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'users' && <UsersPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'subscriptions' && <SubscriptionsPanel theme={theme} language={language} admin={admin} />}
                     {activeTab === 'categories' && <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />}
