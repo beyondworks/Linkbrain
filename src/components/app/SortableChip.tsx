@@ -90,7 +90,6 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         const duration = Date.now() - touchStartTime.current;
         if (duration < 800) {
             touchHandled.current = true; // Prevent subsequent click event
-            console.log('[SortableChip] handleTouchEnd calling onClick');
             onClick();
         }
     }, [isEditing, onClick]);
@@ -104,7 +103,6 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
 
         // If touch already handled onClick, prevent duplicate
         if (touchHandled.current) {
-            console.log('[SortableChip] handleClick blocked - touch already handled');
             e.stopPropagation();
             e.preventDefault();
             // Reset after a short delay
@@ -115,7 +113,6 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         }
 
         // Mouse click (desktop) - call onClick
-        console.log('[SortableChip] handleClick calling onClick');
         onClick();
     }, [isEditing, onClick]);
 

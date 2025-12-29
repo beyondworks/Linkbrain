@@ -1438,8 +1438,6 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
    const toggleFilter = (setFn: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
       setFn(prev => {
-         const action = prev.includes(val) ? 'REMOVE' : 'ADD';
-         console.log('[toggleFilter] val:', val, 'prev:', prev, 'action:', action);
          if (prev.includes(val)) {
             return prev.filter(c => c !== val);
          } else {
