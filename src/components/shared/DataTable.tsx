@@ -57,7 +57,7 @@ export function DataTable<T extends Record<string, any>>({
         )}>
             <table className="w-full text-left">
                 <thead>
-                    <tr className={isDark ? "bg-gray-900/50" : "bg-slate-50"}>
+                    <tr className={isDark ? "bg-gray-800" : "bg-slate-100"}>
                         {columns.map((col) => (
                             <th
                                 key={String(col.key)}
