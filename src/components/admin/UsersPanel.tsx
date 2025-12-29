@@ -273,7 +273,10 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
 
                                                     {/* Platform Clips */}
                                                     <div className={cn("p-4 rounded-2xl", isDark ? "bg-gray-800/50" : "bg-white border border-slate-100")}>
-                                                        <h4 className={cn("text-sm font-semibold mb-4", isDark ? "text-gray-300" : "text-slate-700")}>{t.platformClips}</h4>
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <h4 className={cn("text-sm font-semibold", isDark ? "text-gray-300" : "text-slate-700")}>{t.platformClips}</h4>
+                                                            <span className={cn("text-sm font-semibold", isDark ? "text-white" : "text-slate-800")}>{user.clipCount || 0}</span>
+                                                        </div>
                                                         <div className="grid grid-cols-2 gap-3">
                                                             {[
                                                                 { name: 'YouTube', count: user.platforms?.youtube || 0, color: '#FF0000' },
@@ -290,10 +293,6 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                        <div className={cn("mt-3 pt-3 border-t flex justify-between", isDark ? "border-gray-700" : "border-slate-200")}>
-                                                            <span className={isDark ? "text-gray-400" : "text-slate-600"}>Total</span>
-                                                            <span className={cn("font-semibold", isDark ? "text-white" : "text-slate-800")}>{user.clipCount || 0}</span>
-                                                        </div>
                                                     </div>
 
                                                     {/* Subscription Management */}
@@ -303,12 +302,13 @@ export function UsersPanel({ theme, language, admin }: UsersPanelProps) {
                                                         <select
                                                             defaultValue={user.plan}
                                                             className={cn(
-                                                                "w-full h-10 px-3 rounded-xl border text-sm font-medium",
+                                                                "w-full h-10 px-3 pr-8 rounded-xl border text-sm font-medium appearance-none bg-no-repeat bg-[right_12px_center] bg-[length:16px_16px]",
                                                                 isDark ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-slate-200 text-slate-800"
                                                             )}
+                                                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
                                                         >
-                                                            <option value="Master">👑 Master</option>
-                                                            <option value="Pro">⚡ Pro</option>
+                                                            <option value="Master">Master</option>
+                                                            <option value="Pro">Pro</option>
                                                             <option value="Free">Free</option>
                                                         </select>
                                                     </div>
