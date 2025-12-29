@@ -1437,6 +1437,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    const isAllSelected = filteredLinks.length > 0 && filteredLinks.every(l => selectedItemIds.has(l.id));
 
    const toggleFilter = (setFn: any, current: string[], val: string) => {
+      console.log('[toggleFilter] called with val:', val, 'current:', current, 'action:', current.includes(val) ? 'REMOVE' : 'ADD');
       if (current.includes(val)) setFn(current.filter(c => c !== val));
       else setFn([...current, val]);
    };
