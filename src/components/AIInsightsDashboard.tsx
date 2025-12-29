@@ -4,7 +4,6 @@ import {
   Clock,
   Zap,
   ShieldCheck,
-  Calendar,
   Search,
   Filter,
   RefreshCw,
@@ -22,12 +21,18 @@ import {
   TrendingUp,
   TrendingDown,
   Hash,
-  Inbox
+  Inbox,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 import { toast } from 'sonner';
 import { cn } from './ui/utils';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import { Calendar } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { DateRange } from "react-day-picker";
+import { addDays, format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { ko } from "date-fns/locale";
 import { StatCard } from './AIInsightsDashboard/StatCard';
 import { TagReadingRateCard } from './AIInsightsDashboard/TagReadingRateCard';
 import { generateStudioContent, StudioContentType } from '../lib/aiService';
@@ -363,7 +368,7 @@ const InterestEvolutionCard = ({ links, allLinks, isDark, theme, language, perio
 // Keywords & Trends Sidebar - Reference Design
 // ═══════════════════════════════════════════════════
 
-const KeywordsTrendsCard = ({ links, isDark, theme, language, period, categories }: any) => {
+const KeywordsCard = ({ links, isDark, theme, language, period, categories }: any) => {
   const { keywords, trends } = useMemo(() => {
     // Helper to get category name from ID
     const getCategoryName = (id: string): string => {
@@ -452,7 +457,7 @@ const KeywordsTrendsCard = ({ links, isDark, theme, language, period, categories
   return (
     <>
       {/* Keywords Card */}
-      <div className={cn("border rounded-3xl p-6", theme.card, theme.cardBorder)}>
+      <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)}>
         <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
           <Hash className="w-4 h-4 text-[#21DBA4]" />
           {periodLabel} {language === 'ko' ? '키워드' : 'Keywords'}
@@ -475,38 +480,96 @@ const KeywordsTrendsCard = ({ links, isDark, theme, language, period, categories
           )}
         </div>
       </div>
-
-      {/* Trends Card */}
-      <div className={cn("border rounded-3xl p-6", theme.card, theme.cardBorder)}>
-        <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
-          <TrendingUp className="w-4 h-4 text-[#21DBA4]" />
-          {language === 'ko' ? '트렌드' : 'Trends'}
-        </h3>
-        <div className="space-y-3">
-          {trends.length > 0 ? trends.map((t: any, i: number) => (
-            <div key={i} className={cn(
-              "p-4 rounded-2xl border transition-colors",
-              theme.itemBg, theme.border
-            )}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className={cn("text-sm font-bold truncate", theme.text)}>{t.name}</div>
-                  <div className={cn("text-[10px]", t.type === 'rising' ? "text-blue-400" : "text-red-400")}>{t.detail}</div>
-                </div>
-                <span className={cn(
-                  "text-xs font-bold shrink-0",
-                  t.type === 'rising' ? "text-blue-400" : "text-red-400"
-                )}>{t.change}</span>
-              </div>
-            </div>
-          )) : (
-            <div className={cn("p-4 rounded-2xl border text-center", theme.itemBg, theme.border)}>
-              <span className={cn("text-xs", theme.textSub)}>{language === 'ko' ? '비교할 데이터가 부족합니다' : 'Need more data'}</span>
-            </div>
-          )}
-        </div>
-      </div>
     </>
+  );
+};
+
+const TrendsCard = ({ links, theme, language = 'ko', categories, period = 'weekly' }: any) => {
+  // Theme is now passed directly as an object, matching other cards
+
+  const { trends } = useMemo(() => {
+    const now = new Date();
+    const periodDays = period === 'weekly' ? 7 : 30;
+    const cutoff = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
+    const previousCutoff = new Date(cutoff.getTime() - periodDays * 24 * 60 * 60 * 1000);
+
+    const recentTags: Record<string, number> = {};
+    const olderTags: Record<string, number> = {};
+
+    links.forEach((link: any) => {
+      const date = parseDate(link.timestamp || link.createdAt);
+      if (!date) return;
+      const tags = (link.keywords && link.keywords.length > 0)
+        ? link.keywords
+        : (link.categoryId ? [link.categoryId] : []);
+      tags.forEach((tag: string) => {
+        const displayName = categories.find((c: any) => c.id === tag)?.name || tag;
+        if (date >= cutoff) recentTags[displayName] = (recentTags[displayName] || 0) + 1;
+        else if (date >= previousCutoff) olderTags[displayName] = (olderTags[displayName] || 0) + 1;
+      });
+    });
+
+    const risingTrends: any[] = [];
+    Object.keys(recentTags).forEach(tag => {
+      const recent = recentTags[tag] || 0;
+      const older = olderTags[tag] || 0;
+      if (older > 0) {
+        const change = Math.round(((recent - older) / older) * 100);
+        if (Math.abs(change) > 10) {
+          risingTrends.push({
+            name: tag,
+            change: `${change > 0 ? '+' : ''}${change}%`,
+            type: change > 0 ? 'rising' : 'falling',
+            recent,
+            older,
+            detail: language === 'ko' ? `${older}개 → ${recent}개` : `${older} → ${recent}`
+          });
+        }
+      } else if (recent >= 2) {
+        risingTrends.push({
+          name: tag,
+          change: language === 'ko' ? '신규' : 'NEW',
+          type: 'rising',
+          recent,
+          older: 0,
+          detail: language === 'ko' ? `이번 ${recent}개` : `${recent} new`
+        });
+      }
+    });
+
+    return { trends: risingTrends.slice(0, 5) };
+  }, [links, language, period, categories]);
+
+  return (
+    <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)}>
+      <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
+        <TrendingUp className="w-4 h-4 text-[#21DBA4]" />
+        {language === 'ko' ? '트렌드' : 'Trends'}
+      </h3>
+      <div className="space-y-3">
+        {trends.length > 0 ? trends.map((t: any, i: number) => (
+          <div key={i} className={cn(
+            "p-4 rounded-2xl border transition-colors",
+            theme.itemBg, theme.border
+          )}>
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className={cn("text-sm font-bold truncate", theme.text)}>{t.name}</div>
+                <div className={cn("text-[10px]", t.type === 'rising' ? "text-blue-400" : "text-red-400")}>{t.detail}</div>
+              </div>
+              <span className={cn(
+                "text-xs font-bold shrink-0",
+                t.type === 'rising' ? "text-blue-400" : "text-red-400"
+              )}>{t.change}</span>
+            </div>
+          </div>
+        )) : (
+          <div className={cn("p-4 rounded-2xl border text-center", theme.itemBg, theme.border)}>
+            <span className={cn("text-xs", theme.textSub)}>{language === 'ko' ? '비교할 데이터가 부족합니다' : 'Need more data'}</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -1327,24 +1390,66 @@ export const AIInsightsDashboard = ({
     });
   }, [allActiveLinks, period]);
 
-  // Stats Data
-  const statsData = useMemo(() => {
+  // ═══════════════════════════════════════════════════
+  // Dashboard Date Filtering State
+  // ═══════════════════════════════════════════════════
+  const [dashboardPeriod, setDashboardPeriod] = useState<Period | 'custom'>('weekly');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const now = new Date();
-    const periodDays = period === 'weekly' ? 7 : 30;
-    const cutoff = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
-    const recentClips = allActiveLinks.filter(l => { const d = parseDate(l.createdAt); return d && d >= cutoff; });
+    return {
+      from: startOfWeek(now, { weekStartsOn: 1 }), // Monday start
+      to: endOfWeek(now, { weekStartsOn: 1 })
+    };
+  });
+
+  const handleDashboardPeriodChange = (period: Period | 'custom') => {
+    setDashboardPeriod(period);
+    const now = new Date();
+    if (period === 'weekly') {
+      setDateRange({
+        from: startOfWeek(now, { weekStartsOn: 1 }),
+        to: endOfWeek(now, { weekStartsOn: 1 })
+      });
+    } else if (period === 'monthly') {
+      setDateRange({
+        from: startOfMonth(now),
+        to: endOfMonth(now)
+      });
+    }
+  };
+
+  // 1. Dashboard Filtered Links (Target for top dashboard charts)
+  const dashboardFilteredLinks = useMemo(() => {
+    if (!dateRange?.from) return allActiveLinks;
+
+    // Normalize range to start of day and end of day
+    const from = new Date(dateRange.from);
+    from.setHours(0, 0, 0, 0);
+
+    const to = dateRange.to ? new Date(dateRange.to) : new Date(from);
+    to.setHours(23, 59, 59, 999);
+
+    return allActiveLinks.filter(link => {
+      const date = parseDate(link.createdAt || link.timestamp);
+      if (!date) return false;
+      return date >= from && date <= to;
+    });
+  }, [allActiveLinks, dateRange]);
+
+  // Stats Data Calculation
+  const statsData = useMemo(() => {
+    // 1. Global Counts (Total)
     const totalClips = allActiveLinks.length;
+    const totalUnread = allActiveLinks.filter(l => !l.lastViewedAt).length;
 
-    // Unread clips - clips without lastViewedAt
-    const unreadClips = allActiveLinks.filter(l => !l.lastViewedAt);
-    const unreadCount = unreadClips.length;
-    const recentUnread = recentClips.filter(l => !l.lastViewedAt).length;
+    // 2. Period Counts (Filtered)
+    const periodCount = dashboardFilteredLinks.length;
+    const periodUnread = dashboardFilteredLinks.filter(l => !l.lastViewedAt).length;
 
-    // Category/Keyword engagement analysis - use category if keywords are empty
+    // Category/Keyword engagement analysis (Based on Period for relevance)
     const tagStats: Record<string, { total: number; read: number }> = {};
-    allActiveLinks.forEach(l => {
+    dashboardFilteredLinks.forEach(l => {
       const isRead = !!l.lastViewedAt;
-      // Use keywords if available, otherwise use category
       const tags = (l.keywords && l.keywords.length > 0) ? l.keywords : (l.categoryId ? [l.categoryId] : []);
       tags.forEach((tag: string) => {
         if (!tagStats[tag]) tagStats[tag] = { total: 0, read: 0 };
@@ -1353,18 +1458,15 @@ export const AIInsightsDashboard = ({
       });
     });
 
-    // Sort tags by total count for display (more clips = more relevant)
     const tagEntries = Object.entries(tagStats).filter(([_, v]) => v.total >= 1);
     const sortedByEngagement = tagEntries.sort((a, b) => b[1].total - a[1].total);
 
-    // Helper to get category name from ID
+    // Helper to get category name
     const getCategoryName = (tagOrId: string): string => {
-      // Check if it's a category ID by looking it up
       const cat = categories.find((c: any) => c.id === tagOrId);
       return cat?.name || tagOrId;
     };
 
-    // Get top 5 tags for bar chart display
     const top5Tags = sortedByEngagement.slice(0, 5).map(([tag, stats]: [string, { total: number; read: number }]) => ({
       tag: getCategoryName(tag),
       rate: Math.round((stats.read / stats.total) * 100),
@@ -1375,32 +1477,31 @@ export const AIInsightsDashboard = ({
       stats: [
         {
           label: language === 'ko' ? '영구 보존된 지식' : 'Saved Knowledge',
-          value: formatNumber(totalClips),
+          value: formatNumber(totalClips), // Show Total
           unit: language === 'ko' ? '개' : 'clips',
-          trend: `+${recentClips.length}`,
-          sub: language === 'ko' ? '원본 소실 걱정 없음' : 'Permanently saved',
-          icon: <ShieldCheck size={20} className="text-[#21DBA4]" />
+          trend: `+${periodCount}`, // Show Period Contribution
+          sub: language === 'ko' ? '전체 저장된 클립' : 'Total saved clips',
+          icon: <ShieldCheck size={20} className="text-[#21DBA4]" />,
+          isDark
         },
         {
           label: language === 'ko' ? '읽지 않은 클립' : 'Unread Clips',
-          value: formatNumber(unreadCount),
+          value: formatNumber(totalUnread), // Show Total Unread
           unit: language === 'ko' ? '개' : 'clips',
-          trend: `+${recentUnread}`,
-          sub: language === 'ko' ? '클릭하여 확인하기' : 'Click to view',
+          trend: `+${periodUnread}`, // Show Period Unread
+          sub: language === 'ko' ? '전체 읽지 않은 클립' : 'Total unread clips',
           icon: <Inbox size={20} className="text-blue-400" />,
-          onClick: onNavigateToUnread
+          onClick: onNavigateToUnread,
+          isDark
         },
       ],
       tagReadingData: top5Tags
     };
-  }, [allActiveLinks, period, language, onNavigateToUnread]);
+  }, [allActiveLinks, dashboardFilteredLinks, language, categories, isDark, onNavigateToUnread]);
 
-
-
-  // 기간 필터 적용된 클립 계산 (실시간 카운트용) - Local Date Fix
+  // 2. Studio Filtered Links (For Content Studio - includes Search & explicit Date filters)
   const studioFilteredLinks = useMemo(() => {
     let links = allActiveLinks;
-    // 1. Date Filter
     if (studioStartDate || studioEndDate) {
       links = links.filter(clip => {
         const dateValue = clip.createdAt || clip.date || clip.timestamp;
@@ -1410,7 +1511,6 @@ export const AIInsightsDashboard = ({
         return (!studioStartDate || clipDate >= studioStartDate) && (!studioEndDate || clipDate <= studioEndDate);
       });
     }
-    // 2. Search Filter (For real-time counts)
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       links = links.filter(c =>
@@ -1421,6 +1521,8 @@ export const AIInsightsDashboard = ({
     }
     return links;
   }, [allActiveLinks, studioStartDate, studioEndDate, searchQuery]);
+
+
 
   // 출처 그룹별 카운트 (기간 + 검색 + 카테고리 필터 적용)
   const availableSources = useMemo(() => {
@@ -1656,87 +1758,198 @@ export const AIInsightsDashboard = ({
     <main className={cn("min-h-screen p-6 lg:p-10 max-w-[1600px] mx-auto pb-40 transition-colors duration-300", theme.bg, theme.text)}>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
-            {language === 'ko' ? '반가워요' : 'Welcome back'} <span className="text-[#21DBA4]">👋</span>
+          <h1 className={cn("text-2xl font-bold flex items-center gap-2", theme.text)}>
+            {language === 'ko' ? '반가워요 👋' : 'Welcome back 👋'}
           </h1>
-          <p className={cn("text-sm", theme.textMuted)}>
-            {language === 'ko' ? '오늘의 인사이트를 발견하고, 새로운 가치를 만들어보세요.' : 'Discover insights and create new value today.'}
+          <p className={cn("text-sm mt-1 mb-3", theme.textMuted)}>
+            {language === 'ko'
+              ? '오늘의 인사이트를 발견하고, 새로운 가치를 만들어보세요.'
+              : 'Discover today\'s insights and create new value.'}
           </p>
+
+
         </div>
 
-        {/* Date Filter - Rounded Pill Style */}
-        <div className={cn("flex items-center border rounded-full p-1.5 shadow-sm", theme.card, theme.border)}>
-          {[
-            { key: 'weekly' as Period, label: language === 'ko' ? '이번 주' : 'This Week' },
-            { key: 'monthly' as Period, label: language === 'ko' ? '이번 달' : 'This Month' },
-          ].map(p => (
+        <div className="flex items-center gap-3 self-start md:self-auto">
+          {/* Date Range Display (Moved) */}
+          <div className={cn(
+            "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border",
+            theme.itemBg, theme.textMuted, theme.border
+          )}>
+            <CalendarIcon size={14} />
+            {dateRange?.from ? (
+              <>
+                {format(dateRange.from, 'yyyy-MM-dd')} ~ {dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : format(dateRange.from, 'yyyy-MM-dd')}
+              </>
+            ) : (
+              language === 'ko' ? '전체 기간' : 'All time'
+            )}
+          </div>
+
+          {/* Dashboard Date Filter Control (Pill Style) */}
+          <div className={cn(
+            "flex items-center p-1 rounded-full shadow-sm border",
+            isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          )}>
+            {/* Week Button */}
             <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
+              onClick={() => handleDashboardPeriodChange('weekly')}
               className={cn(
-                "px-6 py-2.5 rounded-full text-sm font-medium transition-all",
-                period === p.key
+                "px-5 py-2 rounded-full text-xs font-bold transition-all",
+                dashboardPeriod === 'weekly'
                   ? "bg-[#21DBA4]/20 text-[#21DBA4]"
-                  : cn(theme.text, "hover:bg-gray-100 dark:hover:bg-gray-800")
+                  : (isDark ? "text-gray-200 hover:bg-gray-700" : "text-gray-900 hover:bg-gray-100")
               )}
             >
-              {p.label}
+              {language === 'ko' ? '이번 주' : 'This Week'}
             </button>
-          ))}
-          <button className={cn(
-            "flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all",
-            theme.text, "hover:bg-gray-100 dark:hover:bg-gray-800"
-          )}>
-            <Calendar size={16} />
-            {language === 'ko' ? '기간 지정' : 'Custom'}
-          </button>
+
+            {/* Month Button */}
+            <button
+              onClick={() => handleDashboardPeriodChange('monthly')}
+              className={cn(
+                "px-5 py-2 rounded-full text-xs font-bold transition-all",
+                dashboardPeriod === 'monthly'
+                  ? "bg-[#21DBA4]/20 text-[#21DBA4]"
+                  : (isDark ? "text-gray-200 hover:bg-gray-700" : "text-gray-900 hover:bg-gray-100")
+              )}
+            >
+              {language === 'ko' ? '이번 달' : 'This Month'}
+            </button>
+
+            {/* Custom Date Picker Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    "px-5 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2",
+                    dashboardPeriod === 'custom'
+                      ? "bg-[#21DBA4]/20 text-[#21DBA4]"
+                      : (isDark ? "text-gray-200 hover:bg-gray-700" : "text-gray-900 hover:bg-gray-100")
+                  )}
+                  onClick={() => setDashboardPeriod('custom')}
+                >
+                  <CalendarIcon size={14} />
+                  {language === 'ko' ? '기간 지정' : 'Custom'}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={(range: DateRange | undefined) => {
+                    setDateRange(range);
+                    if (range?.from) setDashboardPeriod('custom');
+                  }}
+                  numberOfMonths={1}
+                  pagedNavigation
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
 
-      {/* Grid System */}
-      <div className="grid grid-cols-12 gap-6 mb-8">
-
-        {/* Stats Row - 2 columns */}
-        <div className="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {statsData.stats.map((stat: any, idx: number) => (
-            <StatCard key={idx} {...stat} isDark={isDark} theme={theme} />
-          ))}
-        </div>
-        <TagReadingRateCard tagData={statsData.tagReadingData} isDark={isDark} theme={theme} language={language} />
-
-        {/* Analysis Row: Heatmap */}
-        <SavePatternHeatmapCard links={allActiveLinks} isDark={isDark} theme={theme} language={language} period={period} />
-
-        {/* Interest + Keywords + Trends Row - 3 columns */}
-        <div className="col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <InterestEvolutionCard links={allActiveLinks} allLinks={allActiveLinks} isDark={isDark} theme={theme} language={language} period={period} categories={categories} />
-          <KeywordsTrendsCard links={allActiveLinks} isDark={isDark} theme={theme} language={language} period={period} categories={categories} />
-        </div>
-
-        {/* Content Studio */}
-        <ContentStudio
-          clips={filteredClips} selectedClips={selectedClips} onToggleClip={toggleClipSelection} onSelectAll={selectAllClips}
-          contentTypes={contentTypes} selectedContentType={selectedContentType} onSelectContentType={(id: any) => setSelectedContentType(id as ContentType)}
-          onGenerate={handleGenerate} isGenerating={generatingReport} searchQuery={searchQuery} onSearchChange={setSearchQuery}
-          startDate={studioStartDate} endDate={studioEndDate} onStartDateChange={setStudioStartDate} onEndDateChange={setStudioEndDate}
-          onLoadClips={handleLoadClips} loadClipsWithDates={loadClipsWithDates} onClearResults={clearResults} language={language} isDark={isDark} theme={theme}
-          // 새로 추가된 필터/정렬 props
-          availableSources={availableSources}
-          selectedSources={selectedSources}
-          onToggleSource={(domain: string) => setSelectedSources(prev => prev.includes(domain) ? prev.filter(d => d !== domain) : [...prev, domain])}
-          onClearSources={() => setSelectedSources([])}
-          allAvailableCategories={allAvailableCategories}
-          selectedCategories={selectedCategories}
-          onToggleCategory={(catId: string) => setSelectedCategories(prev => prev.includes(catId) ? prev.filter(c => c !== catId) : [...prev, catId])}
-          onClearCategories={() => setSelectedCategories([])}
-          generatedContent={generatedContent}
-          onClearContent={() => setGeneratedContent(null)}
+      {/* Row 1: Top Stats (Saved + Unread only) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <StatCard
+          label={statsData.stats[0].label}
+          value={statsData.stats[0].value}
+          unit={statsData.stats[0].unit}
+          sub={statsData.stats[0].sub}
+          trend={statsData.stats[0].trend}
+          icon={statsData.stats[0].icon}
+          isDark={isDark}
+          theme={theme}
         />
+        <div
+          onClick={onNavigateToUnread}
+          className="cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <StatCard
+            label={statsData.stats[1].label}
+            value={statsData.stats[1].value}
+            unit={statsData.stats[1].unit}
+            sub={statsData.stats[1].sub}
+            trend={statsData.stats[1].trend}
+            icon={statsData.stats[1].icon}
+            onClick={onNavigateToUnread}
+            isDark={isDark}
+            theme={theme}
+          />
+        </div>
+      </div>
 
-        {/* Creation History */}
-        {creationHistory.length > 0 && (
+      {/* Row 2: Tag Reading Rate */}
+      <div className="mb-6">
+        <TagReadingRateCard
+          tagData={statsData.tagReadingData}
+          language={language}
+          isDark={isDark}
+          theme={theme}
+        />
+      </div>
+
+      {/* Row 3: Heatmap */}
+      <div className="mb-6">
+        <SavePatternHeatmapCard
+          links={dashboardFilteredLinks}
+          isDark={isDark}
+          theme={theme}
+          language={language}
+          period={dashboardPeriod === 'custom' ? 'monthly' : dashboardPeriod} // Heatmap expects 'weekly' or 'monthly', passing 'monthly' for custom as fallback
+        />
+      </div>
+
+      {/* Row 4: Interest Analysis, Keywords, Trends (3 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <InterestEvolutionCard
+          links={dashboardFilteredLinks}
+          allLinks={allActiveLinks}
+          theme={theme}
+          language={language}
+        />
+        <KeywordsCard
+          links={dashboardFilteredLinks}
+          categories={categories}
+          theme={theme}
+          language={language}
+          period={dashboardPeriod === 'custom' ? 'weekly' : dashboardPeriod}
+        />
+        <TrendsCard
+          links={dashboardFilteredLinks}
+          categories={categories}
+          theme={theme}
+          language={language}
+          period={dashboardPeriod === 'custom' ? 'weekly' : dashboardPeriod}
+        />
+      </div>
+      <ContentStudio
+        clips={filteredClips} selectedClips={selectedClips} onToggleClip={toggleClipSelection} onSelectAll={selectAllClips}
+        contentTypes={contentTypes} selectedContentType={selectedContentType} onSelectContentType={(id: any) => setSelectedContentType(id as ContentType)}
+        onGenerate={handleGenerate} isGenerating={generatingReport} searchQuery={searchQuery} onSearchChange={setSearchQuery}
+        startDate={studioStartDate} endDate={studioEndDate} onStartDateChange={setStudioStartDate} onEndDateChange={setStudioEndDate}
+        onLoadClips={handleLoadClips} loadClipsWithDates={loadClipsWithDates} onClearResults={clearResults} language={language} isDark={isDark} theme={theme}
+        // 새로 추가된 필터/정렬 props
+        availableSources={availableSources}
+        selectedSources={selectedSources}
+        onToggleSource={(domain: string) => setSelectedSources(prev => prev.includes(domain) ? prev.filter(d => d !== domain) : [...prev, domain])}
+        onClearSources={() => setSelectedSources([])}
+        allAvailableCategories={allAvailableCategories}
+        selectedCategories={selectedCategories}
+        onToggleCategory={(catId: string) => setSelectedCategories(prev => prev.includes(catId) ? prev.filter(c => c !== catId) : [...prev, catId])}
+        onClearCategories={() => setSelectedCategories([])}
+        generatedContent={generatedContent}
+        onClearContent={() => setGeneratedContent(null)}
+      />
+
+      {/* Creation History */}
+      {
+        creationHistory.length > 0 && (
           <div className={cn("col-span-12 border rounded-3xl p-6", theme.card, theme.cardBorder)}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={cn("text-base font-bold flex items-center gap-2", theme.text)}>
@@ -1786,10 +1999,10 @@ export const AIInsightsDashboard = ({
               ))}
             </div>
           </div>
-        )}
+        )
+      }
 
-      </div>
-    </main>
+    </main >
   );
 };
 
