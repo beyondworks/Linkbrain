@@ -2148,59 +2148,6 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   </div>
                </header>
 
-               {/* Subscription Banner */}
-               {showSubscriptionBanner && status !== 'active' && (
-                  <div className="w-full px-4 md:px-8 pt-4">
-                     <div className="w-full max-w-7xl mx-auto">
-                        <motion.div
-                           initial={{ opacity: 0, y: -10 }}
-                           animate={{ opacity: 1, y: 0 }}
-                           className={`rounded-xl shadow-sm flex items-center justify-between px-4 py-2.5 transition-colors border ${status === 'expired'
-                              ? 'bg-red-500 border-red-400 text-white'
-                              : theme === 'dark'
-                                 ? 'bg-slate-800 border-slate-700 text-white shadow-black/20'
-                                 : 'bg-[#21DBA4]/10 border-[#21DBA4]/20 text-slate-800 shadow-[#21DBA4]/5'
-                              }`}
-                        >
-                           <div className="flex items-center gap-3">
-                              <div className={`p-1.5 rounded-full ${status === 'expired'
-                                 ? 'bg-white/20'
-                                 : theme === 'dark' ? 'bg-white/10' : 'bg-[#21DBA4]/20'
-                                 }`}>
-                                 <Clock size={16} className={status !== 'expired' && theme !== 'dark' ? 'text-[#059669]' : ''} />
-                              </div>
-                              <div className="flex flex-col md:flex-row md:items-center md:gap-2">
-                                 <span className="font-bold text-sm">
-                                    {status === 'expired'
-                                       ? (language === 'ko' ? '체험 기간 종료' : 'Trial Expired')
-                                       : (language === 'ko' ? '무료 체험 중' : 'Free Trial Active')}
-                                 </span>
-                                 <span className={`hidden md:inline w-1 h-1 rounded-full ${status === 'expired' || theme === 'dark' ? 'bg-white/40' : 'bg-slate-400/50'}`}></span>
-                                 <span className={`text-xs md:text-sm font-medium ${status === 'expired' || theme === 'dark' ? 'opacity-90' : 'text-slate-600'}`}>
-                                    {status === 'expired'
-                                       ? (language === 'ko' ? '기능이 제한됩니다.' : 'Read-only mode.')
-                                       : (language === 'ko' ? `${remainingDays}일 남음` : `${remainingDays} days left`)}
-                                 </span>
-                              </div>
-                           </div>
-                           <div className={`flex items-center gap-3 pl-4 border-l ml-auto ${status === 'expired' || theme === 'dark' ? 'border-white/10' : 'border-slate-900/10'}`}>
-                              <button
-                                 onClick={() => window.location.href = 'https://linkbrain.lemonsqueezy.com/checkout/buy/d7c88378-7cda-49f6-95b2-e63d01b01312'}
-                                 className={`whitespace-nowrap font-bold transition-colors text-xs md:text-sm ${status === 'expired' || theme === 'dark' ? 'hover:text-[#21DBA4]' : 'text-[#059669] hover:text-[#047857]'}`}
-                              >
-                                 {language === 'ko' ? '업그레이드' : 'Upgrade'}
-                              </button>
-                              <button
-                                 onClick={() => setShowSubscriptionBanner(false)}
-                                 className={`p-0.5 rounded-full transition-colors ${status === 'expired' || theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-slate-900/5 text-slate-500'}`}
-                              >
-                                 <X size={14} />
-                              </button>
-                           </div>
-                        </motion.div>
-                     </div>
-                  </div>
-               )}
 
                {/* Admin Banner Popup */}
                {currentBannerPopup && (

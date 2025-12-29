@@ -19,9 +19,7 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
    const [isLoading, setIsLoading] = useState(false);
    const [email, setEmail] = useState('');
    const [password, setPassword] = useState('');
-   const [inviteCode, setInviteCode] = useState('');
-   const [inviteCodeValid, setInviteCodeValid] = useState<boolean | null>(null);
-   const [inviteCodeChecking, setInviteCodeChecking] = useState(false);
+   const [inviteCode, setInviteCode] = useState(''); // Kept for potential future use
    const [error, setError] = useState('');
    const [isSignUp, setIsSignUp] = useState(false);
 
@@ -54,14 +52,7 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
          errorUserNotFound: "Account not found. Please sign up.",
          errorEmailInUse: "Email already in use. Please sign in.",
          errorWeakPassword: "Password must be at least 6 characters",
-         errorGeneric: "An error occurred. Please try again.",
-         inviteCode: "Invite Code",
-         inviteCodePlaceholder: "LB-XXXXXX",
-         inviteCodeRequired: "Invite code is required to sign up",
-         inviteCodeInvalid: "Invalid or already used invite code",
-         inviteCodeValid: "Valid invite code!",
-         inviteCodeChecking: "Checking...",
-         inviteCodeHint: "Don't have a code? Ask a friend using LinkBrain!"
+         errorGeneric: "An error occurred. Please try again."
       },
       ko: {
          welcomeBack: "환영합니다",
@@ -91,14 +82,7 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
          errorUserNotFound: "계정을 찾을 수 없습니다. 회원가입해주세요.",
          errorEmailInUse: "이미 사용 중인 이메일입니다. 로그인해주세요.",
          errorWeakPassword: "비밀번호는 6자 이상이어야 합니다",
-         errorGeneric: "오류가 발생했습니다. 다시 시도해주세요.",
-         inviteCode: "초대 코드",
-         inviteCodePlaceholder: "LB-XXXXXX",
-         inviteCodeRequired: "가입하려면 초대 코드가 필요합니다",
-         inviteCodeInvalid: "유효하지 않거나 이미 사용된 초대 코드입니다",
-         inviteCodeValid: "유효한 초대 코드입니다!",
-         inviteCodeChecking: "확인 중...",
-         inviteCodeHint: "초대 코드가 없으신가요? LinkBrain을 사용하는 친구에게 요청하세요!"
+         errorGeneric: "오류가 발생했습니다. 다시 시도해주세요."
       }
    };
 
@@ -179,28 +163,6 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
       }
    };
 
-   // Validate invite code as user types
-   const validateInviteCode = async (code: string) => {
-      if (!code || code.length < 9) {
-         setInviteCodeValid(null);
-         return;
-      }
-
-      setInviteCodeChecking(true);
-      try {
-         const response = await fetch('/api/invite?action=validate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code.toUpperCase() }),
-         });
-         const data = await response.json();
-         setInviteCodeValid(data.valid);
-      } catch (err) {
-         setInviteCodeValid(false);
-      } finally {
-         setInviteCodeChecking(false);
-      }
-   };
 
    const handleEmailAuth = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -213,38 +175,12 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
          return;
       }
 
-      // For sign up, require valid invite code
-      if (isSignUp) {
-         if (!inviteCode) {
-            setError(t.inviteCodeRequired);
-            setIsLoading(false);
-            return;
-         }
-         if (!inviteCodeValid) {
-            setError(t.inviteCodeInvalid);
-            setIsLoading(false);
-            return;
-         }
-      }
 
       try {
          if (isSignUp) {
             // Create account first
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-            // Redeem invite code to set up subscription
-            try {
-               await fetch('/api/invite?action=redeem', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                     code: inviteCode.toUpperCase(),
-                     newUserUid: userCredential.user.uid
-                  }),
-               });
-            } catch (inviteErr) {
-               console.error('[Invite] Redeem error:', inviteErr);
-            }
 
             toast.success(language === 'ko' ? '회원가입 성공! 15일 체험이 시작됩니다.' : 'Account created! Your 15-day trial starts now.');
          } else {
@@ -390,42 +326,6 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
                         />
                      </div>
 
-                     {/* Invite Code Field - Only for Sign Up */}
-                     {isSignUp && (
-                        <div className="space-y-1.5">
-                           <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-2">
-                              {t.inviteCode}
-                              {inviteCodeChecking && (
-                                 <span className="text-slate-400 font-normal">{t.inviteCodeChecking}</span>
-                              )}
-                              {inviteCodeValid === true && (
-                                 <span className="text-green-500 font-normal flex items-center gap-1">
-                                    <Check size={12} /> {t.inviteCodeValid}
-                                 </span>
-                              )}
-                              {inviteCodeValid === false && (
-                                 <span className="text-red-500 font-normal">{t.inviteCodeInvalid}</span>
-                              )}
-                           </label>
-                           <input
-                              type="text"
-                              value={inviteCode}
-                              onChange={(e) => {
-                                 const val = e.target.value.toUpperCase();
-                                 setInviteCode(val);
-                                 validateInviteCode(val);
-                              }}
-                              placeholder={t.inviteCodePlaceholder}
-                              className={`w-full h-11 rounded-xl border px-4 text-sm outline-none transition-all font-mono tracking-wider ${inviteCodeValid === true
-                                 ? 'border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20'
-                                 : inviteCodeValid === false
-                                    ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
-                                    : 'border-slate-200 focus:border-[#21DBA4] focus:ring-2 focus:ring-[#21DBA4]/20'
-                                 }`}
-                           />
-                           <p className="text-xs text-slate-400 ml-1">{t.inviteCodeHint}</p>
-                        </div>
-                     )}
                      <button
                         type="submit"
                         disabled={isLoading}
