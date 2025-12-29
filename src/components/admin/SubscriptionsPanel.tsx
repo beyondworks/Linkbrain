@@ -119,9 +119,9 @@ export function SubscriptionsPanel({ theme, language, admin }: SubscriptionsPane
                 />
             </div>
 
-            {/* DataTable Card */}
+            {/* DataTable - No outer box like UsersPanel */}
             <div className={cn(
-                "p-6 rounded-3xl border",
+                "rounded-3xl border overflow-hidden",
                 isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
             )}>
                 <DataTable

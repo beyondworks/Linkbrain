@@ -102,7 +102,6 @@ export function InquiriesPanel({ theme, language, admin }: InquiriesPanelProps) 
             {/* List */}
             {inquiries.length === 0 ? (
                 <div className={cn("rounded-3xl border p-8 text-center", cardBg)}>
-                    <MessageSquare className={`w-10 h-10 mx-auto mb-3 ${textSecondary}`} />
                     <p className={textSecondary}>{t.empty}</p>
                 </div>
             ) : (
