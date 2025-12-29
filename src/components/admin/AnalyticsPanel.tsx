@@ -9,14 +9,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import {
-    Users,
-    FileText,
-    Clock,
-    Zap,
-    RefreshCw,
-    Activity
-} from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { StatCard } from '../shared/StatCard';
 import { SectionHeader } from '../shared/SectionHeader';
@@ -28,18 +21,16 @@ interface AnalyticsPanelProps {
 }
 
 /**
- * AnalyticsPanel (Overview)
+ * AnalyticsPanel (Overview + Service Stats 통합)
  * 
- * Storybook AdminDashboard.stories.tsx Default 스토리 100% 반영:
- * - StatCard 4열 그리드
- * - 차트 영역 2열 그리드 (bg-white rounded-3xl border-slate-100)
+ * 3번 스크린샷처럼 Overview와 Service Stats를 하나의 페이지에 표시
  */
 export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) {
     const { analytics, fetchAnalytics } = admin;
     const isDark = theme === 'dark';
 
     const t = {
-        title: language === 'ko' ? 'Overview' : 'Overview',
+        title: 'Overview',
         subtitle: language === 'ko' ? '실시간 서비스 현황' : 'Real-time metrics',
         totalUsers: language === 'ko' ? '총 사용자' : 'Total Users',
         totalClips: language === 'ko' ? '총 클립' : 'Total Clips',
@@ -50,22 +41,22 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
         dailySignups: language === 'ko' ? '일별 가입자' : 'Daily Signups',
         categoryDist: language === 'ko' ? '카테고리별 분포' : 'Category Distribution',
         chartArea: language === 'ko' ? '차트 영역' : 'Chart Area',
-        thisWeek: language === 'ko' ? '이번 주' : 'this week'
+        thisWeek: language === 'ko' ? '이번 주' : 'this week',
+        serviceStats: language === 'ko' ? '서비스 통계' : 'Service Stats',
+        serviceSubtitle: language === 'ko' ? '실시간 서비스 현황' : 'Real-time metrics',
+        platformUsage: language === 'ko' ? '플랫폼별 사용량' : 'Platform Usage'
     };
 
-    // Chart styling tokens
-    const chartLine = isDark ? '#3F3F46' : '#E5E7EB';
+    const chartLine = isDark ? '#27272A' : '#E5E7EB';
     const chartTick = isDark ? '#71717A' : '#9CA3AF';
 
-    // Loading state
     if (!analytics) {
         return (
             <div className={cn(
-                "flex flex-col items-center justify-center min-h-[400px] rounded-3xl border border-dashed",
-                isDark ? "border-gray-800" : "border-slate-200"
+                "p-6 rounded-3xl border text-center",
+                isDark ? "bg-[#111113] border-gray-800 text-gray-500" : "bg-white border-slate-100 text-slate-400"
             )}>
-                <Activity className={cn("w-6 h-6 mb-3 animate-pulse", isDark ? "text-gray-600" : "text-slate-400")} />
-                <p className={cn("text-sm font-medium", isDark ? "text-gray-500" : "text-slate-500")}>{t.noData}</p>
+                {t.noData}
             </div>
         );
     }
@@ -78,9 +69,18 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
         { label: t.apiCalls, value: "12.3K", trend: "-2% " + t.thisWeek, trendUp: false }
     ];
 
+    // Platform data for Service Stats
+    const platformData = [
+        { platform: 'YouTube', count: analytics.platformStats?.youtube || 0, color: '#FF0000' },
+        { platform: 'Instagram', count: analytics.platformStats?.instagram || 0, color: '#E4405F' },
+        { platform: 'Threads', count: analytics.platformStats?.threads || 0, color: isDark ? '#FFFFFF' : '#000000' },
+        { platform: 'Web', count: analytics.platformStats?.web || 0, color: '#21DBA4' }
+    ];
+    const maxCount = Math.max(...platformData.map(p => p.count), 1);
+
     return (
-        <div className="space-y-6">
-            {/* Header - Storybook SectionHeader Pattern */}
+        <div className="space-y-8">
+            {/* ========== Overview Section ========== */}
             <SectionHeader
                 title={t.title}
                 subtitle={t.subtitle}
@@ -101,7 +101,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
                 }
             />
 
-            {/* Stats Grid - Storybook StatCard 4-column */}
+            {/* Stats Grid - 4-column */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {mainStats.map((stat, i) => (
                     <StatCard
@@ -115,7 +115,7 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
                 ))}
             </div>
 
-            {/* Charts Grid - Storybook 2-column Pattern */}
+            {/* Charts Grid - 2-column */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 일별 가입자 Chart */}
                 <div className={cn(
@@ -174,6 +174,53 @@ export function AnalyticsPanel({ theme, language, admin }: AnalyticsPanelProps) 
                     )}>
                         [{t.chartArea}]
                     </div>
+                </div>
+            </div>
+
+            {/* ========== Service Stats Section ========== */}
+            <SectionHeader
+                title={t.serviceStats}
+                subtitle={t.serviceSubtitle}
+                isDark={isDark}
+            />
+
+            {/* DAU/WAU/MAU/Retention */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard label="DAU" value={analytics.dau || 0} trend="+12%" trendUp={true} isDark={isDark} />
+                <StatCard label="WAU" value={analytics.wau || 0} trend="+8%" trendUp={true} isDark={isDark} />
+                <StatCard label="MAU" value={analytics.mau || 0} trend="+15%" trendUp={true} isDark={isDark} />
+                <StatCard label="Retention" value="68%" trend="-2%" trendUp={false} isDark={isDark} />
+            </div>
+
+            {/* Platform Usage */}
+            <div className={cn(
+                "p-6 rounded-3xl border",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-slate-100"
+            )}>
+                <h4 className={cn("font-semibold mb-4", isDark ? "text-slate-200" : "text-slate-700")}>
+                    {t.platformUsage}
+                </h4>
+                <div className="space-y-3">
+                    {platformData.map((item) => (
+                        <div key={item.platform} className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span className={cn("text-sm w-20", isDark ? "text-gray-400" : "text-slate-600")}>
+                                {item.platform}
+                            </span>
+                            <div className={cn(
+                                "flex-1 h-2 rounded-full overflow-hidden",
+                                isDark ? "bg-gray-800" : "bg-slate-200"
+                            )}>
+                                <div
+                                    className="h-full rounded-full"
+                                    style={{ width: `${(item.count / maxCount) * 100}%`, backgroundColor: item.color }}
+                                />
+                            </div>
+                            <span className={cn("text-sm font-medium w-16 text-right", isDark ? "text-slate-200" : "text-slate-700")}>
+                                {item.count.toLocaleString()}
+                            </span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
