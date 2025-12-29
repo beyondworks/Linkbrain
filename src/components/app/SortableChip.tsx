@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import useLongPress from '../../hooks/useLongPress';
@@ -23,6 +23,9 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         isDragging
     } = useSortable({ id, disabled: !isEditing });
 
+    // Flag to prevent double-click (onTouchEnd + onClick both firing)
+    const clickHandled = useRef(false);
+
     // dnd-kit transform 스타일
     const dndStyle: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
@@ -32,20 +35,36 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         ...style,
     };
 
+    // Wrapped onClick that sets the flag
+    const wrappedOnClick = () => {
+        clickHandled.current = true;
+        onClick();
+        // Reset flag after a short delay
+        setTimeout(() => {
+            clickHandled.current = false;
+        }, 100);
+    };
+
     // 롱프레스 이벤트 (일반 모드에서만 사용)
     const longPressEvents = useLongPress(
         () => {
             if (navigator.vibrate) navigator.vibrate(50);
             onLongPress();
         },
-        onClick,
+        wrappedOnClick,
         { delay: 800 }
     );
 
     // 칩 클릭 시 이벤트 버블링 중단 (오버레이까지 전파 방지)
+    // Also prevent double-click by checking the flag
     const handleClick = (e: React.MouseEvent) => {
         if (isEditing) {
             e.stopPropagation();
+        }
+        // If click was already handled by touch, prevent double-toggle
+        if (clickHandled.current) {
+            e.stopPropagation();
+            e.preventDefault();
         }
     };
 
@@ -61,3 +80,4 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         </div>
     );
 }
+
