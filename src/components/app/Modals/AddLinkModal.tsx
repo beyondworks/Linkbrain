@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink, Plus, ChevronDown, Check, Folder, Tag } from 'lucide-react';
 
 // Color options for new categories
@@ -53,6 +53,10 @@ export const AddLinkModal = ({
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
 
+    // Dropdown states
+    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+    const [isCollectionDropdownOpen, setIsCollectionDropdownOpen] = useState(false);
+
     // New category creation
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
@@ -65,6 +69,24 @@ export const AddLinkModal = ({
     // Loading states
     const [isCreatingCategoryLoading, setIsCreatingCategoryLoading] = useState(false);
     const [isCreatingCollectionLoading, setIsCreatingCollectionLoading] = useState(false);
+
+    // Refs for click outside
+    const categoryDropdownRef = useRef<HTMLDivElement>(null);
+    const collectionDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdowns on click outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
+                setIsCategoryDropdownOpen(false);
+            }
+            if (collectionDropdownRef.current && !collectionDropdownRef.current.contains(e.target as Node)) {
+                setIsCollectionDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,6 +102,7 @@ export const AddLinkModal = ({
             setSelectedCategoryId(result.id);
             setIsCreatingCategory(false);
             setNewCategoryName('');
+            setIsCategoryDropdownOpen(false);
         } catch (error) {
             console.error('Failed to create category:', error);
         } finally {
@@ -95,6 +118,7 @@ export const AddLinkModal = ({
             setSelectedCollectionIds([...selectedCollectionIds, result.id]);
             setIsCreatingCollection(false);
             setNewCollectionName('');
+            setIsCollectionDropdownOpen(false);
         } catch (error) {
             console.error('Failed to create collection:', error);
         } finally {
@@ -108,6 +132,9 @@ export const AddLinkModal = ({
         );
     };
 
+    const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+    const selectedCollections = collections.filter(c => selectedCollectionIds.includes(c.id));
+
     return (
         <div className="fixed inset-0 z-[70] flex items-start md:items-center justify-center p-4 pt-20 md:pt-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -115,7 +142,7 @@ export const AddLinkModal = ({
                 initial={{ scale: 0.9, opacity: 0, y: -20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: -20 }}
-                className={`rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden z-10 max-h-[90vh] overflow-y-auto ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}
+                className={`rounded-3xl w-full max-w-lg shadow-2xl relative overflow-visible z-10 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}
             >
                 <div className="p-6 md:p-8">
                     {/* Header */}
@@ -124,7 +151,7 @@ export const AddLinkModal = ({
                         <button onClick={onClose} className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-900'}`}><X size={18} /></button>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         {/* URL Input */}
                         <div className="space-y-2">
                             <label className={`text-sm font-bold ml-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>URL</label>
@@ -141,158 +168,211 @@ export const AddLinkModal = ({
                             </div>
                         </div>
 
-                        {/* Category & Collection Section - 2 Column Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                            {/* Category Section */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Tag size={14} className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} />
-                                    <label className={`text-sm font-bold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                                        {language === 'ko' ? '카테고리' : 'Category'}
-                                    </label>
-                                </div>
+                        {/* Category Dropdown */}
+                        <div className="relative" ref={categoryDropdownRef}>
+                            <button
+                                type="button"
+                                onClick={() => { setIsCategoryDropdownOpen(!isCategoryDropdownOpen); setIsCollectionDropdownOpen(false); }}
+                                className={`w-full h-12 rounded-xl px-4 flex items-center justify-between border transition-all ${theme === 'dark'
+                                        ? 'bg-slate-800 border-slate-700 text-white hover:border-slate-600'
+                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                                    }`}
+                            >
+                                <span className={selectedCategory ? '' : 'text-slate-400'}>
+                                    {selectedCategory ? selectedCategory.name : (language === 'ko' ? '카테고리 선택' : 'Select Category')}
+                                </span>
+                                <ChevronDown size={18} className={`transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
 
-                                {isCreatingCategory ? (
-                                    <div className="space-y-2">
-                                        <input
-                                            type="text"
-                                            value={newCategoryName}
-                                            onChange={(e) => setNewCategoryName(e.target.value)}
-                                            placeholder={language === 'ko' ? '카테고리 이름' : 'Category name'}
-                                            className={`w-full h-10 rounded-xl px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 border ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
-                                            autoFocus
-                                        />
-                                        {/* Color Picker */}
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {CATEGORY_COLORS.map(color => (
-                                                <button
-                                                    key={color}
-                                                    type="button"
-                                                    onClick={() => setNewCategoryColor(color)}
-                                                    className={`w-6 h-6 rounded-full ${color.split(' ')[0]} ${newCategoryColor === color ? 'ring-2 ring-[#21DBA4] ring-offset-2' : ''}`}
-                                                />
-                                            ))}
-                                        </div>
-                                        <div className="flex gap-2">
+                            <AnimatePresence>
+                                {isCategoryDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className={`absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg border overflow-hidden z-50 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                                            }`}
+                                    >
+                                        <div className="max-h-48 overflow-y-auto">
+                                            {/* None option */}
                                             <button
                                                 type="button"
-                                                onClick={handleCreateCategory}
-                                                disabled={!newCategoryName.trim() || isCreatingCategoryLoading}
-                                                className="flex-1 h-8 rounded-lg bg-[#21DBA4] text-white text-xs font-bold disabled:opacity-50"
+                                                onClick={() => { setSelectedCategoryId(null); setIsCategoryDropdownOpen(false); }}
+                                                className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-50 text-slate-400'
+                                                    }`}
                                             >
-                                                {isCreatingCategoryLoading ? '...' : (language === 'ko' ? '생성' : 'Create')}
+                                                {language === 'ko' ? 'AI 자동 분류' : 'AI Auto-classify'}
+                                                {!selectedCategoryId && <Check size={16} className="text-[#21DBA4]" />}
                                             </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }}
-                                                className={`px-3 h-8 rounded-lg text-xs font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
-                                            >
-                                                {language === 'ko' ? '취소' : 'Cancel'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {/* Existing Categories */}
-                                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+
                                             {categories.map(cat => (
                                                 <button
                                                     key={cat.id}
                                                     type="button"
-                                                    onClick={() => setSelectedCategoryId(selectedCategoryId === cat.id ? null : cat.id)}
-                                                    className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all ${cat.color} ${selectedCategoryId === cat.id ? 'ring-2 ring-[#21DBA4] ring-offset-1' : 'opacity-70 hover:opacity-100'}`}
+                                                    onClick={() => { setSelectedCategoryId(cat.id); setIsCategoryDropdownOpen(false); }}
+                                                    className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-white' : 'hover:bg-slate-50 text-slate-700'
+                                                        }`}
                                                 >
-                                                    {cat.name}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-3 h-3 rounded-full ${cat.color.split(' ')[0]}`} />
+                                                        {cat.name}
+                                                    </div>
+                                                    {selectedCategoryId === cat.id && <Check size={16} className="text-[#21DBA4]" />}
                                                 </button>
                                             ))}
                                         </div>
-                                        {/* New Category Button */}
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsCreatingCategory(true)}
-                                            className={`w-full h-8 rounded-xl border-2 border-dashed flex items-center justify-center gap-1 text-xs font-bold transition-colors ${theme === 'dark' ? 'border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-300' : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500'}`}
-                                        >
-                                            <Plus size={12} />
-                                            {language === 'ko' ? '새 카테고리' : 'New Category'}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
 
-                            {/* Collection Section */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Folder size={14} className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} />
-                                    <label className={`text-sm font-bold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                                        {language === 'ko' ? '컬렉션' : 'Collection'}
-                                    </label>
-                                </div>
-
-                                {isCreatingCollection ? (
-                                    <div className="space-y-2">
-                                        <input
-                                            type="text"
-                                            value={newCollectionName}
-                                            onChange={(e) => setNewCollectionName(e.target.value)}
-                                            placeholder={language === 'ko' ? '컬렉션 이름' : 'Collection name'}
-                                            className={`w-full h-10 rounded-xl px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 border ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`}
-                                            autoFocus
-                                        />
-                                        <div className="flex gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={handleCreateCollection}
-                                                disabled={!newCollectionName.trim() || isCreatingCollectionLoading}
-                                                className="flex-1 h-8 rounded-lg bg-[#21DBA4] text-white text-xs font-bold disabled:opacity-50"
-                                            >
-                                                {isCreatingCollectionLoading ? '...' : (language === 'ko' ? '생성' : 'Create')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setIsCreatingCollection(false); setNewCollectionName(''); }}
-                                                className={`px-3 h-8 rounded-lg text-xs font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
-                                            >
-                                                {language === 'ko' ? '취소' : 'Cancel'}
-                                            </button>
+                                        {/* Create new category */}
+                                        <div className={`border-t ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
+                                            {isCreatingCategory ? (
+                                                <div className="p-3 space-y-2">
+                                                    <input
+                                                        type="text"
+                                                        value={newCategoryName}
+                                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                                        placeholder={language === 'ko' ? '카테고리 이름' : 'Category name'}
+                                                        className={`w-full h-9 rounded-lg px-3 text-sm focus:outline-none border ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                                        autoFocus
+                                                    />
+                                                    <div className="flex gap-1.5">
+                                                        {CATEGORY_COLORS.map(color => (
+                                                            <button
+                                                                key={color}
+                                                                type="button"
+                                                                onClick={() => setNewCategoryColor(color)}
+                                                                className={`w-5 h-5 rounded-full ${color.split(' ')[0]} ${newCategoryColor === color ? 'ring-2 ring-[#21DBA4] ring-offset-1' : ''}`}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleCreateCategory}
+                                                            disabled={!newCategoryName.trim() || isCreatingCategoryLoading}
+                                                            className="flex-1 h-8 rounded-lg bg-[#21DBA4] text-white text-xs font-bold disabled:opacity-50"
+                                                        >
+                                                            {isCreatingCategoryLoading ? '...' : (language === 'ko' ? '생성' : 'Create')}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }}
+                                                            className={`px-3 h-8 rounded-lg text-xs font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
+                                                        >
+                                                            {language === 'ko' ? '취소' : 'Cancel'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsCreatingCategory(true)}
+                                                    className={`w-full px-4 py-3 text-left text-sm flex items-center gap-2 transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-[#21DBA4]' : 'hover:bg-slate-50 text-[#21DBA4]'
+                                                        }`}
+                                                >
+                                                    <Plus size={16} />
+                                                    {language === 'ko' ? '새 카테고리' : 'New Category'}
+                                                </button>
+                                            )}
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {/* Existing Collections */}
-                                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Collection Dropdown */}
+                        <div className="relative" ref={collectionDropdownRef}>
+                            <button
+                                type="button"
+                                onClick={() => { setIsCollectionDropdownOpen(!isCollectionDropdownOpen); setIsCategoryDropdownOpen(false); }}
+                                className={`w-full h-12 rounded-xl px-4 flex items-center justify-between border transition-all ${theme === 'dark'
+                                        ? 'bg-slate-800 border-slate-700 text-white hover:border-slate-600'
+                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                                    }`}
+                            >
+                                <span className={selectedCollections.length > 0 ? '' : 'text-slate-400'}>
+                                    {selectedCollections.length > 0
+                                        ? selectedCollections.map(c => c.name).join(', ')
+                                        : (language === 'ko' ? '컬렉션이 없습니다.' : 'No Collection')}
+                                </span>
+                                <ChevronDown size={18} className={`transition-transform ${isCollectionDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {isCollectionDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className={`absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg border overflow-hidden z-50 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                                            }`}
+                                    >
+                                        <div className="max-h-48 overflow-y-auto">
+                                            {collections.length === 0 && !isCreatingCollection && (
+                                                <div className={`px-4 py-3 text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                    {language === 'ko' ? '컬렉션이 없습니다' : 'No collections yet'}
+                                                </div>
+                                            )}
+
                                             {collections.map(col => (
                                                 <button
                                                     key={col.id}
                                                     type="button"
                                                     onClick={() => toggleCollection(col.id)}
-                                                    className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${selectedCollectionIds.includes(col.id)
-                                                            ? 'bg-[#21DBA4] text-white'
-                                                            : theme === 'dark' ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                    className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-white' : 'hover:bg-slate-50 text-slate-700'
                                                         }`}
                                                 >
-                                                    {selectedCollectionIds.includes(col.id) && <Check size={10} />}
                                                     {col.name}
+                                                    {selectedCollectionIds.includes(col.id) && <Check size={16} className="text-[#21DBA4]" />}
                                                 </button>
                                             ))}
                                         </div>
-                                        {/* New Collection Button */}
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsCreatingCollection(true)}
-                                            className={`w-full h-8 rounded-xl border-2 border-dashed flex items-center justify-center gap-1 text-xs font-bold transition-colors ${theme === 'dark' ? 'border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-300' : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500'}`}
-                                        >
-                                            <Plus size={12} />
-                                            {language === 'ko' ? '새 컬렉션' : 'New Collection'}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
-                        {/* Helper Text */}
-                        <p className={`text-xs text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                            {language === 'ko' ? '미선택 시 AI가 자동으로 분류합니다' : 'If not selected, AI will auto-categorize'}
-                        </p>
+                                        {/* Create new collection */}
+                                        <div className={`border-t ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
+                                            {isCreatingCollection ? (
+                                                <div className="p-3 space-y-2">
+                                                    <input
+                                                        type="text"
+                                                        value={newCollectionName}
+                                                        onChange={(e) => setNewCollectionName(e.target.value)}
+                                                        placeholder={language === 'ko' ? '컬렉션 이름' : 'Collection name'}
+                                                        className={`w-full h-9 rounded-lg px-3 text-sm focus:outline-none border ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200'}`}
+                                                        autoFocus
+                                                    />
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleCreateCollection}
+                                                            disabled={!newCollectionName.trim() || isCreatingCollectionLoading}
+                                                            className="flex-1 h-8 rounded-lg bg-[#21DBA4] text-white text-xs font-bold disabled:opacity-50"
+                                                        >
+                                                            {isCreatingCollectionLoading ? '...' : (language === 'ko' ? '생성' : 'Create')}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setIsCreatingCollection(false); setNewCollectionName(''); }}
+                                                            className={`px-3 h-8 rounded-lg text-xs font-bold ${theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}
+                                                        >
+                                                            {language === 'ko' ? '취소' : 'Cancel'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsCreatingCollection(true)}
+                                                    className={`w-full px-4 py-3 text-left text-sm flex items-center gap-2 transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-[#21DBA4]' : 'hover:bg-slate-50 text-[#21DBA4]'
+                                                        }`}
+                                                >
+                                                    <Plus size={16} />
+                                                    {language === 'ko' ? '새 컬렉션' : 'New Collection'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
 
                         {/* Submit Button */}
                         <button
