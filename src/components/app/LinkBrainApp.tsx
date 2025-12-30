@@ -2298,7 +2298,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         {/* Mobile Sticky Filter Row */}
                         {activeTab !== 'insights' && !selectedLink && (
-                           <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-3 pb-3 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                           <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-4 pb-3 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                               {/* Filter + Toggle Row */}
                               <div className="flex items-center justify-between relative mb-3" ref={filterRef}>
                                  <button
