@@ -194,7 +194,8 @@ export const AddLinkModal = ({
                                             initial={{ opacity: 0, y: -8 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -8 }}
-                                            className={`absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg border z-50 max-h-64 overflow-hidden flex flex-col ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                                            className={`absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg border z-50 flex flex-col ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                                            style={{ maxHeight: '256px', overflow: 'hidden' }}
                                         >
                                             {/* AI Auto + New Category at TOP */}
                                             <div className={`border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
