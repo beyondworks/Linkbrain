@@ -2718,8 +2718,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           className={`rounded-xl overflow-hidden cursor-pointer transition-all flex gap-3 p-3 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
                                              } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : ''}`}
                                        >
-                                          {/* Thumbnail - Smaller */}
-                                          <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden">
+                                          {/* Thumbnail */}
+                                          <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden">
                                              <img
                                                 src={link.image || '/placeholder.jpg'}
                                                 alt=""
@@ -2730,8 +2730,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 {source.icon}
                                              </div>
                                           </div>
-                                          {/* Content - Matches thumbnail height (h-20 = 80px) */}
-                                          <div className="flex-1 min-w-0 h-20 flex flex-col justify-between">
+                                          {/* Content - Matches thumbnail height (h-24 = 96px) */}
+                                          <div className="flex-1 min-w-0 h-24 flex flex-col justify-between">
                                              {/* Title with inline badges */}
                                              <div className="flex items-start gap-1.5">
                                                 <h3 className={`flex-1 min-w-0 text-sm font-bold leading-tight truncate ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
