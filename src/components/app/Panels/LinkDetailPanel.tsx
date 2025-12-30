@@ -1121,6 +1121,9 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
                                     disabled={!isAIConfigured || chatLoading}
                                     placeholder={isAIConfigured ? (language === 'ko' ? '이 콘텐츠에 대해 질문하세요...' : 'Ask about this content...') : (t('aiSetupRequired') || 'Set up your API key in Settings')}
                                     autoComplete="off"
+                                    inputMode="text"
+                                    enterKeyHint="send"
+                                    style={{ touchAction: 'manipulation' }}
                                     className={`flex-1 rounded-full h-10 px-4 text-base focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all ${!isAIConfigured ? 'cursor-not-allowed opacity-60' : ''} ${theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700 placeholder:text-slate-500' : 'bg-slate-100 focus:bg-white placeholder:text-slate-400'}`}
                                 />
                                 <button
