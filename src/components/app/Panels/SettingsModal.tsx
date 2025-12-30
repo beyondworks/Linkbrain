@@ -93,7 +93,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
                             <X size={24} />
                         </button>
                     </div>
-                    <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+                    <nav className="flex-1 px-3 space-y-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                         {[
                             { id: 'account', label: t('myAccount'), icon: User },
                             { id: 'security', label: t('security'), icon: Lock },
@@ -142,23 +142,23 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
                             <X size={20} />
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                         {activeTab === 'general' && (
                             <div className="max-w-xl space-y-6 md:space-y-8">
                                 <div className="space-y-3 md:space-y-4">
                                     <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('appearance')}</h4>
                                     <div className="grid grid-cols-3 gap-2 md:gap-3">
-                                        <button onClick={() => setTheme('light')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'light' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setTheme('light')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'light' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <Sun size={18} className={settings.themePreference === 'light' ? 'text-[#21DBA4]' : 'text-slate-400'} />
-                                            <span className="text-xs font-bold text-slate-600">Light</span>
+                                            <span className={`text-xs font-bold ${theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>Light</span>
                                         </button>
-                                        <button onClick={() => setTheme('dark')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'dark' ? 'border-[#21DBA4] bg-slate-800' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setTheme('dark')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'dark' ? 'border-[#21DBA4] bg-[#21DBA4]/10' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <Moon size={18} className={settings.themePreference === 'dark' ? 'text-[#21DBA4]' : 'text-slate-400'} />
-                                            <span className="text-xs font-bold text-slate-600">Dark</span>
+                                            <span className={`text-xs font-bold ${settings.themePreference === 'dark' ? 'text-[#21DBA4]' : theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>Dark</span>
                                         </button>
-                                        <button onClick={() => setTheme('system')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'system' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setTheme('system')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'system' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <Monitor size={18} className={settings.themePreference === 'system' ? 'text-[#21DBA4]' : 'text-slate-400'} />
-                                            <span className="text-xs font-bold text-slate-600">{t('systemTheme')}</span>
+                                            <span className={`text-xs font-bold ${theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>{t('systemTheme')}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -166,7 +166,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
                                 <div className="space-y-3 md:space-y-4">
                                     <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('language')}</h4>
                                     <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                        <button onClick={() => setLanguage('en')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'en' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setLanguage('en')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'en' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <svg width="59" height="59" viewBox="0 0 59 59" fill="none" className="w-8 h-8 rounded-full shadow-sm">
                                                 <path d="M45.2333 4.52333C40.6117 1.67166 35.3017 0 29.5 0V4.52333H45.2333Z" fill="#ED4C5C" />
                                                 <path d="M29.5 9.04664H50.74C49.0683 7.37498 47.2 5.80165 45.2333 4.52332H29.5V9.04664Z" fill="white" />
@@ -184,16 +184,16 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
                                                 <path d="M13.7667 4.52333C11.7017 5.80166 9.83332 7.37499 8.16166 9.04666C6.78499 10.4233 5.60499 11.9967 4.62166 13.57C3.73666 15.045 2.85166 16.52 2.26166 18.0933C1.67167 19.5683 1.18 21.0433 0.786666 22.6166C0.393333 24.0916 0.196666 25.5666 0.0983331 27.14C-9.52432e-08 27.9266 0 28.7133 0 29.5H29.5V0C23.6983 0 18.3883 1.67166 13.7667 4.52333Z" fill="#428BC1" />
                                                 <path d="M22.6166 0.983337L23.1082 2.45834H24.5832L23.4032 3.44167L23.7966 4.91667L22.6166 4.03167L21.4366 4.91667L21.8299 3.44167L20.6499 2.45834H22.1249L22.6166 0.983337ZM26.5499 6.88333L27.0416 8.35833H28.5166L27.3366 9.34166L27.7299 10.8167L26.5499 9.93166L25.3699 10.8167L25.7632 9.34166L24.5832 8.35833H26.0582L26.5499 6.88333ZM18.6832 6.88333L19.1749 8.35833H20.6499L19.4699 9.34166L19.8632 10.8167L18.6832 9.93166L17.5032 10.8167L17.8966 9.34166L16.7166 8.35833H18.1916L18.6832 6.88333ZM22.6166 12.7833L23.1082 14.2583H24.5832L23.4032 15.2417L23.7966 16.7167L22.6166 15.8317L21.4366 16.7167L21.8299 15.2417L20.6499 14.2583H22.1249L22.6166 12.7833ZM14.7499 12.7833L15.2416 14.2583H16.7166L15.5366 15.2417L15.9299 16.7167L14.7499 15.8317L13.5699 16.7167L13.9632 15.2417L12.7832 14.2583H14.2582L14.7499 12.7833ZM6.88325 12.7833L7.37491 14.2583H8.84991L7.66991 15.2417L8.06325 16.7167L6.88325 15.8317L5.70325 16.7167L6.09658 15.2417L4.91658 14.2583H6.39158L6.88325 12.7833ZM26.5499 18.6833L27.0416 20.1583H28.5166L27.3366 21.1416L27.7299 22.6166L26.5499 21.7316L25.3699 22.6166L25.7632 21.1416L24.5832 20.1583H26.0582L26.5499 18.6833ZM18.6832 18.6833L19.1749 20.1583H20.6499L19.4699 21.1416L19.8632 22.6166L18.6832 21.7316L17.5032 22.6166L17.8966 21.1416L16.7166 20.1583H18.1916L18.6832 18.6833ZM10.8166 18.6833L11.3082 20.1583H12.7832L11.6032 21.1416L11.9966 22.6166L10.8166 21.7316L9.63658 22.6166L10.0299 21.1416L8.84991 20.1583H10.3249L10.8166 18.6833ZM22.6166 24.5833L23.1082 26.0583H24.5832L23.4032 27.0416L23.7966 28.5166L22.6166 27.6316L21.4366 28.5166L21.8299 27.0416L20.6499 26.0583H22.1249L22.6166 24.5833ZM14.7499 24.5833L15.2416 26.0583H16.7166L15.5366 27.0416L15.9299 28.5166L14.7499 27.6316L13.5699 28.5166L13.9632 27.0416L12.7832 26.0583H14.2582L14.7499 24.5833ZM6.88325 24.5833L7.37491 26.0583H8.84991L7.66991 27.0416L8.06325 28.5166L6.88325 27.6316L5.70325 28.5166L6.09658 27.0416L4.91658 26.0583H6.39158L6.88325 24.5833ZM9.63658 10.8167L10.8166 9.93166L11.9966 10.8167L11.5049 9.34166L12.6849 8.35833H11.2099L10.8166 6.88333L10.3249 8.35833H8.94825L10.1282 9.24333L9.63658 10.8167ZM1.76992 22.6166L2.94992 21.7316L4.12992 22.6166L3.63825 21.1416L4.81825 20.1583H3.44158L2.94992 18.6833L2.45825 20.1583H1.47492C1.47492 20.2567 1.37659 20.355 1.37659 20.4533L2.16325 21.0433L1.76992 22.6166Z" fill="white" />
                                             </svg>
-                                            <span className="text-xs md:text-sm font-bold text-slate-600">{t('english')}</span>
+                                            <span className={`text-xs md:text-sm font-bold ${theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>{t('english')}</span>
                                         </button>
-                                        <button onClick={() => setLanguage('ko')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'ko' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setLanguage('ko')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'ko' ? 'border-[#21DBA4] bg-[#21DBA4]/10' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <svg width="59" height="59" viewBox="0 0 59 59" fill="none" className="w-8 h-8 rounded-full shadow-sm">
                                                 <path d="M29.5 58.9999C45.7924 58.9999 58.9999 45.7924 58.9999 29.5C58.9999 13.2076 45.7924 0 29.5 0C13.2076 0 0 13.2076 0 29.5C0 45.7924 13.2076 58.9999 29.5 58.9999Z" fill="#F5F5F5" />
                                                 <path d="M21.0436 31.1717C23.7969 33.04 27.6319 32.2533 29.5002 29.5C31.3686 26.7467 35.1052 25.96 37.9569 27.8283C40.6119 29.5983 41.3986 33.04 39.9236 35.695C43.1686 30.1883 41.6936 23.01 36.1869 19.3717C30.5819 15.635 23.0102 17.11 19.2736 22.715C19.1753 22.9117 19.0769 23.1084 18.9786 23.2067C17.6019 26.0583 18.4869 29.4017 21.0436 31.1717Z" fill="#ED4C5C" />
                                                 <path d="M37.9567 27.8283C35.2033 25.9599 31.3683 26.7466 29.5 29.4999C27.6317 32.2533 23.895 33.0399 21.0433 31.1716C18.3883 29.4016 17.6017 25.9599 19.0767 23.3049C15.7333 28.8116 17.3067 35.9899 22.8133 39.6282C28.4183 43.3649 35.99 41.8899 39.7267 36.2849C39.825 36.0883 39.9233 35.8916 40.0217 35.7933C41.3983 32.9416 40.5133 29.5983 37.9567 27.8283Z" fill="#428BC1" />
                                                 <path d="M5.7032 20.945L12.4882 10.8166L11.7999 10.325L11.1115 9.93164L4.32654 20.06L5.01487 20.4533L5.7032 20.945ZM7.57153 22.2233L8.25987 22.6166L14.9465 12.4883L14.3565 12.095L13.6682 11.6033L6.8832 21.7316L7.57153 22.2233ZM16.1265 13.275L9.43987 23.4033L10.1282 23.895L10.8165 24.2883L17.5032 14.16L16.8149 13.7666L16.1265 13.275ZM45.7248 39.8249L46.4132 40.3166L49.5598 35.5966L48.8715 35.1049L48.1832 34.7116L45.0365 39.4316L45.7248 39.8249ZM53.2965 38.0549L50.1498 42.7749L50.8382 43.2666L51.5265 43.6599L54.6731 38.9399L53.9848 38.5466L53.2965 38.0549ZM48.9698 41.9883L52.1165 37.2683L51.4282 36.7766L50.7398 36.3833L47.5932 41.1033L48.2815 41.4966L48.9698 41.9883ZM45.3315 40.5133L44.6432 40.1199L41.4965 44.8399L42.1848 45.2333L42.8732 45.7249L46.0198 41.0049L45.3315 40.5133ZM47.7898 42.1849L47.1998 41.7916L44.0532 46.5116L44.6432 46.9049L45.3315 47.3966L48.4782 42.6766L47.7898 42.1849ZM49.6582 43.4633L46.5115 48.1833L47.1998 48.6749L47.8882 49.0683L51.0348 44.3483L50.3465 43.8566L49.6582 43.4633ZM5.01487 38.5466L4.32654 38.9399L11.1115 49.0683L11.7999 48.6749L12.4882 48.1833L5.7032 38.0549L5.01487 38.5466ZM11.2099 42.1849L10.5215 42.6766L13.6682 47.3966L14.3565 46.9049L14.9465 46.5116L11.7999 41.7916L11.2099 42.1849ZM10.1282 35.1049L9.43987 35.5966L16.1265 45.7249L16.8149 45.2333L17.5032 44.8399L10.8165 34.7116L10.1282 35.1049ZM6.8832 37.2683L10.0299 41.9883L10.7182 41.4966L11.4065 41.1033L8.25987 36.3833L7.57153 36.7766L6.8832 37.2683ZM50.3465 15.1433L51.0348 14.6516L47.8882 9.93164L47.1998 10.325L46.5115 10.8166L49.6582 15.5366L50.3465 15.1433ZM45.3315 18.4866L46.0198 17.995L42.8732 13.275L42.1848 13.7666L41.4965 14.16L44.6432 18.88L45.3315 18.4866ZM50.1498 16.225L53.2965 20.945L53.9848 20.4533L54.6731 20.06L51.5265 15.34L50.8382 15.7333L50.1498 16.225ZM51.4282 22.2233L52.1165 21.7316L45.3315 11.6033L44.6432 12.095L44.0532 12.4883L50.7398 22.6166L51.4282 22.2233ZM48.8715 23.895L49.5598 23.4033L46.4132 18.6833L45.7248 19.175L45.0365 19.5683L48.1832 24.2883L48.8715 23.895Z" fill="#3E4347" />
                                             </svg>
-                                            <span className="text-xs md:text-sm font-bold text-slate-600">{t('korean')}</span>
+                                            <span className={`text-xs md:text-sm font-bold ${language === 'ko' ? 'text-[#21DBA4]' : theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>{t('korean')}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -378,7 +378,7 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                             type="text"
                             value={firstNameInput}
                             onChange={(e) => setFirstNameInput(e.target.value)}
-                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-[#252525] border-[#404040] text-white focus:bg-[#2D2D2D]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
                         />
                     </div>
                     <div className="space-y-1.5 md:space-y-2">
@@ -387,13 +387,13 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                             type="text"
                             value={lastNameInput}
                             onChange={(e) => setLastNameInput(e.target.value)}
-                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-700' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-[#252525] border-[#404040] text-white focus:bg-[#2D2D2D]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
                         />
                     </div>
                 </div>
                 <div className="space-y-1.5 md:space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase">{t('email')}</label>
-                    <input type="email" defaultValue={email} disabled className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm opacity-60 cursor-not-allowed ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`} />
+                    <input type="email" defaultValue={email} disabled className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm opacity-60 cursor-not-allowed ${theme === 'dark' ? 'bg-[#252525] border-[#404040] text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`} />
                 </div>
 
                 {/* Save Button - Only visible when there are changes */}

@@ -405,7 +405,7 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
             if (images.length === 0) {
                 return (
                     <div className={`h-32 flex items-center justify-center ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                        <Instagram size={48} className="text-slate-400" />
+                        <Instagram size={48} className="text-slate-400 dark:text-neutral-400" />
                     </div>
                 );
             }
@@ -534,8 +534,8 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
             return (
                 <div className="mb-8">
                     <div className="flex items-center gap-2 mb-4">
-                        <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                            <BookOpen size={18} className="text-slate-500" />
+                        <div className={`rounded-lg ${theme === 'dark' ? 'bg-transparent p-0' : 'bg-slate-100 p-2'}`}>
+                            <BookOpen size={18} className="text-slate-500 dark:text-neutral-400" />
                         </div>
                         <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Content</h3>
                     </div>
@@ -547,8 +547,8 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
                     {comments.length > 0 && (
                         <div className="mt-8">
                             <div className="flex items-center gap-2 mb-4">
-                                <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                                    <AtSign size={18} className="text-slate-500" />
+                                <div className={`rounded-lg ${theme === 'dark' ? 'bg-transparent p-0' : 'bg-slate-100 p-2'}`}>
+                                    <AtSign size={18} className="text-slate-500 dark:text-neutral-400" />
                                 </div>
                                 <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Comments ({comments.length})</h3>
                             </div>
@@ -571,8 +571,8 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
             return (
                 <div className="mb-8">
                     <div className="flex items-center gap-2 mb-4">
-                        <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}`}>
-                            <BookOpen size={18} className="text-slate-500" />
+                        <div className={`rounded-lg ${theme === 'dark' ? 'bg-transparent p-0' : 'bg-slate-100 p-2'}`}>
+                            <BookOpen size={18} className="text-slate-500 dark:text-neutral-400" />
                         </div>
                         <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>본문 내용</h3>
                     </div>
@@ -787,11 +787,11 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
 
                         {/* AI Takeaways */}
                         <div className={`rounded-2xl p-6 border shadow-sm mb-8 relative overflow-hidden ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <div className={`absolute top-0 right-0 p-4 ${theme === 'dark' ? 'opacity-0' : 'opacity-10'}`}>
                                 <LinkBrainLogo size={100} variant="green" />
                             </div>
                             <div className="flex items-center gap-2 mb-4">
-                                <div className="p-2 bg-[#E0FBF4] rounded-lg text-[#21DBA4]">
+                                <div className={`rounded-lg text-[#21DBA4] ${theme === 'dark' ? 'bg-transparent p-0' : 'bg-[#E0FBF4] p-2'}`}>
                                     <Sparkles size={18} />
                                 </div>
                                 <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{t('aiTakeaways')}</h3>

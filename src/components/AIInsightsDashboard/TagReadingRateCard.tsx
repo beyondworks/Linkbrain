@@ -14,6 +14,7 @@ interface TagReadingRateCardProps {
     theme: {
         card: string;
         cardBorder: string;
+        cardBorderStyle?: React.CSSProperties;
         cardHover: string;
         text: string;
         textSub: string;
@@ -73,10 +74,13 @@ export const TagReadingRateCard = ({
     theme,
     language,
 }: TagReadingRateCardProps) => (
-    <div className={cn(
-        "col-span-12 md:col-span-4 border rounded-3xl p-6 transition-colors",
-        theme.card, theme.cardBorder, theme.cardHover
-    )}>
+    <div
+        className={cn(
+            "col-span-12 md:col-span-4 border rounded-3xl p-6 transition-colors",
+            theme.card, theme.cardBorder, theme.cardHover
+        )}
+        style={theme.cardBorderStyle}
+    >
         {/* Header - Using SectionHeaderCompact pattern */}
         <SectionHeaderCompact
             icon={<Zap size={20} className="text-orange-400 shrink-0" />}

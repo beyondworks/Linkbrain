@@ -17,6 +17,7 @@ interface StatCardProps {
     theme: {
         card: string;
         cardBorder: string;
+        cardBorderStyle?: React.CSSProperties;
         cardHover: string;
         text: string;
         textMuted: string;
@@ -49,6 +50,7 @@ export const StatCard = ({
                 theme.cardHover,
                 onClick && "cursor-pointer hover:border-[#21DBA4]/50"
             )}
+            style={theme.cardBorderStyle}
         >
             {/* Header row: icon + label */}
             <div className="flex items-center gap-3 mb-4">
