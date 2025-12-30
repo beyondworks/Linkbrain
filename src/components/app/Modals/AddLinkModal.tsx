@@ -194,8 +194,7 @@ export const AddLinkModal = ({
                                             initial={{ opacity: 0, y: -8 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -8 }}
-                                            className={`absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg border overflow-hidden z-50 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
-                                                }`}
+                                            className={`absolute top-full left-0 right-0 mt-2 rounded-xl shadow-lg border z-50 max-h-64 flex flex-col ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
                                         >
                                             {/* AI Auto + New Category at TOP */}
                                             <div className={`border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
@@ -263,8 +262,8 @@ export const AddLinkModal = ({
                                                 )}
                                             </div>
 
-                                            {/* Category List - grows with content, max ~200px then scrolls */}
-                                            <div className="max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                                            {/* Category List - fills remaining space, scrolls if needed */}
+                                            <div className="flex-1 overflow-y-auto overflow-x-hidden rounded-b-xl" style={{ scrollbarWidth: 'thin' }}>
                                                 {categories.map(cat => (
                                                     <button
                                                         key={cat.id}
