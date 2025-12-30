@@ -2189,7 +2189,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         {activeTab !== 'insights' && !selectedLink && (
                            <div className={`md:hidden -mx-4 px-4 pt-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                               {/* Title + Count + Mobile Notification - Scrolls with content */}
-                              <div className="mb-3 flex items-start justify-between">
+                              <div className="mb-2 flex items-start justify-between">
                                  <div className="flex-1 min-w-0">
                                     <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                                        {(() => {
@@ -2298,9 +2298,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         {/* Mobile Sticky Filter Row */}
                         {activeTab !== 'insights' && !selectedLink && (
-                           <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-4 pb-3 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                           <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-2 pb-2 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                               {/* Filter + Toggle Row */}
-                              <div className="flex items-center justify-between relative mb-3" ref={filterRef}>
+                              <div className="flex items-center justify-between relative mb-2" ref={filterRef}>
                                  <button
                                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                                     className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border transition-colors ${isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
