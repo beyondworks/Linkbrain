@@ -2732,17 +2732,18 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           </div>
                                           {/* Content - Aligned with thumbnail width */}
                                           <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                             <div>
-                                                {/* URL + Badges */}
-                                                <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                   <span className="truncate">{truncatedUrl}</span>
-                                                   {link.isFavorite && <Star size={10} fill="currentColor" className="text-yellow-400 shrink-0" />}
-                                                   {link.chatHistory && link.chatHistory.length > 0 && (
-                                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#21DBA4] shrink-0">
-                                                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                                      </svg>
-                                                   )}
-                                                </div>
+                                             <div className="mb-2">
+                                                {/* Badges only (no URL) */}
+                                                {(link.isFavorite || (link.chatHistory && link.chatHistory.length > 0)) && (
+                                                   <div className={`flex items-center gap-1 text-[10px] mb-1`}>
+                                                      {link.isFavorite && <Star size={10} fill="currentColor" className="text-yellow-400 shrink-0" />}
+                                                      {link.chatHistory && link.chatHistory.length > 0 && (
+                                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#21DBA4] shrink-0">
+                                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                                         </svg>
+                                                      )}
+                                                   </div>
+                                                )}
                                                 {/* Title - 1 line with truncation */}
                                                 <h3 className={`text-sm font-bold leading-tight truncate ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                                                    {link.title}
