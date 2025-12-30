@@ -2365,7 +2365,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
 
                                              {/* Date Range Filter */}
-                                             <div className="px-3 py-1.5">
+                                             <div className="px-3 pt-1.5 pb-3">
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">기간</span>
                                                 <div className="mt-1 flex flex-wrap gap-1">
                                                    {[
@@ -2386,7 +2386,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              </div>
                                              {/* Unread Filter - Mobile Only */}
                                              <div className={`h-px ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}></div>
-                                             <div className="px-3 py-1.5">
+                                             <div className="px-3 pt-1.5 pb-3">
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'ko' ? '필터' : 'Filter'}</span>
                                                 <div className="mt-1">
                                                    <label className="flex items-center gap-1.5 cursor-pointer group">
