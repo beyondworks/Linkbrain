@@ -1104,7 +1104,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       setAnalysisLogs(prev => [newLog, ...prev].slice(0, 10)); // Keep max 10 logs
    };
 
-   const handleAddLink = async (url: string) => {
+   const handleAddLink = async (url: string, categoryId?: string, collectionIds?: string[]) => {
       if (!canCreate) {
          toast.error(language === 'ko' ? '체험 기간이 종료되었습니다. 계속하려면 플랜을 업그레이드하세요.' : 'Trial expired. Upgrade to add more links.');
          setIsAddModalOpen(false);
@@ -1127,6 +1127,15 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
       try {
          const result = await analyzeUrl(url);
+
+         // If user selected category or collections, update the clip
+         if ((categoryId || (collectionIds && collectionIds.length > 0)) && result.id) {
+            const updates: any = {};
+            if (categoryId) updates.category = categoryId;
+            if (collectionIds && collectionIds.length > 0) updates.collectionIds = collectionIds;
+            await updateClip(result.id, updates);
+         }
+
          // Mark as complete
          setAnalysisQueue([{ id: analysisId, url, status: 'complete' as AnalysisStatus }]);
          addLogEntry(url, 'complete');
@@ -2719,7 +2728,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : ''}`}
                                        >
                                           {/* Thumbnail */}
-                                          <div className="relative w-[88px] h-[88px] shrink-0 rounded-lg overflow-hidden">
+                                          <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden">
                                              <img
                                                 src={link.image || '/placeholder.jpg'}
                                                 alt=""
@@ -2730,8 +2739,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 {source.icon}
                                              </div>
                                           </div>
-                                          {/* Content - Matches thumbnail height (88px) */}
-                                          <div className="flex-1 min-w-0 h-[88px] flex flex-col justify-between">
+                                          {/* Content - Matches thumbnail height (h-24 = 96px) */}
+                                          <div className="flex-1 min-w-0 h-24 flex flex-col justify-between">
                                              {/* Title with inline badges */}
                                              <div className="flex items-start gap-1.5">
                                                 <h3 className={`flex-1 min-w-0 text-sm font-bold leading-tight truncate ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
@@ -2877,7 +2886,25 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
          {/* Modals */}
          <AnimatePresence>
-            {isAddModalOpen && <AddLinkModal onClose={() => setIsAddModalOpen(false)} onAdd={handleAddLink} theme={theme} t={t} />}
+            {isAddModalOpen && (
+               <AddLinkModal
+                  onClose={() => setIsAddModalOpen(false)}
+                  onAdd={handleAddLink}
+                  theme={theme}
+                  t={t}
+                  language={language}
+                  categories={categories}
+                  collections={collections}
+                  onCreateCategory={async (name, color) => {
+                     const result = await createCategory({ name, color });
+                     return result;
+                  }}
+                  onCreateCollection={async (name) => {
+                     const result = await createCollection({ name });
+                     return result;
+                  }}
+               />
+            )}
             {isCategoryModalOpen && (
                <ManagementModal
                   title={editingCategory ? t('editCategory') : t('newCategory')}
