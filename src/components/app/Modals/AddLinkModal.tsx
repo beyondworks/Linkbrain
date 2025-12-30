@@ -178,8 +178,8 @@ export const AddLinkModal = ({
                                     type="button"
                                     onClick={() => { setIsCategoryDropdownOpen(!isCategoryDropdownOpen); setIsCollectionDropdownOpen(false); }}
                                     className={`w-full h-12 rounded-xl px-3 flex items-center justify-between border transition-all text-sm ${theme === 'dark'
-                                            ? 'bg-slate-800 border-slate-700 text-white hover:border-slate-600'
-                                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                                        ? 'bg-slate-800 border-slate-700 text-white hover:border-slate-600'
+                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                                         }`}
                                 >
                                     <span className={`truncate ${selectedCategory ? '' : 'text-slate-400'}`}>
@@ -264,7 +264,7 @@ export const AddLinkModal = ({
                                             </div>
 
                                             {/* Category List */}
-                                            <div className="max-h-40 overflow-y-auto">
+                                            <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent" style={{ scrollbarWidth: 'thin' }}>
                                                 {categories.map(cat => (
                                                     <button
                                                         key={cat.id}
@@ -292,8 +292,8 @@ export const AddLinkModal = ({
                                     type="button"
                                     onClick={() => { setIsCollectionDropdownOpen(!isCollectionDropdownOpen); setIsCategoryDropdownOpen(false); }}
                                     className={`w-full h-12 rounded-xl px-3 flex items-center justify-between border transition-all text-sm ${theme === 'dark'
-                                            ? 'bg-slate-800 border-slate-700 text-white hover:border-slate-600'
-                                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                                        ? 'bg-slate-800 border-slate-700 text-white hover:border-slate-600'
+                                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                                         }`}
                                 >
                                     <span className={`truncate ${selectedCollections.length > 0 ? '' : 'text-slate-400'}`}>
