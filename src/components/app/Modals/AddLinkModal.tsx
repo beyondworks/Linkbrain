@@ -263,8 +263,8 @@ export const AddLinkModal = ({
                                                 )}
                                             </div>
 
-                                            {/* Category List */}
-                                            <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent" style={{ scrollbarWidth: 'thin' }}>
+                                            {/* Category List - grows with content, max ~200px then scrolls */}
+                                            <div className="max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                                                 {categories.map(cat => (
                                                     <button
                                                         key={cat.id}
