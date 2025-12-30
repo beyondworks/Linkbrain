@@ -2187,8 +2187,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         {/* Mobile Sticky Header Section */}
                         {activeTab !== 'insights' && !selectedLink && (
-                           <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-4 pb-3 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
-                              {/* Title + Count + Mobile Notification */}
+                           <div className={`md:hidden -mx-4 px-4 pt-4 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                              {/* Title + Count + Mobile Notification - Scrolls with content */}
                               <div className="mb-3 flex items-start justify-between">
                                  <div className="flex-1 min-w-0">
                                     <h1 className={`text-xl font-black mb-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -2293,6 +2293,12 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     )}
                                  </div>
                               </div>
+                           </div>
+                        )}
+
+                        {/* Mobile Sticky Filter Row */}
+                        {activeTab !== 'insights' && !selectedLink && (
+                           <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-3 pb-3 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
                               {/* Filter + Toggle Row */}
                               <div className="flex items-center justify-between relative mb-3" ref={filterRef}>
                                  <button
