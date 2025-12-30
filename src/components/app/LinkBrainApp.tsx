@@ -2718,8 +2718,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           className={`rounded-xl overflow-hidden cursor-pointer transition-all flex gap-3 p-3 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
                                              } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : ''}`}
                                        >
-                                          {/* Thumbnail */}
-                                          <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden">
+                                          {/* Thumbnail - Smaller */}
+                                          <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden">
                                              <img
                                                 src={link.image || '/placeholder.jpg'}
                                                 alt=""
@@ -2730,29 +2730,31 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 {source.icon}
                                              </div>
                                           </div>
-                                          {/* Content */}
-                                          <div className="flex-1 min-w-0 flex flex-col">
-                                             {/* URL */}
-                                             <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                <span className="truncate">{truncatedUrl}</span>
-                                                {link.isFavorite && <Star size={10} fill="currentColor" className="text-yellow-400 shrink-0" />}
-                                                {link.chatHistory && link.chatHistory.length > 0 && (
-                                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#21DBA4] shrink-0">
-                                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                                   </svg>
-                                                )}
+                                          {/* Content - Aligned with thumbnail width */}
+                                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                             <div>
+                                                {/* URL + Badges */}
+                                                <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                   <span className="truncate">{truncatedUrl}</span>
+                                                   {link.isFavorite && <Star size={10} fill="currentColor" className="text-yellow-400 shrink-0" />}
+                                                   {link.chatHistory && link.chatHistory.length > 0 && (
+                                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#21DBA4] shrink-0">
+                                                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                                      </svg>
+                                                   )}
+                                                </div>
+                                                {/* Title - 1 line with truncation */}
+                                                <h3 className={`text-sm font-bold leading-tight truncate ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                                   {link.title}
+                                                </h3>
                                              </div>
-                                             {/* Title */}
-                                             <h3 className={`text-sm font-bold leading-tight line-clamp-2 mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                                                {link.title}
-                                             </h3>
-                                             {/* AI Summary */}
-                                             <div className={`mt-auto text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
-                                                <div className={`flex items-center gap-1 font-bold text-[#21DBA4]`}>
+                                             {/* AI Summary - 2 lines */}
+                                             <div className={`text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
+                                                <div className={`flex items-center gap-1 font-bold text-[#21DBA4] mb-0.5`}>
                                                    <span>✨</span> AI Summary
                                                 </div>
-                                                <p className={`line-clamp-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                                                   {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 60) || 'No summary'}
+                                                <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                                   {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 100) || 'No summary'}
                                                 </p>
                                              </div>
                                           </div>
