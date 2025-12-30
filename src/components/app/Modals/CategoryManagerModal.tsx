@@ -38,8 +38,8 @@ export const CategoryManagerModal = ({ categories, links, onClose, onEdit, onDel
                     className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-1"
                     style={{
                         WebkitOverflowScrolling: 'touch',
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: theme === 'dark' ? '#475569 #1e293b' : '#cbd5e1 #f1f5f9'
+                        scrollbarWidth: theme === 'dark' ? 'none' : 'thin',
+                        scrollbarColor: theme === 'dark' ? 'transparent transparent' : '#cbd5e1 #f1f5f9'
                     }}
                 >
                     {categories.map((cat: Category) => {

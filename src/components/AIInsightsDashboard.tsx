@@ -61,18 +61,20 @@ type Period = 'weekly' | 'monthly';
 // ═══════════════════════════════════════════════════
 
 const useTheme = (isDark: boolean) => ({
-  bg: isDark ? 'bg-[#0F1115]' : 'bg-[#F9FAFB]',
+  bg: isDark ? 'bg-[#121212]' : 'bg-[#F9FAFB]',
   text: isDark ? 'text-white' : 'text-gray-900',
-  textMuted: isDark ? 'text-gray-400' : 'text-gray-500',
-  textSub: isDark ? 'text-gray-500' : 'text-gray-400',
-  card: isDark ? 'bg-[#161B22]' : 'bg-white',
-  cardBorder: isDark ? 'border-gray-800' : 'border-gray-200',
-  cardHover: isDark ? 'hover:border-gray-600' : 'hover:border-gray-300',
-  itemBg: isDark ? 'bg-gray-900/50' : 'bg-gray-50',
-  itemHover: isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100',
-  border: isDark ? 'border-gray-800' : 'border-gray-200',
-  divider: isDark ? 'bg-gray-800' : 'bg-gray-200',
-  inputBg: isDark ? 'bg-gray-800/50' : 'bg-white',
+  textMuted: isDark ? 'text-neutral-400' : 'text-gray-500',
+  textSub: isDark ? 'text-neutral-500' : 'text-gray-400',
+  card: isDark ? 'bg-[#1E1E1E]' : 'bg-white',
+  cardBorder: isDark ? 'border-[#454545]' : 'border-gray-200',
+  cardBorderStyle: isDark ? { borderColor: '#454545' } : {},
+  cardHover: isDark ? 'hover:border-[#555555]' : 'hover:border-gray-300',
+  itemBg: isDark ? 'bg-[#252525]' : 'bg-gray-50',
+  itemHover: isDark ? 'hover:bg-[#2D2D2D]' : 'hover:bg-gray-100',
+  border: isDark ? 'border-[#3A3A3A]' : 'border-gray-200',
+  borderStyle: isDark ? { borderColor: '#3A3A3A' } : {},
+  divider: isDark ? 'bg-[#2D2D2D]' : 'bg-gray-200',
+  inputBg: isDark ? 'bg-[#252525]' : 'bg-white',
 });
 
 // ═══════════════════════════════════════════════════
@@ -196,13 +198,13 @@ const SavePatternHeatmapCard = ({ links, isDark, theme, language, period }: any)
   }, [links, language]);
 
   return (
-    <div className={cn("col-span-12 lg:col-span-4 border rounded-3xl p-6 flex flex-col h-full overflow-visible", theme.card, theme.cardBorder)}>
+    <div className={cn("col-span-12 lg:col-span-4 border rounded-3xl p-6 flex flex-col h-full overflow-visible", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
       <div className="flex justify-between items-center mb-6">
         <h3 className={cn("text-base font-bold flex items-center gap-2", theme.text)}>
           <Clock className="w-4 h-4 text-[#21DBA4]" />
           {language === 'ko' ? '수집 패턴' : 'Save Pattern'}
         </h3>
-        <span className={cn("text-xs px-2 py-0.5 rounded-full", isDark ? "bg-gray-800" : "bg-gray-100", theme.textMuted)}>
+        <span className={cn("text-xs px-2 py-0.5 rounded-full", isDark ? "bg-[#333333]" : "bg-gray-100", theme.textMuted)}>
           {heatmapData.totalClips}{language === 'ko' ? '개' : ' clips'}
         </span>
       </div>
@@ -223,7 +225,7 @@ const SavePatternHeatmapCard = ({ links, isDark, theme, language, period }: any)
                           className="flex-1 rounded-sm transition-all duration-200 cursor-pointer hover:scale-110 hover:ring-2 hover:ring-[#21DBA4]/50"
                           style={{
                             backgroundColor: val === 0
-                              ? (isDark ? '#1F2937' : '#E5E7EB')
+                              ? (isDark ? '#2D2D2D' : '#E5E7EB')
                               : `rgba(33, 219, 164, ${0.3 + intensity * 0.7})`,
                           }}
                         />
@@ -234,12 +236,12 @@ const SavePatternHeatmapCard = ({ links, isDark, theme, language, period }: any)
                           sideOffset={8}
                           className={cn(
                             "px-3 py-2 rounded-lg text-xs font-medium shadow-xl border z-[9999]",
-                            isDark ? "bg-gray-900 text-white border-gray-700" : "bg-white text-gray-900 border-gray-200"
+                            isDark ? "bg-[#252525] text-white border-[#333333]" : "bg-white text-gray-900 border-gray-200"
                           )}
                         >
                           <div className="font-bold mb-1">{day} {startHour}:00~{endHour}:00</div>
                           <div className="text-[#21DBA4] font-bold">{val}{language === 'ko' ? '개 클립' : ' clips'}</div>
-                          <Tooltip.Arrow className={isDark ? "fill-gray-900" : "fill-white"} />
+                          <Tooltip.Arrow className={isDark ? "fill-[#252525]" : "fill-white"} />
                         </Tooltip.Content>
                       </Tooltip.Portal>
                     </Tooltip.Root>
@@ -328,7 +330,7 @@ const InterestEvolutionCard = ({ links, allLinks, isDark, theme, language, perio
   }, [allLinks, links, language, categories]);
 
   return (
-    <div className={cn("border rounded-3xl p-6 flex flex-col", theme.card, theme.cardBorder)}>
+    <div className={cn("border rounded-3xl p-6 flex flex-col", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
       <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
         <div className="w-3 h-3 rounded-full border-2 border-[#21DBA4]" />
         {language === 'ko' ? '관심사 변화' : 'Interest Evolution'}
@@ -457,7 +459,7 @@ const KeywordsCard = ({ links, isDark, theme, language, period, categories }: an
   return (
     <>
       {/* Keywords Card */}
-      <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)}>
+      <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
         <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
           <Hash className="w-4 h-4 text-[#21DBA4]" />
           {periodLabel} {language === 'ko' ? '키워드' : 'Keywords'}
@@ -541,7 +543,7 @@ const TrendsCard = ({ links, theme, language = 'ko', categories, period = 'weekl
   }, [links, language, period, categories]);
 
   return (
-    <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)}>
+    <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
       <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
         <TrendingUp className="w-4 h-4 text-[#21DBA4]" />
         {language === 'ko' ? '트렌드' : 'Trends'}
@@ -614,7 +616,7 @@ const ContentStudio = ({
             {/* Header */}
             <div className={cn(
               "flex-none flex items-center justify-between px-5 py-4 border-b",
-              isDark ? "border-gray-700" : "border-gray-200"
+              isDark ? "border-[#454545]" : "border-gray-200"
             )}>
               <h3 className={cn("text-base font-bold", isDark ? "text-white" : "text-gray-900")}>
                 {language === 'ko' ? '클립 상세보기' : 'Clip Details'}
@@ -745,7 +747,7 @@ const ContentStudio = ({
             {/* Footer */}
             <div className={cn(
               "flex-none flex items-center justify-end gap-2 px-5 py-4 border-t",
-              isDark ? "border-gray-700" : "border-gray-200"
+              isDark ? "border-[#454545]" : "border-gray-200"
             )}>
               <button
                 onClick={() => setPreviewClip(null)}
@@ -783,13 +785,13 @@ const ContentStudio = ({
 
       <div className={cn(
         "col-span-12 bg-gradient-to-b border rounded-3xl p-1 relative overflow-hidden group",
-        isDark ? "from-[#1E232B] to-[#161B22]" : "from-gray-50 to-white",
+        isDark ? "from-[#1E1E1E] to-[#121212]" : "from-gray-50 to-white",
         theme.cardBorder
-      )}>
+      )} style={theme.cardBorderStyle}>
         {/* Gradient Decor */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#21DBA4] blur-[180px] opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-700" />
 
-        <div className={cn("backdrop-blur-sm rounded-[20px] p-6 lg:p-8 h-full", isDark ? "bg-[#0F1115]/50" : "bg-white/80")}>
+        <div className={cn("backdrop-blur-sm rounded-[20px] p-6 lg:p-8 h-full", isDark ? "bg-[#121212]/50" : "bg-white/80")}>
           <div className="flex flex-col gap-6 h-full">
 
             {/* Header */}
@@ -804,7 +806,7 @@ const ContentStudio = ({
             </div>
 
             {/* Search Bar */}
-            <div className={cn("relative border rounded-2xl", theme.border)}>
+            <div className={cn("relative border rounded-2xl", theme.border)} style={theme.borderStyle}>
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
@@ -867,7 +869,7 @@ const ContentStudio = ({
                             selectedPeriod === opt.id
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
                               : cn(
-                                isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600",
                                 "hover:border-[#21DBA4] hover:text-[#21DBA4]"
                               )
                           )}
@@ -887,7 +889,7 @@ const ContentStudio = ({
                         clips.length === 0
                           ? "opacity-40 cursor-not-allowed"
                           : "hover:border-red-400 hover:text-red-400",
-                        isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"
+                        isDark ? "border-[#454545] text-gray-400" : "border-gray-200 text-gray-500"
                       )}
                     >
                       {language === 'ko' ? '초기화' : 'Clear'}
@@ -902,7 +904,7 @@ const ContentStudio = ({
                 </div>
 
                 {/* Mobile: Period Dropdown (Accordion) */}
-                <details className="md:hidden group w-full border rounded-xl overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                <details className={cn("md:hidden group w-full border rounded-xl overflow-hidden", isDark ? "bg-[#1E1E1E] border-[#454545]" : "bg-white border-gray-200")}>
                   <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
                     <span className={cn("text-xs font-bold", theme.textMuted)}>
                       {language === 'ko' ? '기간' : 'Period'}: <span className="text-[#21DBA4] ml-1">{
@@ -939,7 +941,7 @@ const ContentStudio = ({
                           "px-3 py-2 rounded-lg text-xs font-bold border shrink-0 transition-all",
                           selectedPeriod === opt.id
                             ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                            : cn(isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                            : cn(isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
                         )}
                       >
                         {opt.label}
@@ -967,7 +969,7 @@ const ContentStudio = ({
                             selectedSources.includes(src.group)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
                               : cn(
-                                isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600",
                                 "hover:border-[#21DBA4] hover:text-[#21DBA4]"
                               )
                           )}
@@ -987,7 +989,7 @@ const ContentStudio = ({
                   </div>
 
                   {/* Mobile Source Dropdown */}
-                  <details className="md:hidden group w-full border rounded-xl overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                  <details className={cn("md:hidden group w-full border rounded-xl overflow-hidden", isDark ? "bg-[#1E1E1E] border-[#454545]" : "bg-white border-gray-200")}>
                     <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
                       <span className={cn("text-xs font-bold", theme.textMuted)}>
                         {language === 'ko' ? '출처' : 'Source'} {selectedSources.length > 0 && <span className="text-[#21DBA4]">({selectedSources.length})</span>}
@@ -1003,7 +1005,7 @@ const ContentStudio = ({
                             "px-3 py-2 rounded-lg text-xs font-medium border transition-all",
                             selectedSources.includes(src.group)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                              : cn(isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                              : cn(isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
                           )}
                         >
                           {src.group} <span className="opacity-60">({src.count})</span>
@@ -1032,7 +1034,7 @@ const ContentStudio = ({
                             selectedCategories.includes(cat.id)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
                               : cn(
-                                isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600",
                                 "hover:border-[#21DBA4] hover:text-[#21DBA4]"
                               )
                           )}
@@ -1052,7 +1054,7 @@ const ContentStudio = ({
                   </div>
 
                   {/* Mobile Category Dropdown */}
-                  <details className="md:hidden group w-full border rounded-xl overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                  <details className={cn("md:hidden group w-full border rounded-xl overflow-hidden", isDark ? "bg-[#1E1E1E] border-[#454545]" : "bg-white border-gray-200")}>
                     <summary className="flex items-center justify-between p-3 cursor-pointer list-none">
                       <span className={cn("text-xs font-bold", theme.textMuted)}>
                         {language === 'ko' ? '카테고리' : 'Category'} {selectedCategories.length > 0 && <span className="text-[#21DBA4]">({selectedCategories.length})</span>}
@@ -1068,7 +1070,7 @@ const ContentStudio = ({
                             "px-3 py-2 rounded-lg text-xs font-medium border transition-all",
                             selectedCategories.includes(cat.id)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                              : cn(isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                              : cn(isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
                           )}
                         >
                           {cat.name} <span className="opacity-60">({cat.count})</span>
@@ -1080,7 +1082,7 @@ const ContentStudio = ({
               )}
 
               {/* Mobile Action Buttons (Bottom of Filters) */}
-              <div className="flex md:hidden items-center gap-2 mt-4 pt-2 border-t dark:border-gray-800">
+              <div className={cn("flex md:hidden items-center gap-2 mt-4 pt-2 border-t", isDark ? "border-[#454545]" : "border-gray-200")}>
                 <button
                   onClick={onClearResults}
                   disabled={clips.length === 0}
@@ -1089,7 +1091,7 @@ const ContentStudio = ({
                     clips.length === 0
                       ? "opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-800 text-gray-400 border-transparent"
                       : "hover:border-red-400 hover:text-red-400 bg-white dark:bg-gray-900",
-                    isDark ? "border-gray-700 text-gray-400" : "border-gray-200 text-gray-500"
+                    isDark ? "border-[#454545] text-gray-400" : "border-gray-200 text-gray-500"
                   )}
                 >
                   {language === 'ko' ? '초기화' : 'Clear'}
@@ -1139,8 +1141,8 @@ const ContentStudio = ({
 
             {/* Clip List */}
             <div
-              className={cn("w-full border rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out", theme.border)}
-              style={{ height: clips.length > 0 ? '600px' : 'auto' }}
+              className={cn("w-full border rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out", theme.cardBorder)}
+              style={{ height: clips.length > 0 ? '600px' : 'auto', ...(theme.cardBorderStyle || {}) }}
             >
               <div
                 className={cn("flex-1", theme.itemBg)}
@@ -1216,7 +1218,7 @@ const ContentStudio = ({
             </div>
 
             {/* Divider */}
-            <div className={cn("border-t -mx-6 lg:-mx-8", theme.border)} />
+            <div className={cn("border-t -mx-6 lg:-mx-8", theme.cardBorder)} />
 
             {/* Output Type - Full Width at Bottom */}
             <div>
@@ -1233,8 +1235,9 @@ const ContentStudio = ({
                       "flex-1 px-4 py-3 rounded-xl border cursor-pointer transition-all flex items-center justify-center gap-2",
                       selectedContentType === type.id
                         ? "bg-[#21DBA4] text-black border-[#21DBA4] shadow-lg shadow-[#21DBA4]/20 font-bold"
-                        : cn(isDark ? "bg-gray-800/40" : "bg-white", theme.border, theme.textMuted, "hover:border-[#21DBA4] hover:text-[#21DBA4]")
+                        : cn(isDark ? "bg-[#252525]" : "bg-white", theme.cardBorder, theme.textMuted, "hover:border-[#21DBA4] hover:text-[#21DBA4]")
                     )}
+                    style={selectedContentType !== type.id ? theme.cardBorderStyle : undefined}
                   >
                     {type.icon}
                     <span className="text-sm font-medium">{type.label}</span>
@@ -1268,7 +1271,7 @@ const ContentStudio = ({
               {generatedContent && (
                 <div className={cn(
                   "mt-6 p-6 rounded-2xl border",
-                  isDark ? "bg-gray-900/50 border-gray-700" : "bg-gray-50 border-gray-200"
+                  isDark ? "bg-gray-900/50 border-[#454545]" : "bg-gray-50 border-gray-200"
                 )}>
                   <div className="flex items-center justify-between mb-4">
                     <h4 className={cn("text-sm font-bold flex items-center gap-2", theme.text)}>
@@ -1778,7 +1781,7 @@ export const AIInsightsDashboard = ({
           {/* Dashboard Date Filter Control (Pill Style) */}
           <div className={cn(
             "flex items-center p-1 rounded-full shadow-sm border w-full md:w-auto justify-between md:justify-start overflow-x-auto",
-            isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+            isDark ? "bg-gray-800 border-[#454545]" : "bg-white border-gray-200"
           )}>
             {/* Week Button */}
             <button
@@ -1937,7 +1940,7 @@ export const AIInsightsDashboard = ({
       {/* Creation History */}
       {
         creationHistory.length > 0 && (
-          <div className={cn("col-span-12 border rounded-3xl p-6", theme.card, theme.cardBorder)}>
+          <div className={cn("col-span-12 border rounded-3xl p-6", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={cn("text-base font-bold flex items-center gap-2", theme.text)}>
                 <FileBarChart className="w-4 h-4 text-gray-400" />
@@ -1959,7 +1962,7 @@ export const AIInsightsDashboard = ({
                   key={item.id}
                   className={cn(
                     "p-4 border rounded-xl transition-colors flex items-center justify-between group",
-                    isDark ? "bg-gray-800/30 border-gray-800 hover:bg-gray-800" : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                    isDark ? "bg-gray-800/30 border-[#454545] hover:bg-gray-800" : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                   )}
                 >
                   <div className="flex items-center gap-3">
