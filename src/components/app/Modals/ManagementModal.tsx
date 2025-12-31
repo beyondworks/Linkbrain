@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CATEGORY_COLORS } from '../constants';
+import { getCategoryColor } from '../constants';
 import { LinkItem } from '../types';
 
 interface ManagementModalProps {
@@ -15,15 +15,10 @@ interface ManagementModalProps {
 }
 
 export const ManagementModal = ({ title, initialData, type, onClose, onSave, onDelete, links, theme, t }: ManagementModalProps) => {
+    // New 10-color indexed palette
     const categoryColors = [
-        'bg-pink-100 text-pink-600',
-        'bg-blue-100 text-blue-600',
-        'bg-emerald-100 text-emerald-600',
-        'bg-orange-100 text-orange-600',
-        'bg-purple-100 text-purple-600',
-        'bg-green-200 text-green-700',
-        'bg-indigo-200 text-indigo-700',
-        'bg-red-200 text-red-700'
+        'color-0', 'color-1', 'color-2', 'color-3', 'color-4',
+        'color-5', 'color-6', 'color-7', 'color-8', 'color-9'
     ];
     const collectionColors = ['bg-indigo-500', 'bg-teal-500', 'bg-rose-500', 'bg-amber-500', 'bg-slate-800'];
 
@@ -75,15 +70,15 @@ export const ManagementModal = ({ title, initialData, type, onClose, onSave, onD
                     {type === 'category' && (
                         <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{t('colorStyle')}</label>
-                            <div className="flex gap-1.5 mt-2 flex-wrap">
+                            <div className="flex gap-1 mt-2">
                                 {colors.map(c => {
-                                    const bgStyle = CATEGORY_COLORS[c] || '#f1f5f9';
+                                    const bgStyle = getCategoryColor(c, theme === 'dark');
 
                                     return (
                                         <button
                                             key={c}
                                             onClick={() => setColor(c)}
-                                            className={`w-7 h-7 rounded-full border transition-all ${color === c ? 'ring-2 ring-[#21DBA4] ring-offset-1 scale-110' : 'hover:scale-105'}`}
+                                            className={`w-5 h-5 rounded-full border transition-all ${color === c ? 'ring-2 ring-[#21DBA4] ring-offset-1 scale-110' : 'hover:scale-105'}`}
                                             style={{ backgroundColor: bgStyle }}
                                         />
                                     );

@@ -1,17 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink, Plus, ChevronDown, Check } from 'lucide-react';
+import { getCategoryColor, CATEGORY_COLOR_PALETTE } from '../constants';
 
-// Color options for new categories
-const CATEGORY_COLORS = [
-    'bg-pink-100 text-pink-600',
-    'bg-blue-100 text-blue-600',
-    'bg-emerald-100 text-emerald-600',
-    'bg-orange-100 text-orange-600',
-    'bg-purple-100 text-purple-600',
-    'bg-amber-100 text-amber-600',
-    'bg-cyan-100 text-cyan-600',
-    'bg-rose-100 text-rose-600',
+// Use indexed color keys for new categories
+const COLOR_KEYS = [
+    'color-0', 'color-1', 'color-2', 'color-3', 'color-4',
+    'color-5', 'color-6', 'color-7', 'color-8', 'color-9'
 ];
 
 interface Category {
@@ -60,7 +55,7 @@ export const AddLinkModal = ({
     // New category creation
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
-    const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
+    const [newCategoryColor, setNewCategoryColor] = useState(COLOR_KEYS[0]);
 
     // New collection creation
     const [isCreatingCollection, setIsCreatingCollection] = useState(false);
@@ -223,12 +218,13 @@ export const AddLinkModal = ({
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                         <div className="flex gap-1">
-                                                            {CATEGORY_COLORS.slice(0, 6).map(color => (
+                                                            {COLOR_KEYS.slice(0, 6).map((colorKey, idx) => (
                                                                 <button
-                                                                    key={color}
+                                                                    key={colorKey}
                                                                     type="button"
-                                                                    onClick={(e) => { e.stopPropagation(); setNewCategoryColor(color); }}
-                                                                    className={`w-5 h-5 rounded-full ${color.split(' ')[0]} ${newCategoryColor === color ? 'ring-2 ring-[#21DBA4] ring-offset-1' : ''}`}
+                                                                    onClick={(e) => { e.stopPropagation(); setNewCategoryColor(colorKey); }}
+                                                                    className={`w-5 h-5 rounded-full ${newCategoryColor === colorKey ? 'ring-2 ring-[#21DBA4] ring-offset-1' : ''}`}
+                                                                    style={{ backgroundColor: getCategoryColor(colorKey, theme === 'dark') }}
                                                                 />
                                                             ))}
                                                         </div>
@@ -274,7 +270,7 @@ export const AddLinkModal = ({
                                                             }`}
                                                     >
                                                         <div className="flex items-center gap-2">
-                                                            <div className={`w-2.5 h-2.5 rounded-full ${cat.color.split(' ')[0]}`} />
+                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getCategoryColor(cat.color, theme === 'dark') }} />
                                                             <span className="truncate">{cat.name}</span>
                                                         </div>
                                                         {selectedCategoryId === cat.id && <Check size={14} className="text-[#21DBA4] shrink-0" />}

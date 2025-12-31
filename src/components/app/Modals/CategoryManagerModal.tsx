@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { X, Edit2, Trash2 } from 'lucide-react';
-import { CATEGORY_COLORS } from '../constants';
+import { getCategoryColor } from '../constants';
 import { LinkItem, Category } from '../types';
 
 interface CategoryManagerModalProps {
@@ -54,7 +54,7 @@ export const CategoryManagerModal = ({ categories, links, onClose, onEdit, onDel
                                 {/* Color Dot */}
                                 <div
                                     className="w-4 h-4 rounded-full flex-shrink-0"
-                                    style={{ backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' }}
+                                    style={{ backgroundColor: getCategoryColor(cat.color, theme === 'dark') }}
                                 />
 
                                 {/* Name & Count */}
