@@ -896,7 +896,7 @@ const ContentStudio = ({
                     </button>
                     <button
                       onClick={onLoadClips}
-                      className="px-4 py-1.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all hover:scale-[1.02] shadow-lg shadow-[#21DBA4]/20"
+                      className="px-4 py-1.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all hover:scale-[1.02]"
                     >
                       <RefreshCw size={12} /> {language === 'ko' ? '클립 불러오기' : 'Load Clips'}
                     </button>
@@ -1098,7 +1098,7 @@ const ContentStudio = ({
                 </button>
                 <button
                   onClick={onLoadClips}
-                  className="flex-[2] px-4 py-2.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] shadow-lg shadow-[#21DBA4]/20"
+                  className="flex-[2] px-4 py-2.5 bg-[#21DBA4] hover:bg-[#1bc490] text-black text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
                 >
                   <RefreshCw size={14} /> {language === 'ko' ? '클립 불러오기' : 'Load Clips'}
                 </button>
@@ -1234,7 +1234,7 @@ const ContentStudio = ({
                     className={cn(
                       "flex-1 px-4 py-3 rounded-xl border cursor-pointer transition-all flex items-center justify-center gap-2",
                       selectedContentType === type.id
-                        ? "bg-[#21DBA4] text-black border-[#21DBA4] shadow-lg shadow-[#21DBA4]/20 font-bold"
+                        ? "bg-[#21DBA4] text-black border-[#21DBA4] font-bold"
                         : cn(isDark ? "bg-[#252525]" : "bg-white", theme.cardBorder, theme.textMuted, "hover:border-[#21DBA4] hover:text-[#21DBA4]")
                     )}
                     style={selectedContentType !== type.id ? theme.cardBorderStyle : undefined}
@@ -1251,7 +1251,7 @@ const ContentStudio = ({
                 className={cn(
                   "mt-4 w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all",
                   selectedContentType
-                    ? "bg-[#21DBA4] text-black hover:bg-[#1bc490] hover:scale-[1.02] shadow-lg shadow-[#21DBA4]/20"
+                    ? "bg-[#21DBA4] text-black hover:bg-[#1bc490] hover:scale-[1.02]"
                     : cn(isDark ? "bg-gray-800 text-gray-600" : "bg-gray-200 text-gray-400", "cursor-not-allowed")
                 )}
               >
