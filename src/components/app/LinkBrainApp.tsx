@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useClips, ClipData } from '../../hooks/useClips';
 import { UserPreferences } from '../../hooks/useUserPreferences';
-import { TRANSLATIONS, CATEGORY_COLORS } from './constants';
+import { TRANSLATIONS, getCategoryColor } from './constants';
 import { LinkItem, Category, Collection } from './types';
 import { DeleteConfirmationModal, AddLinkModal, ManagementModal, CategoryManagerModal } from './Modals';
 import { LinkCard, LinkRow, NavItem, getSourceInfo, GlobeIcon } from './Cards';
@@ -1697,7 +1697,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                    ? `text-slate-800 hover:ring-2 hover:ring-[#21DBA4]/50`
                                                    : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
                                                 }`}
-                                             style={!isActive ? { backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' } : {}}
+                                             style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
                                           >
                                              <span>{cat.name}</span>
                                              {count > 0 && (
@@ -1727,7 +1727,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 ? 'text-slate-800 ring-2 ring-[#21DBA4]'
                                                 : 'text-slate-600 ring-2 ring-[#21DBA4]'
                                              }`}
-                                          style={!isActive ? { backgroundColor: CATEGORY_COLORS[cat.color] || '#f1f5f9' } : {}}
+                                          style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
                                        >
                                           <span>{cat.name}</span>
                                        </div>
