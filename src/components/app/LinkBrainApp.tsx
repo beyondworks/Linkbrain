@@ -568,7 +568,6 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    // Modals
    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-   const [showFlyAnimation, setShowFlyAnimation] = useState(false);
    const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
    const [settingsInitialTab, setSettingsInitialTab] = useState('general');
@@ -1121,9 +1120,6 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       // Clear previous items and add new one as analyzing directly with timestamp
       setAnalysisQueue([{ id: analysisId, url, status: 'analyzing' as AnalysisStatus, timestamp: Date.now() }]);
 
-      // Trigger Animation immediately
-      setShowFlyAnimation(true);
-      setTimeout(() => setShowFlyAnimation(false), 2500);
 
       try {
          const result = await analyzeUrl(url);
@@ -2081,7 +2077,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         <button
                            onClick={() => setIsAddModalOpen(true)}
-                           className={`bg-[#21DBA4] hover:bg-[#1bc290] h-9 px-4 rounded-full text-sm font-bold shadow-lg shadow-[#21DBA4]/20 flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px] ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}
+                           className={`bg-[#21DBA4] hover:bg-[#1bc290] h-9 px-4 rounded-full text-sm font-bold flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px] ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}
                         >
                            <Plus size={18} />
                            <span className="hidden md:inline text-[14px]">{t('addLink')}</span>
@@ -2864,25 +2860,6 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             />
          )}
 
-         {/* Paper Plane Animation */}
-         <AnimatePresence>
-            {showFlyAnimation && (
-               <motion.div
-                  initial={{ x: "-10vw", y: "110vh", rotate: 0, scale: 0.5, opacity: 0 }}
-                  animate={{
-                     x: ["-10vw", "45vw", "35vw", "55vw", "120vw"],
-                     y: ["110vh", "50vh", "35vh", "65vh", "-20vh"],
-                     rotate: [0, -45, -180, -270, 0],
-                     scale: [0.5, 1, 1, 1, 0.5],
-                     opacity: [0, 1, 1, 1, 0]
-                  }}
-                  transition={{ duration: 2.5, ease: "easeInOut", times: [0, 0.4, 0.5, 0.6, 1] }}
-                  className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center"
-               >
-                  <LinkBrainLogo variant="white" size={128} className="drop-shadow-2xl" />
-               </motion.div>
-            )}
-         </AnimatePresence>
 
          {/* Modals */}
          <AnimatePresence>

@@ -384,7 +384,7 @@ export const AddLinkModal = ({
                         <button
                             type="submit"
                             disabled={!url}
-                            className={`w-full h-14 bg-[#21DBA4] rounded-2xl font-bold text-lg shadow-lg shadow-[#21DBA4]/30 hover:bg-[#1bc290] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}
+                            className={`w-full h-14 bg-[#21DBA4] rounded-2xl font-bold text-lg hover:bg-[#1bc290] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 ${theme === 'dark' ? 'text-slate-900' : 'text-white'}`}
                         >
                             <Plus size={20} /> {t('addLink')}
                         </button>
