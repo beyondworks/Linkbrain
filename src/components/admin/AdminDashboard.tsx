@@ -225,7 +225,7 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                         </button>
                     </SheetTrigger>
                     {/* SheetContent has default padding and cross icon. We remove padding to match sidebar style */}
-                    <SheetContent side="left" className="p-0 w-64 border-r-0 [&>button]:top-0 [&>button]:right-0 [&>button]:h-14 [&>button]:w-14 [&>button]:flex [&>button]:items-center [&>button]:justify-center">
+                    <SheetContent side="left" className={cn("p-0 w-64 border-r-0 [&>button]:top-0 [&>button]:right-0 [&>button]:h-14 [&>button]:w-14 [&>button]:flex [&>button]:items-center [&>button]:justify-center", isDark ? "bg-[#111113]" : "bg-white")}>
                         <VisuallyHidden>
                             <SheetTitle>{t.title}</SheetTitle>
                             <SheetDescription>Navigation Menu</SheetDescription>
