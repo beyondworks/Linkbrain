@@ -247,14 +247,14 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
             {/* Main Content Area */}
             <main className="flex-1 p-4 md:p-8 overflow-y-auto">
                 <div className="max-w-5xl mx-auto">
-                    {activeTab === 'analytics' && <AnalyticsPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'users' && <UsersPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'subscriptions' && <SubscriptionsPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'categories' && <CategoryAnalyticsPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'detailed' && <DetailedAnalyticsPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'announcements' && <AnnouncementsPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'inquiries' && <InquiriesPanel theme={theme} language={language} admin={admin} />}
-                    {activeTab === 'popups' && <PopupsPanel theme={theme} language={language} admin={admin} />}
+                    {activeTab === 'analytics' && <AnalyticsPanel theme="light" language={language} admin={admin} />}
+                    {activeTab === 'users' && <UsersPanel theme="light" language={language} admin={admin} />}
+                    {activeTab === 'subscriptions' && <SubscriptionsPanel theme="light" language={language} admin={admin} />}
+                    {activeTab === 'categories' && <CategoryAnalyticsPanel theme="light" language={language} admin={admin} />}
+                    {activeTab === 'detailed' && <DetailedAnalyticsPanel theme="light" language={language} admin={admin} />}
+                    {activeTab === 'announcements' && <AnnouncementsPanel theme="light" language={language} admin={admin} />}
+                    {activeTab === 'inquiries' && <InquiriesPanel theme="light" language={language} admin={admin} />}
+                    {activeTab === 'popups' && <PopupsPanel theme="light" language={language} admin={admin} />}
                 </div>
             </main>
         </div>
