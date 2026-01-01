@@ -421,10 +421,10 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    // DnD Sensors - Activation constraints for drag
    const sensors = useSensors(
       useSensor(MouseSensor, {
-         activationConstraint: { delay: 150, tolerance: 5 }
+         activationConstraint: { distance: 5 }
       }),
       useSensor(TouchSensor, {
-         activationConstraint: { delay: 150, tolerance: 5 }
+         activationConstraint: { delay: 50, tolerance: 5 }
       })
    );
 
