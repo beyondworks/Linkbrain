@@ -1578,7 +1578,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       `}>
             {/* Logo Area */}
             <div className={`h-[72px] flex items-center px-6 border-b ${theme === 'dark' ? 'border-slate-800' : 'border-slate-50'}`}>
-               <div className="w-8 h-8 rounded-lg mr-3 shadow-lg shadow-[#21DBA4]/20 cursor-pointer" onClick={onBack}>
+               <div className="w-8 h-8 rounded-lg mr-3 cursor-pointer" onClick={onBack}>
                   <Logo className="w-full h-full" />
                </div>
                <span className="font-bold text-lg tracking-tight text-[#21DBA4] text-[22px]">Linkbrain</span>
