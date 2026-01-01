@@ -23,7 +23,7 @@ export const NavItem = ({ icon, label, count, active, onClick, iconClassName, cl
                 : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'}`}
     >
         <div className={`${active ? 'text-[#21DBA4]' : iconClassName || 'text-slate-400'}`}>{icon}</div>
-        <span className="text-sm font-bold flex-1 truncate text-[14px]">
+        <span className="text-sm font-bold flex-1 truncate text-[14px] text-inherit">
             {label.replace('[Beta]', '')}
             {label.includes('[Beta]') && (
                 <span className="ml-2 px-1.5 py-0.5 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-[9px] font-extrabold tracking-wide">

@@ -1687,10 +1687,10 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              isEditing={isRearranging}
                                              onLongPress={() => setIsRearranging(true)}
                                              onClick={() => !isRearranging && toggleFilter(setFilterCategories, cat.id)}
-                                             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
+                                             className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
                                                 ? 'bg-[#21DBA4] text-white shadow-sm'
                                                 : theme === 'dark'
-                                                   ? `text-slate-800 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                   ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
                                                    : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
                                                 }`}
                                              style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
@@ -1771,10 +1771,10 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              isEditing={isRearranging}
                                              onLongPress={() => setIsRearranging(true)}
                                              onClick={() => !isRearranging && toggleFilter(setFilterSources, src)}
-                                             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${isActive
+                                             className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
                                                 ? 'bg-[#21DBA4] text-white shadow-sm'
                                                 : theme === 'dark'
-                                                   ? 'bg-slate-800 text-slate-400 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                   ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
                                                    : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
                                                 }`}
                                           >
@@ -1782,7 +1782,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              {count > 0 && (
                                                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
                                                    ? 'bg-white/20 text-white'
-                                                   : theme === 'dark' ? 'bg-slate-700 text-slate-500' : 'bg-white/50 text-slate-500'
+                                                   : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
                                                    }`}>
                                                    {count}
                                                 </span>
