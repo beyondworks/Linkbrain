@@ -140,7 +140,8 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
     const [activeTab, setActiveTab] = useState<AdminTab>('analytics');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar state
     const admin = useAdmin();
-    const isDark = theme === 'dark';
+    // Admin Dashboard always uses light mode
+    const isDark = false;
 
     const t = {
         title: 'Linkbrain Admin',
