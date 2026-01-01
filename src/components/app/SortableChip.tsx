@@ -28,6 +28,7 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
     const touchHandled = useRef(false);
     const touchMoved = useRef(false);
     const startPos = useRef<{ x: number; y: number } | null>(null);
+    const lastTouchTime = useRef<number>(0);
 
     // dnd-kit transform 스타일
     const dndStyle: React.CSSProperties = {
@@ -74,6 +75,9 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
 
     const handleTouchEnd = useCallback((e: React.TouchEvent) => {
         if (isEditing) return;
+
+        // Record touch time to prevent ghost mouse events
+        lastTouchTime.current = Date.now();
 
         if (longPressTimer.current) {
             clearTimeout(longPressTimer.current);
@@ -122,6 +126,9 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         if (isEditing) return;
 
+        // Ignore mouse events that follow touch events (mobile browsers fire both)
+        if (Date.now() - lastTouchTime.current < 500) return;
+
         mouseStartTime.current = Date.now();
         mouseHandled.current = false;
 
@@ -133,6 +140,9 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
 
     const handleMouseUp = useCallback((e: React.MouseEvent) => {
         if (isEditing) return;
+
+        // Ignore mouse events that follow touch events (mobile browsers fire both)
+        if (Date.now() - lastTouchTime.current < 500) return;
 
         if (mouseLongPressTimer.current) {
             clearTimeout(mouseLongPressTimer.current);
