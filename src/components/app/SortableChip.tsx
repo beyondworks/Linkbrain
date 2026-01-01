@@ -105,15 +105,13 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         if (touchHandled.current) {
             e.stopPropagation();
             e.preventDefault();
-            // Reset after a short delay
-            setTimeout(() => {
-                touchHandled.current = false;
-            }, 100);
+            touchHandled.current = false;
             return;
         }
 
-        // Mouse click (desktop) - handled by mouseUp, prevent duplicate
-        // onClick is triggered after mouseUp, so we check if it was a long press
+        // Mouse click is handled by mouseUp, so prevent duplicate here
+        // This onClick fires after mouseUp, so we just prevent it
+        e.stopPropagation();
     }, [isEditing]);
 
     // Mouse long-press handlers for desktop
