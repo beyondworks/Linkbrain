@@ -22,7 +22,8 @@ import {
   TrendingDown,
   Hash,
   Inbox,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  ArrowUpDown
 } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 import { toast } from 'sonner';
@@ -75,6 +76,20 @@ const useTheme = (isDark: boolean) => ({
   borderStyle: isDark ? { borderColor: '#454545' } : {},
   divider: isDark ? 'bg-[#2D2D2D]' : 'bg-gray-200',
   inputBg: isDark ? 'bg-[#131313]' : 'bg-white',
+  // Modal-specific tokens (inline style values)
+  modal: {
+    bg: isDark ? '#1A1A1A' : '#FFFFFF',
+    border: isDark ? '#454545' : '#E5E7EB',
+    sectionBg: isDark ? '#2A2A2A' : '#F9FAFB',
+    memoBg: isDark ? 'rgba(33, 219, 164, 0.12)' : 'rgba(33, 219, 164, 0.05)',
+    title: isDark ? '#FFFFFF' : '#111827',
+    label: isDark ? '#A1A1AA' : '#6B7280',
+    body: isDark ? '#E4E4E7' : '#4B5563',
+    muted: isDark ? '#D4D4D8' : '#6B7280',
+    badgeBg: isDark ? '#3F3F46' : '#F3F4F6',
+    badgeText: isDark ? '#A1A1AA' : '#6B7280',
+  },
+  isDark,
 });
 
 // ═══════════════════════════════════════════════════
@@ -614,7 +629,9 @@ const ContentStudio = ({
   onSelectContentType, onGenerate, isGenerating, searchQuery, onSearchChange,
   startDate, endDate, onStartDateChange, onEndDateChange,
   onLoadClips, loadClipsWithDates, onClearResults, language, isDark, theme,
-  // 새로 추가된 필터 props
+  // 정렬 props
+  clipSortOrder, onSortOrderChange,
+  // 필터 props
   availableSources, selectedSources, onToggleSource, onClearSources,
   allAvailableCategories, selectedCategories, onToggleCategory, onClearCategories,
   // 생성 결과
@@ -622,6 +639,15 @@ const ContentStudio = ({
 }: any) => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [previewClip, setPreviewClip] = useState<any>(null);
+
+  // Debug: Log previewClip data when it changes
+  useEffect(() => {
+    if (previewClip) {
+      console.log('[Modal Debug] previewClip fields:', Object.keys(previewClip));
+      console.log('[Modal Debug] previewClip.summary:', previewClip.summary?.substring(0, 100));
+      console.log('[Modal Debug] previewClip.content:', previewClip.content?.substring(0, 100));
+    }
+  }, [previewClip]);
 
   return (
     <>
@@ -636,123 +662,141 @@ const ContentStudio = ({
 
           {/* Modal */}
           <div
-            className={cn(
-              "relative w-full max-w-2xl flex flex-col rounded-2xl shadow-2xl",
-              isDark ? "bg-[#1E2228]" : "bg-white"
-            )}
-            style={{ maxHeight: 'min(720px, calc(100vh - 48px))' }}
+            className="relative w-full max-w-2xl flex flex-col rounded-2xl shadow-2xl border"
+            style={{
+              maxHeight: 'min(720px, calc(100vh - 48px))',
+              backgroundColor: theme.modal.bg,
+              borderColor: theme.modal.border
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className={cn(
-              "flex-none flex items-center justify-between px-5 py-4 border-b",
-              isDark ? "border-[#454545]" : "border-gray-200"
-            )}>
-              <h3 className={cn("text-base font-bold", isDark ? "text-white" : "text-gray-900")}>
+            <div
+              className="flex-none flex items-center justify-between px-5 py-4 border-b"
+              style={{ borderColor: theme.modal.border }}
+            >
+              <h3
+                className="text-base font-bold"
+                style={{ color: theme.modal.title }}
+              >
                 {language === 'ko' ? '클립 상세보기' : 'Clip Details'}
               </h3>
               <button
                 onClick={() => setPreviewClip(null)}
-                className={cn(
-                  "w-7 h-7 flex items-center justify-center rounded-md text-base transition-colors",
-                  isDark ? "text-gray-500 hover:text-white hover:bg-gray-700" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                )}
+                className="w-7 h-7 flex items-center justify-center rounded-md text-base transition-colors hover:bg-white/10"
+                style={{ color: theme.modal.label }}
               >
                 ✕
               </button>
             </div>
 
             {/* Content - Only vertical scroll */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div
+              className="flex-1 overflow-y-auto overflow-x-hidden"
+              style={{ color: theme.modal.body }}
+            >
               <div className="px-6 pt-6 pb-10 space-y-6">
 
                 {/* Title */}
-                <h4 className={cn(
-                  "text-xl font-bold leading-snug break-words",
-                  isDark ? "text-white" : "text-gray-900"
-                )}>
+                <h4
+                  className="text-xl font-bold leading-snug break-words"
+                  style={{ color: theme.modal.title }}
+                >
                   {previewClip.title || 'Untitled'}
                 </h4>
 
                 {/* Date + Keywords */}
                 <div className="flex flex-wrap gap-1.5">
                   {previewClip.createdAt && (
-                    <span className={cn(
-                      "text-[11px] px-2 py-0.5 rounded",
-                      isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"
-                    )}>
+                    <span
+                      className="text-[11px] px-2 py-0.5 rounded"
+                      style={{
+                        backgroundColor: theme.modal.badgeBg,
+                        color: theme.modal.badgeText
+                      }}
+                    >
                       {new Date(previewClip.createdAt).toLocaleDateString('ko-KR')}
                     </span>
                   )}
                   {previewClip.keywords?.slice(0, 3).map((k: string, i: number) => (
                     <span
                       key={i}
-                      className="text-[11px] px-2 py-0.5 rounded bg-[#21DBA4]/15 text-[#21DBA4] font-medium"
+                      className="text-[11px] px-2 py-0.5 rounded font-medium"
+                      style={{ backgroundColor: 'rgba(33, 219, 164, 0.15)', color: '#21DBA4' }}
                     >
                       #{k}
                     </span>
                   ))}
                 </div>
 
-                {/* AI Summary */}
+                {/* AI 핵심 요약 */}
                 {previewClip.summary && (
-                  <div className={cn(
-                    "p-4 rounded-lg",
-                    isDark ? "bg-gray-800/60" : "bg-gray-50"
-                  )}>
-                    <p className={cn(
-                      "text-xs font-semibold uppercase tracking-wide mb-2",
-                      isDark ? "text-gray-500" : "text-gray-400"
-                    )}>
-                      {language === 'ko' ? 'AI 요약' : 'AI Summary'}
-                    </p>
-                    <p className={cn(
-                      "text-sm leading-[1.7] break-words",
-                      isDark ? "text-gray-300" : "text-gray-600"
-                    )}>
+                  <div
+                    className="p-4 rounded-lg"
+                    style={{ backgroundColor: theme.modal.sectionBg }}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles size={16} style={{ color: '#21DBA4' }} />
+                      <p
+                        className="text-sm font-bold"
+                        style={{ color: theme.modal.title }}
+                      >
+                        {language === 'ko' ? 'AI 핵심 요약' : 'AI Summary'}
+                      </p>
+                    </div>
+                    <p
+                      className="text-sm leading-[1.7] break-words whitespace-pre-line"
+                      style={{ color: theme.modal.body }}
+                    >
                       {previewClip.summary}
                     </p>
                   </div>
                 )}
 
-                {/* Memo */}
-                {previewClip.memo && (
-                  <div className={cn(
-                    "p-4 rounded-lg border-l-[3px] border-[#21DBA4]",
-                    isDark ? "bg-[#21DBA4]/8" : "bg-[#21DBA4]/5"
-                  )}>
-                    <p className={cn(
-                      "text-xs font-semibold uppercase tracking-wide mb-2",
-                      isDark ? "text-gray-500" : "text-gray-400"
-                    )}>
-                      {language === 'ko' ? '내 메모' : 'My Notes'}
-                    </p>
-                    <p className={cn(
-                      "text-sm leading-[1.7] break-words",
-                      isDark ? "text-gray-300" : "text-gray-600"
-                    )}>
-                      {previewClip.memo}
+                {/* Content - 원문 내용 */}
+                {previewClip.content && (
+                  <div
+                    className="p-4 rounded-lg"
+                    style={{ backgroundColor: theme.modal.sectionBg }}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <FileText size={16} style={{ color: theme.modal.label }} />
+                      <p
+                        className="text-sm font-bold"
+                        style={{ color: theme.modal.title }}
+                      >
+                        Content
+                      </p>
+                    </div>
+                    <p
+                      className="text-sm leading-[1.7] break-words whitespace-pre-line"
+                      style={{ color: theme.modal.body }}
+                    >
+                      {previewClip.content.length > 1500
+                        ? previewClip.content.substring(0, 1500) + '...'
+                        : previewClip.content
+                      }
                     </p>
                   </div>
                 )}
 
-                {/* Original Content */}
-                {previewClip.content && (
-                  <div className={cn(
-                    "p-4 rounded-lg",
-                    isDark ? "bg-gray-800/60" : "bg-gray-50"
-                  )}>
-                    <p className={cn(
-                      "text-xs font-semibold uppercase tracking-wide mb-2",
-                      isDark ? "text-gray-500" : "text-gray-400"
-                    )}>
-                      {language === 'ko' ? '원본 콘텐츠' : 'Original Content'}
+                {/* Memo */}
+                {previewClip.notes && (
+                  <div
+                    className="p-4 rounded-lg border-l-[3px] border-[#21DBA4]"
+                    style={{ backgroundColor: theme.modal.memoBg }}
+                  >
+                    <p
+                      className="text-xs font-semibold uppercase tracking-wide mb-2"
+                      style={{ color: theme.modal.label }}
+                    >
+                      {language === 'ko' ? '내 메모' : 'My Notes'}
                     </p>
-                    <p className={cn(
-                      "text-sm leading-[1.7] break-words whitespace-pre-line",
-                      isDark ? "text-gray-400" : "text-gray-500"
-                    )}>
-                      {previewClip.content.substring(0, 500)}{previewClip.content.length > 500 ? '...' : ''}
+                    <p
+                      className="text-sm leading-[1.7] break-words"
+                      style={{ color: theme.modal.body }}
+                    >
+                      {previewClip.notes}
                     </p>
                   </div>
                 )}
@@ -763,10 +807,11 @@ const ContentStudio = ({
                     href={previewClip.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={cn(
-                      "block text-xs p-3 rounded-lg truncate",
-                      isDark ? "bg-gray-800/60 text-[#21DBA4]" : "bg-gray-50 text-[#21DBA4]"
-                    )}
+                    className="block text-xs p-3 rounded-lg truncate hover:underline"
+                    style={{
+                      backgroundColor: theme.modal.sectionBg,
+                      color: '#21DBA4'
+                    }}
                   >
                     🔗 {previewClip.url}
                   </a>
@@ -775,16 +820,18 @@ const ContentStudio = ({
             </div>
 
             {/* Footer */}
-            <div className={cn(
-              "flex-none flex items-center justify-end gap-2 px-5 py-4 border-t",
-              isDark ? "border-[#454545]" : "border-gray-200"
-            )}>
+            <div
+              className="flex-none flex items-center justify-end gap-2 px-5 py-4 border-t"
+              style={{ borderColor: theme.modal.border }}
+            >
               <button
                 onClick={() => setPreviewClip(null)}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isDark ? "text-gray-400 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-100"
-                )}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
+                style={{
+                  color: theme.modal.body,
+                  borderColor: theme.modal.border,
+                  backgroundColor: 'transparent'
+                }}
               >
                 {language === 'ko' ? '닫기' : 'Close'}
               </button>
@@ -1167,18 +1214,45 @@ const ContentStudio = ({
                   </span>
                 )}
               </div>
-              <button
-                onClick={onSelectAll}
-                disabled={clips.length === 0}
-                className={cn(
-                  "text-xs font-bold transition-colors",
-                  clips.length === 0 ? "opacity-40 cursor-not-allowed" : "text-[#21DBA4] hover:underline"
-                )}
-              >
-                {clips.length > 0 && selectedClips.length === clips.length
-                  ? (language === 'ko' ? '전체 해제' : 'Deselect All')
-                  : (language === 'ko' ? '전체 선택' : 'Select All')}
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Sort Toggle */}
+                <button
+                  onClick={() => {
+                    const newOrder = (clipSortOrder || 'newest') === 'newest' ? 'oldest' : 'newest';
+                    console.log('[Sort Debug] Button clicked. Current:', clipSortOrder, 'New:', newOrder);
+                    if (onSortOrderChange) {
+                      onSortOrderChange(newOrder);
+                    } else {
+                      console.error('[Sort Debug] onSortOrderChange is undefined!');
+                    }
+                  }}
+                  disabled={clips.length === 0}
+                  className={cn(
+                    "text-xs font-medium flex items-center gap-1 transition-colors",
+                    clips.length === 0 ? "opacity-40 cursor-not-allowed" : "hover:text-[#21DBA4]"
+                  )}
+                  style={{ color: isDark ? '#A1A1AA' : '#6B7280' }}
+                >
+                  <ArrowUpDown size={12} />
+                  {(clipSortOrder || 'newest') === 'newest'
+                    ? (language === 'ko' ? '최신순' : 'Newest')
+                    : (language === 'ko' ? '오래된순' : 'Oldest')
+                  }
+                </button>
+                {/* Select All */}
+                <button
+                  onClick={onSelectAll}
+                  disabled={clips.length === 0}
+                  className={cn(
+                    "text-xs font-bold transition-colors",
+                    clips.length === 0 ? "opacity-40 cursor-not-allowed" : "text-[#21DBA4] hover:underline"
+                  )}
+                >
+                  {clips.length > 0 && selectedClips.length === clips.length
+                    ? (language === 'ko' ? '전체 해제' : 'Deselect All')
+                    : (language === 'ko' ? '전체 선택' : 'Select All')}
+                </button>
+              </div>
             </div>
 
             {/* Clip List */}
@@ -1403,6 +1477,7 @@ export const AIInsightsDashboard = ({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [studioClips, setStudioClips] = useState<any[]>([]);
+  const [clipSortOrder, setClipSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [isLoading, setIsLoading] = useState(true);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
 
@@ -1623,11 +1698,10 @@ export const AIInsightsDashboard = ({
   }, [studioFilteredLinks, selectedSources, categories]);
 
   const filteredClips = useMemo(() => {
-    // studioClips is the explicit "Loaded" clips. 
-    // If we want real-time filtering on the "Result Window" as well, we usually filter studioClips.
-    // The user requirement "Result window scroll" + "Real-time count" suggests consistent behavior.
     if (studioClips.length === 0) return [];
-    let result = studioClips;
+    let result = [...studioClips];
+
+    // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(c =>
@@ -1636,8 +1710,16 @@ export const AIInsightsDashboard = ({
         c.summary?.toLowerCase().includes(q)
       );
     }
+
+    // Sort by date
+    result.sort((a, b) => {
+      const dateA = parseDate(a.createdAt)?.getTime() || 0;
+      const dateB = parseDate(b.createdAt)?.getTime() || 0;
+      return clipSortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
     return result.slice(0, 100);
-  }, [studioClips, searchQuery]);
+  }, [studioClips, searchQuery, clipSortOrder]);
 
   // Load clips with specific dates (bypasses stale state issue)
   const loadClipsWithDates = useCallback((startDate: string, endDate: string) => {
@@ -1983,7 +2065,10 @@ export const AIInsightsDashboard = ({
         onGenerate={handleGenerate} isGenerating={generatingReport} searchQuery={searchQuery} onSearchChange={setSearchQuery}
         startDate={studioStartDate} endDate={studioEndDate} onStartDateChange={setStudioStartDate} onEndDateChange={setStudioEndDate}
         onLoadClips={handleLoadClips} loadClipsWithDates={loadClipsWithDates} onClearResults={clearResults} language={language} isDark={isDark} theme={theme}
-        // 새로 추가된 필터/정렬 props
+        // 정렬 props
+        clipSortOrder={clipSortOrder}
+        onSortOrderChange={setClipSortOrder}
+        // 필터 props
         availableSources={availableSources}
         selectedSources={selectedSources}
         onToggleSource={(domain: string) => setSelectedSources(prev => prev.includes(domain) ? prev.filter(d => d !== domain) : [...prev, domain])}
