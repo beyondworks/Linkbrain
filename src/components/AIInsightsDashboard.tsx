@@ -692,7 +692,7 @@ const ContentStudio = ({
 
             {/* Content - Only vertical scroll */}
             <div
-              className="flex-1 overflow-y-auto overflow-x-hidden"
+              className={`flex-1 overflow-y-auto overflow-x-hidden ${isDark ? 'dark-scrollbar' : 'light-scrollbar'}`}
               style={{ color: theme.modal.body }}
             >
               <div className="px-6 pt-6 pb-10 space-y-6">
@@ -861,7 +861,7 @@ const ContentStudio = ({
       )}
 
       <div className={cn(
-        "col-span-12 bg-gradient-to-b border rounded-3xl p-1 relative overflow-hidden group",
+        "col-span-12 bg-gradient-to-b border rounded-3xl p-4 relative overflow-hidden group",
         isDark ? "from-[#1E1E1E] to-[#121212]" : "from-gray-50 to-white",
         theme.cardBorder
       )} style={theme.cardBorderStyle}>
@@ -869,8 +869,8 @@ const ContentStudio = ({
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#21DBA4] blur-[180px] opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-700" />
 
         <div
-          className="backdrop-blur-sm rounded-[20px] p-6 lg:p-8 h-full"
-          style={{ backgroundColor: isDark ? 'rgba(18, 18, 18, 0.5)' : 'rgba(255, 255, 255, 0.8)' }}
+          className="backdrop-blur-sm rounded-2xl p-6 lg:p-8 h-full"
+          style={{ backgroundColor: isDark ? '#131313' : 'rgba(255, 255, 255, 0.8)' }}
         >
           <div className="flex flex-col gap-6 h-full">
 
@@ -1265,7 +1265,7 @@ const ContentStudio = ({
               }}
             >
               <div
-                className="flex-1"
+                className={`flex-1 ${isDark ? 'dark-scrollbar' : 'light-scrollbar'}`}
                 style={{
                   overflowY: 'auto',
                   backgroundColor: isDark ? '#131313' : '#f9fafb'
@@ -1718,6 +1718,7 @@ export const AIInsightsDashboard = ({
       return clipSortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
+    console.log('[filteredClips] Recalculated with sortOrder:', clipSortOrder, 'count:', result.length, 'first createdAt:', result[0]?.createdAt);
     return result.slice(0, 100);
   }, [studioClips, searchQuery, clipSortOrder]);
 
@@ -1962,7 +1963,7 @@ export const AIInsightsDashboard = ({
                   {language === 'ko' ? '기간 지정' : 'Custom'}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
+              <PopoverContent className={`w-auto p-0 ${isDark ? 'dark' : ''}`} align="end">
                 <Calendar
                   initialFocus
                   mode="range"
@@ -1974,6 +1975,7 @@ export const AIInsightsDashboard = ({
                   }}
                   numberOfMonths={1}
                   pagedNavigation
+                  className={isDark ? 'bg-[#1a1a1a] border-[#333] rounded-lg' : ''}
                 />
               </PopoverContent>
             </Popover>

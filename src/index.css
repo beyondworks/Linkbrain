@@ -5942,3 +5942,87 @@ html {
 .animate-shake {
   animation: shake 0.8s ease-in-out infinite;
 }
+
+/* Dark mode scrollbar */
+.dark-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 4px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
+/* Light mode scrollbar */
+.light-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.light-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.light-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.light-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Calendar Dark Mode */
+.dark .rdp {
+  --rdp-background-color: #1a1a1a;
+  --rdp-accent-color: #21DBA4;
+  --rdp-accent-color-dark: #1bc290;
+}
+
+.dark .rdp-day_selected {
+  background-color: #21DBA4 !important;
+  color: #000 !important;
+}
+
+.dark .rdp-day_today {
+  border: 1px solid #21DBA4;
+}
+
+.dark .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: rgba(33, 219, 164, 0.15);
+}
+
+.dark .rdp-caption_label {
+  color: #fff;
+}
+
+.dark .rdp-head_cell {
+  color: #9ca3af;
+}
+
+.dark .rdp-day {
+  color: #e5e7eb;
+}
+
+.dark .rdp-day_outside {
+  color: #4b5563;
+}
+
+.dark .rdp-nav_button {
+  color: #9ca3af;
+}
+
+.dark .rdp-nav_button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
