@@ -13,6 +13,7 @@ export interface UserPreferences {
     theme: 'light' | 'dark' | 'system';
     language: 'en' | 'ko';
     showThumbnails: boolean;
+    viewMode: 'grid' | 'list';
     notifications: NotificationSettings;
 }
 
@@ -20,6 +21,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     theme: 'system',
     language: 'ko',
     showThumbnails: true,
+    viewMode: 'grid',
     notifications: {
         weeklyDigest: true,
         productUpdates: true,

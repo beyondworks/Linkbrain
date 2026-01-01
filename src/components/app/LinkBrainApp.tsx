@@ -376,7 +376,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    }, [firebaseCollections]);
 
    const [sidebarOpen, setSidebarOpen] = useState(false);
-   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+   const viewMode = preferences.viewMode;
+   const setViewMode = (mode: 'grid' | 'list') => updatePreference('viewMode', mode);
    const [activeTab, setActiveTab] = useState(() => {
       return localStorage.getItem('activeTab') || initialTab;
    });
