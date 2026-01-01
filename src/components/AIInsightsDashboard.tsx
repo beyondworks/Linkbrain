@@ -69,12 +69,12 @@ const useTheme = (isDark: boolean) => ({
   cardBorder: isDark ? 'border-[#454545]' : 'border-gray-200',
   cardBorderStyle: isDark ? { borderColor: '#454545' } : {},
   cardHover: isDark ? 'hover:border-[#555555]' : 'hover:border-gray-300',
-  itemBg: isDark ? 'bg-[#252525]' : 'bg-gray-50',
+  itemBg: isDark ? 'bg-[#131313]' : 'bg-gray-50',
   itemHover: isDark ? 'hover:bg-[#2D2D2D]' : 'hover:bg-gray-100',
-  border: isDark ? 'border-[#3A3A3A]' : 'border-gray-200',
-  borderStyle: isDark ? { borderColor: '#3A3A3A' } : {},
+  border: isDark ? 'border-[#454545]' : 'border-gray-200',
+  borderStyle: isDark ? { borderColor: '#454545' } : {},
   divider: isDark ? 'bg-[#2D2D2D]' : 'bg-gray-200',
-  inputBg: isDark ? 'bg-[#252525]' : 'bg-white',
+  inputBg: isDark ? 'bg-[#131313]' : 'bg-white',
 });
 
 // ═══════════════════════════════════════════════════
@@ -198,71 +198,77 @@ const SavePatternHeatmapCard = ({ links, isDark, theme, language, period }: any)
   }, [links, language]);
 
   return (
-    <div className={cn("col-span-12 lg:col-span-4 border rounded-3xl p-6 flex flex-col h-full overflow-visible", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
-      <div className="flex justify-between items-center mb-6">
-        <h3 className={cn("text-base font-bold flex items-center gap-2", theme.text)}>
-          <Clock className="w-4 h-4 text-[#21DBA4]" />
-          {language === 'ko' ? '수집 패턴' : 'Save Pattern'}
-        </h3>
-        <span className={cn("text-xs px-2 py-0.5 rounded-full", isDark ? "bg-[#333333]" : "bg-gray-100", theme.textMuted)}>
-          {heatmapData.totalClips}{language === 'ko' ? '개' : ' clips'}
-        </span>
-      </div>
-      <Tooltip.Provider delayDuration={100}>
-        <div className={cn("flex-1 flex flex-col justify-center gap-2 rounded-2xl p-4", theme.itemBg)}>
-          {heatmapData.days.map((day: string, i: number) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className={cn("text-[10px] w-8 font-medium", theme.textMuted)}>{day}</span>
-              <div className="flex-1 flex gap-1 h-5">
-                {heatmapData.grid[i].map((val: number, idx: number) => {
-                  const intensity = heatmapData.maxCount > 0 ? val / heatmapData.maxCount : 0;
-                  const startHour = idx * 2;
-                  const endHour = startHour + 2;
-                  return (
-                    <Tooltip.Root key={idx}>
-                      <Tooltip.Trigger asChild>
-                        <div
-                          className="flex-1 rounded-sm transition-all duration-200 cursor-pointer hover:scale-110 hover:ring-2 hover:ring-[#21DBA4]/50"
-                          style={{
-                            backgroundColor: val === 0
-                              ? (isDark ? '#2D2D2D' : '#E5E7EB')
-                              : `rgba(33, 219, 164, ${0.3 + intensity * 0.7})`,
-                          }}
-                        />
-                      </Tooltip.Trigger>
-                      <Tooltip.Portal>
-                        <Tooltip.Content
-                          side="top"
-                          sideOffset={8}
-                          className={cn(
-                            "px-3 py-2 rounded-lg text-xs font-medium shadow-xl border z-[9999]",
-                            isDark ? "bg-[#252525] text-white border-[#333333]" : "bg-white text-gray-900 border-gray-200"
-                          )}
-                        >
-                          <div className="font-bold mb-1">{day} {startHour}:00~{endHour}:00</div>
-                          <div className="text-[#21DBA4] font-bold">{val}{language === 'ko' ? '개 클립' : ' clips'}</div>
-                          <Tooltip.Arrow className={isDark ? "fill-[#252525]" : "fill-white"} />
-                        </Tooltip.Content>
-                      </Tooltip.Portal>
-                    </Tooltip.Root>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+    <div className={cn("col-span-12 lg:col-span-4 border rounded-3xl p-4 flex flex-col h-full overflow-visible", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
+      {/* Inner Container for better visibility */}
+      <div
+        className="rounded-2xl p-4 flex-1 flex flex-col"
+        style={{ backgroundColor: isDark ? '#131313' : '#f9fafb' }}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className={cn("text-base font-bold flex items-center gap-2", theme.text)}>
+            <Clock className="w-4 h-4 text-[#21DBA4]" />
+            {language === 'ko' ? '수집 패턴' : 'Save Pattern'}
+          </h3>
+          <span className={cn("text-xs px-2 py-0.5 rounded-full", theme.textMuted)} style={{ backgroundColor: isDark ? '#333333' : '#f3f4f6' }}>
+            {heatmapData.totalClips}{language === 'ko' ? '개' : ' clips'}
+          </span>
         </div>
-      </Tooltip.Provider>
-      <p className={cn("mt-4 text-xs text-center", theme.textMuted)}>
-        {links.length > 0 ? (
-          <>
-            {language === 'ko' ? '주로 ' : 'Mostly at '}
-            <span className="text-[#21DBA4] font-bold">{heatmapData.peakTimeLabel}</span>
-            {language === 'ko' ? '에 집중됩니다.' : ''}
-          </>
-        ) : (
-          language === 'ko' ? '이 기간에 저장된 클립이 없습니다.' : 'No clips saved in this period.'
-        )}
-      </p>
+        <Tooltip.Provider delayDuration={100}>
+          <div className="flex-1 flex flex-col justify-center gap-2">
+            {heatmapData.days.map((day: string, i: number) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className={cn("text-[10px] w-8 font-medium", theme.textMuted)}>{day}</span>
+                <div className="flex-1 flex gap-1 h-5">
+                  {heatmapData.grid[i].map((val: number, idx: number) => {
+                    const intensity = heatmapData.maxCount > 0 ? val / heatmapData.maxCount : 0;
+                    const startHour = idx * 2;
+                    const endHour = startHour + 2;
+                    return (
+                      <Tooltip.Root key={idx}>
+                        <Tooltip.Trigger asChild>
+                          <div
+                            className="flex-1 rounded-sm transition-all duration-200 cursor-pointer hover:scale-110 hover:ring-2 hover:ring-[#21DBA4]/50"
+                            style={{
+                              backgroundColor: val === 0
+                                ? (isDark ? '#2D2D2D' : '#E5E7EB')
+                                : `rgba(33, 219, 164, ${0.3 + intensity * 0.7})`,
+                            }}
+                          />
+                        </Tooltip.Trigger>
+                        <Tooltip.Portal>
+                          <Tooltip.Content
+                            side="top"
+                            sideOffset={8}
+                            className={cn(
+                              "px-3 py-2 rounded-lg text-xs font-medium shadow-xl border z-[9999]",
+                              isDark ? "bg-[#131313] text-white border-[#454545]" : "bg-white text-gray-900 border-gray-200"
+                            )}
+                          >
+                            <div className="font-bold mb-1">{day} {startHour}:00~{endHour}:00</div>
+                            <div className="text-[#21DBA4] font-bold">{val}{language === 'ko' ? '개 클립' : ' clips'}</div>
+                            <Tooltip.Arrow className={isDark ? "fill-[#131313]" : "fill-white"} />
+                          </Tooltip.Content>
+                        </Tooltip.Portal>
+                      </Tooltip.Root>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Tooltip.Provider>
+        <p className={cn("mt-4 text-xs text-center", theme.textMuted)}>
+          {links.length > 0 ? (
+            <>
+              {language === 'ko' ? '주로 ' : 'Mostly at '}
+              <span className="text-[#21DBA4] font-bold">{heatmapData.peakTimeLabel}</span>
+              {language === 'ko' ? '에 집중됩니다.' : ''}
+            </>
+          ) : (
+            language === 'ko' ? '이 기간에 저장된 클립이 없습니다.' : 'No clips saved in this period.'
+          )}
+        </p>
+      </div>
     </div>
   );
 };
@@ -330,37 +336,49 @@ const InterestEvolutionCard = ({ links, allLinks, isDark, theme, language, perio
   }, [allLinks, links, language, categories]);
 
   return (
-    <div className={cn("border rounded-3xl p-6 flex flex-col", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
-      <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
-        <div className="w-3 h-3 rounded-full border-2 border-[#21DBA4]" />
-        {language === 'ko' ? '관심사 변화' : 'Interest Evolution'}
-      </h3>
+    <div className={cn("border rounded-3xl p-4 flex flex-col", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
+      {/* Inner Container for better visibility */}
+      <div
+        className="rounded-2xl p-4 flex-1 flex flex-col"
+        style={{ backgroundColor: isDark ? '#131313' : '#f9fafb' }}
+      >
+        <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
+          <div className="w-3 h-3 rounded-full border-2 border-[#21DBA4]" />
+          {language === 'ko' ? '관심사 변화' : 'Interest Evolution'}
+        </h3>
 
-      <div className="space-y-3 flex-1">
-        {interestFlow.map((item: any, idx: number) => (
-          <div
-            key={idx}
-            className={cn(
-              "p-4 rounded-2xl border transition-colors",
-              item.active ? "bg-[#21DBA4]/5 border-[#21DBA4]/30" : cn(theme.itemBg, theme.border)
-            )}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className={cn("text-xs font-bold", item.active ? "text-[#21DBA4]" : theme.textSub)}>
-                {item.label}
-              </span>
-              <span className={cn("text-[10px]", theme.textMuted)}>({item.dateRange})</span>
-            </div>
-            <div className={cn("text-lg font-bold", item.active ? "text-[#21DBA4]" : theme.text)}>
-              {item.topic}
-            </div>
-            {item.count > 0 && (
-              <div className={cn("text-xs mt-1", theme.textMuted)}>
-                {item.count}{language === 'ko' ? '개' : ''} · {item.percentage}%
+        <div className="space-y-3 flex-1">
+          {interestFlow.map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className={cn(
+                "p-4 rounded-2xl border transition-colors",
+                item.active ? "border-[#21DBA4]/30" : theme.border
+              )}
+              style={{
+                ...(!item.active ? theme.borderStyle : {}),
+                backgroundColor: item.active
+                  ? (isDark ? 'rgba(33, 219, 164, 0.05)' : 'rgba(33, 219, 164, 0.05)')
+                  : (isDark ? '#1E1E1E' : 'white')
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className={cn("text-xs font-bold", item.active ? "text-[#21DBA4]" : theme.textSub)}>
+                  {item.label}
+                </span>
+                <span className={cn("text-[10px]", theme.textMuted)}>({item.dateRange})</span>
               </div>
-            )}
-          </div>
-        ))}
+              <div className={cn("text-lg font-bold", item.active ? "text-[#21DBA4]" : theme.text)}>
+                {item.topic}
+              </div>
+              {item.count > 0 && (
+                <div className={cn("text-xs mt-1", theme.textMuted)}>
+                  {item.count}{language === 'ko' ? '개' : ''} · {item.percentage}%
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -459,34 +477,40 @@ const KeywordsCard = ({ links, isDark, theme, language, period, categories }: an
   return (
     <>
       {/* Keywords Card */}
-      <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
-        <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
-          <Hash className="w-4 h-4 text-[#21DBA4]" />
-          {periodLabel} {language === 'ko' ? '키워드' : 'Keywords'}
-        </h3>
-        <div className="space-y-3">
-          {keywords.length > 0 ? keywords.map((k: any, i: number) => (
-            <div key={i} className={cn(
-              "p-4 rounded-2xl border hover:border-[#21DBA4] cursor-pointer transition-colors",
-              theme.itemBg, theme.border
-            )}>
-              <div className="flex items-center justify-between">
-                <span className={cn("text-sm font-bold", theme.text)}>#{k.tag}</span>
-                <span className="text-xs font-medium text-[#21DBA4]">{k.count}{language === 'ko' ? '회' : 'x'}</span>
+      <div className={cn("border rounded-3xl p-4 h-full", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
+        {/* Inner Container for better visibility */}
+        <div
+          className="rounded-2xl p-4 h-full"
+          style={{ backgroundColor: isDark ? '#131313' : '#f9fafb' }}
+        >
+          <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
+            <Hash className="w-4 h-4 text-[#21DBA4]" />
+            {periodLabel} {language === 'ko' ? '키워드' : 'Keywords'}
+          </h3>
+          <div className="space-y-3">
+            {keywords.length > 0 ? keywords.map((k: any, i: number) => (
+              <div key={i} className={cn(
+                "p-4 rounded-2xl border hover:border-[#21DBA4] cursor-pointer transition-colors",
+                theme.border
+              )} style={{ ...theme.borderStyle, backgroundColor: isDark ? '#1E1E1E' : 'white' }}>
+                <div className="flex items-center justify-between">
+                  <span className={cn("text-sm font-bold", theme.text)}>#{k.tag}</span>
+                  <span className="text-xs font-medium text-[#21DBA4]">{k.count}{language === 'ko' ? '회' : 'x'}</span>
+                </div>
               </div>
-            </div>
-          )) : (
-            <div className={cn("p-4 rounded-2xl border text-center", theme.itemBg, theme.border)}>
-              <span className={cn("text-xs", theme.textSub)}>{language === 'ko' ? '데이터 없음' : 'No data'}</span>
-            </div>
-          )}
+            )) : (
+              <div className={cn("p-4 rounded-2xl border text-center", theme.border)} style={{ ...theme.borderStyle, backgroundColor: isDark ? '#1E1E1E' : 'white' }}>
+                <span className={cn("text-xs", theme.textSub)}>{language === 'ko' ? '데이터 없음' : 'No data'}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
   );
 };
 
-const TrendsCard = ({ links, theme, language = 'ko', categories, period = 'weekly' }: any) => {
+const TrendsCard = ({ links, isDark, theme, language = 'ko', categories, period = 'weekly' }: any) => {
   // Theme is now passed directly as an object, matching other cards
 
   const { trends } = useMemo(() => {
@@ -543,33 +567,39 @@ const TrendsCard = ({ links, theme, language = 'ko', categories, period = 'weekl
   }, [links, language, period, categories]);
 
   return (
-    <div className={cn("border rounded-3xl p-6 h-full", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
-      <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
-        <TrendingUp className="w-4 h-4 text-[#21DBA4]" />
-        {language === 'ko' ? '트렌드' : 'Trends'}
-      </h3>
-      <div className="space-y-3">
-        {trends.length > 0 ? trends.map((t: any, i: number) => (
-          <div key={i} className={cn(
-            "p-4 rounded-2xl border transition-colors",
-            theme.itemBg, theme.border
-          )}>
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className={cn("text-sm font-bold truncate", theme.text)}>{t.name}</div>
-                <div className={cn("text-[10px]", t.type === 'rising' ? "text-blue-400" : "text-red-400")}>{t.detail}</div>
+    <div className={cn("border rounded-3xl p-4 h-full", theme.card, theme.cardBorder)} style={theme.cardBorderStyle}>
+      {/* Inner Container for better visibility */}
+      <div
+        className="rounded-2xl p-4 h-full"
+        style={{ backgroundColor: isDark ? '#131313' : '#f9fafb' }}
+      >
+        <h3 className={cn("text-sm font-bold mb-4 flex items-center gap-2", theme.text)}>
+          <TrendingUp className="w-4 h-4 text-[#21DBA4]" />
+          {language === 'ko' ? '트렌드' : 'Trends'}
+        </h3>
+        <div className="space-y-3">
+          {trends.length > 0 ? trends.map((t: any, i: number) => (
+            <div key={i} className={cn(
+              "p-4 rounded-2xl border transition-colors",
+              theme.border
+            )} style={{ ...theme.borderStyle, backgroundColor: isDark ? '#1E1E1E' : 'white' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className={cn("text-sm font-bold truncate", theme.text)}>{t.name}</div>
+                  <div className={cn("text-[10px]", t.type === 'rising' ? "text-blue-400" : "text-red-400")}>{t.detail}</div>
+                </div>
+                <span className={cn(
+                  "text-xs font-bold shrink-0",
+                  t.type === 'rising' ? "text-blue-400" : "text-red-400"
+                )}>{t.change}</span>
               </div>
-              <span className={cn(
-                "text-xs font-bold shrink-0",
-                t.type === 'rising' ? "text-blue-400" : "text-red-400"
-              )}>{t.change}</span>
             </div>
-          </div>
-        )) : (
-          <div className={cn("p-4 rounded-2xl border text-center", theme.itemBg, theme.border)}>
-            <span className={cn("text-xs", theme.textSub)}>{language === 'ko' ? '비교할 데이터가 부족합니다' : 'Need more data'}</span>
-          </div>
-        )}
+          )) : (
+            <div className={cn("p-4 rounded-2xl border text-center", theme.border)} style={{ ...theme.borderStyle, backgroundColor: isDark ? '#1E1E1E' : 'white' }}>
+              <span className={cn("text-xs", theme.textSub)}>{language === 'ko' ? '비교할 데이터가 부족합니다' : 'Need more data'}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -791,7 +821,10 @@ const ContentStudio = ({
         {/* Gradient Decor */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#21DBA4] blur-[180px] opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-700" />
 
-        <div className={cn("backdrop-blur-sm rounded-[20px] p-6 lg:p-8 h-full", isDark ? "bg-[#121212]/50" : "bg-white/80")}>
+        <div
+          className="backdrop-blur-sm rounded-[20px] p-6 lg:p-8 h-full"
+          style={{ backgroundColor: isDark ? 'rgba(18, 18, 18, 0.5)' : 'rgba(255, 255, 255, 0.8)' }}
+        >
           <div className="flex flex-col gap-6 h-full">
 
             {/* Header */}
@@ -941,8 +974,9 @@ const ContentStudio = ({
                           "px-3 py-2 rounded-lg text-xs font-bold border shrink-0 transition-all",
                           selectedPeriod === opt.id
                             ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                            : cn(isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                            : cn(isDark ? "bg-gray-800 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
                         )}
+                        style={selectedPeriod !== opt.id && isDark ? { borderColor: '#454545' } : undefined}
                       >
                         {opt.label}
                       </button>
@@ -969,10 +1003,11 @@ const ContentStudio = ({
                             selectedSources.includes(src.group)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
                               : cn(
-                                isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                isDark ? "bg-gray-800 text-gray-300" : "bg-white border-gray-200 text-gray-600",
                                 "hover:border-[#21DBA4] hover:text-[#21DBA4]"
                               )
                           )}
+                          style={!selectedSources.includes(src.group) && isDark ? { borderColor: '#454545' } : undefined}
                         >
                           {src.group} <span className="opacity-60">({src.count})</span>
                         </button>
@@ -1005,8 +1040,9 @@ const ContentStudio = ({
                             "px-3 py-2 rounded-lg text-xs font-medium border transition-all",
                             selectedSources.includes(src.group)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                              : cn(isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                              : cn(isDark ? "bg-gray-800 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
                           )}
+                          style={!selectedSources.includes(src.group) && isDark ? { borderColor: '#454545' } : undefined}
                         >
                           {src.group} <span className="opacity-60">({src.count})</span>
                         </button>
@@ -1034,10 +1070,11 @@ const ContentStudio = ({
                             selectedCategories.includes(cat.id)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
                               : cn(
-                                isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600",
+                                isDark ? "bg-gray-800 text-gray-300" : "bg-white border-gray-200 text-gray-600",
                                 "hover:border-[#21DBA4] hover:text-[#21DBA4]"
                               )
                           )}
+                          style={!selectedCategories.includes(cat.id) && isDark ? { borderColor: '#454545' } : undefined}
                         >
                           {cat.name} <span className="opacity-60">({cat.count})</span>
                         </button>
@@ -1070,8 +1107,9 @@ const ContentStudio = ({
                             "px-3 py-2 rounded-lg text-xs font-medium border transition-all",
                             selectedCategories.includes(cat.id)
                               ? "bg-[#21DBA4] text-black border-[#21DBA4]"
-                              : cn(isDark ? "bg-gray-800 border-[#454545] text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
+                              : cn(isDark ? "bg-gray-800 text-gray-300" : "bg-white border-gray-200 text-gray-600", "hover:border-[#21DBA4]")
                           )}
+                          style={!selectedCategories.includes(cat.id) && isDark ? { borderColor: '#454545' } : undefined}
                         >
                           {cat.name} <span className="opacity-60">({cat.count})</span>
                         </button>
@@ -1082,7 +1120,10 @@ const ContentStudio = ({
               )}
 
               {/* Mobile Action Buttons (Bottom of Filters) */}
-              <div className={cn("flex md:hidden items-center gap-2 mt-4 pt-2 border-t", isDark ? "border-[#454545]" : "border-gray-200")}>
+              <div
+                className={cn("flex md:hidden items-center gap-2 mt-4 pt-2 border-t", isDark ? "" : "border-gray-200")}
+                style={isDark ? { borderColor: '#454545' } : undefined}
+              >
                 <button
                   onClick={onClearResults}
                   disabled={clips.length === 0}
@@ -1091,8 +1132,9 @@ const ContentStudio = ({
                     clips.length === 0
                       ? "opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-800 text-gray-400 border-transparent"
                       : "hover:border-red-400 hover:text-red-400 bg-white dark:bg-gray-900",
-                    isDark ? "border-[#454545] text-gray-400" : "border-gray-200 text-gray-500"
+                    isDark ? "text-gray-400" : "border-gray-200 text-gray-500"
                   )}
+                  style={clips.length !== 0 && isDark ? { borderColor: '#454545' } : undefined}
                 >
                   {language === 'ko' ? '초기화' : 'Clear'}
                 </button>
@@ -1142,11 +1184,18 @@ const ContentStudio = ({
             {/* Clip List */}
             <div
               className={cn("w-full border rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out", theme.cardBorder)}
-              style={{ height: clips.length > 0 ? '600px' : 'auto', ...(theme.cardBorderStyle || {}) }}
+              style={{
+                height: clips.length > 0 ? '600px' : 'auto',
+                ...theme.cardBorderStyle,
+                backgroundColor: isDark ? '#1E1E1E' : 'white'
+              }}
             >
               <div
-                className={cn("flex-1", theme.itemBg)}
-                style={{ overflowY: 'auto' }}
+                className="flex-1"
+                style={{
+                  overflowY: 'auto',
+                  backgroundColor: isDark ? '#131313' : '#f9fafb'
+                }}
               >
                 {clips.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -1235,9 +1284,12 @@ const ContentStudio = ({
                       "flex-1 px-4 py-3 rounded-xl border cursor-pointer transition-all flex items-center justify-center gap-2",
                       selectedContentType === type.id
                         ? "bg-[#21DBA4] text-black border-[#21DBA4] font-bold"
-                        : cn(isDark ? "bg-[#252525]" : "bg-white", theme.cardBorder, theme.textMuted, "hover:border-[#21DBA4] hover:text-[#21DBA4]")
+                        : cn(theme.cardBorder, theme.textMuted, "hover:border-[#21DBA4] hover:text-[#21DBA4]")
                     )}
-                    style={selectedContentType !== type.id ? theme.cardBorderStyle : undefined}
+                    style={selectedContentType !== type.id
+                      ? { ...theme.cardBorderStyle, backgroundColor: isDark ? '#131313' : 'white' }
+                      : undefined
+                    }
                   >
                     {type.icon}
                     <span className="text-sm font-medium">{type.label}</span>
@@ -1779,10 +1831,13 @@ export const AIInsightsDashboard = ({
           </div>
 
           {/* Dashboard Date Filter Control (Pill Style) */}
-          <div className={cn(
-            "flex items-center p-1 rounded-full shadow-sm border w-full md:w-auto justify-between md:justify-start overflow-x-auto",
-            isDark ? "bg-gray-800 border-[#454545]" : "bg-white border-gray-200"
-          )}>
+          <div
+            className={cn(
+              "flex items-center p-1 rounded-full shadow-sm border w-full md:w-auto justify-between md:justify-start overflow-x-auto",
+              isDark ? "bg-gray-800" : "bg-white border-gray-200"
+            )}
+            style={isDark ? { borderColor: '#454545' } : undefined}
+          >
             {/* Week Button */}
             <button
               onClick={() => handleDashboardPeriodChange('weekly')}
@@ -1900,11 +1955,14 @@ export const AIInsightsDashboard = ({
         <InterestEvolutionCard
           links={dashboardFilteredLinks}
           allLinks={allActiveLinks}
+          isDark={isDark}
           theme={theme}
           language={language}
+          categories={categories}
         />
         <KeywordsCard
           links={dashboardFilteredLinks}
+          isDark={isDark}
           categories={categories}
           theme={theme}
           language={language}
@@ -1912,6 +1970,7 @@ export const AIInsightsDashboard = ({
         />
         <TrendsCard
           links={dashboardFilteredLinks}
+          isDark={isDark}
           categories={categories}
           theme={theme}
           language={language}
