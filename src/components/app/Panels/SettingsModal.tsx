@@ -148,15 +148,15 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
                                 <div className="space-y-3 md:space-y-4">
                                     <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('appearance')}</h4>
                                     <div className="grid grid-cols-3 gap-2 md:gap-3">
-                                        <button onClick={() => setTheme('light')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'light' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setTheme('light')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'light' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#555] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <Sun size={18} className={settings.themePreference === 'light' ? 'text-[#21DBA4]' : 'text-slate-400'} />
                                             <span className={`text-xs font-bold ${theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>Light</span>
                                         </button>
-                                        <button onClick={() => setTheme('dark')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'dark' ? 'border-[#21DBA4] bg-[#21DBA4]/10' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setTheme('dark')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'dark' ? 'border-[#21DBA4] bg-[#21DBA4]/10' : theme === 'dark' ? 'border-[#555] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <Moon size={18} className={settings.themePreference === 'dark' ? 'text-[#21DBA4]' : 'text-slate-400'} />
                                             <span className={`text-xs font-bold ${settings.themePreference === 'dark' ? 'text-[#21DBA4]' : theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>Dark</span>
                                         </button>
-                                        <button onClick={() => setTheme('system')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'system' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setTheme('system')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${settings.themePreference === 'system' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#555] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <Monitor size={18} className={settings.themePreference === 'system' ? 'text-[#21DBA4]' : 'text-slate-400'} />
                                             <span className={`text-xs font-bold ${theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>{t('systemTheme')}</span>
                                         </button>
@@ -166,7 +166,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
                                 <div className="space-y-3 md:space-y-4">
                                     <h4 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">{t('language')}</h4>
                                     <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                        <button onClick={() => setLanguage('en')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'en' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setLanguage('en')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'en' ? 'border-[#21DBA4] bg-[#E0FBF4]/30' : theme === 'dark' ? 'border-[#555] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <svg width="59" height="59" viewBox="0 0 59 59" fill="none" className="w-8 h-8 rounded-full shadow-sm">
                                                 <path d="M45.2333 4.52333C40.6117 1.67166 35.3017 0 29.5 0V4.52333H45.2333Z" fill="#ED4C5C" />
                                                 <path d="M29.5 9.04664H50.74C49.0683 7.37498 47.2 5.80165 45.2333 4.52332H29.5V9.04664Z" fill="white" />
@@ -186,7 +186,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
                                             </svg>
                                             <span className={`text-xs md:text-sm font-bold ${theme === 'dark' ? 'text-neutral-400' : 'text-slate-600'}`}>{t('english')}</span>
                                         </button>
-                                        <button onClick={() => setLanguage('ko')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'ko' ? 'border-[#21DBA4] bg-[#21DBA4]/10' : theme === 'dark' ? 'border-[#404040] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
+                                        <button onClick={() => setLanguage('ko')} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all ${language === 'ko' ? 'border-[#21DBA4] bg-[#21DBA4]/10' : theme === 'dark' ? 'border-[#555] bg-[#2D2D2D] opacity-80' : 'border-slate-200 opacity-60'}`}>
                                             <svg width="59" height="59" viewBox="0 0 59 59" fill="none" className="w-8 h-8 rounded-full shadow-sm">
                                                 <path d="M29.5 58.9999C45.7924 58.9999 58.9999 45.7924 58.9999 29.5C58.9999 13.2076 45.7924 0 29.5 0C13.2076 0 0 13.2076 0 29.5C0 45.7924 13.2076 58.9999 29.5 58.9999Z" fill="#F5F5F5" />
                                                 <path d="M21.0436 31.1717C23.7969 33.04 27.6319 32.2533 29.5002 29.5C31.3686 26.7467 35.1052 25.96 37.9569 27.8283C40.6119 29.5983 41.3986 33.04 39.9236 35.695C43.1686 30.1883 41.6936 23.01 36.1869 19.3717C30.5819 15.635 23.0102 17.11 19.2736 22.715C19.1753 22.9117 19.0769 23.1084 18.9786 23.2067C17.6019 26.0583 18.4869 29.4017 21.0436 31.1717Z" fill="#ED4C5C" />
@@ -378,7 +378,7 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                             type="text"
                             value={firstNameInput}
                             onChange={(e) => setFirstNameInput(e.target.value)}
-                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-[#252525] border-[#404040] text-white focus:bg-[#2D2D2D]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-[#252525] border-[#555] text-white focus:bg-[#2D2D2D]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
                         />
                     </div>
                     <div className="space-y-1.5 md:space-y-2">
@@ -387,13 +387,13 @@ const AccountSettings = ({ theme, t, user }: { theme: string; t: (key: string) =
                             type="text"
                             value={lastNameInput}
                             onChange={(e) => setLastNameInput(e.target.value)}
-                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-[#252525] border-[#404040] text-white focus:bg-[#2D2D2D]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
+                            className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm ${theme === 'dark' ? 'bg-[#252525] border-[#555] text-white focus:bg-[#2D2D2D]' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white focus:border-[#21DBA4]'}`}
                         />
                     </div>
                 </div>
                 <div className="space-y-1.5 md:space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase">{t('email')}</label>
-                    <input type="email" defaultValue={email} disabled className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm opacity-60 cursor-not-allowed ${theme === 'dark' ? 'bg-[#252525] border-[#404040] text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`} />
+                    <input type="email" defaultValue={email} disabled className={`w-full p-2.5 md:p-3 rounded-xl border outline-none transition-all font-bold text-sm opacity-60 cursor-not-allowed ${theme === 'dark' ? 'bg-[#252525] border-[#555] text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`} />
                 </div>
 
                 {/* Save Button - Only visible when there are changes */}
@@ -657,7 +657,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
             </div>
 
             {/* Existing Integrations */}
-            <div className="p-3 md:p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 text-blue-700">
+            <div className={`p-3 md:p-4 rounded-xl flex gap-3 ${theme === 'dark' ? 'bg-slate-800 border border-[#555] text-slate-300' : 'bg-blue-50 border border-blue-100 text-blue-700'}`}>
                 <Zap size={20} className="shrink-0 mt-0.5" />
                 <div className="text-xs md:text-sm">
                     <p className="font-bold mb-0.5">{t('language') === '언어' ? '더 강력한 브레인 만들기' : 'Supercharge your Brain'}</p>
@@ -834,7 +834,7 @@ const DataSettings = ({ theme, t }: { theme: string; t: (key: string) => string 
 
         <div className={`pt-6 md:pt-8 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
             <h4 className={`text-xs md:text-sm font-bold uppercase tracking-wider mb-3 md:mb-4 ${theme === 'dark' ? 'text-red-400' : 'text-red-500'}`}>{t('dangerZone')}</h4>
-            <button onClick={() => toast.error("Account deletion is disabled in demo")} className={`w-full p-3 md:p-4 rounded-xl font-bold flex items-center justify-between transition-colors text-sm md:text-base ${theme === 'dark' ? 'bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100'}`}>
+            <button onClick={() => toast.error("Account deletion is disabled in demo")} className={`w-full p-3 md:p-4 rounded-xl font-bold flex items-center justify-between transition-colors text-sm md:text-base ${theme === 'dark' ? 'bg-transparent border border-red-500/50 text-red-400 hover:bg-red-500/10' : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100'}`}>
                 <span>{t('deleteAccount')}</span>
                 <ChevronRight size={16} />
             </button>
