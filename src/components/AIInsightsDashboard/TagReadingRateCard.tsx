@@ -76,35 +76,41 @@ export const TagReadingRateCard = ({
 }: TagReadingRateCardProps) => (
     <div
         className={cn(
-            "col-span-12 md:col-span-4 border rounded-3xl p-6 transition-colors",
+            "col-span-12 md:col-span-4 border rounded-3xl p-4 transition-colors",
             theme.card, theme.cardBorder, theme.cardHover
         )}
         style={theme.cardBorderStyle}
     >
-        {/* Header - Using SectionHeaderCompact pattern */}
-        <SectionHeaderCompact
-            icon={<Zap size={20} className="text-orange-400 shrink-0" />}
-            title={language === 'ko' ? '태그별 열람율' : 'Tag Reading Rate'}
-            theme={theme}
-        />
+        {/* Inner Container for better visibility */}
+        <div
+            className="rounded-2xl p-4"
+            style={{ backgroundColor: isDark ? '#131313' : '#f9fafb' }}
+        >
+            {/* Header - Using SectionHeaderCompact pattern */}
+            <SectionHeaderCompact
+                icon={<Zap size={20} className="text-orange-400 shrink-0" />}
+                title={language === 'ko' ? '태그별 열람율' : 'Tag Reading Rate'}
+                theme={theme}
+            />
 
-        {/* Bar Gauges */}
-        <div className="space-y-4">
-            {tagData.length > 0 ? (
-                tagData.map((item, idx) => (
-                    <BarGauge
-                        key={idx}
-                        label={item.tag}
-                        percentage={item.rate}
-                        isDark={isDark}
-                        theme={theme}
-                    />
-                ))
-            ) : (
-                <div className={cn("text-sm text-center py-6", theme.textSub)}>
-                    {language === 'ko' ? '클립을 읽어보세요!' : 'Start reading clips!'}
-                </div>
-            )}
+            {/* Bar Gauges */}
+            <div className="space-y-4">
+                {tagData.length > 0 ? (
+                    tagData.map((item, idx) => (
+                        <BarGauge
+                            key={idx}
+                            label={item.tag}
+                            percentage={item.rate}
+                            isDark={isDark}
+                            theme={theme}
+                        />
+                    ))
+                ) : (
+                    <div className={cn("text-sm text-center py-6", theme.textSub)}>
+                        {language === 'ko' ? '클립을 읽어보세요!' : 'Start reading clips!'}
+                    </div>
+                )}
+            </div>
         </div>
     </div>
 );

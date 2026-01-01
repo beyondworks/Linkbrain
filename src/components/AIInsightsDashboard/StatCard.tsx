@@ -44,7 +44,7 @@ export const StatCard = ({
         <div
             onClick={onClick}
             className={cn(
-                "border rounded-3xl p-6 transition-colors group",
+                "border rounded-3xl p-4 transition-colors group",
                 theme.card,
                 theme.cardBorder,
                 theme.cardHover,
@@ -52,33 +52,39 @@ export const StatCard = ({
             )}
             style={theme.cardBorderStyle}
         >
-            {/* Header row: icon + label */}
-            <div className="flex items-center gap-3 mb-4">
-                {icon}
-                <span className={cn("text-sm font-bold", theme.text)}>{label}</span>
-                <div className="flex-1" />
-                {showTrend && (
-                    <span className="text-xs font-bold text-[#21DBA4] bg-[#21DBA4]/10 px-2 py-0.5 rounded-full">
-                        {trend}
+            {/* Inner Container for better visibility */}
+            <div
+                className="rounded-2xl p-4"
+                style={{ backgroundColor: isDark ? '#131313' : '#f9fafb' }}
+            >
+                {/* Header row: icon + label */}
+                <div className="flex items-center gap-3 mb-4">
+                    {icon}
+                    <span className={cn("text-sm font-bold", theme.text)}>{label}</span>
+                    <div className="flex-1" />
+                    {showTrend && (
+                        <span className="text-xs font-bold text-[#21DBA4] bg-[#21DBA4]/10 px-2 py-0.5 rounded-full">
+                            {trend}
+                        </span>
+                    )}
+                </div>
+
+                {/* Main value - large and prominent */}
+                <div className="flex items-baseline gap-2">
+                    <span className={cn("text-4xl font-bold tracking-tight tabular-nums", theme.text)}>
+                        {value}
                     </span>
+                    <span className={cn("text-lg", theme.textMuted)}>{unit}</span>
+                </div>
+
+                {/* Sub text */}
+                {sub && (
+                    <div className={cn("mt-2 flex items-center gap-1", onClick && "text-[#21DBA4] group-hover:text-[#1bc490]")}>
+                        <span className={cn("text-xs", onClick ? "" : theme.textSub)}>{sub}</span>
+                        {onClick && <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />}
+                    </div>
                 )}
             </div>
-
-            {/* Main value - large and prominent */}
-            <div className="flex items-baseline gap-2">
-                <span className={cn("text-4xl font-bold tracking-tight tabular-nums", theme.text)}>
-                    {value}
-                </span>
-                <span className={cn("text-lg", theme.textMuted)}>{unit}</span>
-            </div>
-
-            {/* Sub text */}
-            {sub && (
-                <div className={cn("mt-2 flex items-center gap-1", onClick && "text-[#21DBA4] group-hover:text-[#1bc490]")}>
-                    <span className={cn("text-xs", onClick ? "" : theme.textSub)}>{sub}</span>
-                    {onClick && <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />}
-                </div>
-            )}
         </div>
     );
 };
