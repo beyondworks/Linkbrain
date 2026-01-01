@@ -2128,7 +2128,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     {/* Notification List */}
                                     <div className="max-h-80 overflow-y-auto">
                                        {appNotifications.length === 0 ? (
-                                          <div className={`py-8 text-center text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                          <div className={`py-12 text-center text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
                                              {language === 'ko' ? '알림이 없습니다' : 'No notifications'}
                                           </div>
                                        ) : (
