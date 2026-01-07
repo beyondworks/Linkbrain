@@ -1924,7 +1924,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          <div
             ref={pullIndicatorRef}
             className={`md:hidden fixed top-0 left-0 right-0 z-[50] flex flex-col items-center justify-center pointer-events-none ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
-            style={{ height: '70px', opacity: 0, willChange: 'opacity', paddingTop: 'env(safe-area-inset-top, 0px)' }}
+            style={{ height: '70px', opacity: 0, willChange: 'opacity' }}
          >
             <div
                ref={pullSpinnerRef}
@@ -1963,10 +1963,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             <main
                ref={mainContentRef}
                className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar"
-               style={{
-                  WebkitOverflowScrolling: 'touch',
-                  paddingTop: 'env(safe-area-inset-top, 0px)'
-               }}
+               style={{ WebkitOverflowScrolling: 'touch' }}
                onClick={() => { if (isRearranging) setIsRearranging(false); }}
             >
 
