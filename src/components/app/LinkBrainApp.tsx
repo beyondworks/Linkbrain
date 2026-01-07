@@ -1951,12 +1951,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                  <div key={col.id} className="group relative flex items-center">
                                     <NavItem
                                        icon={<Library size={16} />}
-                                       label={col.name}
+                                       label={`${col.name}  ${links.filter(l => l.collectionIds.includes(col.id) && !l.isArchived).length}`}
                                        active={activeTab === col.id}
                                        onClick={() => setActiveTab(col.id)}
                                        iconClassName={col.color.replace('bg-', 'text-')}
-                                       count={links.filter(l => l.collectionIds.includes(col.id) && !l.isArchived).length || undefined}
-                                       className="flex-1"
+                                       className="flex-1 pr-8"
                                        theme={theme}
                                     />
                                     <button
