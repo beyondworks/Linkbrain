@@ -23,18 +23,20 @@ export const NavItem = ({ icon, label, count, active, onClick, iconClassName, cl
                 : 'hover:bg-slate-50 text-slate-500 hover:text-slate-900'}`}
     >
         <div className={`${active ? 'text-[#21DBA4]' : iconClassName || 'text-slate-400'}`}>{icon}</div>
-        <span className="text-sm font-bold flex-1 truncate text-[14px] text-inherit">
-            {label.replace('[Beta]', '')}
+        <span className="text-sm font-bold flex-1 truncate text-[14px] text-inherit flex items-center gap-2">
+            <span className="truncate">
+                {label.replace('[Beta]', '')}
+            </span>
             {label.includes('[Beta]') && (
-                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-[9px] font-extrabold tracking-wide">
+                <span className="px-1.5 py-0.5 rounded-full bg-[#21DBA4]/10 text-[#21DBA4] text-[9px] font-extrabold tracking-wide shrink-0">
                     BETA
                 </span>
             )}
+            {count !== undefined && (
+                <span className={`text-[12px] font-medium shrink-0 ${active ? 'text-[#21DBA4]/70' : theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
+                    {count}
+                </span>
+            )}
         </span>
-        {count !== undefined && (
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${active ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : theme === 'dark' ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400'}`}>
-                {count}
-            </span>
-        )}
     </div>
 );
