@@ -611,7 +611,7 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
             >
                 {/* Header Toolbar */}
                 <div
-                    className={`border-b flex items-center justify-between px-6 shrink-0 transition-all ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'} md:h-16 md:pt-0`}
+                    className={`border-b flex items-center justify-between px-6 shrink-0 transition-all ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'} md:h-[72px] md:pt-0`}
                     style={{
                         height: isMobile ? 'calc(4rem + env(safe-area-inset-top))' : undefined,
                         paddingTop: isMobile ? 'env(safe-area-inset-top)' : undefined

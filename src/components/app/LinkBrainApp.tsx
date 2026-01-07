@@ -2117,16 +2117,16 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            style={{ top: 'calc(72px + env(safe-area-inset-top, 0px))' }}
                         >
                            <div className="relative w-full max-w-md mx-auto">
-                              <Search size={16} className={"absolute left-3 top-1/2-translate-y-1/2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-400') + " "} />
+                              <Search size={16} className={"absolute left-3 top-1/2 -translate-y-1/2 " + (theme === 'dark' ? 'text-slate-400' : 'text-[#21DBA4]') + " "} />
                               <input
                                  autoFocus
                                  type="text"
                                  value={searchQuery}
                                  onChange={(e) => setSearchQuery(e.target.value)}
                                  placeholder={t('searchPlaceholder')}
-                                 className={"w-full h-10 rounded-full pl-12 pr-12 text-base md:text-xs focus:outline-none focus:ring-2 focus:ring-[#21DBA4] / 20 transition-all " + (theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white') + " "}
+                                 className={"w-full h-10 rounded-full pl-12 pr-12 text-base md:text-xs border-2 border-[#21DBA4] focus:outline-none focus:ring-2 focus:ring-[#21DBA4]/20 transition-all " + (theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-white text-slate-900 placeholder:text-slate-400') + " "}
                               />
-                              <button onClick={() => setMobileSearchOpen(false)} className={"absolute right-3 top-1/2-translate-y-1/2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-400') + " "}>
+                              <button onClick={() => setMobileSearchOpen(false)} className={"absolute right-3 top-1/2 -translate-y-1/2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-400') + " "}>
                                  <X size={16} />
                               </button>
                            </div>
