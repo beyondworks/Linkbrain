@@ -1816,7 +1816,6 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              <SortableChip
                                                 key={src}
                                                 id={`src-${src}`}
-                                                isEditing={isRearranging}
                                                 onLongPress={() => setIsRearranging(true)}
                                                 onClick={() => { }}
                                                 className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
