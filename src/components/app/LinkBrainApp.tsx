@@ -2310,7 +2310,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         {/* Mobile Sticky Header Section */}
                         {activeTab !== 'insights' && !selectedLink && (
-                           <div className={"md:hidden-mx-4 px-4 pt-4 " + (theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]') + " "}>
+                           <div className={"md:hidden -mx-4 px-4 pt-4 " + (theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]') + " "}>
                               {/* Title + Count + Mobile Notification-Scrolls with content */}
                               <div className="mb-2 flex items-start justify-between">
                                  <div className="flex-1 min-w-0">

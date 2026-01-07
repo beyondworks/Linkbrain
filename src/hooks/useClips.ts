@@ -142,13 +142,17 @@ export const useClips = (): UseClipsReturn => {
         try {
             // Call /api/analyze for content analysis
             // keepalive: true ensures the request continues even if user navigates away
+            // Get user language preference from localStorage
+            const language = localStorage.getItem('linkbrain_language') || 'ko';
+            const apiLanguage = language === 'ko' ? 'KR' : 'EN';
+
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${await user.getIdToken()}`,
                 },
-                body: JSON.stringify({ url, userId: user.uid }),
+                body: JSON.stringify({ url, userId: user.uid, language: apiLanguage }),
                 keepalive: true, // Continue request even if page navigates away
             });
 
