@@ -63,8 +63,39 @@
   </style>
 </head>
 
-<body>
-  <div id="root"></div>
+<body style="margin:0;padding:0;">
+  <div id="app-error" style="display:none;position:fixed;inset:0;background:#fee2e2;padding:20px;overflow:auto;z-index:999999;font-family:monospace;">
+    <h2 style="color:#dc2626;margin:0 0 10px;">Error</h2>
+    <pre id="error-message" style="color:#7f1d1d;white-space:pre-wrap;word-break:break-all;font-size:12px;"></pre>
+  </div>
+  <div id="root">
+    <div id="app-loading" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;z-index:99999;">
+      <div style="text-align:center;">
+        <div style="width:60px;height:60px;border:4px solid #21DBA4;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
+        <p style="margin-top:16px;color:#64748b;font-family:system-ui;font-weight:500;">Loading...</p>
+      </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      var el = document.getElementById('app-error');
+      var msgEl = document.getElementById('error-message');
+      if (el && msgEl) {
+        el.style.display = 'block';
+        msgEl.textContent = msg + '\n\nFile: ' + url + '\nLine: ' + line + '\n\n' + (error && error.stack ? error.stack : '');
+      }
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      var el = document.getElementById('app-error');
+      var msgEl = document.getElementById('error-message');
+      if (el && msgEl) {
+        el.style.display = 'block';
+        msgEl.textContent = 'Unhandled Promise Rejection:\n\n' + (e.reason && e.reason.stack ? e.reason.stack : e.reason);
+      }
+    });
+  </script>
   <div id="modal-root" style="position: relative; z-index: 999999;"></div>
   <script type="module" src="/src/main.tsx"></script>
 
@@ -84,10 +115,10 @@
     </div>
   </div>
 
-  <!-- Service Worker 등록 & PWA 설치 로직 -->
   <script>
-    // Service Worker 등록
-    if ('serviceWorker' in navigator) {
+    var isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    
+    if (!isCapacitor && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))

@@ -13,8 +13,8 @@ import { InstallInstructionModal } from './components/common/InstallInstructionM
 import { LandingLanguage } from './constants/landingTranslations';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { ShareTarget } from './components/app/ShareTarget';
+import { setStatusBarForTheme } from './lib/capacitor';
 
-// New Landing Page Components
 import { LandingLayout } from './components/landing/LandingLayout';
 import { HomePage } from './components/landing/HomePage';
 import { LinkBrainFeatures } from './components/landing/LinkBrainFeatures';
@@ -63,7 +63,10 @@ const App = () => {
 
   const theme = themePreference === 'system' ? systemTheme : themePreference;
 
-  // Handlers adapted to match old signature or direct usage
+  useEffect(() => {
+    setStatusBarForTheme(theme);
+  }, [theme]);
+
   const handleSetTheme = (newTheme: 'light' | 'dark' | 'system') => {
     updatePreference('theme', newTheme);
   };

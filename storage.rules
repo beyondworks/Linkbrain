@@ -11,6 +11,12 @@ service firebase.storage {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // [NEW] Admin Popups
+    match /popups/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
     // User profile images
     match /users/{userId}/profile/{fileName} {
       allow read: if true; // Public read for profile images

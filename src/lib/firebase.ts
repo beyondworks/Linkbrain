@@ -1,8 +1,14 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, browserLocalPersistence, browserSessionPersistence, setPersistence } from "firebase/auth";
-import { getFirestore, initializeFirestore, persistentLocalCache, memoryLocalCache } from "firebase/firestore";
+import { 
+    getAuth, 
+    indexedDBLocalPersistence,
+    initializeAuth,
+    browserLocalPersistence
+} from "firebase/auth";
+import { getFirestore, initializeFirestore, memoryLocalCache } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { Capacitor } from "@capacitor/core";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,33 +22,36 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Auth with fallback persistence
-export const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence).catch(() => {
-    // Fallback to session persistence if local storage is blocked
-    setPersistence(auth, browserSessionPersistence).catch(console.error);
-});
+const isNative = Capacitor.isNativePlatform();
 
-// Initialize Firestore with memory cache fallback (avoids IndexedDB issues)
+let auth;
+if (isNative) {
+    auth = initializeAuth(app, {
+        persistence: indexedDBLocalPersistence
+    });
+} else {
+    auth = getAuth(app);
+}
+
+export { auth };
+
 let db: ReturnType<typeof getFirestore>;
 try {
     db = initializeFirestore(app, {
         localCache: memoryLocalCache()
     });
 } catch (e) {
-    // If already initialized, just get the instance
     db = getFirestore(app);
 }
 export { db };
 
 export const storage = getStorage(app);
 
-// Analytics with support check
 export let analytics: ReturnType<typeof getAnalytics> | null = null;
-isSupported().then((supported) => {
-    if (supported) {
-        analytics = getAnalytics(app);
-    }
-}).catch(() => {
-    console.warn('Analytics not supported in this environment');
-});
+if (!isNative) {
+    isSupported().then((supported) => {
+        if (supported) {
+            analytics = getAnalytics(app);
+        }
+    }).catch(() => {});
+}

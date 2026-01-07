@@ -8,12 +8,16 @@ import {
    createUserWithEmailAndPassword,
    signInWithPopup,
    signInWithRedirect,
+   signInWithCredential,
    getRedirectResult,
    GoogleAuthProvider
 } from 'firebase/auth';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 const googleProvider = new GoogleAuthProvider();
+const isNativePlatform = Capacitor.isNativePlatform();
 
 export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLanguage }: { onLogin: () => void, theme?: 'light' | 'dark', language?: 'en' | 'ko', setLanguage?: (lang: 'en' | 'ko') => void }) => {
    const [isLoading, setIsLoading] = useState(false);
@@ -117,8 +121,9 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
       }
    };
 
-   // Handle redirect result on component mount (for browsers that used redirect)
    useEffect(() => {
+      if (isNativePlatform) return;
+      
       getRedirectResult(auth)
          .then((result) => {
             if (result?.user) {
@@ -136,18 +141,26 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
    const handleGoogleLogin = async () => {
       setIsLoading(true);
       setError('');
+      
       try {
-         await signInWithPopup(auth, googleProvider);
-         toast.success(language === 'ko' ? '로그인 성공!' : 'Login successful!');
+         if (isNativePlatform) {
+            const result = await FirebaseAuthentication.signInWithGoogle();
+            if (result.credential?.idToken) {
+               const credential = GoogleAuthProvider.credential(result.credential.idToken);
+               await signInWithCredential(auth, credential);
+               toast.success(language === 'ko' ? '로그인 성공!' : 'Login successful!');
+            }
+         } else {
+            await signInWithPopup(auth, googleProvider);
+            toast.success(language === 'ko' ? '로그인 성공!' : 'Login successful!');
+         }
       } catch (err: any) {
          console.error('[Firebase Auth] Google login error:', err);
 
-         // If popup was blocked or closed, try redirect method
-         if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+         if (!isNativePlatform && (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user')) {
             toast.info(language === 'ko' ? '팝업이 차단되어 다른 방식으로 로그인합니다...' : 'Popup blocked, trying alternative login...');
             try {
                await signInWithRedirect(auth, googleProvider);
-               // Will redirect, so no need to handle success here
                return;
             } catch (redirectErr: any) {
                console.error('[Firebase Auth] Redirect fallback error:', redirectErr);
@@ -155,8 +168,9 @@ export const LoginPage = ({ onLogin, theme = 'light', language = 'ko', setLangua
                toast.error(getErrorMessage(redirectErr.code));
             }
          } else {
-            setError(getErrorMessage(err.code));
-            toast.error(getErrorMessage(err.code));
+            const errorMessage = err.message || getErrorMessage(err.code);
+            setError(errorMessage);
+            toast.error(errorMessage);
          }
       } finally {
          setIsLoading(false);
