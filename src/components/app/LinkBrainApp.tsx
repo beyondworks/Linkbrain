@@ -472,7 +472,18 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    }, [activeTab]);
    const [searchQuery, setSearchQuery] = useState('');
    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>('grid');
+   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'grid'>(() => {
+      if (typeof window !== 'undefined') {
+         const saved = localStorage.getItem('mobileViewMode');
+         if (saved === 'list' || saved === 'grid') return saved;
+      }
+      return 'grid';
+   });
+
+   // Persist mobileViewMode to localStorage
+   useEffect(() => {
+      localStorage.setItem('mobileViewMode', mobileViewMode);
+   }, [mobileViewMode]);
 
    // Scroll position for scroll-to-top button
    const [showScrollTop, setShowScrollTop] = useState(false);
@@ -1126,11 +1137,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          const result = await analyzeUrl(url);
 
          // If user selected category or collections, update the clip
+         console.log('[handleAddLink] result.id:', result.id, 'categoryId:', categoryId, 'collectionIds:', collectionIds);
          if ((categoryId || (collectionIds && collectionIds.length > 0)) && result.id) {
             const updates: any = {};
             if (categoryId) updates.category = categoryId;
             if (collectionIds && collectionIds.length > 0) updates.collectionIds = collectionIds;
+            console.log('[handleAddLink] Updating clip with:', updates);
             await updateClip(result.id, updates);
+            console.log('[handleAddLink] Clip updated successfully');
          }
 
          // Mark as complete
@@ -1910,7 +1924,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          <div
             ref={pullIndicatorRef}
             className={`md:hidden fixed top-0 left-0 right-0 z-[50] flex flex-col items-center justify-center pointer-events-none ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
-            style={{ height: '70px', opacity: 0, willChange: 'opacity' }}
+            style={{ height: '70px', opacity: 0, willChange: 'opacity', paddingTop: 'env(safe-area-inset-top, 0px)' }}
          >
             <div
                ref={pullSpinnerRef}
@@ -1949,12 +1963,17 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             <main
                ref={mainContentRef}
                className="flex-1 flex flex-col h-full overflow-y-auto relative w-full isolate no-scrollbar"
-               style={{ WebkitOverflowScrolling: 'touch' }}
+               style={{
+                  WebkitOverflowScrolling: 'touch',
+                  paddingTop: 'env(safe-area-inset-top, 0px)'
+               }}
                onClick={() => { if (isRearranging) setIsRearranging(false); }}
             >
 
                {/* Top Header */}
-               <header className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}>
+               <header
+                  className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}
+               >
                   <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
                      <div className="flex items-center gap-3 md:hidden">
                         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
@@ -2790,22 +2809,142 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               </div>
                            </>
                         ) : (
-                           <div className="space-y-4">
-                              {filteredLinks.map(link => (
-                                 <LinkRow
-                                    key={link.id}
-                                    data={link}
-                                    selected={selectedItemIds.has(link.id)}
-                                    selectionMode={isSelectionMode}
-                                    onToggleSelect={() => toggleSelection(link.id)}
-                                    onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
-                                    onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
-                                    categories={categories}
-                                    theme={theme}
-                                    showThumbnails={showThumbnails}
-                                 />
-                              ))}
-                           </div>
+                           <>
+                              {/* Mobile 2-Column Grid View */}
+                              <div className={`md:hidden ${mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden'}`}>
+                                 {filteredLinks.map(link => {
+                                    const source = getSourceInfo(link.url);
+                                    const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
+                                    return (
+                                       <div
+                                          key={link.id}
+                                          onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
+                                          className={`rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
+                                             } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : ''}`}
+                                       >
+                                          {/* 16:9 Image */}
+                                          <div className="relative aspect-video overflow-hidden">
+                                             <img
+                                                src={link.image || '/placeholder.jpg'}
+                                                alt=""
+                                                className="w-full h-full object-cover"
+                                             />
+                                             {/* Source Badge - Always show */}
+                                             <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white ${source.color || 'bg-slate-600'}`}>
+                                                {source.icon}{source.name}
+                                             </div>
+                                             {/* Favorite Star - Always show if favorite */}
+                                             {link.isFavorite && (
+                                                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
+                                                   <Star size={12} fill="white" className="text-white" />
+                                                </div>
+                                             )}
+                                             {/* Chat History Badge - Show if chatHistory exists */}
+                                             {link.chatHistory && link.chatHistory.length > 0 && (
+                                                <div className={`absolute ${link.isFavorite ? 'top-2 right-10' : 'top-2 right-2'} w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shadow-sm`}>
+                                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                                   </svg>
+                                                </div>
+                                             )}
+                                          </div>
+                                          {/* Content - flex-1 for consistent height */}
+                                          <div className="p-3 flex flex-col flex-1">
+                                             {/* URL */}
+                                             <div className={`flex items-center gap-1 text-[10px] mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                <span className="text-slate-400">⊙</span>
+                                                <span className="truncate">{truncatedUrl}</span>
+                                             </div>
+                                             {/* Title - fixed height for 2 lines */}
+                                             <h3 className={`text-xs font-bold leading-tight line-clamp-2 h-8 mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                                {link.title}
+                                             </h3>
+                                             {/* AI Summary - pushed to bottom with mt-auto */}
+                                             <div className={`mt-auto text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
+                                                <div className={`flex items-center gap-1 font-bold mb-1 text-[#21DBA4]`}>
+                                                   <span>✨</span> AI Summary
+                                                </div>
+                                                <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                                   {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 80) || 'No summary available'}
+                                                </p>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    );
+                                 })}
+                              </div>
+
+                              {/* Mobile List View */}
+                              <div className={`md:hidden ${mobileViewMode === 'list' ? 'flex flex-col gap-3' : 'hidden'}`}>
+                                 {filteredLinks.map(link => {
+                                    const source = getSourceInfo(link.url);
+                                    const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
+                                    return (
+                                       <div
+                                          key={link.id}
+                                          onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
+                                          className={`rounded-xl overflow-hidden cursor-pointer transition-all flex gap-3 p-3 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
+                                             } ${selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : ''}`}
+                                       >
+                                          {/* Thumbnail */}
+                                          <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden">
+                                             <img
+                                                src={link.image || '/placeholder.jpg'}
+                                                alt=""
+                                                className="w-full h-full object-cover"
+                                             />
+                                             {/* Source Badge */}
+                                             <div className={`absolute bottom-1 left-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white ${source.color || 'bg-slate-600'}`}>
+                                                {source.icon}
+                                             </div>
+                                          </div>
+                                          {/* Content - Matches thumbnail height (h-24 = 96px) */}
+                                          <div className="flex-1 min-w-0 h-24 flex flex-col justify-between">
+                                             {/* Title with inline badges */}
+                                             <div className="flex items-start gap-1.5">
+                                                <h3 className={`flex-1 min-w-0 text-sm font-bold leading-tight truncate ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                                                   {link.title}
+                                                </h3>
+                                                {link.isFavorite && <Star size={12} fill="currentColor" className="text-yellow-400 shrink-0 mt-0.5" />}
+                                                {link.chatHistory && link.chatHistory.length > 0 && (
+                                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#21DBA4] shrink-0 mt-0.5">
+                                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                                   </svg>
+                                                )}
+                                             </div>
+                                             {/* AI Summary - 2 lines */}
+                                             <div className={`text-[10px] p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]'}`}>
+                                                <div className={`flex items-center gap-1 font-bold text-[#21DBA4] mb-0.5`}>
+                                                   <span>✨</span> AI Summary
+                                                </div>
+                                                <p className={`line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                                   {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 100) || 'No summary'}
+                                                </p>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    );
+                                 })}
+                              </div>
+
+                              {/* Desktop List View */}
+                              <div className="hidden md:block space-y-4">
+                                 {filteredLinks.map(link => (
+                                    <LinkRow
+                                       key={link.id}
+                                       data={link}
+                                       selected={selectedItemIds.has(link.id)}
+                                       selectionMode={isSelectionMode}
+                                       onToggleSelect={() => toggleSelection(link.id)}
+                                       onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
+                                       onToggleFavorite={(e) => handleToggleFavorite(link.id, e)}
+                                       categories={categories}
+                                       theme={theme}
+                                       showThumbnails={showThumbnails}
+                                    />
+                                 ))}
+                              </div>
+                           </>
                         )}
 
                         {filteredLinks.length === 0 && activeTab !== 'insights' && (

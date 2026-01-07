@@ -588,9 +588,13 @@ html {
   --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
-html {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
+/* 
+ * NOTE: html 레벨 padding은 제거됨.
+ * Safe Area는 각 컴포넌트에서 개별적으로 처리 (header, sidebar, footer 등)
+ * - SheetContent: pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]
+ * - Main Header: style={{ top: 'env(safe-area-inset-top)' }}
+ * - Pull-to-refresh: style={{ top: 'env(safe-area-inset-top)' }}
+ */
 
 body.keyboard-open {
   padding-bottom: 0 !important;
