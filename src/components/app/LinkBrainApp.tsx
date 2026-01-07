@@ -70,7 +70,7 @@ import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { motion, AnimatePresence } from 'motion/react';
 import { DndContext, closestCenter, TouchSensor, MouseSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
-import { SortableChip } from './SortableChip';
+import { SortableChip, StaticChip } from './SortableChip';
 
 import { toast } from 'sonner';
 import {
@@ -1688,64 +1688,96 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            className="overflow-hidden"
                            style={{ zIndex: isRearranging ? 50 : 'auto', position: isRearranging ? 'relative' : undefined }}
                         >
-                           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                              <SortableContext items={sortedCategories.map(c => `cat-${c.id}`)} strategy={rectSortingStrategy}>
-                                 <div className="flex flex-wrap gap-2 px-3 py-2">
-                                    {sortedCategories.map((cat: Category) => {
-                                       const isActive = filterCategories.includes(cat.id);
-                                       // Match by both ID and name
-                                       const count = links.filter((l: LinkItem) => (l.categoryId === cat.id || l.categoryId?.toLowerCase() === cat.name?.toLowerCase()) && !l.isArchived).length;
+                           {isRearranging ? (
+                              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                                 <SortableContext items={sortedCategories.map(c => `cat-${c.id}`)} strategy={rectSortingStrategy}>
+                                    <div className="flex flex-wrap gap-2 px-3 py-2">
+                                       {sortedCategories.map((cat: Category) => {
+                                          const isActive = filterCategories.includes(cat.id);
+                                          const count = links.filter((l: LinkItem) => (l.categoryId === cat.id || l.categoryId?.toLowerCase() === cat.name?.toLowerCase()) && !l.isArchived).length;
+                                          return (
+                                             <SortableChip
+                                                key={cat.id}
+                                                id={`cat-${cat.id}`}
+                                                onLongPress={() => setIsRearranging(true)}
+                                                onClick={() => { }}
+                                                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
+                                                   ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                   : theme === 'dark'
+                                                      ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                      : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                   }`}
+                                                style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
+                                             >
+                                                <span>{cat.name}</span>
+                                                {count > 0 && (
+                                                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                                      ? 'bg-white/20 text-white'
+                                                      : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
+                                                      }`}>
+                                                      {count}
+                                                   </span>
+                                                )}
+                                             </SortableChip>
+                                          );
+                                       })}
+                                    </div>
+                                 </SortableContext>
+                                 <DragOverlay>
+                                    {activeId && activeId.startsWith('cat-') && (() => {
+                                       const catId = activeId.replace('cat-', '');
+                                       const cat = categories.find(c => c.id === catId);
+                                       if (!cat) return null;
+                                       const isActive = filterCategories.includes(catId);
                                        return (
-                                          <SortableChip
-                                             key={cat.id}
-                                             id={`cat-${cat.id}`}
-                                             isEditing={isRearranging}
-                                             onLongPress={() => setIsRearranging(true)}
-                                             onClick={() => !isRearranging && toggleFilter(setFilterCategories, cat.id)}
-                                             className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
-                                                ? 'bg-[#21DBA4] text-white shadow-sm'
+                                          <div
+                                             className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing ${isActive
+                                                ? 'bg-[#21DBA4] text-white'
                                                 : theme === 'dark'
-                                                   ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
-                                                   : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                   ? 'text-slate-800 ring-2 ring-[#21DBA4]'
+                                                   : 'text-slate-600 ring-2 ring-[#21DBA4]'
                                                 }`}
                                              style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
                                           >
                                              <span>{cat.name}</span>
-                                             {count > 0 && (
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
-                                                   ? 'bg-white/20 text-white'
-                                                   : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
-                                                   }`}>
-                                                   {count}
-                                                </span>
-                                             )}
-                                          </SortableChip>
+                                          </div>
                                        );
-                                    })}
-                                 </div>
-                              </SortableContext>
-                              <DragOverlay>
-                                 {activeId && activeId.startsWith('cat-') && (() => {
-                                    const catId = activeId.replace('cat-', '');
-                                    const cat = categories.find(c => c.id === catId);
-                                    if (!cat) return null;
-                                    const isActive = filterCategories.includes(catId);
+                                    })()}
+                                 </DragOverlay>
+                              </DndContext>
+                           ) : (
+                              <div className="flex flex-wrap gap-2 px-3 py-2">
+                                 {sortedCategories.map((cat: Category) => {
+                                    const isActive = filterCategories.includes(cat.id);
+                                    const count = links.filter((l: LinkItem) => (l.categoryId === cat.id || l.categoryId?.toLowerCase() === cat.name?.toLowerCase()) && !l.isArchived).length;
                                     return (
-                                       <div
-                                          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing ${isActive
-                                             ? 'bg-[#21DBA4] text-white'
+                                       <StaticChip
+                                          key={cat.id}
+                                          id={`cat-${cat.id}`}
+                                          onLongPress={() => setIsRearranging(true)}
+                                          onClick={() => toggleFilter(setFilterCategories, cat.id)}
+                                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
+                                             ? 'bg-[#21DBA4] text-white shadow-sm'
                                              : theme === 'dark'
-                                                ? 'text-slate-800 ring-2 ring-[#21DBA4]'
-                                                : 'text-slate-600 ring-2 ring-[#21DBA4]'
+                                                ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
+                                                : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
                                              }`}
                                           style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
                                        >
                                           <span>{cat.name}</span>
-                                       </div>
+                                          {count > 0 && (
+                                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                                ? 'bg-white/20 text-white'
+                                                : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
+                                                }`}>
+                                                {count}
+                                             </span>
+                                          )}
+                                       </StaticChip>
                                     );
-                                 })()}
-                              </DragOverlay>
-                           </DndContext>
+                                 })}
+                              </div>
+                           )}
                         </motion.div>
                      )}
                   </AnimatePresence>
@@ -1772,60 +1804,94 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            className="overflow-hidden"
                            style={{ zIndex: isRearranging ? 50 : 'auto', position: isRearranging ? 'relative' : undefined }}
                         >
-                           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                              <SortableContext items={sortedSources.map(s => `src-${s}`)} strategy={rectSortingStrategy}>
-                                 <div className="flex flex-wrap gap-2 px-3 py-2">
-                                    {sortedSources.map((src: string) => {
-                                       const isActive = filterSources.includes(src);
-                                       const count = links.filter((l: LinkItem) => getSourceInfo(l.url).name === src && !l.isArchived).length;
+                           {isRearranging ? (
+                              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                                 <SortableContext items={sortedSources.map(s => `src-${s}`)} strategy={rectSortingStrategy}>
+                                    <div className="flex flex-wrap gap-2 px-3 py-2">
+                                       {sortedSources.map((src: string) => {
+                                          const isActive = filterSources.includes(src);
+                                          const count = links.filter((l: LinkItem) => getSourceInfo(l.url).name === src && !l.isArchived).length;
 
+                                          return (
+                                             <SortableChip
+                                                key={src}
+                                                id={`src-${src}`}
+                                                isEditing={isRearranging}
+                                                onLongPress={() => setIsRearranging(true)}
+                                                onClick={() => { }}
+                                                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
+                                                   ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                   : theme === 'dark'
+                                                      ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                      : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                   }`}
+                                             >
+                                                <span>{src}</span>
+                                                {count > 0 && (
+                                                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                                      ? 'bg-white/20 text-white'
+                                                      : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
+                                                      }`}>
+                                                      {count}
+                                                   </span>
+                                                )}
+                                             </SortableChip>
+                                          );
+                                       })}
+                                    </div>
+                                 </SortableContext>
+                                 <DragOverlay>
+                                    {activeId && activeId.startsWith('src-') && (() => {
+                                       const src = activeId.replace('src-', '');
+                                       const isActive = filterSources.includes(src);
                                        return (
-                                          <SortableChip
-                                             key={src}
-                                             id={`src-${src}`}
-                                             isEditing={isRearranging}
-                                             onLongPress={() => setIsRearranging(true)}
-                                             onClick={() => !isRearranging && toggleFilter(setFilterSources, src)}
-                                             className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
-                                                ? 'bg-[#21DBA4] text-white shadow-sm'
+                                          <div
+                                             className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing ${isActive
+                                                ? 'bg-[#21DBA4] text-white'
                                                 : theme === 'dark'
-                                                   ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
-                                                   : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                   ? 'bg-slate-800 text-slate-400 ring-2 ring-[#21DBA4]'
+                                                   : 'bg-slate-100 text-slate-600 ring-2 ring-[#21DBA4]'
                                                 }`}
                                           >
                                              <span>{src}</span>
-                                             {count > 0 && (
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
-                                                   ? 'bg-white/20 text-white'
-                                                   : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
-                                                   }`}>
-                                                   {count}
-                                                </span>
-                                             )}
-                                          </SortableChip>
+                                          </div>
                                        );
-                                    })}
-                                 </div>
-                              </SortableContext>
-                              <DragOverlay>
-                                 {activeId && activeId.startsWith('src-') && (() => {
-                                    const src = activeId.replace('src-', '');
+                                    })()}
+                                 </DragOverlay>
+                              </DndContext>
+                           ) : (
+                              <div className="flex flex-wrap gap-2 px-3 py-2">
+                                 {sortedSources.map((src: string) => {
                                     const isActive = filterSources.includes(src);
+                                    const count = links.filter((l: LinkItem) => getSourceInfo(l.url).name === src && !l.isArchived).length;
+
                                     return (
-                                       <div
-                                          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing ${isActive
-                                             ? 'bg-[#21DBA4] text-white'
+                                       <StaticChip
+                                          key={src}
+                                          id={`src-${src}`}
+                                          onLongPress={() => setIsRearranging(true)}
+                                          onClick={() => toggleFilter(setFilterSources, src)}
+                                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 ${isActive
+                                             ? 'bg-[#21DBA4] text-white shadow-sm'
                                              : theme === 'dark'
-                                                ? 'bg-slate-800 text-slate-400 ring-2 ring-[#21DBA4]'
-                                                : 'bg-slate-100 text-slate-600 ring-2 ring-[#21DBA4]'
+                                                ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
                                              }`}
                                        >
                                           <span>{src}</span>
-                                       </div>
+                                          {count > 0 && (
+                                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive
+                                                ? 'bg-white/20 text-white'
+                                                : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
+                                                }`}>
+                                                {count}
+                                             </span>
+                                          )}
+                                       </StaticChip>
                                     );
-                                 })()}
-                              </DragOverlay>
-                           </DndContext>
+                                 })}
+                              </div>
+                           )}
                         </motion.div>
                      )}
                   </AnimatePresence>
@@ -1972,10 +2038,10 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   className={`sticky top-0 border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}
                   style={{
                      paddingTop: 'env(safe-area-inset-top, 0px)',
-                     minHeight: '72px'
+                     height: 'calc(72px + env(safe-area-inset-top, 0px))'
                   }}
                >
-                  <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
+                  <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-[72px]">
                      <div className="flex items-center gap-3 md:hidden">
                         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
                            <Menu size={20} />

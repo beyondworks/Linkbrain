@@ -1,112 +1,98 @@
 import { useRef, useCallback } from 'react';
 
-interface Options {
+interface LongPressOptions {
+    onLongPress: () => void;
+    onClick: () => void;
     delay?: number;
-    moveThreshold?: number; // pixels of movement allowed before canceling
 }
 
-const useLongPress = (
-    onLongPress: (event: React.MouseEvent | React.TouchEvent) => void,
-    onClick?: (event: React.MouseEvent | React.TouchEvent) => void,
-    { delay = 500, moveThreshold = 10 }: Options = {}
-) => {
-    const timeout = useRef<ReturnType<typeof setTimeout>>(null);
+export const useLongPress = ({ onLongPress, onClick, delay = 500 }: LongPressOptions) => {
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPress = useRef(false);
     const startPos = useRef<{ x: number; y: number } | null>(null);
-    const hasMoved = useRef(false);
-    const isTouchEvent = useRef(false); // Track if this interaction started with touch
 
-    const start = useCallback(
-        (event: React.MouseEvent | React.TouchEvent) => {
-            // If this is a mouse event but we're in a touch interaction, ignore it (simulated event)
-            if (!('touches' in event) && isTouchEvent.current) {
-                return;
-            }
+    const start = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+        // Only left click or single touch
+        if (e.type === 'mousedown' && (e as React.MouseEvent).button !== 0) return;
+        if (e.type === 'touchstart' && (e as React.TouchEvent).touches.length > 1) return;
 
-            // Track if this is a touch event
-            isTouchEvent.current = 'touches' in event;
+        const clientX = e.type.startsWith('touch')
+            ? (e as React.TouchEvent).touches[0].clientX
+            : (e as React.MouseEvent).clientX;
+        const clientY = e.type.startsWith('touch')
+            ? (e as React.TouchEvent).touches[0].clientY
+            : (e as React.MouseEvent).clientY;
 
-            isLongPress.current = false;
-            hasMoved.current = false;
-
-            // Store start position for scroll detection
-            if ('touches' in event && event.touches.length > 0) {
-                startPos.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
-            } else if ('clientX' in event) {
-                startPos.current = { x: event.clientX, y: event.clientY };
-            }
-
-            timeout.current = setTimeout(() => {
-                if (!hasMoved.current) {
-                    isLongPress.current = true;
-                    onLongPress(event);
-                }
-            }, delay);
-        },
-        [onLongPress, delay]
-    );
-
-    const clear = useCallback(
-        (event: React.MouseEvent | React.TouchEvent) => {
-            // If this is a mouse event but we started with touch, ignore it (simulated event)
-            if (!('touches' in event) && isTouchEvent.current) {
-                return;
-            }
-
-            if (timeout.current) {
-                clearTimeout(timeout.current);
-            }
-
-            // If the press duration was shorter than 'delay', it's a click.
-            // But if we already triggered long press or moved too much, skip.
-            if (!isLongPress.current && !hasMoved.current && onClick) {
-                onClick(event);
-            }
-
-            isLongPress.current = false;
-            hasMoved.current = false;
-            startPos.current = null;
-
-            // Reset touch flag after a short delay to allow next interaction
-            setTimeout(() => {
-                isTouchEvent.current = false;
-            }, 100);
-        },
-        [onClick]
-    );
-
-    const cancel = useCallback(() => {
-        // Cancel everything if cursor moves out or scroll happens
-        if (timeout.current) {
-            clearTimeout(timeout.current);
-        }
+        startPos.current = { x: clientX, y: clientY };
         isLongPress.current = false;
-        hasMoved.current = true; // Mark as moved so click doesn't fire
+
+        timerRef.current = setTimeout(() => {
+            isLongPress.current = true;
+            if (navigator.vibrate) navigator.vibrate(50);
+            onLongPress();
+        }, delay);
+    }, [onLongPress, delay]);
+
+    const move = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+        if (!startPos.current || !timerRef.current) return;
+
+        const clientX = e.type.startsWith('touch')
+            ? (e as React.TouchEvent).touches[0].clientX
+            : (e as React.MouseEvent).clientX;
+        const clientY = e.type.startsWith('touch')
+            ? (e as React.TouchEvent).touches[0].clientY
+            : (e as React.MouseEvent).clientY;
+
+        const dx = Math.abs(clientX - startPos.current.x);
+        const dy = Math.abs(clientY - startPos.current.y);
+
+        if (dx > 10 || dy > 10) {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
     }, []);
 
-    const handleTouchMove = useCallback((event: React.TouchEvent) => {
-        // Check if user has moved beyond threshold (likely scrolling)
-        if (startPos.current && event.touches.length > 0) {
-            const dx = Math.abs(event.touches[0].clientX - startPos.current.x);
-            const dy = Math.abs(event.touches[0].clientY - startPos.current.y);
-            if (dx > moveThreshold || dy > moveThreshold) {
-                hasMoved.current = true;
-                if (timeout.current) {
-                    clearTimeout(timeout.current);
-                }
-            }
+    const end = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
         }
-    }, [moveThreshold]);
+
+        if (!isLongPress.current && e.cancelable) {
+            // It was a click
+            // We rely on native onClick for actual action to ensure best a11y/compatibility
+            // unless we want to force it.
+            // But triggering onClick programmatically is tricky.
+            // Let's just create a props object that we spread.
+        }
+
+        // Cleanup
+        startPos.current = null;
+        isLongPress.current = false;
+    }, []);
+
+    // For hybrid approach where we want to let native onClick fire if not long press
+    // But we want to prevent onClick if it WAS a long press.
+
+    const onClickHandler = useCallback((e: React.MouseEvent) => {
+        if (isLongPress.current) {
+            // It was a long press, so consume the click
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        // Otherwise let it pass through to the element's onClick
+        onClick();
+    }, [onClick]);
 
     return {
         onMouseDown: start,
+        onMouseMove: move,
+        onMouseUp: end,
+        onMouseLeave: end,
         onTouchStart: start,
-        onMouseUp: clear,
-        onMouseLeave: cancel,
-        onTouchEnd: clear,
-        // Cancel if user scrolls beyond threshold
-        onTouchMove: handleTouchMove
+        onTouchMove: move,
+        onTouchEnd: end,
+        onClick: onClickHandler
     };
 };
-
-export default useLongPress;
