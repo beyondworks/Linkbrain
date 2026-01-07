@@ -39,6 +39,7 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
     };
 
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        console.log('[SortableChip] touchStart, isEditing:', isEditing, 'id:', id);
         if (isEditing) return;
 
         touchStartTime.current = Date.now();
@@ -57,7 +58,7 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
                 onLongPress();
             }
         }, 800);
-    }, [isEditing, onLongPress]);
+    }, [isEditing, onLongPress, id]);
 
     const handleTouchMove = useCallback((e: React.TouchEvent) => {
         if (startPos.current && e.touches.length > 0) {
@@ -74,6 +75,7 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
     }, []);
 
     const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        console.log('[SortableChip] touchEnd, isEditing:', isEditing, 'touchHandled:', touchHandled.current, 'touchMoved:', touchMoved.current, 'id:', id);
         if (isEditing) return;
 
         // Record touch time to prevent ghost mouse events
@@ -92,11 +94,12 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
 
         // Short tap - call onClick
         const duration = Date.now() - touchStartTime.current;
+        console.log('[SortableChip] tap duration:', duration, 'calling onClick for id:', id);
         if (duration < 800) {
             touchHandled.current = true; // Prevent subsequent click event
             onClick();
         }
-    }, [isEditing, onClick]);
+    }, [isEditing, onClick, id]);
 
     const handleClick = useCallback((e: React.MouseEvent) => {
         // If editing, just stop propagation
