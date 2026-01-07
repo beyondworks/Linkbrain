@@ -2024,7 +2024,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                      {/* Mobile Search Toggle Overlay */}
                      {mobileSearchOpen && (
                         <div
-                           className={`absolute top-[72px] left-0 right-0 py-3 px-4 border-b z-20 animate-fade-in-down md:hidden shadow-lg ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}
+                           className={`absolute left-0 right-0 py-3 px-4 border-b z-20 animate-fade-in-down md:hidden shadow-lg ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}
+                           style={{ top: 'calc(72px + env(safe-area-inset-top, 0px))' }}
                         >
                            <div className="relative w-full max-w-md mx-auto">
                               <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`} />
@@ -2324,7 +2325,10 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         {/* Mobile Sticky Filter Row */}
                         {activeTab !== 'insights' && !selectedLink && (
-                           <div className={`md:hidden sticky top-[72px] z-30 -mx-4 px-4 pt-2 pb-2 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}>
+                           <div
+                              className={`md:hidden sticky z-30 -mx-4 px-4 pt-2 pb-2 ${theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]'}`}
+                              style={{ top: 'calc(72px + env(safe-area-inset-top, 0px))' }}
+                           >
                               {/* Filter + Toggle Row */}
                               <div className="flex items-center justify-between relative mb-2" ref={filterRef}>
                                  <button

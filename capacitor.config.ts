@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appId: 'com.linkbrain.app',
   appName: 'LinkBrain',
   webDir: 'dist',
-  
+
   server: {
     androidScheme: 'https',
     allowNavigation: [
@@ -18,21 +18,21 @@ const config: CapacitorConfig = {
       'https://*.firebaseio.com',
     ],
   },
-  
+
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'never',
     preferredContentMode: 'mobile',
     backgroundColor: '#ffffff',
     allowsLinkPreview: false,
   },
-  
+
   android: {
     backgroundColor: '#ffffff',
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
   },
-  
+
   plugins: {
     SplashScreen: {
       launchShowDuration: 0,
