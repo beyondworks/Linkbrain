@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
+import { db, auth } from '../../../lib/firebase';
 import {
     Settings,
     X,
@@ -85,7 +85,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
             >
                 {/* Sidebar */}
                 <div className={`w-full md:w-64 border-r flex flex-col ${theme === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'} ${mobileView === 'menu' ? 'flex h-full' : 'hidden md:flex'}`}>
-                    <div className="p-6 flex items-center justify-between">
+                    <div className={`p-6 flex items-center justify-between transition-all pt-[calc(1.5rem+env(safe-area-inset-top))] md:pt-6`}>
                         <h2 className={`text-xl font-black tracking-tight flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                             <Settings className="text-[#21DBA4]" size={20} /> {t('settings')}
                         </h2>
@@ -131,7 +131,7 @@ export const SettingsModal = ({ onClose, settings, setSettings, onLogout, onAdmi
 
                 {/* Content Area */}
                 <div className={`flex-1 flex flex-col h-full ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} ${mobileView === 'content' ? 'flex' : 'hidden md:flex'}`}>
-                    <div className={`h-16 border-b flex items-center justify-between px-4 md:px-8 shrink-0 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-50'}`}>
+                    <div className={`border-b flex items-center justify-between px-4 md:px-8 shrink-0 transition-all ${theme === 'dark' ? 'border-slate-800' : 'border-slate-50'} h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] md:h-16 md:pt-0`}>
                         <div className="flex items-center gap-3">
                             <button onClick={() => setMobileView('menu')} className="md:hidden p-1 -ml-2 text-slate-400 hover:text-slate-600">
                                 <ChevronLeft size={24} />
@@ -470,7 +470,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
     useEffect(() => {
         const loadKeyStatus = async () => {
             try {
-                const { auth } = await import('../../../lib/firebase');
+
                 const user = auth.currentUser;
                 if (!user) return;
 
@@ -492,7 +492,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
     const handleGenerateKey = async () => {
         setIsLoading(true);
         try {
-            const { auth } = await import('../../../lib/firebase');
+
             const user = auth.currentUser;
             if (!user) {
                 toast.error(t('loginRequired'));
@@ -528,7 +528,7 @@ const IntegrationsSettings = ({ theme, t }: { theme: string; t: (key: string) =>
     const handleRevokeKey = async () => {
         setIsLoading(true);
         try {
-            const { auth } = await import('../../../lib/firebase');
+
             const user = auth.currentUser;
             if (!user) return;
 

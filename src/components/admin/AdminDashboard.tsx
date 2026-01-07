@@ -207,8 +207,9 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
 
             {/* Mobile Header - Visible only on mobile */}
             <header className={cn(
-                "md:hidden h-14 border-b flex items-center justify-between px-4 sticky top-0 z-50",
-                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-gray-200"
+                "md:hidden border-b flex items-center justify-between px-4 sticky top-0 z-50 transition-all",
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-gray-200",
+                "h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)]"
             )}>
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 bg-[#21DBA4] rounded-lg flex items-center justify-center">
