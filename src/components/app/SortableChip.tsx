@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -22,15 +22,13 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         isDragging
     } = useSortable({ id, disabled: !isEditing });
 
-    // Refs for touch handling
-    const touchStartTime = useRef<number>(0);
+    // Simple flag to prevent double-firing
+    const isProcessing = useRef(false);
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const touchHandled = useRef(false);
-    const touchMoved = useRef(false);
-    const startPos = useRef<{ x: number; y: number } | null>(null);
-    const lastTouchTime = useRef<number>(0);
+    const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+    const didMove = useRef(false);
 
-    // dnd-kit transform 스타일
+    // dnd-kit transform style
     const dndStyle: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition,
@@ -38,161 +36,130 @@ export function SortableChip({ id, isEditing, onLongPress, onClick, children, cl
         ...style,
     };
 
-    const handleTouchStart = useCallback((e: React.TouchEvent) => {
-        console.log('[SortableChip] touchStart, isEditing:', isEditing, 'id:', id);
-        if (isEditing) return;
-
-        touchStartTime.current = Date.now();
-        touchHandled.current = false;
-        touchMoved.current = false;
-
-        if (e.touches.length > 0) {
-            startPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        }
-
-        // Long press detection
-        longPressTimer.current = setTimeout(() => {
-            if (!touchMoved.current) {
-                touchHandled.current = true;
-                if (navigator.vibrate) navigator.vibrate(50);
-                onLongPress();
-            }
-        }, 800);
-    }, [isEditing, onLongPress, id]);
-
-    const handleTouchMove = useCallback((e: React.TouchEvent) => {
-        if (startPos.current && e.touches.length > 0) {
-            const dx = Math.abs(e.touches[0].clientX - startPos.current.x);
-            const dy = Math.abs(e.touches[0].clientY - startPos.current.y);
-            if (dx > 10 || dy > 10) {
-                touchMoved.current = true;
-                if (longPressTimer.current) {
-                    clearTimeout(longPressTimer.current);
-                    longPressTimer.current = null;
-                }
-            }
-        }
-    }, []);
-
-    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-        console.log('[SortableChip] touchEnd, isEditing:', isEditing, 'touchHandled:', touchHandled.current, 'touchMoved:', touchMoved.current, 'id:', id);
-        if (isEditing) return;
-
-        // Record touch time to prevent ghost mouse events
-        lastTouchTime.current = Date.now();
-
+    // Clean up timer
+    const clearLongPressTimer = useCallback(() => {
         if (longPressTimer.current) {
             clearTimeout(longPressTimer.current);
             longPressTimer.current = null;
         }
-
-        // If touch was handled by long press or user moved, do nothing
-        if (touchHandled.current || touchMoved.current) {
-            touchHandled.current = false;
-            return;
-        }
-
-        // Short tap - call onClick
-        const duration = Date.now() - touchStartTime.current;
-        console.log('[SortableChip] tap duration:', duration, 'calling onClick for id:', id);
-        if (duration < 800) {
-            touchHandled.current = true; // Prevent subsequent click event
-            onClick();
-        }
-    }, [isEditing, onClick, id]);
-
-    const handleClick = useCallback((e: React.MouseEvent) => {
-        // If editing, just stop propagation
-        if (isEditing) {
-            e.stopPropagation();
-            return;
-        }
-
-        // If touch already handled onClick, prevent duplicate
-        if (touchHandled.current) {
-            e.stopPropagation();
-            e.preventDefault();
-            touchHandled.current = false;
-            return;
-        }
-
-        // Mouse click is handled by mouseUp, so prevent duplicate here
-        // This onClick fires after mouseUp, so we just prevent it
-        e.stopPropagation();
-    }, [isEditing]);
-
-    // Mouse long-press handlers for desktop
-    const mouseStartTime = useRef<number>(0);
-    const mouseLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const mouseHandled = useRef(false);
-
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        if (isEditing) return;
-
-        // Ignore mouse events that follow touch events (mobile browsers fire both)
-        if (Date.now() - lastTouchTime.current < 500) return;
-
-        mouseStartTime.current = Date.now();
-        mouseHandled.current = false;
-
-        mouseLongPressTimer.current = setTimeout(() => {
-            mouseHandled.current = true;
-            onLongPress();
-        }, 800);
-    }, [isEditing, onLongPress]);
-
-    const handleMouseUp = useCallback((e: React.MouseEvent) => {
-        if (isEditing) return;
-
-        // Ignore mouse events that follow touch events (mobile browsers fire both)
-        if (Date.now() - lastTouchTime.current < 500) return;
-
-        if (mouseLongPressTimer.current) {
-            clearTimeout(mouseLongPressTimer.current);
-            mouseLongPressTimer.current = null;
-        }
-
-        // If long press was handled, don't trigger click
-        if (mouseHandled.current) {
-            mouseHandled.current = false;
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-
-        // Short click - call onClick
-        const duration = Date.now() - mouseStartTime.current;
-        if (duration < 800) {
-            onClick();
-        }
-    }, [isEditing, onClick]);
-
-    const handleMouseLeave = useCallback(() => {
-        if (mouseLongPressTimer.current) {
-            clearTimeout(mouseLongPressTimer.current);
-            mouseLongPressTimer.current = null;
-        }
     }, []);
 
-    // Event handlers for non-editing mode
-    const touchEvents = isEditing ? {} : {
-        onTouchStart: handleTouchStart,
-        onTouchMove: handleTouchMove,
-        onTouchEnd: handleTouchEnd,
-    };
+    // Unified handler for both touch and mouse
+    const handleInteractionStart = useCallback((clientX: number, clientY: number) => {
+        if (isEditing || isProcessing.current) return;
 
-    const mouseEvents = isEditing ? {} : {
-        onMouseDown: handleMouseDown,
-        onMouseUp: handleMouseUp,
-        onMouseLeave: handleMouseLeave,
-    };
+        touchStartPos.current = { x: clientX, y: clientY };
+        didMove.current = false;
+
+        // Long press: 500ms (reduced from 800ms for faster response)
+        longPressTimer.current = setTimeout(() => {
+            if (!didMove.current && !isProcessing.current) {
+                isProcessing.current = true;
+                if (navigator.vibrate) navigator.vibrate(30);
+                onLongPress();
+                // Reset after a short delay
+                setTimeout(() => { isProcessing.current = false; }, 300);
+            }
+        }, 500);
+    }, [isEditing, onLongPress]);
+
+    const handleInteractionMove = useCallback((clientX: number, clientY: number) => {
+        if (!touchStartPos.current) return;
+
+        const dx = Math.abs(clientX - touchStartPos.current.x);
+        const dy = Math.abs(clientY - touchStartPos.current.y);
+
+        // If moved more than 8px, cancel long press
+        if (dx > 8 || dy > 8) {
+            didMove.current = true;
+            clearLongPressTimer();
+        }
+    }, [clearLongPressTimer]);
+
+    const handleInteractionEnd = useCallback(() => {
+        clearLongPressTimer();
+
+        // If editing mode, moved, or already processing, skip
+        if (isEditing || didMove.current || isProcessing.current) {
+            touchStartPos.current = null;
+            return;
+        }
+
+        // Trigger click
+        isProcessing.current = true;
+        onClick();
+
+        // Reset processing flag after debounce period
+        setTimeout(() => {
+            isProcessing.current = false;
+        }, 200);
+
+        touchStartPos.current = null;
+    }, [isEditing, onClick, clearLongPressTimer]);
+
+    // Touch handlers
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 1) {
+            handleInteractionStart(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, [handleInteractionStart]);
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 1) {
+            handleInteractionMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, [handleInteractionMove]);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        e.preventDefault(); // Prevent ghost click
+        e.stopPropagation();
+        handleInteractionEnd();
+    }, [handleInteractionEnd]);
+
+    // Mouse handlers (for desktop)
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        handleInteractionStart(e.clientX, e.clientY);
+    }, [handleInteractionStart]);
+
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+        handleInteractionMove(e.clientX, e.clientY);
+    }, [handleInteractionMove]);
+
+    const handleMouseUp = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        handleInteractionEnd();
+    }, [handleInteractionEnd]);
+
+    const handleMouseLeave = useCallback(() => {
+        clearLongPressTimer();
+        touchStartPos.current = null;
+    }, [clearLongPressTimer]);
+
+    // Prevent default click to avoid double-firing
+    const handleClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+    }, []);
+
+    // Choose event handlers based on mode
+    const interactionHandlers = isEditing
+        ? { ...attributes, ...listeners }
+        : {
+            onTouchStart: handleTouchStart,
+            onTouchMove: handleTouchMove,
+            onTouchEnd: handleTouchEnd,
+            onMouseDown: handleMouseDown,
+            onMouseMove: handleMouseMove,
+            onMouseUp: handleMouseUp,
+            onMouseLeave: handleMouseLeave,
+            onClick: handleClick,
+        };
 
     return (
         <div
             ref={setNodeRef}
             style={dndStyle}
-            {...(isEditing ? { ...attributes, ...listeners } : { ...touchEvents, ...mouseEvents })}
-            onClick={handleClick}
+            {...interactionHandlers}
             className={`${className} ${isEditing && !isDragging ? 'animate-shake cursor-move select-none' : 'cursor-pointer'} ${isEditing ? 'relative z-[60] touch-none' : ''}`}
         >
             {children}
