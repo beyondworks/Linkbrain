@@ -1969,7 +1969,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                {/* Top Header */}
                <header
-                  className={`sticky top-0 h-[72px] border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}
+                  className={`sticky top-0 border-b flex items-center justify-between px-4 md:px-8 z-40 shrink-0 ${headerClass} ${selectedLink ? 'hidden md:flex' : ''}`}
+                  style={{
+                     paddingTop: 'env(safe-area-inset-top, 0px)',
+                     minHeight: '72px'
+                  }}
                >
                   <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
                      <div className="flex items-center gap-3 md:hidden">
