@@ -610,7 +610,13 @@ export const LinkDetailPanel = ({ link, categories, collections, allClips = [], 
                 className={`w-full max-w-2xl h-full shadow-2xl relative flex flex-col overflow-hidden ${theme === 'dark' ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-900'}`}
             >
                 {/* Header Toolbar */}
-                <div className={`border-b flex items-center justify-between px-6 shrink-0 transition-all ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'} h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] md:h-16 md:pt-0`}>
+                <div
+                    className={`border-b flex items-center justify-between px-6 shrink-0 transition-all ${theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'} md:h-16 md:pt-0`}
+                    style={{
+                        height: isMobile ? 'calc(4rem + env(safe-area-inset-top))' : undefined,
+                        paddingTop: isMobile ? 'env(safe-area-inset-top)' : undefined
+                    }}
+                >
                     <div className="flex items-center gap-3">
                         <button onClick={handleClose} className={`p-2 -ml-2 rounded-full ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>
                             <X size={20} />

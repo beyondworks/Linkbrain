@@ -170,8 +170,7 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
         { id: 'detailed', label: t.detailed, icon: <Activity size={18} /> },
         { id: 'announcements', label: t.announcements, icon: <Bell size={18} /> },
         { id: 'inquiries', label: t.inquiries, icon: <MessageSquare size={18} /> },
-        { id: 'popups', label: t.popups, icon: <Megaphone size={18} /> }
-    ];
+        { id: 'popups', label: t.popups, icon: <Megaphone size={18} /> }];
 
     // Loading State
     if (admin.loading) {
@@ -205,12 +204,15 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
     return (
         <div className={cn("min-h-screen flex flex-col md:flex-row", isDark ? "bg-[#0A0A0B]" : "bg-[#F8F9FA]")}>
 
-            {/* Mobile Header - Visible only on mobile */}
+            {/* Mobile Header-Visible only on mobile */}
             <header className={cn(
                 "md:hidden border-b flex items-center justify-between px-4 sticky top-0 z-50 transition-all",
-                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-gray-200",
-                "h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)]"
-            )}>
+                isDark ? "bg-[#111113] border-gray-800" : "bg-white border-gray-200"
+            )}
+                style={{
+                    height: 'calc(3.5rem + env(safe-area-inset-top))',
+                    paddingTop: 'env(safe-area-inset-top)'
+                }}>
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 bg-[#21DBA4] rounded-lg flex items-center justify-center">
                         <span className="text-white font-bold text-xs">L</span>
@@ -237,7 +239,7 @@ export function AdminDashboard({ theme, language, onBack }: AdminDashboardProps)
                 </Sheet>
             </header>
 
-            {/* Desktop Sidebar - Hidden on mobile */}
+            {/* Desktop Sidebar-Hidden on mobile */}
             <aside className={cn(
                 "hidden md:flex w-64 shrink-0 border-r flex-col h-screen sticky top-0",
                 isDark ? "bg-[#111113] border-gray-800" : "bg-white border-gray-100"

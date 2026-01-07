@@ -1,4 +1,4 @@
-```
+
 import React, { useState, useMemo, useEffect, useRef, useDeferredValue } from 'react';
 import { useClips, ClipData } from '../../hooks/useClips';
 import { UserPreferences } from '../../hooks/useUserPreferences';
@@ -98,12 +98,10 @@ const INITIAL_CATEGORIES: Category[] = [
    { id: 'design', name: 'Design', color: 'bg-pink-100 text-pink-600' },
    { id: 'dev', name: 'Development', color: 'bg-blue-100 text-blue-600' },
    { id: 'ai', name: 'AI & ML', color: 'bg-emerald-100 text-emerald-600' },
-   { id: 'business', name: 'Business', color: 'bg-orange-100 text-orange-600' },
-];
+   { id: 'business', name: 'Business', color: 'bg-orange-100 text-orange-600' },];
 
 const INITIAL_COLLECTIONS: Collection[] = [
-   { id: 'reading-list-2025', name: 'Must Read 2025', color: 'bg-teal-500' }
-];
+   { id: 'reading-list-2025', name: 'Must Read 2025', color: 'bg-teal-500' }];
 
 const INITIAL_LINKS: LinkItem[] = [
    {
@@ -125,8 +123,7 @@ const INITIAL_LINKS: LinkItem[] = [
       keyTakeaways: [
          "Shift from static Figma libraries to code-generated UI",
          "Context-aware tokens that adapt to user behavior",
-         "AI co-pilots managing accessibility automatically"
-      ]
+         "AI co-pilots managing accessibility automatically"]
    },
    {
       id: '2',
@@ -147,8 +144,7 @@ const INITIAL_LINKS: LinkItem[] = [
       keyTakeaways: [
          "Standardizing context exchange is crucial for agents",
          "MCP reduces hallucination by grounding data",
-         "Server-client architecture for LLM tools"
-      ]
+         "Server-client architecture for LLM tools"]
    },
    {
       id: '3',
@@ -217,8 +213,7 @@ const INITIAL_LINKS: LinkItem[] = [
       isFavorite: false,
       isReadLater: false,
       isArchived: false
-   }
-];
+   }];
 
 export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage, theme, themePreference, setTheme, preferences, updatePreference, initialTab = 'home' }: { onBack?: () => void, onLogout?: () => void, onAdmin?: () => void, language: 'en' | 'ko', setLanguage: (lang: 'en' | 'ko') => void, theme: 'light' | 'dark', themePreference: 'light' | 'dark' | 'system', setTheme: (t: 'light' | 'dark' | 'system') => void, preferences: UserPreferences, updatePreference: (key: keyof UserPreferences, value: any) => void, initialTab?: string }) => {
    // --- Firebase Data Hook ---
@@ -279,7 +274,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       const timestamp = getTimestamp(clip);
 
       return {
-         id: clip.id || `temp - ${ Date.now() } `,
+         id: clip.id || 'temp-' + Date.now(),
          title: clip.title || 'Untitled',
          url: clip.url || '',
          image: clip.image || clip.images?.[0] || '',
@@ -287,7 +282,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          tags: clip.keywords || [],
          date: new Date(timestamp).toLocaleDateString(),
          timestamp: timestamp,
-         readTime: clip.contentMarkdown ? `${ Math.ceil(clip.contentMarkdown.length / 1000) } min` : '3 min',
+         readTime: clip.contentMarkdown ? Math.ceil(clip.contentMarkdown.length / 1000) + ' min' : '3 min',
          aiScore: 85,
          categoryId: clip.category || 'general',
          collectionIds: clip.collectionIds || [],
@@ -302,12 +297,12 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          author: clip.author || '',
          authorHandle: (clip.authorProfile as any)?.handle || '',
          authorAvatar: (clip.authorProfile as any)?.avatar || '',
-         chatHistory: clip.chatHistory || [],  // ← CRITICAL: Include chatHistory!
+         chatHistory: clip.chatHistory || [],  // ← CRITICAL:Include chatHistory!
          lastViewedAt: clip.lastViewedAt,  // ← Include lastViewedAt for tracking views
       };
    };
 
-   // State - now uses Firebase data
+   // State-now uses Firebase data
    const [links, setLinks] = useState<LinkItem[]>([]);
    const [categories, setCategories] = useState<Category[]>([]);
    const [collections, setCollections] = useState<Collection[]>([]);
@@ -353,7 +348,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    }, [firebaseCategories]);
 
    // --- Auto-Migration for Legacy/Dynamic Categories ---
-   // DISABLED: This was causing categories to be recreated after user deletes them.
+   // DISABLED:This was causing categories to be recreated after user deletes them.
    // Users now have full control over their categories.
    // If you need to restore categories, do it manually or re-enable this code.
    /*
@@ -419,7 +414,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       localStorage.setItem('sortMode', sortMode);
    }, [sortMode]);
 
-   // DnD Sensors - Activation constraints for drag
+   // DnD Sensors-Activation constraints for drag
    const sensors = useSensors(
       useSensor(MouseSensor, {
          activationConstraint: { distance: 5 }
@@ -510,13 +505,13 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    const deferredPromptRef = useRef<any>(null);
    const [canInstall, setCanInstall] = useState(false);
 
-   // Mobile Visual Viewport Fix - handles keyboard appearance/disappearance
+   // Mobile Visual Viewport Fix-handles keyboard appearance/disappearance
    useEffect(() => {
       if (typeof window === 'undefined' || !window.visualViewport) return;
 
       const handleViewportResize = () => {
          // Force layout recalculation by triggering a minimal style change
-         document.documentElement.style.setProperty('--vh', `${ window.visualViewport!.height * 0.01 } px`);
+         document.documentElement.style.setProperty('--vh', (window.visualViewport!.height * 0.01) + 'px');
       };
 
       window.visualViewport.addEventListener('resize', handleViewportResize);
@@ -538,7 +533,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
       // Check if already installed (standalone mode)
-      if (window.matchMedia('(display-mode: standalone)').matches) {
+      if (window.matchMedia('(display-mode:standalone)').matches) {
          setCanInstall(false);
       }
 
@@ -557,7 +552,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          }
          deferredPromptRef.current = null;
       } else {
-         // iOS Safari - show manual instructions
+         // iOS Safari-show manual instructions
          toast(language === 'ko' ? '공유 버튼 → 홈 화면에 추가를 눌러주세요' : 'Tap Share → Add to Home Screen', {
             duration: 5000
          });
@@ -589,7 +584,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
    const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
    const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
 
-   // Notification State - Firestore connected
+   // Notification State-Firestore connected
    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
    const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -712,11 +707,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             const distance = Math.min(diff * 0.5, 120);
             pullDistanceRef.current = distance;
 
-            // Direct DOM manipulation for smooth animation - native app style
+            // Direct DOM manipulation for smooth animation-native app style
             requestAnimationFrame(() => {
                // Move entire content down
                if (mainContentWrapperRef.current) {
-                  mainContentWrapperRef.current.style.transform = `translateY(${ distance }px)`;
+                  mainContentWrapperRef.current.style.transform = 'translateY(' + distance + 'px)';
                }
                // Show spinner in revealed space
                if (pullIndicatorRef.current) {
@@ -724,8 +719,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                }
                if (pullSpinnerRef.current) {
                   const progress = Math.min(distance / 60, 1);
-                  pullSpinnerRef.current.style.opacity = `${ progress } `;
-                  pullSpinnerRef.current.style.transform = `rotate(${ distance * 6}deg) scale(${ progress })`;
+                  pullSpinnerRef.current.style.opacity = String(progress);
+                  pullSpinnerRef.current.style.transform = 'rotate(' + (distance * 6) + 'deg) scale(' + progress + ')';
                }
                if (pullTextRef.current) {
                   pullTextRef.current.style.opacity = distance > 60 ? '1' : '0';
@@ -950,7 +945,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          result = result.filter(l => l.timestamp >= cutoff);
       }
 
-      // Unread filter - show only clips that have never been viewed
+      // Unread filter-show only clips that have never been viewed
       if (deferredFilterUnread) {
          const viewedClipIds = new Set(
             firebaseClips.filter(c => c.lastViewedAt).map(c => c.id)
@@ -958,9 +953,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          result = result.filter(l => !viewedClipIds.has(l.id));
       }
 
-      // Optimization: Create a map for fast lookup of lastViewedAt for sorting
+      // Optimization:Create a map for fast lookup of lastViewedAt for sorting
       // Only needed if we are actually sorting by 'unread'
-      const clipViewedMap = deferredSortBy === 'unread' 
+      const clipViewedMap = deferredSortBy === 'unread'
          ? new Map(firebaseClips.map(c => [c.id, c.lastViewedAt]))
          : null;
 
@@ -982,7 +977,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       return result;
    }, [links, deferredActiveTab, deferredSearchQuery, categories, collections, deferredSortBy, deferredFilterCategories, deferredFilterSources, deferredFilterTags, deferredDateRange, deferredFilterUnread, firebaseClips]);
 
-   // Handle selecting/opening a clip - also marks it as viewed
+   // Handle selecting/opening a clip-also marks it as viewed
    const handleSelectLink = async (id: string) => {
       setSelectedLinkId(id);
 
@@ -1047,7 +1042,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          ? (newValue ? "나중에 읽기에 추가되었습니다" : "나중에 읽기에서 제거되었습니다")
          : (newValue ? "Added to read later" : "Removed from read later"));
 
-      // Sync to Firebase - using 'isReadLater' field (we need to ensure this field exists in ClipData)
+      // Sync to Firebase-using 'isReadLater' field (we need to ensure this field exists in ClipData)
       // For now, we'll just update locally as this field may not be in Firebase schema
    };
 
@@ -1082,7 +1077,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-   // Analysis Queue State - persisted to localStorage
+   // Analysis Queue State-persisted to localStorage
    const [analysisQueue, setAnalysisQueue] = useState<AnalysisItem[]>(() => {
       try {
          const saved = localStorage.getItem('analysis_queue');
@@ -1125,7 +1120,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
    const addLogEntry = (url: string, status: 'complete' | 'error') => {
       const newLog: AnalysisLogItem = {
-         id: `log - ${ Date.now() } `,
+         id: 'log-' + Date.now(),
          url,
          status,
          timestamp: Date.now()
@@ -1145,7 +1140,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       setIsAddModalOpen(false);
 
       // Generate unique ID for this analysis
-      const analysisId = `analysis - ${ Date.now() } -${ Math.random().toString(36).substr(2, 9) } `;
+      const analysisId = 'analysis-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
       // Clear previous items and add new one as analyzing directly with timestamp
       setAnalysisQueue([{ id: analysisId, url, status: 'analyzing' as AnalysisStatus, timestamp: Date.now() }]);
@@ -1186,7 +1181,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             // Mark as error
             setAnalysisQueue([{ id: analysisId, url, status: 'error' as AnalysisStatus }]);
             addLogEntry(url, 'error');
-            toast.error(language === 'ko' ? `분석 실패: ${ error.message } ` : `Analysis failed: ${ error.message } `);
+            toast.error(language === 'ko' ? '분석 실패: ' + error.message : 'Analysis failed: ' + error.message);
             // Reset to idle after 3 seconds
             setTimeout(() => setAnalysisQueue([]), 3000);
          }
@@ -1244,7 +1239,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       });
    };
 
-   // Handle bulk archive - moves selected clips to archive
+   // Handle bulk archive-moves selected clips to archive
    const handleBulkArchive = async () => {
       if (!canEdit) {
          toast.error(language === 'ko' ? '읽기 전용 모드입니다. 수정하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to edit.');
@@ -1263,8 +1258,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          setSelectedItemIds(new Set());
          setIsSelectionMode(false);
          toast.success(language === 'ko'
-            ? `${ selectedItemIds.size }개 항목이 보관되었습니다`
-            : `${ selectedItemIds.size } items archived`
+            ? selectedItemIds.size + '개 항목이 보관되었습니다'
+            : selectedItemIds.size + ' items archived'
          );
       } catch (error) {
          console.error('Failed to archive clips:', error);
@@ -1272,7 +1267,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
       }
    };
 
-   // Handle bulk unarchive - moves selected clips back to home
+   // Handle bulk unarchive-moves selected clips back to home
    const handleBulkUnarchive = async () => {
       if (!canEdit) {
          toast.error(language === 'ko' ? '읽기 전용 모드입니다. 수정하려면 업그레이드하세요.' : 'Read-only mode. Upgrade to edit.');
@@ -1291,8 +1286,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          setSelectedItemIds(new Set());
          setIsSelectionMode(false);
          toast.success(language === 'ko'
-            ? `${ selectedItemIds.size }개 항목이 홈으로 이동되었습니다`
-            : `${ selectedItemIds.size } items moved to home`
+            ? selectedItemIds.size + '개 항목이 홈으로 이동되었습니다'
+            : selectedItemIds.size + ' items moved to home'
          );
       } catch (error) {
          console.error('Failed to unarchive clips:', error);
@@ -1341,14 +1336,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
                return;
             }
-            // Create new category in Firebase - ID will be auto-generated
+            // Create new category in Firebase-ID will be auto-generated
             await createCategory({
                name: cat.name,
                color: cat.color
             });
             toast.success(t('categoryCreated'));
          }
-         // Note: No manual state update - real-time listener will sync
+         // Note:No manual state update-real-time listener will sync
          setIsCategoryModalOpen(false);
          setEditingCategory(null);
          // Reopen category manager modal after saving
@@ -1377,14 +1372,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                toast.error(language === 'ko' ? '읽기 전용 모드입니다.' : 'Read-only mode.');
                return;
             }
-            // Create new collection in Firebase - ID will be auto-generated
+            // Create new collection in Firebase-ID will be auto-generated
             await createCollection({
                name: col.name,
                color: col.color
             });
             toast.success(t('collectionCreated'));
          }
-         // Note: No manual state update - real-time listener will sync
+         // Note:No manual state update-real-time listener will sync
          setIsCollectionModalOpen(false);
          setEditingCollection(null);
       } catch (error) {
@@ -1494,7 +1489,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          count: 1,
          onConfirm: async () => {
             try {
-               // Cascade: Update all clips with this category to 'uncategorized'
+               // Cascade:Update all clips with this category to 'uncategorized'
                const clipsToUpdate = links.filter(l => l.categoryId === catId);
                const updatePromises = clipsToUpdate.map(clip =>
                   updateClip(clip.id, { category: 'uncategorized' })
@@ -1528,7 +1523,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
    return (
       <div
-         className={`flex h - screen font - sans overflow - hidden transition - colors duration - 300 ${ bgClass } `}
+         className={"flex h-screen font-sans overflow-hidden transition-colors duration-300 " + (bgClass) + " "}
          style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
       >
 
@@ -1544,49 +1539,49 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                />
 
                {/* 정렬 버튼 + 닫기 버튼 */}
-               <div className={`fixed top - 4 left - 1 / 2 - translate - x - 1 / 2 z - [70] flex items - center gap - 1 px - 2 py - 1.5 rounded - full text - xs font - medium shadow - lg pointer - events - auto ${
-   theme === 'dark'
-      ? 'bg-slate-800 border border-slate-600'
-      : 'bg-white border border-slate-200'
-} `}>
+               <div className={"fixed top-4 left-1/2-translate-x-1/2 z-[70] flex items-center gap-1 px-2 py-1.5 rounded-full text-xs font-medium shadow-lg pointer-events-auto " + (
+                  theme === 'dark'
+                     ? 'bg-slate-800 border border-slate-600'
+                     : 'bg-white border border-slate-200'
+               ) + " "}>
                   <button
                      onClick={(e) => { e.stopPropagation(); setSortMode('count'); }}
-                     className={`px - 3 py - 1 rounded - full transition - all whitespace - nowrap ${
-   sortMode === 'count'
-      ? 'bg-[#21DBA4] text-white'
-      : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
-} `}
+                     className={"px-3 py-1 rounded-full transition-all whitespace-nowrap " + (
+                        sortMode === 'count'
+                           ? 'bg-[#21DBA4] text-white'
+                           : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
+                     ) + " "}
                   >
                      {language === 'ko' ? '개수순' : 'Count'}
                   </button>
                   <button
                      onClick={(e) => { e.stopPropagation(); setSortMode('name'); }}
-                     className={`px - 3 py - 1 rounded - full transition - all whitespace - nowrap ${
-   sortMode === 'name'
-      ? 'bg-[#21DBA4] text-white'
-      : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
-} `}
+                     className={"px-3 py-1 rounded-full transition-all whitespace-nowrap " + (
+                        sortMode === 'name'
+                           ? 'bg-[#21DBA4] text-white'
+                           : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
+                     ) + " "}
                   >
                      {language === 'ko' ? '이름순' : 'Name'}
                   </button>
                   <button
                      onClick={(e) => { e.stopPropagation(); setSortMode('custom'); }}
-                     className={`px - 3 py - 1 rounded - full transition - all whitespace - nowrap ${
-   sortMode === 'custom'
-      ? 'bg-[#21DBA4] text-white'
-      : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
-} `}
+                     className={"px-3 py-1 rounded-full transition-all whitespace-nowrap " + (
+                        sortMode === 'custom'
+                           ? 'bg-[#21DBA4] text-white'
+                           : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
+                     ) + " "}
                   >
                      {language === 'ko' ? '커스텀' : 'Custom'}
                   </button>
                   {/* 닫기 버튼 */}
                   <button
                      onClick={(e) => { e.stopPropagation(); setIsRearranging(false); }}
-                     className={`ml - 1 p - 1 rounded - full transition - all ${
-   theme === 'dark'
-      ? 'text-slate-400 hover:text-white hover:bg-slate-700'
-      : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'
-} `}
+                     className={"ml-1 p-1 rounded-full transition-all " + (
+                        theme === 'dark'
+                           ? 'text-slate-400 hover:text-white hover:bg-slate-700'
+                           : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'
+                     ) + " "}
                   >
                      <X size={14} />
                   </button>
@@ -1608,13 +1603,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          </AnimatePresence>
 
          {/* Sidebar */}
-         <aside className={`
-        fixed md:relative z - 50 h - full w - [280px] border - r flex flex - col transition - all duration - 300 ease -in -out
-        ${ sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0' }
-        ${ sidebarClass }
-`}>
+         <aside className={"\n        fixed md:relative z-50 h-full w-[280px] border-r flex flex-col transition-all duration-300 ease -in -out\n        " + (sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0') + "\n        " + (sidebarClass) + "\n"}>
             {/* Logo Area */}
-            <div className={`h - [72px] flex items - center px - 6 border - b ${ theme === 'dark' ? 'border-slate-800' : 'border-slate-50' } `}>
+            <div className={"h-[72px] flex items-center px-6 border-b " + (theme === 'dark' ? 'border-slate-800' : 'border-slate-50') + " "}>
                <div className="w-8 h-8 rounded-lg mr-3 cursor-pointer" onClick={onBack}>
                   <Logo className="w-full h-full" />
                </div>
@@ -1680,22 +1671,22 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   <div className="px-3 mb-2 flex justify-between items-center group">
                      <button
                         onClick={() => setIsSmartFoldersOpen(!isSmartFoldersOpen)}
-                        className={`flex items - center gap - 1.5 text - [11px] font - bold uppercase tracking - wider transition - colors ${ theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600' } `}
+                        className={"flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors " + (theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600') + " "}
                      >
-                        <ChevronDown size={14} className={`transition - transform duration - 200 ${ isSmartFoldersOpen ? '' : '-rotate-90' } `} />
+                        <ChevronDown size={14} className={"transition-transform duration-200 " + (isSmartFoldersOpen ? '' : '-rotate-90') + " "} />
                         {t('smartFolders')}
                      </button>
                      <div className="flex items-center gap-1">
                         <button
                            onClick={() => setIsCategoryManagerOpen(true)}
-                           className={`p - 1 rounded transition - colors ${ theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]' } `}
+                           className={"p-1 rounded transition-colors " + (theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]') + " "}
                            title="Manage Categories"
                         >
                            <Settings size={14} />
                         </button>
                         <button
                            onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }}
-                           className={`p - 1 rounded transition - colors ${ theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]' } `}
+                           className={"p-1 rounded transition-colors " + (theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]') + " "}
                         >
                            <Plus size={14} />
                         </button>
@@ -1713,7 +1704,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         >
                            {isRearranging ? (
                               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                                 <SortableContext items={sortedCategories.map(c => `cat - ${ c.id } `)} strategy={rectSortingStrategy}>
+                                 <SortableContext items={sortedCategories.map(c => "cat-" + (c.id) + " ")} strategy={rectSortingStrategy}>
                                     <div className="flex flex-wrap gap-2 px-3 py-2">
                                        {sortedCategories.map((cat: Category) => {
                                           const isActive = filterCategories.includes(cat.id);
@@ -1721,25 +1712,25 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           return (
                                              <SortableChip
                                                 key={cat.id}
-                                                id={`cat - ${ cat.id } `}
+                                                id={"cat-" + (cat.id) + " "}
                                                 onLongPress={() => setIsRearranging(true)}
                                                 onClick={() => { }}
-                                                className={`px - 3 py - 1.5 rounded - full text - [11px] font - bold transition - all flex items - center gap - 1.5 ${
-   isActive
-      ? 'bg-[#21DBA4] text-white shadow-sm'
-      : theme === 'dark'
-         ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
-         : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
-} `}
+                                                className={"px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 " + (
+                                                   isActive
+                                                      ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                      : theme === 'dark'
+                                                         ? 'text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                         : 'text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                ) + " "}
                                                 style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
                                              >
                                                 <span>{cat.name}</span>
                                                 {count > 0 && (
-                                                   <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${
-   isActive
-      ? 'bg-white/20 text-white'
-      : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
-} `}>
+                                                   <span className={"text-[10px] px-1.5 py-0.5 rounded-full " + (
+                                                      isActive
+                                                         ? 'bg-white/20 text-white'
+                                                         : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
+                                                   ) + " "}>
                                                       {count}
                                                    </span>
                                                 )}
@@ -1756,13 +1747,13 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        const isActive = filterCategories.includes(catId);
                                        return (
                                           <div
-                                             className={`px - 3 py - 1.5 rounded - full text - xs font - bold flex items - center gap - 1.5 shadow - xl scale - 110 cursor - grabbing ${
-   isActive
-      ? 'bg-[#21DBA4] text-white'
-      : theme === 'dark'
-         ? 'text-slate-800 ring-2 ring-[#21DBA4]'
-         : 'text-slate-600 ring-2 ring-[#21DBA4]'
-} `}
+                                             className={"px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing " + (
+                                                isActive
+                                                   ? 'bg-[#21DBA4] text-white'
+                                                   : theme === 'dark'
+                                                      ? 'text-slate-800 ring-2 ring-[#21DBA4]'
+                                                      : 'text-slate-600 ring-2 ring-[#21DBA4]'
+                                             ) + " "}
                                              style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
                                           >
                                              <span>{cat.name}</span>
@@ -1779,25 +1770,25 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     return (
                                        <StaticChip
                                           key={cat.id}
-                                          id={`cat - ${ cat.id } `}
+                                          id={"cat-" + (cat.id) + " "}
                                           onLongPress={() => setIsRearranging(true)}
                                           onClick={() => toggleFilter(setFilterCategories, cat.id)}
-                                          className={`px - 3 py - 1.5 rounded - full text - [11px] font - bold transition - all flex items - center gap - 1.5 ${
-   isActive
-      ? 'bg-[#21DBA4] text-white shadow-sm'
-      : theme === 'dark'
-         ? `text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50`
-         : `text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50`
-} `}
+                                          className={"px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 " + (
+                                             isActive
+                                                ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                : theme === 'dark'
+                                                   ? 'text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                   : 'text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                          ) + " "}
                                           style={!isActive ? { backgroundColor: getCategoryColor(cat.color, theme === 'dark') } : {}}
                                        >
                                           <span>{cat.name}</span>
                                           {count > 0 && (
-                                             <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${
-   isActive
-      ? 'bg-white/20 text-white'
-      : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
-} `}>
+                                             <span className={"text-[10px] px-1.5 py-0.5 rounded-full " + (
+                                                isActive
+                                                   ? 'bg-white/20 text-white'
+                                                   : theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-white/50 text-slate-600'
+                                             ) + " "}>
                                                 {count}
                                              </span>
                                           )}
@@ -1816,9 +1807,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   <div className="px-3 mb-2 flex justify-between items-center group">
                      <button
                         onClick={() => setIsSourcesOpen(!isSourcesOpen)}
-                        className={`flex items - center gap - 1.5 text - [11px] font - bold uppercase tracking - wider transition - colors ${ theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600' } `}
+                        className={"flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors " + (theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600') + " "}
                      >
-                        <ChevronDown size={14} className={`transition - transform duration - 200 ${ isSourcesOpen ? '' : '-rotate-90' } `} />
+                        <ChevronDown size={14} className={"transition-transform duration-200 " + (isSourcesOpen ? '' : '-rotate-90') + " "} />
                         {t('sources')}
                      </button>
                   </div>
@@ -1834,7 +1825,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         >
                            {isRearranging ? (
                               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                                 <SortableContext items={sortedSources.map(s => `src - ${ s } `)} strategy={rectSortingStrategy}>
+                                 <SortableContext items={sortedSources.map(s => "src-" + (s) + " ")} strategy={rectSortingStrategy}>
                                     <div className="flex flex-wrap gap-2 px-3 py-2">
                                        {sortedSources.map((src: string) => {
                                           const isActive = filterSources.includes(src);
@@ -1843,24 +1834,24 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           return (
                                              <SortableChip
                                                 key={src}
-                                                id={`src - ${ src } `}
+                                                id={"src-" + (src) + " "}
                                                 onLongPress={() => setIsRearranging(true)}
                                                 onClick={() => { }}
-                                                className={`px - 3 py - 1.5 rounded - full text - [11px] font - bold transition - all flex items - center gap - 1.5 ${
-   isActive
-      ? 'bg-[#21DBA4] text-white shadow-sm'
-      : theme === 'dark'
-         ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
-         : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
-} `}
+                                                className={"px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 " + (
+                                                   isActive
+                                                      ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                      : theme === 'dark'
+                                                         ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                         : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                ) + " "}
                                              >
                                                 <span>{src}</span>
                                                 {count > 0 && (
-                                                   <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${
-   isActive
-      ? 'bg-white/20 text-white'
-      : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
-} `}>
+                                                   <span className={"text-[10px] px-1.5 py-0.5 rounded-full " + (
+                                                      isActive
+                                                         ? 'bg-white/20 text-white'
+                                                         : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
+                                                   ) + " "}>
                                                       {count}
                                                    </span>
                                                 )}
@@ -1875,13 +1866,13 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        const isActive = filterSources.includes(src);
                                        return (
                                           <div
-                                             className={`px - 3 py - 1.5 rounded - full text - xs font - bold flex items - center gap - 1.5 shadow - xl scale - 110 cursor - grabbing ${
-   isActive
-      ? 'bg-[#21DBA4] text-white'
-      : theme === 'dark'
-         ? 'bg-slate-800 text-slate-400 ring-2 ring-[#21DBA4]'
-         : 'bg-slate-100 text-slate-600 ring-2 ring-[#21DBA4]'
-} `}
+                                             className={"px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-xl scale-110 cursor-grabbing " + (
+                                                isActive
+                                                   ? 'bg-[#21DBA4] text-white'
+                                                   : theme === 'dark'
+                                                      ? 'bg-slate-800 text-slate-400 ring-2 ring-[#21DBA4]'
+                                                      : 'bg-slate-100 text-slate-600 ring-2 ring-[#21DBA4]'
+                                             ) + " "}
                                           >
                                              <span>{src}</span>
                                           </div>
@@ -1898,24 +1889,24 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     return (
                                        <StaticChip
                                           key={src}
-                                          id={`src - ${ src } `}
+                                          id={"src-" + (src) + " "}
                                           onLongPress={() => setIsRearranging(true)}
                                           onClick={() => toggleFilter(setFilterSources, src)}
-                                          className={`px - 3 py - 1.5 rounded - full text - [11px] font - bold transition - all flex items - center gap - 1.5 ${
-   isActive
-      ? 'bg-[#21DBA4] text-white shadow-sm'
-      : theme === 'dark'
-         ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
-         : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
-} `}
+                                          className={"px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 " + (
+                                             isActive
+                                                ? 'bg-[#21DBA4] text-white shadow-sm'
+                                                : theme === 'dark'
+                                                   ? 'bg-slate-800 text-slate-300 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                                   : 'bg-slate-100 text-slate-600 hover:ring-2 hover:ring-[#21DBA4]/50'
+                                          ) + " "}
                                        >
                                           <span>{src}</span>
                                           {count > 0 && (
-                                             <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${
-   isActive
-      ? 'bg-white/20 text-white'
-      : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
-} `}>
+                                             <span className={"text-[10px] px-1.5 py-0.5 rounded-full " + (
+                                                isActive
+                                                   ? 'bg-white/20 text-white'
+                                                   : theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-white/50 text-slate-500'
+                                             ) + " "}>
                                                 {count}
                                              </span>
                                           )}
@@ -1934,14 +1925,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   <div className="px-3 mb-2 flex justify-between items-center group">
                      <button
                         onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
-                        className={`flex items - center gap - 1.5 text - [11px] font - bold uppercase tracking - wider transition - colors ${ theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600' } `}
+                        className={"flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors " + (theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600') + " "}
                      >
-                        <ChevronDown size={14} className={`transition - transform duration - 200 ${ isCollectionsOpen ? '' : '-rotate-90' } `} />
+                        <ChevronDown size={14} className={"transition-transform duration-200 " + (isCollectionsOpen ? '' : '-rotate-90') + " "} />
                         {t('collections')}
                      </button>
                      <button
                         onClick={() => { setEditingCollection(null); setIsCollectionModalOpen(true); }}
-                        className={`p - 1 rounded transition - colors ${ theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]' } `}
+                        className={"p-1 rounded transition-colors " + (theme === 'dark' ? 'hover:bg-slate-800 text-slate-500 hover:text-[#21DBA4]' : 'hover:bg-slate-100 text-slate-400 hover:text-[#21DBA4]') + " "}
                      >
                         <Plus size={14} />
                      </button>
@@ -1970,14 +1961,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     />
                                     <button
                                        onClick={() => { setEditingCollection(col); setIsCollectionModalOpen(true); }}
-                                       className={`absolute right - 2 md: opacity - 0 md: group - hover: opacity - 100 p - 1.5 rounded - md transition - all ${ theme === 'dark' ? 'text-slate-500 hover:text-slate-300 bg-slate-800/80' : 'text-slate-400 hover:text-slate-600 bg-white/50' } `}
+                                       className={"absolute right-2 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded-md transition-all " + (theme === 'dark' ? 'text-slate-500 hover:text-slate-300 bg-slate-800/80' : 'text-slate-400 hover:text-slate-600 bg-white/50') + " "}
                                     >
                                        <Edit2 size={12} />
                                     </button>
                                  </div>
                               ))}
                               {collections.length === 0 && (
-                                 <div className={`px - 3 text - xs italic py - 2 ${ theme === 'dark' ? 'text-slate-600' : 'text-slate-400' } `}>{t('noCollections')}</div>
+                                 <div className={"px-3 text-xs italic py-2 " + (theme === 'dark' ? 'text-slate-600' : 'text-slate-400') + " "}>{t('noCollections')}</div>
                               )}
                            </div>
                         </motion.div>
@@ -1989,20 +1980,20 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             {/* User Footer */}
             <div
                onClick={() => { setSettingsInitialTab('account'); setIsSettingsOpen(true); }}
-               className={`p - 4 border - t ${ theme === 'dark' ? 'border-slate-800 bg-slate-900 hover:bg-slate-800' : 'border-slate-50 bg-slate-50/50 hover:bg-slate-100' } cursor - pointer transition - colors group`}
+               className={"p-4 border-t " + (theme === 'dark' ? 'border-slate-800 bg-slate-900 hover:bg-slate-800' : 'border-slate-50 bg-slate-50/50 hover:bg-slate-100') + " cursor-pointer transition-colors group"}
             >
                <div className="flex items-center gap-3">
-                  <div className={`w - 9 h - 9 rounded - full bg - slate - 200 border - 2 shadow - sm overflow - hidden group - hover: border - [#21DBA4] / 50 transition - colors ${ theme === 'dark' ? 'border-slate-700' : 'border-white' } `}>
+                  <div className={"w-9 h-9 rounded-full bg-slate-200 border-2 shadow-sm overflow-hidden group-hover:border-[#21DBA4] / 50 transition-colors " + (theme === 'dark' ? 'border-slate-700' : 'border-white') + " "}>
                      {user?.photoURL ? (
                         <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
                      ) : (
-                        <div className={`w - full h - full flex items - center justify - center text - sm font - bold ${ theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-500' } `}>
+                        <div className={"w-full h-full flex items-center justify-center text-sm font-bold " + (theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-500') + " "}>
                            {(user?.displayName || 'U').charAt(0).toUpperCase()}
                         </div>
                      )}
                   </div>
                   <div className="flex-1 min-w-0">
-                     <div className={`text - sm font - bold truncate group - hover: text - [#21DBA4] ${ theme === 'dark' ? 'text-slate-200' : 'text-slate-700' } `}>{user?.displayName || 'User'}</div>
+                     <div className={"text-sm font-bold truncate group-hover:text-[#21DBA4] " + (theme === 'dark' ? 'text-slate-200' : 'text-slate-700') + " "}>{user?.displayName || 'User'}</div>
                      <div className="text-[10px] text-slate-400">
                         {status === 'active' || tier === 'pro'
                            ? 'LinkBrain Pro'
@@ -2021,15 +2012,15 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
          {/* Pull-to-Refresh Indicator (mobile only) - Fixed at top, revealed when content is pulled down */}
          <div
             ref={pullIndicatorRef}
-            className={`md:hidden fixed top - 0 left - 0 right - 0 z - [50] flex flex - col items - center justify - center pointer - events - none ${ theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]' } `}
+            className={"md:hidden fixed top-0 left-0 right-0 z-[50] flex flex-col items-center justify-center pointer-events-none " + (theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]') + " "}
             style={{ height: '70px', opacity: 0, willChange: 'opacity' }}
          >
             <div
                ref={pullSpinnerRef}
-               className={`w - 7 h - 7 rounded - full border - [3px] border - t - transparent ${ theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]' } `}
+               className={"w-7 h-7 rounded-full border-[3px] border-t-transparent " + (theme === 'dark' ? 'border-[#21DBA4]' : 'border-[#21DBA4]') + " "}
                style={{ opacity: 0, transform: 'rotate(0deg) scale(0)', willChange: 'transform, opacity' }}
             />
-            {/* Bounce arrow indicator - shows when ready to release */}
+            {/* Bounce arrow indicator-shows when ready to release */}
             <div
                ref={pullTextRef}
                className="mt-1"
@@ -2051,7 +2042,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             </div>
          </div>
 
-         {/* Main Content Wrapper - translates down for pull-to-refresh */}
+         {/* Main Content Wrapper-translates down for pull-to-refresh */}
          <div
             ref={mainContentWrapperRef}
             className="flex-1 flex flex-col h-full w-full overflow-auto md:overflow-visible"
@@ -2067,7 +2058,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                {/* Top Header */}
                <header
-                  className={`sticky top - 0 border - b flex items - center justify - between px - 4 md: px - 8 z - 40 shrink - 0 ${ headerClass } ${ selectedLink ? 'hidden md:flex' : '' } `}
+                  className={"sticky top-0 border-b flex items-center justify-between px-4 md:px-8 z-50 shrink-0 " + (headerClass) + " " + (selectedLink ? 'hidden md:flex' : '') + " "}
                   style={{
                      paddingTop: 'env(safe-area-inset-top, 0px)',
                      height: 'calc(72px + env(safe-area-inset-top, 0px))'
@@ -2078,7 +2069,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-500">
                            <Menu size={20} />
                         </button>
-                        <span className={`font - bold capitalize flex items - center gap - 2 ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                        <span className={"font-bold capitalize flex items-center gap-2 " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                            {(() => {
                               const label = activeTab === 'insights' ? t('aiInsights') : activeTab === 'discovery' ? t('discovery') : categories.find(c => c.id === activeTab)?.name || collections.find(c => c.id === activeTab)?.name || activeTab;
                               const hasBeta = label.includes('[Beta]');
@@ -2092,7 +2083,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         </span>
                      </div>
 
-                     {/* Search Bar - Desktop - Hide on insights/discovery */}
+                     {/* Search Bar-Desktop-Hide on insights/discovery */}
                      {activeTab !== 'insights' && activeTab !== 'discovery' && (
                         <div className="hidden md:flex relative group flex-1 max-w-md mr-auto">
                            <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#21DBA4] transition-colors pl-4">
@@ -2103,7 +2094,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               placeholder={t('searchPlaceholder')}
-                              className={`w - full h - 11 rounded - 2xl pl - 11 pr - 4 text - sm font - medium focus: outline - none transition - all placeholder: text - slate - 400 ${ theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700' : 'bg-slate-100/50 hover:bg-slate-100 focus:bg-white focus:shadow-sm focus:ring-1 focus:ring-[#21DBA4]/20 text-slate-900' } `}
+                              className={"w-full h-11 rounded-2xl pl-11 pr-4 text-sm font-medium focus:outline-none transition-all placeholder:text-slate-400 " + (theme === 'dark' ? 'bg-slate-800 text-white focus:bg-slate-700' : 'bg-slate-100/50 hover:bg-slate-100 focus:bg-white focus:shadow-sm focus:ring-1 focus:ring-[#21DBA4]/20 text-slate-900') + " "}
                            />
                            {searchQuery && (
                               <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-12 flex items-center text-slate-400 hover:text-slate-600">
@@ -2111,7 +2102,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               </button>
                            )}
                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                              <div className={`flex items - center gap - 1 px - 1.5 py - 1 rounded - md ${ theme === 'dark' ? 'bg-slate-700/50' : 'bg-white/50 border border-slate-200/50' } `}>
+                              <div className={"flex items-center gap-1 px-1.5 py-1 rounded-md " + (theme === 'dark' ? 'bg-slate-700/50' : 'bg-white/50 border border-slate-200/50') + " "}>
                                  <span className="text-[10px] text-slate-400 font-bold">⌘</span>
                                  <span className="text-[10px] text-slate-400 font-bold">K</span>
                               </div>
@@ -2122,20 +2113,20 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                      {/* Mobile Search Toggle Overlay */}
                      {mobileSearchOpen && (
                         <div
-                           className={`absolute left - 0 right - 0 py - 3 px - 4 border - b z - 20 animate - fade -in -down md:hidden shadow - lg ${ theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100' } `}
+                           className={"absolute left-0 right-0 py-3 px-4 border-b z-20 animate-fade -in -down md:hidden shadow-lg " + (theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100') + " "}
                            style={{ top: 'calc(72px + env(safe-area-inset-top, 0px))' }}
                         >
                            <div className="relative w-full max-w-md mx-auto">
-                              <Search size={16} className={`absolute left - 3 top - 1 / 2 - translate - y - 1 / 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-400' } `} />
+                              <Search size={16} className={"absolute left-3 top-1/2-translate-y-1/2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-400') + " "} />
                               <input
                                  autoFocus
                                  type="text"
                                  value={searchQuery}
                                  onChange={(e) => setSearchQuery(e.target.value)}
                                  placeholder={t('searchPlaceholder')}
-                                 className={`w - full h - 10 rounded - full pl - 12 pr - 12 text - base md: text - xs focus: outline - none focus: ring - 2 focus: ring - [#21DBA4] / 20 transition - all ${ theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white' } `}
+                                 className={"w-full h-10 rounded-full pl-12 pr-12 text-base md:text-xs focus:outline-none focus:ring-2 focus:ring-[#21DBA4] / 20 transition-all " + (theme === 'dark' ? 'bg-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-700' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400 focus:bg-white') + " "}
                               />
-                              <button onClick={() => setMobileSearchOpen(false)} className={`absolute right - 3 top - 1 / 2 - translate - y - 1 / 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-400' } `}>
+                              <button onClick={() => setMobileSearchOpen(false)} className={"absolute right-3 top-1/2-translate-y-1/2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-400') + " "}>
                                  <X size={16} />
                               </button>
                            </div>
@@ -2148,11 +2139,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         {isSelectionMode && (
                            <button
                               onClick={handleSelectAll}
-                              className={`flex items - center gap - 2 text - sm font - bold px - 3 py - 1.5 rounded - full transition - colors ${
-   isAllSelected
-      ? theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4] border border-[#21DBA4]/30' : 'bg-[#21DBA4] text-white'
-      : theme === 'dark' ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-} `}
+                              className={"flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full transition-colors " + (
+                                 isAllSelected
+                                    ? theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4] border border-[#21DBA4]/30' : 'bg-[#21DBA4] text-white'
+                                    : theme === 'dark' ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              ) + " "}
                            >
                               {isAllSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                               <span className="hidden sm:inline">{isAllSelected ? t('deselectAllItems') : t('selectAll')}</span>
@@ -2165,22 +2156,22 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            </button>
                         )}
 
-                        {/* Analysis Status Indicator - positioned before divider */}
+                        {/* Analysis Status Indicator-positioned before divider */}
                         <AnalysisIndicator items={analysisQueue} logs={analysisLogs} theme={theme} language={language} />
 
-                        <div className={`h - 6 w - px hidden md:block ${ theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200' } `}></div>
+                        <div className={"h-6 w-px hidden md:block " + (theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200') + " "}></div>
 
                         {activeTab !== 'insights' && activeTab !== 'discovery' && (
-                           <div className={`flex items - center gap - 1 rounded - lg p - 0.5 hidden md:flex ${ theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100' } `}>
+                           <div className={"flex items-center gap-1 rounded-lg p-0.5 hidden md:flex " + (theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100') + " "}>
                               <button
                                  onClick={() => setViewMode('grid')}
-                                 className={`p - 1.5 rounded - md transition - all ${ viewMode === 'grid' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600' } `}
+                                 className={"p-1.5 rounded-md transition-all " + (viewMode === 'grid' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600') + " "}
                               >
                                  <Grid size={16} />
                               </button>
                               <button
                                  onClick={() => setViewMode('list')}
-                                 className={`p - 1.5 rounded - md transition - all ${ viewMode === 'list' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600' } `}
+                                 className={"p-1.5 rounded-md transition-all " + (viewMode === 'list' ? (theme === 'dark' ? 'bg-slate-700 text-[#21DBA4]' : 'bg-white text-[#21DBA4] shadow-sm') : 'text-slate-400 hover:text-slate-600') + " "}
                               >
                                  <List size={16} />
                               </button>
@@ -2189,11 +2180,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         <button
                            onClick={() => setIsSelectionMode(!isSelectionMode)}
-                           className={`p - 2 rounded - full transition - all ${
-   isSelectionMode
-      ? theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : 'bg-[#E0FBF4] text-[#21DBA4]'
-      : 'text-slate-400 hover:text-slate-600'
-} `}
+                           className={"p-2 rounded-full transition-all " + (
+                              isSelectionMode
+                                 ? theme === 'dark' ? 'bg-[#21DBA4]/20 text-[#21DBA4]' : 'bg-[#E0FBF4] text-[#21DBA4]'
+                                 : 'text-slate-400 hover:text-slate-600'
+                           ) + " "}
                            title="Select Items"
                         >
                            <CheckSquare size={18} />
@@ -2201,7 +2192,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         <button
                            onClick={() => setIsAddModalOpen(true)}
-                           className={`bg - [#21DBA4] hover: bg - [#1bc290] h - 9 px - 4 rounded - full text - sm font - bold flex items - center gap - 1.5 transition - all transform active: scale - 95 text - [14px] ${ theme === 'dark' ? 'text-slate-900' : 'text-white' } `}
+                           className={"bg-[#21DBA4] hover:bg-[#1bc290] h-9 px-4 rounded-full text-sm font-bold flex items-center gap-1.5 transition-all transform active:scale-95 text-[14px] " + (theme === 'dark' ? 'text-slate-900' : 'text-white') + " "}
                         >
                            <Plus size={18} />
                            <span className="hidden md:inline text-[14px]">{t('addLink')}</span>
@@ -2211,11 +2202,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         <div className="relative hidden md:block" ref={notificationRef}>
                            <button
                               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                              className={`relative p - 2.5 rounded - full transition - all ${
-   isNotificationOpen
-      ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
-      : theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
-} `}
+                              className={"relative p-2.5 rounded-full transition-all " + (
+                                 isNotificationOpen
+                                    ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
+                                    : theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                              ) + " "}
                            >
                               <Bell size={20} />
                               {unreadCount > 0 && (
@@ -2235,10 +2226,10 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     className="fixed inset-0 z-40"
                                     onClick={() => setIsNotificationOpen(false)}
                                  />
-                                 <div className={`absolute right - 0 top - full mt - 2 w - 96 rounded - xl shadow - xl border z - 50 overflow - hidden ${ theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200' } `}>
+                                 <div className={"absolute right-0 top-full mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden " + (theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200') + " "}>
                                     {/* Header */}
-                                    <div className={`flex items - center justify - between px - 4 py - 3 border - b ${ theme === 'dark' ? 'border-slate-700' : 'border-slate-100' } `}>
-                                       <span className={`font - bold ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                    <div className={"flex items-center justify-between px-4 py-3 border-b " + (theme === 'dark' ? 'border-slate-700' : 'border-slate-100') + " "}>
+                                       <span className={"font-bold " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                           {language === 'ko' ? '알림' : 'Notifications'}
                                        </span>
                                        {unreadCount > 0 && (
@@ -2253,7 +2244,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     {/* Notification List */}
                                     <div className="max-h-80 overflow-y-auto">
                                        {appNotifications.length === 0 ? (
-                                          <div className={`py - 12 text - center text - sm ${ theme === 'dark' ? 'text-slate-500' : 'text-slate-400' } `}>
+                                          <div className={"py-12 text-center text-sm " + (theme === 'dark' ? 'text-slate-500' : 'text-slate-400') + " "}>
                                              {language === 'ko' ? '알림이 없습니다' : 'No notifications'}
                                           </div>
                                        ) : (
@@ -2261,21 +2252,21 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              <div
                                                 key={notification.id}
                                                 onClick={() => markAsRead(notification.id)}
-                                                className={`px - 4 py - 3 cursor - pointer transition - colors ${
-   !notification.isRead
-      ? theme === 'dark' ? 'bg-slate-700/50' : 'bg-[#21DBA4]/5'
-      : ''
-} ${ theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-slate-50' } `}
+                                                className={"px-4 py-3 cursor-pointer transition-colors " + (
+                                                   !notification.isRead
+                                                      ? theme === 'dark' ? 'bg-slate-700/50' : 'bg-[#21DBA4]/5'
+                                                      : ''
+                                                ) + " " + (theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-slate-50') + " "}
                                              >
                                                 <div className="flex items-start gap-3">
                                                    <div className="flex-1 min-w-0">
-                                                      <div className={`text - sm font - medium mb - 0.5 ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                                      <div className={"text-sm font-medium mb-0.5 " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                                          {notification.title}
                                                       </div>
-                                                      <div className={`text - xs line - clamp - 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-500' } `}>
+                                                      <div className={"text-xs line-clamp-2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-500') + " "}>
                                                          {notification.message}
                                                       </div>
-                                                      <div className={`text - [10px] mt - 1 ${ theme === 'dark' ? 'text-slate-500' : 'text-slate-400' } `}>
+                                                      <div className={"text-[10px] mt-1 " + (theme === 'dark' ? 'text-slate-500' : 'text-slate-400') + " "}>
                                                          {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : ''}
                                                       </div>
                                                    </div>
@@ -2309,8 +2300,8 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                {/* Scrollable Area */}
                <div
-                  className={`flex - 1 ${ ['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8' } `}
-                  style={{ minHeight: 'calc(100vh - 72px)' }}
+                  className={"flex-1 " + (['discovery', 'features', 'how-it-works', 'pricing'].includes(activeTab) ? '' : 'px-4 pb-4 pt-0 md:p-8') + " "}
+                  style={{ minHeight: 'calc(100vh-72px)' }}
                >
                   {activeTab === 'discovery' ? (
                      <LinkBrainArticle theme={theme} />
@@ -2319,11 +2310,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                         {/* Mobile Sticky Header Section */}
                         {activeTab !== 'insights' && !selectedLink && (
-                           <div className={`md: hidden - mx - 4 px - 4 pt - 4 ${ theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]' } `}>
-                              {/* Title + Count + Mobile Notification - Scrolls with content */}
+                           <div className={"md:hidden-mx-4 px-4 pt-4 " + (theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]') + " "}>
+                              {/* Title + Count + Mobile Notification-Scrolls with content */}
                               <div className="mb-2 flex items-start justify-between">
                                  <div className="flex-1 min-w-0">
-                                    <h1 className={`text - xl font - black mb - 1 ${ theme === 'dark' ? 'text-white' : 'text-slate-900' } `}>
+                                    <h1 className={"text-xl font-black mb-1 " + (theme === 'dark' ? 'text-white' : 'text-slate-900') + " "}>
                                        {(() => {
                                           const getTimeGreeting = () => {
                                              const hour = new Date().getHours();
@@ -2332,7 +2323,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              return t('goodEvening');
                                           };
                                           const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
-                                          const title = activeTab === 'home' ? `${ getTimeGreeting() }, ${ userName } 👋` :
+                                          const title = activeTab === 'home' ? getTimeGreeting() + ', ' + userName + ' 👋' :
                                              activeTab === 'later' ? t('readLater') :
                                                 activeTab === 'favorites' ? t('favorites') :
                                                    activeTab === 'archive' ? t('archive') :
@@ -2341,20 +2332,20 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           return title;
                                        })()}
                                     </h1>
-                                    <p className={`text - sm ${ textMuted } `}>
-                                       {`${ filteredLinks.length }${ t('linksFound') } `}
-                                       {activeTab === 'home' && ` ${ t('aiSummary') } `}
+                                    <p className={"text-sm " + (textMuted) + " "}>
+                                       {filteredLinks.length + t('linksFound') + ' '}
+                                       {activeTab === 'home' && ' ' + t('aiSummary')}
                                     </p>
                                  </div>
                                  {/* Mobile Notification Button */}
                                  <div className="relative">
                                     <button
                                        onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                                       className={`relative p - 2 rounded - full transition - all ${
-   isNotificationOpen
-      ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
-      : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-700'
-} `}
+                                       className={"relative p-2 rounded-full transition-all " + (
+                                          isNotificationOpen
+                                             ? 'bg-[#21DBA4]/10 text-[#21DBA4]'
+                                             : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-700'
+                                       ) + " "}
                                     >
                                        <Bell size={22} />
                                        {unreadCount > 0 && (
@@ -2374,10 +2365,10 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              className="fixed inset-0 z-40"
                                              onClick={() => setIsNotificationOpen(false)}
                                           />
-                                          <div className={`absolute right - 0 top - full mt - 2 w - 72 rounded - xl shadow - xl border z - 50 overflow - hidden ${ theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200' } `}>
+                                          <div className={"absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border z-50 overflow-hidden " + (theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200') + " "}>
                                              {/* Header */}
-                                             <div className={`flex items - center justify - between px - 4 py - 3 border - b ${ theme === 'dark' ? 'border-slate-700' : 'border-slate-100' } `}>
-                                                <span className={`font - bold text - sm ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                             <div className={"flex items-center justify-between px-4 py-3 border-b " + (theme === 'dark' ? 'border-slate-700' : 'border-slate-100') + " "}>
+                                                <span className={"font-bold text-sm " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                                    {language === 'ko' ? '알림' : 'Notifications'}
                                                 </span>
                                                 {unreadCount > 0 && (
@@ -2392,7 +2383,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                              {/* Notification List */}
                                              <div className="max-h-60 overflow-y-auto">
                                                 {appNotifications.length === 0 ? (
-                                                   <div className={`py - 6 text - center text - xs ${ theme === 'dark' ? 'text-slate-500' : 'text-slate-400' } `}>
+                                                   <div className={"py-6 text-center text-xs " + (theme === 'dark' ? 'text-slate-500' : 'text-slate-400') + " "}>
                                                       {language === 'ko' ? '알림이 없습니다' : 'No notifications'}
                                                    </div>
                                                 ) : (
@@ -2400,18 +2391,18 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                       <div
                                                          key={notification.id}
                                                          onClick={() => markAsRead(notification.id)}
-                                                         className={`px - 4 py - 2.5 cursor - pointer transition - colors ${
-   !notification.isRead
-      ? theme === 'dark' ? 'bg-slate-700/50' : 'bg-[#21DBA4]/5'
-      : ''
-} ${ theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-slate-50' } `}
+                                                         className={"px-4 py-2.5 cursor-pointer transition-colors " + (
+                                                            !notification.isRead
+                                                               ? theme === 'dark' ? 'bg-slate-700/50' : 'bg-[#21DBA4]/5'
+                                                               : ''
+                                                         ) + " " + (theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-slate-50') + " "}
                                                       >
                                                          <div className="flex items-start gap-2">
                                                             <div className="flex-1 min-w-0">
-                                                               <div className={`text - xs font - medium mb - 0.5 ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                                               <div className={"text-xs font-medium mb-0.5 " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                                                   {notification.title}
                                                                </div>
-                                                               <div className={`text - [10px] line - clamp - 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-500' } `}>
+                                                               <div className={"text-[10px] line-clamp-2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-500') + " "}>
                                                                   {notification.message}
                                                                </div>
                                                             </div>
@@ -2434,18 +2425,18 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         {/* Mobile Sticky Filter Row */}
                         {activeTab !== 'insights' && !selectedLink && (
                            <div
-                              className={`md:hidden sticky z - 30 - mx - 4 px - 4 pt - 2 pb - 2 ${ theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]' } `}
+                              className={"md:hidden sticky z-40 -mx-4 px-4 pt-2 pb-2 " + (theme === 'dark' ? 'bg-slate-950' : 'bg-[#F8FAFC]') + " "}
                               style={{ top: 'calc(72px + env(safe-area-inset-top, 0px))' }}
                            >
                               {/* Filter + Toggle Row */}
                               <div className="flex items-center justify-between relative mb-2" ref={filterRef}>
                                  <button
                                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                    className={`flex items - center gap - 1.5 text - sm font - semibold px - 3 py - 1.5 rounded - full border transition - colors ${
-   isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
-      ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4]'
-      : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-500 shadow-sm'
-} `}
+                                    className={"flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border transition-colors " + (
+                                       isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
+                                          ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4]'
+                                          : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-500 shadow-sm'
+                                    ) + " "}
                                  >
                                     <Filter size={14} />
                                     {t('filter')}
@@ -2455,11 +2446,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                  </button>
                                  <button
                                     onClick={() => setMobileViewMode(mobileViewMode === 'list' ? 'grid' : 'list')}
-                                    className={`w - 9 h - 9 flex items - center justify - center rounded - lg border transition - colors ${
-   theme === 'dark'
-      ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
-      : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50 shadow-sm'
-} `}
+                                    className={"w-9 h-9 flex items-center justify-center rounded-lg border transition-colors " + (
+                                       theme === 'dark'
+                                          ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-[#21DBA4] hover:border-[#21DBA4]/50'
+                                          : 'bg-white border-slate-200 text-slate-500 hover:text-[#21DBA4] hover:border-[#21DBA4]/50 shadow-sm'
+                                    ) + " "}
                                  >
                                     {mobileViewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}
                                  </button>
@@ -2477,7 +2468,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        <div
                                           onMouseDown={(e) => e.stopPropagation()}
                                           onClick={(e) => e.stopPropagation()}
-                                          className={`absolute left - 0 top - full mt - 1 w - 4 / 5 rounded - xl shadow - xl border z - 30 overflow - hidden ${ theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100' } `}
+                                          className={"absolute left-0 top-full mt-1 w-4/5 rounded-xl shadow-xl border z-30 overflow-hidden " + (theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100') + " "}
                                        >
                                           {/* Scrollable Content */}
                                           <div
@@ -2488,21 +2479,20 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 <div className="mt-1 space-y-0.5">
                                                    {[
                                                       { id: 'date-desc', label: t('recentlyAdded') },
-                                                      { id: 'date-asc', label: t('oldestFirst') }
-                                                   ].map((opt) => (
-                                                      <button
-                                                         key={opt.id}
-                                                         onClick={() => setSortBy(opt.id as any)}
-                                                         className={`w - full text - left flex items - center justify - between text - xs py - 1 ${ sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600' } `}
-                                                      >
-                                                         {opt.label}
-                                                         {sortBy === opt.id && <Check size={12} />}
-                                                      </button>
-                                                   ))}
+                                                      { id: 'date-asc', label: t('oldestFirst') }].map((opt) => (
+                                                         <button
+                                                            key={opt.id}
+                                                            onClick={() => setSortBy(opt.id as any)}
+                                                            className={"w-full text-left flex items-center justify-between text-xs py-1 " + (sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600') + " "}
+                                                         >
+                                                            {opt.label}
+                                                            {sortBy === opt.id && <Check size={12} />}
+                                                         </button>
+                                                      ))}
                                                 </div>
                                              </div>
 
-                                             <div className={`h - px ${ theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100' } `}></div>
+                                             <div className={"h-px " + (theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100') + " "}></div>
 
                                              {/* Date Range Filter */}
                                              <div className="px-3 pt-1.5 pb-4">
@@ -2512,31 +2502,30 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                       { id: 'all', label: '전체' },
                                                       { id: 'today', label: '오늘' },
                                                       { id: 'week', label: '이번 주' },
-                                                      { id: 'month', label: '이번 달' }
-                                                   ].map((opt) => (
-                                                      <button
-                                                         key={opt.id}
-                                                         onClick={() => setFilterDateRange(opt.id as any)}
-                                                         className={`px - 2 py - 0.5 rounded - full text - [10px] font - bold border transition - colors ${ filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]' } `}
-                                                      >
-                                                         {opt.label}
-                                                      </button>
-                                                   ))}
+                                                      { id: 'month', label: '이번 달' }].map((opt) => (
+                                                         <button
+                                                            key={opt.id}
+                                                            onClick={() => setFilterDateRange(opt.id as any)}
+                                                            className={"px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors " + (filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]') + " "}
+                                                         >
+                                                            {opt.label}
+                                                         </button>
+                                                      ))}
                                                 </div>
                                              </div>
-                                             {/* Unread Filter - Mobile Only */}
-                                             <div className={`h - px ${ theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100' } `}></div>
+                                             {/* Unread Filter-Mobile Only */}
+                                             <div className={"h-px " + (theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100') + " "}></div>
                                              <div className="px-3 pt-1.5 pb-4">
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'ko' ? '필터' : 'Filter'}</span>
                                                 <div className="mt-1">
                                                    <label className="flex items-center gap-1.5 cursor-pointer group">
                                                       <div
                                                          onClick={() => setFilterUnread(!filterUnread)}
-                                                         className={`w - 3.5 h - 3.5 rounded border flex items - center justify - center transition - colors ${ filterUnread ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]' } `}
+                                                         className={"w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors " + (filterUnread ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]') + " "}
                                                       >
                                                          {filterUnread && <Check size={8} strokeWidth={4} />}
                                                       </div>
-                                                      <span className={`text - xs ${ filterUnread ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500' } `}>
+                                                      <span className={"text-xs " + (filterUnread ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500') + " "}>
                                                          {language === 'ko' ? '미열람만 보기' : 'Unread only'}
                                                       </span>
                                                    </label>
@@ -2548,14 +2537,14 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                  )}
                               </div>
                               {/* Divider */}
-                              <div className={`border - b mb - 4 ${ theme === 'dark' ? 'border-slate-800' : 'border-slate-200' } `}></div>
+                              <div className={"border-b mb-4 " + (theme === 'dark' ? 'border-slate-800' : 'border-slate-200') + " "}></div>
                            </div>
                         )}
 
                         {/* Desktop Header Info (hidden on mobile now) */}
                         <div className="hidden md:flex items-end justify-between mb-8">
                            <div className="flex-1">
-                              <h1 className={`text - 2xl font - black mb - 2 flex items - center gap - 2 ${ theme === 'dark' ? 'text-white' : 'text-slate-900' } `}>
+                              <h1 className={"text-2xl font-black mb-2 flex items-center gap-2 " + (theme === 'dark' ? 'text-white' : 'text-slate-900') + " "}>
                                  {(() => {
                                     // Time-based greeting
                                     const getTimeGreeting = () => {
@@ -2568,7 +2557,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                     // Get user display name
                                     const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
-                                    const title = activeTab === 'home' ? `${ getTimeGreeting() }, ${ userName } 👋` :
+                                    const title = activeTab === 'home' ? getTimeGreeting() + ', ' + userName + ' 👋' :
                                        activeTab === 'later' ? t('readLater') :
                                           activeTab === 'favorites' ? t('favorites') :
                                              activeTab === 'archive' ? t('archive') :
@@ -2590,9 +2579,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                  })()}
                               </h1>
                               <div className="flex items-center gap-2">
-                                 <p className={`text - sm ${ textMuted } `}>
-                                    {activeTab === 'insights' ? '' : `${ filteredLinks.length } ${ t('linksFound') } `}
-                                    {activeTab === 'home' && !filterUnread && ` ${ t('aiSummary') } `}
+                                 <p className={"text-sm " + (textMuted) + " "}>
+                                    {activeTab === 'insights' ? '' : filteredLinks.length + ' ' + t('linksFound') + ' '}
+                                    {activeTab === 'home' && !filterUnread && ' ' + t('aiSummary')}
                                  </p>
                                  {filterUnread && (
                                     <button
@@ -2607,16 +2596,16 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               </div>
                            </div>
 
-                           {/* Sort & Advanced Filter Dropdown - Hide on insights/discovery */}
+                           {/* Sort & Advanced Filter Dropdown-Hide on insights/discovery */}
                            {activeTab !== 'insights' && activeTab !== 'discovery' && (
                               <div className="relative hidden md:block" ref={filterRef}>
                                  <div
                                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                    className={`hidden md:flex items - center gap - 2 text - sm font - medium px - 3 py - 1.5 rounded - full border shadow - sm cursor - pointer transition - colors ${
-   isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
-      ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4] dark:bg-[#21DBA4]/20'
-      : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-[#21DBA4]/50' : 'bg-white border-slate-200 text-slate-500 hover:border-[#21DBA4]/50'
-} `}
+                                    className={"hidden md:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors " + (
+                                       isFilterOpen || filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0
+                                          ? 'bg-[#21DBA4]/10 border-[#21DBA4]/30 text-[#21DBA4] dark:bg-[#21DBA4]/20'
+                                          : theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-[#21DBA4]/50' : 'bg-white border-slate-200 text-slate-500 hover:border-[#21DBA4]/50'
+                                    ) + " "}
                                  >
                                     <Filter size={14} />
                                     {t('filterSort')}
@@ -2632,28 +2621,27 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           className="fixed inset-0 z-10 bg-transparent"
                                           onClick={() => setIsFilterOpen(false)}
                                        />
-                                       <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={`absolute right - 0 top - full mt - 2 w - 72 rounded - xl shadow - xl border py - 2 z - 20 overflow - hidden max - h - [80vh] overflow - y - auto no - scrollbar ${ theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100' } `}>
+                                       <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className={"absolute right-0 top-full mt-2 w-72 rounded-xl shadow-xl border py-2 z-20 overflow-hidden max-h-[80vh] overflow-y-auto no-scrollbar " + (theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-100') + " "}>
                                           <div className="px-4 py-2">
                                              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sort By</span>
                                              <div className="mt-2 space-y-1">
                                                 {[
                                                    { id: 'date-desc', label: t('recentlyAdded') },
                                                    { id: 'date-asc', label: t('oldestFirst') },
-                                                   { id: 'unread', label: language === 'ko' ? '미열람' : 'Unread First' }
-                                                ].map((opt) => (
-                                                   <button
-                                                      key={opt.id}
-                                                      onClick={() => setSortBy(opt.id as any)}
-                                                      className={`w - full text - left flex items - center justify - between text - sm py - 1.5 ${ sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600' } `}
-                                                   >
-                                                      {opt.label}
-                                                      {sortBy === opt.id && <Check size={14} />}
-                                                   </button>
-                                                ))}
+                                                   { id: 'unread', label: language === 'ko' ? '미열람' : 'Unread First' }].map((opt) => (
+                                                      <button
+                                                         key={opt.id}
+                                                         onClick={() => setSortBy(opt.id as any)}
+                                                         className={"w-full text-left flex items-center justify-between text-sm py-1.5 " + (sortBy === opt.id ? 'text-[#21DBA4] font-bold' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600') + " "}
+                                                      >
+                                                         {opt.label}
+                                                         {sortBy === opt.id && <Check size={14} />}
+                                                      </button>
+                                                   ))}
                                              </div>
                                           </div>
 
-                                          <div className={`h - px my - 1 ${ theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100' } `}></div>
+                                          <div className={"h-px my-1 " + (theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100') + " "}></div>
 
                                           {/* Date Range Filter */}
                                           <div className="px-4 py-2">
@@ -2663,20 +2651,19 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                    { id: 'all', label: '전체' },
                                                    { id: 'today', label: '오늘' },
                                                    { id: 'week', label: '이번 주' },
-                                                   { id: 'month', label: '이번 달' }
-                                                ].map((opt) => (
-                                                   <button
-                                                      key={opt.id}
-                                                      onClick={() => setFilterDateRange(opt.id as any)}
-                                                      className={`px - 2.5 py - 1 rounded - full text - [10px] font - bold border transition - colors ${ filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]' } `}
-                                                   >
-                                                      {opt.label}
-                                                   </button>
-                                                ))}
+                                                   { id: 'month', label: '이번 달' }].map((opt) => (
+                                                      <button
+                                                         key={opt.id}
+                                                         onClick={() => setFilterDateRange(opt.id as any)}
+                                                         className={"px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors " + (filterDateRange === opt.id ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]') + " "}
+                                                      >
+                                                         {opt.label}
+                                                      </button>
+                                                   ))}
                                              </div>
                                           </div>
 
-                                          <div className={`h - px my - 1 ${ theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100' } `}></div>
+                                          <div className={"h-px my-1 " + (theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100') + " "}></div>
 
                                           {availableCategories.length > 0 && (
                                              <div className="px-4 py-2">
@@ -2686,11 +2673,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                       <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
                                                          <div
                                                             onClick={() => toggleFilter(setFilterCategories, cat.id)}
-                                                            className={`w - 4 h - 4 rounded border flex items - center justify - center transition - colors ${ filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]' } `}
+                                                            className={"w-4 h-4 rounded border flex items-center justify-center transition-colors " + (filterCategories.includes(cat.id) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]') + " "}
                                                          >
                                                             {filterCategories.includes(cat.id) && <Check size={10} strokeWidth={4} />}
                                                          </div>
-                                                         <span className={`text - sm ${ filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500' } `}>{cat.name}</span>
+                                                         <span className={"text-sm " + (filterCategories.includes(cat.id) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500') + " "}>{cat.name}</span>
                                                       </label>
                                                    ))}
                                                 </div>
@@ -2699,7 +2686,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                                           {availableSources.length > 0 && (
                                              <>
-                                                <div className={`h - px my - 1 ${ theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100' } `}></div>
+                                                <div className={"h-px my-1 " + (theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100') + " "}></div>
                                                 <div className="px-4 py-2">
                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Source</span>
                                                    <div className="mt-2 space-y-1">
@@ -2707,11 +2694,11 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                          <label key={src} className="flex items-center gap-2 cursor-pointer group">
                                                             <div
                                                                onClick={() => toggleFilter(setFilterSources, src)}
-                                                               className={`w - 4 h - 4 rounded border flex items - center justify - center transition - colors ${ filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]' } `}
+                                                               className={"w-4 h-4 rounded border flex items-center justify-center transition-colors " + (filterSources.includes(src) ? 'bg-[#21DBA4] border-[#21DBA4] text-white' : theme === 'dark' ? 'border-slate-600 bg-slate-700' : 'border-slate-300 bg-white group-hover:border-[#21DBA4]') + " "}
                                                             >
                                                                {filterSources.includes(src) && <Check size={10} strokeWidth={4} />}
                                                             </div>
-                                                            <span className={`text - sm ${ filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500' } `}>{src}</span>
+                                                            <span className={"text-sm " + (filterSources.includes(src) ? (theme === 'dark' ? 'text-white' : 'text-slate-900') + ' font-medium' : 'text-slate-500') + " "}>{src}</span>
                                                          </label>
                                                       ))}
                                                    </div>
@@ -2721,7 +2708,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
                                           {availableTags.length > 0 && (
                                              <>
-                                                <div className={`h - px my - 1 ${ theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100' } `}></div>
+                                                <div className={"h-px my-1 " + (theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100') + " "}></div>
                                                 <div className="px-4 py-2">
                                                    <div className="flex items-center justify-between mb-2">
                                                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('tags')}</span>
@@ -2730,7 +2717,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                             onClick={() => setShowAllTags(!showAllTags)}
                                                             className="text-[10px] font-bold text-[#21DBA4] hover:text-[#1BC491]"
                                                          >
-                                                            {showAllTags ? '접기' : `더보기(+${ availableTags.length - 8 })`}
+                                                            {showAllTags ? '접기' : '더보기(+' + (availableTags.length - 8) + ')'}
                                                          </button>
                                                       )}
                                                    </div>
@@ -2739,7 +2726,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                          <button
                                                             key={tag}
                                                             onClick={() => toggleFilter(setFilterTags, tag)}
-                                                            className={`px - 2 py - 1 rounded text - [10px] font - bold border transition - colors ${ filterTags.includes(tag) ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]' } `}
+                                                            className={"px-2 py-1 rounded text-[10px] font-bold border transition-colors " + (filterTags.includes(tag) ? 'bg-[#21DBA4] text-white border-transparent' : theme === 'dark' ? 'bg-slate-700 text-slate-400 border-slate-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-[#21DBA4]') + " "}
                                                          >
                                                             #{tag}
                                                          </button>
@@ -2750,7 +2737,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                           )}
 
                                           {(filterCategories.length > 0 || filterSources.length > 0 || filterTags.length > 0 || filterDateRange !== 'all') && (
-                                             <div className={`p - 2 border - t mt - 1 ${ theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50' } `}>
+                                             <div className={"p-2 border-t mt-1 " + (theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50') + " "}>
                                                 <button
                                                    onClick={() => { setFilterCategories([]); setFilterSources([]); setFilterTags([]); setFilterDateRange('all'); }}
                                                    className="w-full text-center text-xs font-bold text-red-500 hover:text-red-600 py-1"
@@ -2766,7 +2753,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                            )}
                         </div>
 
-                        {/* Grid / List View */}
+                        {/* Grid/List View */}
                         {activeTab === 'insights' ? (
                            <AIInsightsDashboard
                               links={links}
@@ -2784,7 +2771,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         ) : viewMode === 'grid' ? (
                            <>
                               {/* Mobile 2-Column Grid View */}
-                              <div className={`md:hidden ${ mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden' } `}>
+                              <div className={"md:hidden " + (mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden') + " "}>
                                  {filteredLinks.map(link => {
                                     const source = getSourceInfo(link.url);
                                     const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
@@ -2792,9 +2779,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        <div
                                           key={link.id}
                                           onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
-                                          className={`rounded - 2xl overflow - hidden cursor - pointer transition - all flex flex - col ${
-   theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
-} ${ selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '' } `}
+                                          className={"rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col " + (
+                                             theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
+                                          ) + " " + (selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '') + " "}
                                        >
                                           {/* 16:9 Image */}
                                           <div className="relative aspect-video overflow-hidden">
@@ -2803,42 +2790,42 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 alt=""
                                                 className="w-full h-full object-cover"
                                              />
-                                             {/* Source Badge - Always show */}
-                                             <div className={`absolute top - 2 left - 2 flex items - center gap - 1 px - 2 py - 1 rounded - full text - [10px] font - bold text - white ${ source.color || 'bg-slate-600' } `}>
+                                             {/* Source Badge-Always show */}
+                                             <div className={"absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white " + (source.color || 'bg-slate-600') + " "}>
                                                 {source.icon}{source.name}
                                              </div>
-                                             {/* Favorite Star - Always show if favorite */}
+                                             {/* Favorite Star-Always show if favorite */}
                                              {link.isFavorite && (
                                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
                                                    <Star size={12} fill="white" className="text-white" />
                                                 </div>
                                              )}
-                                             {/* Chat History Badge - Show if chatHistory exists */}
+                                             {/* Chat History Badge-Show if chatHistory exists */}
                                              {link.chatHistory && link.chatHistory.length > 0 && (
-                                                <div className={`absolute ${ link.isFavorite ? 'top-2 right-10' : 'top-2 right-2' } w - 6 h - 6 rounded - full bg - [#21DBA4] flex items - center justify - center shadow - sm`}>
+                                                <div className={"absolute " + (link.isFavorite ? 'top-2 right-10' : 'top-2 right-2') + " w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shadow-sm"}>
                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                                                    </svg>
                                                 </div>
                                              )}
                                           </div>
-                                          {/* Content - flex-1 for consistent height */}
+                                          {/* Content-flex-1 for consistent height */}
                                           <div className="p-3 flex flex-col flex-1">
                                              {/* URL */}
-                                             <div className={`flex items - center gap - 1 text - [10px] mb - 1 ${ theme === 'dark' ? 'text-slate-500' : 'text-slate-400' } `}>
+                                             <div className={"flex items-center gap-1 text-[10px] mb-1 " + (theme === 'dark' ? 'text-slate-500' : 'text-slate-400') + " "}>
                                                 <span className="text-slate-400">⊙</span>
                                                 <span className="truncate">{truncatedUrl}</span>
                                              </div>
-                                             {/* Title - fixed height for 2 lines */}
-                                             <h3 className={`text - xs font - bold leading - tight line - clamp - 2 h - 8 mb - 2 ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                             {/* Title-fixed height for 2 lines */}
+                                             <h3 className={"text-xs font-bold leading-tight line-clamp-2 h-8 mb-2 " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                                 {link.title}
                                              </h3>
-                                             {/* AI Summary - pushed to bottom with mt-auto */}
-                                             <div className={`mt - auto text - [10px] p - 2 rounded - lg ${ theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]' } `}>
-                                                <div className={`flex items - center gap - 1 font - bold mb - 1 text - [#21DBA4]`}>
+                                             {/* AI Summary-pushed to bottom with mt-auto */}
+                                             <div className={"mt-auto text-[10px] p-2 rounded-lg " + (theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]') + " "}>
+                                                <div className={"flex items-center gap-1 font-bold mb-1 text-[#21DBA4]"}>
                                                    <span>✨</span> AI Summary
                                                 </div>
-                                                <p className={`line - clamp - 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-600' } `}>
+                                                <p className={"line-clamp-2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-600') + " "}>
                                                    {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 80) || 'No summary available'}
                                                 </p>
                                              </div>
@@ -2849,7 +2836,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               </div>
 
                               {/* Mobile List View */}
-                              <div className={`md:hidden ${ mobileViewMode === 'list' ? 'flex flex-col gap-3' : 'hidden' } `}>
+                              <div className={"md:hidden " + (mobileViewMode === 'list' ? 'flex flex-col gap-3' : 'hidden') + " "}>
                                  {filteredLinks.map(link => {
                                     const source = getSourceInfo(link.url);
                                     const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
@@ -2857,9 +2844,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        <div
                                           key={link.id}
                                           onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
-                                          className={`rounded - xl overflow - hidden cursor - pointer transition - all flex gap - 3 p - 3 ${
-   theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
-} ${ selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '' } `}
+                                          className={"rounded-xl overflow-hidden cursor-pointer transition-all flex gap-3 p-3 " + (
+                                             theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
+                                          ) + " " + (selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '') + " "}
                                        >
                                           {/* Thumbnail */}
                                           <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden">
@@ -2869,15 +2856,15 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 className="w-full h-full object-cover"
                                              />
                                              {/* Source Badge */}
-                                             <div className={`absolute bottom - 1 left - 1 flex items - center gap - 0.5 px - 1.5 py - 0.5 rounded - full text - [8px] font - bold text - white ${ source.color || 'bg-slate-600' } `}>
+                                             <div className={"absolute bottom-1 left-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white " + (source.color || 'bg-slate-600') + " "}>
                                                 {source.icon}
                                              </div>
                                           </div>
-                                          {/* Content - Matches thumbnail height (h-24 = 96px) */}
+                                          {/* Content-Matches thumbnail height (h-24 = 96px) */}
                                           <div className="flex-1 min-w-0 h-24 flex flex-col justify-between">
                                              {/* Title with inline badges */}
                                              <div className="flex items-start gap-1.5">
-                                                <h3 className={`flex - 1 min - w - 0 text - sm font - bold leading - tight truncate ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                                <h3 className={"flex-1 min-w-0 text-sm font-bold leading-tight truncate " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                                    {link.title}
                                                 </h3>
                                                 {link.isFavorite && <Star size={12} fill="currentColor" className="text-yellow-400 shrink-0 mt-0.5" />}
@@ -2887,12 +2874,12 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                    </svg>
                                                 )}
                                              </div>
-                                             {/* AI Summary - 2 lines */}
-                                             <div className={`text - [10px] p - 2 rounded - lg ${ theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]' } `}>
-                                                <div className={`flex items - center gap - 1 font - bold text - [#21DBA4] mb - 0.5`}>
+                                             {/* AI Summary-2 lines */}
+                                             <div className={"text-[10px] p-2 rounded-lg " + (theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]') + " "}>
+                                                <div className={"flex items-center gap-1 font-bold text-[#21DBA4] mb-0.5"}>
                                                    <span>✨</span> AI Summary
                                                 </div>
-                                                <p className={`line - clamp - 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-600' } `}>
+                                                <p className={"line-clamp-2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-600') + " "}>
                                                    {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 100) || 'No summary'}
                                                 </p>
                                              </div>
@@ -2929,7 +2916,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                         ) : (
                            <>
                               {/* Mobile 2-Column Grid View */}
-                              <div className={`md:hidden ${ mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden' } `}>
+                              <div className={"md:hidden " + (mobileViewMode === 'grid' ? 'grid grid-cols-2 gap-3' : 'hidden') + " "}>
                                  {filteredLinks.map(link => {
                                     const source = getSourceInfo(link.url);
                                     const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
@@ -2937,9 +2924,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        <div
                                           key={link.id}
                                           onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
-                                          className={`rounded - 2xl overflow - hidden cursor - pointer transition - all flex flex - col ${
-   theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
-} ${ selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '' } `}
+                                          className={"rounded-2xl overflow-hidden cursor-pointer transition-all flex flex-col " + (
+                                             theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
+                                          ) + " " + (selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '') + " "}
                                        >
                                           {/* 16:9 Image */}
                                           <div className="relative aspect-video overflow-hidden">
@@ -2948,42 +2935,42 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 alt=""
                                                 className="w-full h-full object-cover"
                                              />
-                                             {/* Source Badge - Always show */}
-                                             <div className={`absolute top - 2 left - 2 flex items - center gap - 1 px - 2 py - 1 rounded - full text - [10px] font - bold text - white ${ source.color || 'bg-slate-600' } `}>
+                                             {/* Source Badge-Always show */}
+                                             <div className={"absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white " + (source.color || 'bg-slate-600') + " "}>
                                                 {source.icon}{source.name}
                                              </div>
-                                             {/* Favorite Star - Always show if favorite */}
+                                             {/* Favorite Star-Always show if favorite */}
                                              {link.isFavorite && (
                                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center shadow-sm">
                                                    <Star size={12} fill="white" className="text-white" />
                                                 </div>
                                              )}
-                                             {/* Chat History Badge - Show if chatHistory exists */}
+                                             {/* Chat History Badge-Show if chatHistory exists */}
                                              {link.chatHistory && link.chatHistory.length > 0 && (
-                                                <div className={`absolute ${ link.isFavorite ? 'top-2 right-10' : 'top-2 right-2' } w - 6 h - 6 rounded - full bg - [#21DBA4] flex items - center justify - center shadow - sm`}>
+                                                <div className={"absolute " + (link.isFavorite ? 'top-2 right-10' : 'top-2 right-2') + " w-6 h-6 rounded-full bg-[#21DBA4] flex items-center justify-center shadow-sm"}>
                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                                                    </svg>
                                                 </div>
                                              )}
                                           </div>
-                                          {/* Content - flex-1 for consistent height */}
+                                          {/* Content-flex-1 for consistent height */}
                                           <div className="p-3 flex flex-col flex-1">
                                              {/* URL */}
-                                             <div className={`flex items - center gap - 1 text - [10px] mb - 1 ${ theme === 'dark' ? 'text-slate-500' : 'text-slate-400' } `}>
+                                             <div className={"flex items-center gap-1 text-[10px] mb-1 " + (theme === 'dark' ? 'text-slate-500' : 'text-slate-400') + " "}>
                                                 <span className="text-slate-400">⊙</span>
                                                 <span className="truncate">{truncatedUrl}</span>
                                              </div>
-                                             {/* Title - fixed height for 2 lines */}
-                                             <h3 className={`text - xs font - bold leading - tight line - clamp - 2 h - 8 mb - 2 ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                             {/* Title-fixed height for 2 lines */}
+                                             <h3 className={"text-xs font-bold leading-tight line-clamp-2 h-8 mb-2 " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                                 {link.title}
                                              </h3>
-                                             {/* AI Summary - pushed to bottom with mt-auto */}
-                                             <div className={`mt - auto text - [10px] p - 2 rounded - lg ${ theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]' } `}>
-                                                <div className={`flex items - center gap - 1 font - bold mb - 1 text - [#21DBA4]`}>
+                                             {/* AI Summary-pushed to bottom with mt-auto */}
+                                             <div className={"mt-auto text-[10px] p-2 rounded-lg " + (theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]') + " "}>
+                                                <div className={"flex items-center gap-1 font-bold mb-1 text-[#21DBA4]"}>
                                                    <span>✨</span> AI Summary
                                                 </div>
-                                                <p className={`line - clamp - 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-600' } `}>
+                                                <p className={"line-clamp-2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-600') + " "}>
                                                    {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 80) || 'No summary available'}
                                                 </p>
                                              </div>
@@ -2994,7 +2981,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                               </div>
 
                               {/* Mobile List View */}
-                              <div className={`md:hidden ${ mobileViewMode === 'list' ? 'flex flex-col gap-3' : 'hidden' } `}>
+                              <div className={"md:hidden " + (mobileViewMode === 'list' ? 'flex flex-col gap-3' : 'hidden') + " "}>
                                  {filteredLinks.map(link => {
                                     const source = getSourceInfo(link.url);
                                     const truncatedUrl = link.url.replace(/^https?:\/\//, '').split('/')[0];
@@ -3002,9 +2989,9 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                        <div
                                           key={link.id}
                                           onClick={() => isSelectionMode ? toggleSelection(link.id) : handleSelectLink(link.id)}
-                                          className={`rounded - xl overflow - hidden cursor - pointer transition - all flex gap - 3 p - 3 ${
-   theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
-} ${ selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '' } `}
+                                          className={"rounded-xl overflow-hidden cursor-pointer transition-all flex gap-3 p-3 " + (
+                                             theme === 'dark' ? 'bg-slate-900' : 'bg-white border border-slate-100 shadow-sm'
+                                          ) + " " + (selectedItemIds.has(link.id) ? 'ring-2 ring-[#21DBA4]' : '') + " "}
                                        >
                                           {/* Thumbnail */}
                                           <div className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden">
@@ -3014,15 +3001,15 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                 className="w-full h-full object-cover"
                                              />
                                              {/* Source Badge */}
-                                             <div className={`absolute bottom - 1 left - 1 flex items - center gap - 0.5 px - 1.5 py - 0.5 rounded - full text - [8px] font - bold text - white ${ source.color || 'bg-slate-600' } `}>
+                                             <div className={"absolute bottom-1 left-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white " + (source.color || 'bg-slate-600') + " "}>
                                                 {source.icon}
                                              </div>
                                           </div>
-                                          {/* Content - Matches thumbnail height (h-24 = 96px) */}
+                                          {/* Content-Matches thumbnail height (h-24 = 96px) */}
                                           <div className="flex-1 min-w-0 h-24 flex flex-col justify-between">
                                              {/* Title with inline badges */}
                                              <div className="flex items-start gap-1.5">
-                                                <h3 className={`flex - 1 min - w - 0 text - sm font - bold leading - tight truncate ${ theme === 'dark' ? 'text-white' : 'text-slate-800' } `}>
+                                                <h3 className={"flex-1 min-w-0 text-sm font-bold leading-tight truncate " + (theme === 'dark' ? 'text-white' : 'text-slate-800') + " "}>
                                                    {link.title}
                                                 </h3>
                                                 {link.isFavorite && <Star size={12} fill="currentColor" className="text-yellow-400 shrink-0 mt-0.5" />}
@@ -3032,12 +3019,12 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                                                    </svg>
                                                 )}
                                              </div>
-                                             {/* AI Summary - 2 lines */}
-                                             <div className={`text - [10px] p - 2 rounded - lg ${ theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]' } `}>
-                                                <div className={`flex items - center gap - 1 font - bold text - [#21DBA4] mb - 0.5`}>
+                                             {/* AI Summary-2 lines */}
+                                             <div className={"text-[10px] p-2 rounded-lg " + (theme === 'dark' ? 'bg-slate-800' : 'bg-[#E0FBF4]') + " "}>
+                                                <div className={"flex items-center gap-1 font-bold text-[#21DBA4] mb-0.5"}>
                                                    <span>✨</span> AI Summary
                                                 </div>
-                                                <p className={`line - clamp - 2 ${ theme === 'dark' ? 'text-slate-400' : 'text-slate-600' } `}>
+                                                <p className={"line-clamp-2 " + (theme === 'dark' ? 'text-slate-400' : 'text-slate-600') + " "}>
                                                    {link.keyTakeaways && link.keyTakeaways.length > 0 ? link.keyTakeaways[0] : link.summary?.slice(0, 100) || 'No summary'}
                                                 </p>
                                              </div>
@@ -3086,17 +3073,17 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
 
          {/* Loading Overlay for Data Fetch */}
          {dataLoading && links.length === 0 && (
-            <div className={`fixed inset - 0 z - [200] flex flex - col items - center justify - center gap - 4 ${ theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50' } `}>
+            <div className={"fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 " + (theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50') + " "}>
                <div className="w-10 h-10 rounded-full bg-[#21DBA4]/20 flex items-center justify-center animate-pulse">
                   <div className="w-4 h-4 rounded-full bg-[#21DBA4]" />
                </div>
-               <p className={`font - medium ${ theme === 'dark' ? 'text-slate-300' : 'text-slate-600' } `}>
+               <p className={"font-medium " + (theme === 'dark' ? 'text-slate-300' : 'text-slate-600') + " "}>
                   {language === 'ko' ? '데이터를 불러오는 중...' : 'Loading your data...'}
                </p>
             </div>
          )}
 
-         {/* Analyzing Overlay - REMOVED: Now using AnalysisIndicator in header only */}
+         {/* Analyzing Overlay-REMOVED:Now using AnalysisIndicator in header only */}
          {/* Analysis status is shown in the header indicator */}
 
          {/* Detail Overlay */}
@@ -3243,7 +3230,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                           px-4 py-2.5 rounded-full gap-3
                           md:px-6 md:py-3 md:gap-6"
                >
-                  {/* Count - Number only for mobile */}
+                  {/* Count-Number only for mobile */}
                   <div className="flex items-center gap-1.5">
                      <span className="font-black text-base md:text-sm">{selectedItemIds.size}</span>
                      <span className="hidden md:inline text-sm font-medium text-slate-300">
@@ -3254,7 +3241,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   {/* Divider */}
                   <div className="h-5 md:h-4 w-px bg-white/20"></div>
 
-                  {/* Archive/Home - Conditional based on current tab */}
+                  {/* Archive/Home-Conditional based on current tab */}
                   {activeTab === 'archive' ? (
                      <button onClick={handleBulkUnarchive} className="group flex items-center gap-1.5 hover:text-[#21DBA4] transition-colors">
                         <Home className="w-[18px] h-[18px] md:w-4 md:h-4" />
@@ -3270,7 +3257,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   {/* Divider */}
                   <div className="h-5 md:h-4 w-px bg-white/20"></div>
 
-                  {/* Delete - Icon only on mobile */}
+                  {/* Delete-Icon only on mobile */}
                   <button onClick={handleBulkDeleteRequest} className="group flex items-center gap-1.5 hover:text-red-400 transition-colors">
                      <Trash2 className="w-[18px] h-[18px] md:w-4 md:h-4" />
                      <span className="hidden md:inline text-sm font-medium">{t('delete')}</span>
@@ -3287,7 +3274,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
             )}
          </AnimatePresence>
 
-         {/* Mobile FAB - outside main for proper fixed positioning */}
+         {/* Mobile FAB-outside main for proper fixed positioning */}
          {!selectedLink && (
             <button
                onClick={() => setIsAddModalOpen(true)}
@@ -3305,7 +3292,7 @@ export const LinkBrainApp = ({ onBack, onLogout, onAdmin, language, setLanguage,
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   onClick={() => mainContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className={`md:hidden fixed bottom - 6 left - 4 w - 9 h - 9 rounded - full shadow - lg flex items - center justify - center z - 30 transition - all ${ theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200' } `}
+                  className={"md:hidden fixed bottom-6 left-4 w-9 h-9 rounded-full shadow-lg flex items-center justify-center z-30 transition-all " + (theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200') + " "}
                >
                   <ChevronUp size={20} />
                </motion.button>
