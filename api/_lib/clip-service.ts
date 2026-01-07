@@ -284,46 +284,9 @@ export const safeGenerateMetadata = async (
     }
 
     try {
-        // 언어에 따라 프롬프트 분기 - 한국어 프롬프트는 한국어 응답을 유도
-        const prompt = language === 'KR'
-            ? `메타데이터 생성 요청입니다. 아래 콘텐츠를 분석해 메타데이터를 생성하세요.
+        const langName = language === 'KR' ? 'Korean' : 'English';
 
-필수 규칙:
-- 아래 CONTENT에 없는 정보를 생성하거나 추측하지 마세요
-- 예시, 설명, 아이디어 확장 금지
-- 요약은 불릿 포인트가 아닌 간결한 문장으로 작성
-- 중복 내용은 제거하고 한 번만 사용
-- 콘텐츠가 짧으면 (1-3문장) 핵심을 한 문장으로 요약
-
-URL: ${url}
-플랫폼: ${platform}
-
-CONTENT:
-"""
-${rawText.substring(0, 5000)}
-"""
-
-위 CONTENT를 기반으로 아래 JSON 형식의 메타데이터를 생성하세요:
-{
-  "title": "제목 (최대 60자, 콘텐츠에서 추출)",
-  "summary": "1-3문장 요약. 불릿 포인트 금지, 핵심 내용만 간결하게.",
-  "keywords": ["콘텐츠에서 추출한 관련 키워드 5개"],
-  "category": "가장 관련 있는 카테고리 선택: Design, Dev, AI, Product, Business, Marketing, Finance, Stock, Investment, Crypto, Health, Fitness, Education, Science, News, Entertainment, Music, Gaming, Travel, Food, Lifestyle, Sports, Fashion, Art, Photography, Automation, Productivity, Career, Startup, Other",
-  "sentiment": "positive | neutral | negative",
-  "type": "article | video | image | social_post | website"
-}
-
-카테고리 힌트:
-- Stock/Investment/Finance: 주식, 투자, 증권, 배당, ETF, 펀드, 재테크, 경제
-- Crypto: 비트코인, 이더리움, 암호화폐, 코인, NFT, 블록체인
-- Health/Fitness: 건강, 운동, 헬스, 다이어트, 영양, 의료
-- Marketing: 마케팅, 광고, 브랜딩, SEO, 콘텐츠, 소셜미디어
-- Business: 사업, 경영, 창업, 스타트업, 비즈니스
-- Automation: 자동화, RPA, 워크플로우, 노코드, Zapier, Make
-- Productivity: 생산성, 효율, 시간관리, 습관, 노션
-
-JSON만 출력하세요. 마크다운이나 설명은 포함하지 마세요.`
-            : `You are a metadata generation assistant. Your job is to analyze EXISTING content and create metadata.
+        const prompt = `You are a metadata generation assistant. Your job is to analyze EXISTING content and create metadata.
 
 CRITICAL RULES:
 - DO NOT generate, invent, or hallucinate ANY information not present in CONTENT below
@@ -344,22 +307,22 @@ ${rawText.substring(0, 5000)}
 
 Generate JSON metadata based STRICTLY on the CONTENT above:
 {
-  "title": "Descriptive title in English (max 60 chars, from CONTENT only)",
-  "summary": "Concise 1-3 sentence summary in English. DO NOT split original text into bullets. Condense the main idea.",
-  "keywords": ["5 relevant keywords in English from CONTENT"],
+  "title": "Descriptive title in ${langName} (max 60 chars, from CONTENT only)",
+  "summary": "Concise 1-3 sentence summary in ${langName}. DO NOT split original text into bullets. Condense the main idea.",
+  "keywords": ["5 relevant keywords in ${langName} from CONTENT"],
   "category": "Choose the MOST relevant from: Design, Dev, AI, Product, Business, Marketing, Finance, Stock, Investment, Crypto, Health, Fitness, Education, Science, News, Entertainment, Music, Gaming, Travel, Food, Lifestyle, Sports, Fashion, Art, Photography, Automation, Productivity, Career, Startup, Other",
   "sentiment": "positive | neutral | negative",
   "type": "article | video | image | social_post | website"
 }
 
-CATEGORY HINTS:
-- Stock/Investment/Finance: stock, invest, dividend, portfolio, ETF, fund
-- Crypto: bitcoin, ethereum, crypto, NFT, blockchain
-- Health/Fitness: health, fitness, workout, nutrition, diet
-- Marketing: marketing, ads, branding, SEO, content, social media
-- Business: business, startup, entrepreneur, company
-- Automation: automation, RPA, workflow, no-code, Zapier, Make
-- Productivity: productivity, efficiency, time management, habits, Notion
+CATEGORY HINTS (detect even from small keywords):
+- Stock/Investment/Finance: 주식, 투자, 증권, 배당, ETF, 펀드, 재테크, 경제, stock, invest, dividend, portfolio
+- Crypto: 비트코인, 이더리움, 암호화폐, 코인, NFT, 블록체인, crypto, bitcoin, ethereum
+- Health/Fitness: 건강, 운동, 헬스, 다이어트, 영양, 의료, health, fitness, workout, nutrition
+- Marketing: 마케팅, 광고, 브랜딩, SEO, 콘텐츠, 소셜미디어, marketing, ads, branding
+- Business: 사업, 경영, 창업, 스타트업, 비즈니스, 회사, business, startup, entrepreneur
+- Automation: 자동화, RPA, 워크플로우, 노코드, Zapier, Make, automation, workflow
+- Productivity: 생산성, 효율, 시간관리, 습관, 노션, productivity, efficiency, time management
 
 Return ONLY valid JSON, no markdown or explanations.`;
 
